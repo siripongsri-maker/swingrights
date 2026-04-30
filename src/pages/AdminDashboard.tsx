@@ -30,6 +30,7 @@ interface CaseRow {
   has_violation: boolean | null;
   violation_details: any;
   extra_facts: string | null;
+  audio_urls: { qIndex: number; path: string; question: string }[] | null;
 }
 
 export default function AdminDashboard() {
@@ -231,6 +232,23 @@ function ChartBlock({ title, data }: { title: string; data: { label: string; val
 
 function CaseDetail({ caseRow, onBack, onUpdateStatus }: { caseRow: CaseRow; onBack: () => void; onUpdateStatus: (s: CaseStatus, note?: string) => void }) {
   const [note, setNote] = useState('');
+  const [audioSigned, setAudioSigned] = useState<Record<number, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const list = caseRow.audio_urls || [];
+    if (list.length === 0) return;
+    (async () => {
+      const out: Record<number, string> = {};
+      for (const a of list) {
+        const { data } = await supabase.storage.from('case-audio').createSignedUrl(a.path, 3600);
+        if (data?.signedUrl) out[a.qIndex] = data.signedUrl;
+      }
+      if (!cancelled) setAudioSigned(out);
+    })();
+    return () => { cancelled = true; };
+  }, [caseRow.id]);
+
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="bg-gradient-dark text-white">
@@ -279,6 +297,9 @@ function CaseDetail({ caseRow, onBack, onUpdateStatus }: { caseRow: CaseRow; onB
                 <p className="text-[10px] uppercase tracking-wider text-primary mb-1">{a.cat}</p>
                 <p className="text-xs text-muted-foreground mb-1">{a.question}</p>
                 <p className="text-sm bg-muted/40 border border-border rounded-md p-2">{a.transcript || '(ไม่มีคำตอบ)'}</p>
+                {audioSigned[i] && (
+                  <audio src={audioSigned[i]} controls className="w-full mt-2 h-9" />
+                )}
                 {caseRow.staff_observations?.[i] && <p className="text-xs text-amber-700 dark:text-amber-300 mt-1.5">หมายเหตุ: {caseRow.staff_observations[i]}</p>}
               </div>
             ))}

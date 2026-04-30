@@ -38,6 +38,7 @@ export interface IntakeState {
   signatureClient: string;
   caseCode: string | null;
   caseId: string | null;
+  audioBlobs: (Blob | null)[];
 }
 
 export interface AIResult {
@@ -75,6 +76,7 @@ const INIT: IntakeState = {
   signatureClient: '',
   caseCode: null,
   caseId: null,
+  audioBlobs: [],
 };
 
 interface Store extends IntakeState {

@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       case_timeline: {
         Row: {
+          audio_url: string | null
           case_id: string
           created_at: string
           id: string
@@ -23,6 +24,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          audio_url?: string | null
           case_id: string
           created_at?: string
           id?: string
@@ -30,6 +32,7 @@ export type Database = {
           status: string
         }
         Update: {
+          audio_url?: string | null
           case_id?: string
           created_at?: string
           id?: string
@@ -50,6 +53,7 @@ export type Database = {
         Row: {
           ai_result: Json | null
           answers: Json | null
+          audio_urls: Json
           case_code: string
           created_at: string
           extra_facts: string | null
@@ -75,6 +79,7 @@ export type Database = {
         Insert: {
           ai_result?: Json | null
           answers?: Json | null
+          audio_urls?: Json
           case_code: string
           created_at?: string
           extra_facts?: string | null
@@ -100,6 +105,7 @@ export type Database = {
         Update: {
           ai_result?: Json | null
           answers?: Json | null
+          audio_urls?: Json
           case_code?: string
           created_at?: string
           extra_facts?: string | null
