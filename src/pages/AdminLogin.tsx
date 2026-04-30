@@ -34,15 +34,19 @@ export default function AdminLogin() {
         userId = data.user?.id ?? null;
         toast.success('สร้างบัญชีผู้ดูแลแล้ว');
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        let { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
-          // Auto-create the demo admin if missing
-          if (email === DEMO_EMAIL && error.message.toLowerCase().includes('invalid')) {
+          const msg = error.message.toLowerCase();
+          // Auto-create or recreate demo admin on common first-run errors
+          if (email === DEMO_EMAIL && (msg.includes('invalid') || msg.includes('not confirmed') || msg.includes('email'))) {
             const { data: s, error: e2 } = await supabase.auth.signUp({
               email, password, options: { emailRedirectTo: `${window.location.origin}/admin` },
             });
-            if (e2) throw e2;
-            userId = s.user?.id ?? null;
+            if (e2 && !e2.message.toLowerCase().includes('registered')) throw e2;
+            // Try login again now that auto-confirm is on
+            const retry = await supabase.auth.signInWithPassword({ email, password });
+            if (retry.error) throw retry.error;
+            userId = retry.data.user?.id ?? null;
           } else throw error;
         } else {
           userId = data.user?.id ?? null;
