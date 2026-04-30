@@ -843,6 +843,23 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       const sigStaff = staffCanvas.current!.toDataURL('image/png');
       const sigClient = clientEmpty ? null : clientCanvas.current!.toDataURL('image/png');
 
+      // 1) Upload audio recordings (if any) to private storage bucket under cases/<code>/
+      const audioPaths: { qIndex: number; path: string; question: string }[] = [];
+      for (let i = 0; i < intake.audioBlobs.length; i++) {
+        const blob = intake.audioBlobs[i];
+        if (!blob) continue;
+        const ext = (blob.type.split('/')[1] || 'webm').split(';')[0];
+        const path = `cases/${code}/q${i + 1}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('case-audio')
+          .upload(path, blob, { contentType: blob.type, upsert: false });
+        if (upErr) {
+          console.warn(`audio upload failed for q${i + 1}:`, upErr);
+          continue; // don't block case save if one upload fails
+        }
+        audioPaths.push({ qIndex: i, path, question: intake.answers[i]?.question || '' });
+      }
+
       const insertPayload: any = {
         case_code: code,
         status: 'received',
@@ -864,6 +881,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         signature_staff_name: staffName,
         signature_client: sigClient,
         signed_at: new Date().toISOString(),
+        audio_urls: audioPaths,
       };
       // NOTE: anon role can INSERT but cannot SELECT (admin-only). So no .select() here.
       const { error } = await (supabase.from('cases') as any).insert(insertPayload);
@@ -872,13 +890,10 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         throw error;
       }
 
-      // timeline insert is allowed for anon (with case_code lookup not required for write)
-      // We don't have the row id back, so insert timeline using a follow-up RPC-less approach:
-      // Use case_code -> id via a public function would be ideal; for now skip timeline on anon save.
-      // Admins create timeline entries when updating status.
-
       intake.patch({ caseCode: code, signatureStaff: sigStaff, signatureStaffName: staffName, signatureClient: sigClient || '' });
-      toast.success('บันทึกเคสสำเร็จ');
+      toast.success(audioPaths.length
+        ? `บันทึกเคสและไฟล์เสียง ${audioPaths.length} ไฟล์สำเร็จ`
+        : 'บันทึกเคสสำเร็จ');
       onNext();
     } catch (e: any) {
       console.error(e);
