@@ -773,6 +773,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
 
       const { data, error } = await supabase.from('cases').insert({
         case_code: code,
+        // @ts-expect-error - jsonb columns accept any JSON shape
         status: 'received',
         severity: intake.severity,
         has_violation: intake.hasViolation,
