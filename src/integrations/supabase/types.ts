@@ -14,16 +14,152 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      case_timeline: {
+        Row: {
+          case_id: string
+          created_at: string
+          id: string
+          note: string | null
+          status: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          status: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_timeline_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cases: {
+        Row: {
+          ai_result: Json | null
+          answers: Json | null
+          case_code: string
+          created_at: string
+          extra_facts: string | null
+          has_violation: boolean | null
+          id: string
+          profile: Json | null
+          referral_note: string | null
+          referrals: Json | null
+          reporter: Json | null
+          severity: string | null
+          signature_client: string | null
+          signature_staff: string | null
+          signature_staff_name: string | null
+          signed_at: string | null
+          special_tests: Json | null
+          staff_observations: Json | null
+          status: string
+          updated_at: string
+          victim: Json | null
+          violation_details: Json | null
+          violation_types: Json | null
+        }
+        Insert: {
+          ai_result?: Json | null
+          answers?: Json | null
+          case_code: string
+          created_at?: string
+          extra_facts?: string | null
+          has_violation?: boolean | null
+          id?: string
+          profile?: Json | null
+          referral_note?: string | null
+          referrals?: Json | null
+          reporter?: Json | null
+          severity?: string | null
+          signature_client?: string | null
+          signature_staff?: string | null
+          signature_staff_name?: string | null
+          signed_at?: string | null
+          special_tests?: Json | null
+          staff_observations?: Json | null
+          status?: string
+          updated_at?: string
+          victim?: Json | null
+          violation_details?: Json | null
+          violation_types?: Json | null
+        }
+        Update: {
+          ai_result?: Json | null
+          answers?: Json | null
+          case_code?: string
+          created_at?: string
+          extra_facts?: string | null
+          has_violation?: boolean | null
+          id?: string
+          profile?: Json | null
+          referral_note?: string | null
+          referrals?: Json | null
+          reporter?: Json | null
+          severity?: string | null
+          signature_client?: string | null
+          signature_staff?: string | null
+          signature_staff_name?: string | null
+          signed_at?: string | null
+          special_tests?: Json | null
+          staff_observations?: Json | null
+          status?: string
+          updated_at?: string
+          victim?: Json | null
+          violation_details?: Json | null
+          violation_types?: Json | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +286,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "staff"],
+    },
   },
 } as const
