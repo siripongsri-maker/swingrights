@@ -325,7 +325,8 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   useEffect(() => {
     setTranscript(answers[qIndex]?.transcript || '');
     setObs(staffObs[qIndex] || '');
-    setAudioUrl(null);
+    const existing = audioBlobs[qIndex];
+    setAudioUrl(existing ? URL.createObjectURL(existing) : null);
     setElapsed(0);
   }, [qIndex]);
 
