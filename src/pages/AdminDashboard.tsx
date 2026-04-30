@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/screening/StatusBadge';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
-import { CaseStatus, STATUS_LABEL } from '@/lib/screening';
-import { Loader2, LogOut, Plus, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { CaseStatus, STATUS_LABEL, BRANCHES } from '@/lib/screening';
+import { Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CaseRow {
@@ -66,24 +67,41 @@ export default function AdminDashboard() {
     setCases((data ?? []) as any);
   };
 
+  const [branchFilter, setBranchFilter] = useState<string>('all');
+
+  const branchOptions = useMemo(() => {
+    const set = new Set<string>(BRANCHES);
+    cases.forEach((c) => c.profile?.branch && set.add(c.profile.branch));
+    return ['all', ...Array.from(set)];
+  }, [cases]);
+
+  const overviewCases = useMemo(
+    () => (branchFilter === 'all' ? cases : cases.filter((c) => c.profile?.branch === branchFilter)),
+    [cases, branchFilter]
+  );
+
   const stats = useMemo(() => {
-    const total = cases.length;
-    const violence = cases.filter((c) => c.has_violation).length;
-    const high = cases.filter((c) => c.ai_result?.riskLevel === 'high' || c.severity === 'red').length;
-    const referred = cases.filter((c) => Array.isArray(c.referrals) && c.referrals.length > 0).length;
+    const src = overviewCases;
+    const total = src.length;
+    const violence = src.filter((c) => c.has_violation).length;
+    const high = src.filter((c) => c.ai_result?.riskLevel === 'high' || c.severity === 'red').length;
+    const referred = src.filter((c) => Array.isArray(c.referrals) && c.referrals.length > 0).length;
     const byStatus: Record<CaseStatus, number> = { received: 0, inprogress: 0, completed: 0, cancelled: 0 };
     const byVtype: Record<string, number> = {};
     const byKp: Record<string, number> = {};
-    cases.forEach((c) => {
+    const byBranch: Record<string, number> = {};
+    src.forEach((c) => {
       byStatus[c.status] = (byStatus[c.status] || 0) + 1;
       (c.ai_result?.violationTags || []).forEach((t: any) => {
         byVtype[t.label] = (byVtype[t.label] || 0) + 1;
       });
       const kp = c.profile?.kp || 'ไม่ระบุ';
       byKp[kp] = (byKp[kp] || 0) + 1;
+      const br = c.profile?.branch || 'ไม่ระบุ';
+      byBranch[br] = (byBranch[br] || 0) + 1;
     });
-    return { total, violence, high, referred, byStatus, byVtype, byKp };
-  }, [cases]);
+    return { total, violence, high, referred, byStatus, byVtype, byKp, byBranch };
+  }, [overviewCases]);
 
   const filtered = filter === 'all' ? cases : cases.filter((c) => c.status === filter);
 
@@ -96,6 +114,123 @@ export default function AdminDashboard() {
   };
 
   const logout = async () => { await supabase.auth.signOut(); navigate('/admin/login'); };
+
+  const exportCSV = () => {
+    const rows = overviewCases;
+    const headers = ['เลขเคส','วันที่','สถานะ','ความรุนแรง','พื้นที่','กลุ่ม','เพศ','อายุ','ผู้รับบริการ','ผู้แจ้ง','พื้นที่เกิดเหตุ','มีการละเมิด','ประเภทการละเมิด','คะแนนความเสี่ยง (AI)','สรุป AI','ส่งต่อ'];
+    const esc = (v: any) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [headers.join(',')];
+    rows.forEach((c) => {
+      lines.push([
+        c.case_code,
+        new Date(c.created_at).toLocaleString('th-TH'),
+        STATUS_LABEL[c.status],
+        c.severity || '',
+        c.profile?.branch || '',
+        c.profile?.kp || '',
+        c.profile?.gender || '',
+        c.profile?.age || '',
+        c.victim?.name || '',
+        c.reporter?.name || '',
+        c.profile?.incidentPlace || '',
+        c.has_violation ? 'ใช่' : 'ไม่',
+        (c.violation_details || []).join(' | '),
+        c.ai_result?.riskScore ?? '',
+        c.ai_result?.summary || '',
+        (c.referrals || []).join(' | '),
+      ].map(esc).join(','));
+    });
+    // Prepend BOM for Excel Thai support
+    const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `swing-cases-${branchFilter === 'all' ? 'all' : branchFilter}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`ส่งออก CSV ${rows.length} เคสแล้ว`);
+  };
+
+  const exportPDF = () => {
+    const rows = overviewCases;
+    const branchTitle = branchFilter === 'all' ? 'ทุกพื้นที่' : branchFilter;
+    const statBlock = (label: string, n: number) => `<div class="stat"><div class="num">${n}</div><div class="lbl">${label}</div></div>`;
+    const barRows = (data: { label: string; value: number }[]) => {
+      const max = Math.max(...data.map((d) => d.value), 1);
+      return data.filter((d) => d.value > 0).map((d) => `
+        <div class="bar-row">
+          <span class="bar-lbl">${d.label}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${(d.value / max) * 100}%"></div></div>
+          <span class="bar-val">${d.value}</span>
+        </div>`).join('');
+    };
+    const tableRows = rows.map((c) => `
+      <tr>
+        <td>${c.case_code}</td>
+        <td>${new Date(c.created_at).toLocaleDateString('th-TH')}</td>
+        <td>${STATUS_LABEL[c.status]}</td>
+        <td>${c.severity || '-'}</td>
+        <td>${c.profile?.branch || '-'}</td>
+        <td>${c.profile?.kp || '-'}</td>
+        <td>${c.victim?.name || '-'}</td>
+        <td>${c.has_violation ? '✓' : '-'}</td>
+        <td>${c.ai_result?.riskScore ?? '-'}</td>
+      </tr>`).join('');
+
+    const html = `<!doctype html><html lang="th"><head><meta charset="utf-8" />
+      <title>SWING Report — ${branchTitle}</title>
+      <style>
+        @page { size: A4; margin: 16mm; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Sarabun','Noto Sans Thai',-apple-system,system-ui,sans-serif; color:#111; margin:0; padding:24px; }
+        h1 { margin:0 0 4px; font-size:22px; color:#5b2bca; }
+        .sub { color:#666; font-size:12px; margin-bottom:18px; }
+        .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px; }
+        .stat { border:1px solid #e5e5e5; border-radius:10px; padding:12px; text-align:center; }
+        .stat .num { font-size:24px; font-weight:600; color:#5b2bca; }
+        .stat .lbl { font-size:11px; color:#666; margin-top:2px; }
+        .section { margin-bottom:18px; }
+        .section h2 { font-size:13px; color:#444; margin:0 0 8px; padding-bottom:4px; border-bottom:1px solid #eee; }
+        .bar-row { display:flex; align-items:center; gap:10px; margin-bottom:5px; font-size:11px; }
+        .bar-lbl { width:140px; }
+        .bar-track { flex:1; height:8px; background:#f0f0f0; border-radius:4px; overflow:hidden; }
+        .bar-fill { height:100%; background:linear-gradient(90deg,#7c3aed,#a78bfa); }
+        .bar-val { width:30px; text-align:right; font-variant-numeric:tabular-nums; }
+        table { width:100%; border-collapse:collapse; font-size:10.5px; }
+        th, td { border:1px solid #e5e5e5; padding:5px 7px; text-align:left; }
+        th { background:#f7f3ff; color:#5b2bca; font-weight:600; }
+        tr:nth-child(even) td { background:#fafafa; }
+        .footer { margin-top:24px; font-size:10px; color:#888; text-align:center; }
+        @media print { body { padding:0; } }
+      </style></head><body>
+      <h1>SWING Foundation — รายงานเคส</h1>
+      <div class="sub">พื้นที่: <strong>${branchTitle}</strong> · วันที่ออกรายงาน ${new Date().toLocaleString('th-TH')}</div>
+      <div class="stats">
+        ${statBlock('เคสทั้งหมด', stats.total)}
+        ${statBlock('มีความรุนแรง', stats.violence)}
+        ${statBlock('ความเสี่ยงสูง', stats.high)}
+        ${statBlock('ส่งต่อแล้ว', stats.referred)}
+      </div>
+      <div class="section"><h2>สถานะเคส</h2>${barRows(Object.entries(stats.byStatus).map(([k, v]) => ({ label: STATUS_LABEL[k as CaseStatus], value: v as number })))}</div>
+      <div class="section"><h2>กลุ่มประชากร (KP)</h2>${barRows(Object.entries(stats.byKp).map(([k, v]) => ({ label: k, value: v as number })))}</div>
+      ${branchFilter === 'all' ? `<div class="section"><h2>แยกตามพื้นที่</h2>${barRows(Object.entries(stats.byBranch).map(([k, v]) => ({ label: k, value: v as number })))}</div>` : ''}
+      <div class="section"><h2>ประเภทการละเมิด (จาก AI)</h2>${barRows(Object.entries(stats.byVtype).map(([k, v]) => ({ label: k, value: v as number }))) || '<p style="font-size:11px;color:#888">ยังไม่มีข้อมูล</p>'}</div>
+      <div class="section"><h2>รายการเคส (${rows.length})</h2>
+        <table><thead><tr><th>เลขเคส</th><th>วันที่</th><th>สถานะ</th><th>ความรุนแรง</th><th>พื้นที่</th><th>กลุ่ม</th><th>ผู้รับบริการ</th><th>ละเมิด</th><th>คะแนน AI</th></tr></thead>
+        <tbody>${tableRows || '<tr><td colspan="9" style="text-align:center;color:#888">ไม่มีข้อมูล</td></tr>'}</tbody></table>
+      </div>
+      <div class="footer">SWING Foundation · Confidential — สำหรับเจ้าหน้าที่ภายในเท่านั้น</div>
+      <script>window.onload = () => { setTimeout(() => window.print(), 300); };</script>
+      </body></html>`;
+
+    const w = window.open('', '_blank');
+    if (!w) { toast.error('กรุณาอนุญาต popup เพื่อพิมพ์ PDF'); return; }
+    w.document.write(html);
+    w.document.close();
+  };
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -133,6 +268,26 @@ export default function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="overview">
+            <div className="bg-card border border-border rounded-xl p-3 mb-4 flex flex-col sm:flex-row gap-3 sm:items-center shadow-card">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <MapPin className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-xs text-muted-foreground shrink-0">พื้นที่:</span>
+                <Select value={branchFilter} onValueChange={setBranchFilter}>
+                  <SelectTrigger className="h-9 max-w-[220px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {branchOptions.map((b) => (
+                      <SelectItem key={b} value={b}>{b === 'all' ? 'ทุกพื้นที่' : b}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-[11px] text-muted-foreground ml-1">{overviewCases.length} เคส</span>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={exportCSV} variant="outline" size="sm" className="h-9"><Download className="w-3.5 h-3.5" /> CSV</Button>
+                <Button onClick={exportPDF} size="sm" className="h-9 bg-gradient-primary"><FileText className="w-3.5 h-3.5" /> PDF</Button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
               <StatCard num={stats.total} label="เคสทั้งหมด" tone="purple" />
               <StatCard num={stats.violence} label="มีความรุนแรง" tone="red" />
@@ -141,6 +296,9 @@ export default function AdminDashboard() {
             </div>
 
             <ChartBlock title="สถานะเคส" data={Object.entries(stats.byStatus).map(([k, v]) => ({ label: STATUS_LABEL[k as CaseStatus], value: v }))} />
+            {branchFilter === 'all' && (
+              <ChartBlock title="แยกตามพื้นที่" data={Object.entries(stats.byBranch).map(([k, v]) => ({ label: k, value: v }))} />
+            )}
             <ChartBlock title="ประเภทการละเมิด (จาก AI)" data={Object.entries(stats.byVtype).map(([k, v]) => ({ label: k, value: v }))} />
             <ChartBlock title="กลุ่มประชากร (KP)" data={Object.entries(stats.byKp).map(([k, v]) => ({ label: k, value: v }))} />
           </TabsContent>
