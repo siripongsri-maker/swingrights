@@ -48,11 +48,17 @@ export default function AdminDashboard() {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) { navigate('/admin/login'); return; }
       const uid = session.session.user.id;
-      const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', uid);
-      const isAdmin = roles?.some((r: any) => r.role === 'admin');
+      let { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', uid);
+      let isAdmin = roles?.some((r: any) => r.role === 'admin');
       if (!isAdmin) {
-        // Auto-grant for demo simplicity
-        await supabase.from('user_roles').insert({ user_id: uid, role: 'admin' } as any);
+        // Try to claim demo admin (works only for admin@swing.demo)
+        await supabase.rpc('claim_demo_admin' as any);
+        const { data: roles2 } = await supabase.from('user_roles').select('role').eq('user_id', uid);
+        isAdmin = roles2?.some((r: any) => r.role === 'admin');
+      }
+      if (!isAdmin) {
+        navigate('/admin/login');
+        return;
       }
       if (cancelled) return;
       setAuthorized(true);
