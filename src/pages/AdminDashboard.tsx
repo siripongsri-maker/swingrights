@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/screening/StatusBadge';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
-import { CaseStatus, STATUS_LABEL } from '@/lib/screening';
-import { Loader2, LogOut, Plus, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { CaseStatus, STATUS_LABEL, BRANCHES } from '@/lib/screening';
+import { Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CaseRow {
