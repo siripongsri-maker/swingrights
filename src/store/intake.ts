@@ -38,6 +38,7 @@ export interface IntakeState {
   signatureClient: string;
   caseCode: string | null;
   caseId: string | null;
+  audioBlobs: (Blob | null)[];
 }
 
 export interface AIResult {
