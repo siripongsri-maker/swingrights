@@ -30,6 +30,7 @@ interface CaseRow {
   has_violation: boolean | null;
   violation_details: any;
   extra_facts: string | null;
+  audio_urls: { qIndex: number; path: string; question: string }[] | null;
 }
 
 export default function AdminDashboard() {
