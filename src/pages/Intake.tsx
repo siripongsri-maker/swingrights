@@ -793,15 +793,19 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         signature_client: sigClient,
         signed_at: new Date().toISOString(),
       };
-      const { data, error } = await (supabase.from('cases') as any).insert(insertPayload).select('id, case_code').single();
+      // NOTE: anon role can INSERT but cannot SELECT (admin-only). So no .select() here.
+      const { error } = await (supabase.from('cases') as any).insert(insertPayload);
+      if (error) {
+        console.error('insert cases error:', error);
+        throw error;
+      }
 
-      if (error) throw error;
+      // timeline insert is allowed for anon (with case_code lookup not required for write)
+      // We don't have the row id back, so insert timeline using a follow-up RPC-less approach:
+      // Use case_code -> id via a public function would be ideal; for now skip timeline on anon save.
+      // Admins create timeline entries when updating status.
 
-      await supabase.from('case_timeline').insert({
-        case_id: data.id, status: 'received', note: `รับเรื่อง โดย ${staffName}`,
-      });
-
-      intake.patch({ caseCode: data.case_code, caseId: data.id, signatureStaff: sigStaff, signatureStaffName: staffName, signatureClient: sigClient || '' });
+      intake.patch({ caseCode: code, signatureStaff: sigStaff, signatureStaffName: staffName, signatureClient: sigClient || '' });
       toast.success('บันทึกเคสสำเร็จ');
       onNext();
     } catch (e: any) {
