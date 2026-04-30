@@ -297,6 +297,9 @@ function CaseDetail({ caseRow, onBack, onUpdateStatus }: { caseRow: CaseRow; onB
                 <p className="text-[10px] uppercase tracking-wider text-primary mb-1">{a.cat}</p>
                 <p className="text-xs text-muted-foreground mb-1">{a.question}</p>
                 <p className="text-sm bg-muted/40 border border-border rounded-md p-2">{a.transcript || '(ไม่มีคำตอบ)'}</p>
+                {audioSigned[i] && (
+                  <audio src={audioSigned[i]} controls className="w-full mt-2 h-9" />
+                )}
                 {caseRow.staff_observations?.[i] && <p className="text-xs text-amber-700 dark:text-amber-300 mt-1.5">หมายเหตุ: {caseRow.staff_observations[i]}</p>}
               </div>
             ))}
