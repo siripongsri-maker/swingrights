@@ -67,24 +67,41 @@ export default function AdminDashboard() {
     setCases((data ?? []) as any);
   };
 
+  const [branchFilter, setBranchFilter] = useState<string>('all');
+
+  const branchOptions = useMemo(() => {
+    const set = new Set<string>(BRANCHES);
+    cases.forEach((c) => c.profile?.branch && set.add(c.profile.branch));
+    return ['all', ...Array.from(set)];
+  }, [cases]);
+
+  const overviewCases = useMemo(
+    () => (branchFilter === 'all' ? cases : cases.filter((c) => c.profile?.branch === branchFilter)),
+    [cases, branchFilter]
+  );
+
   const stats = useMemo(() => {
-    const total = cases.length;
-    const violence = cases.filter((c) => c.has_violation).length;
-    const high = cases.filter((c) => c.ai_result?.riskLevel === 'high' || c.severity === 'red').length;
-    const referred = cases.filter((c) => Array.isArray(c.referrals) && c.referrals.length > 0).length;
+    const src = overviewCases;
+    const total = src.length;
+    const violence = src.filter((c) => c.has_violation).length;
+    const high = src.filter((c) => c.ai_result?.riskLevel === 'high' || c.severity === 'red').length;
+    const referred = src.filter((c) => Array.isArray(c.referrals) && c.referrals.length > 0).length;
     const byStatus: Record<CaseStatus, number> = { received: 0, inprogress: 0, completed: 0, cancelled: 0 };
     const byVtype: Record<string, number> = {};
     const byKp: Record<string, number> = {};
-    cases.forEach((c) => {
+    const byBranch: Record<string, number> = {};
+    src.forEach((c) => {
       byStatus[c.status] = (byStatus[c.status] || 0) + 1;
       (c.ai_result?.violationTags || []).forEach((t: any) => {
         byVtype[t.label] = (byVtype[t.label] || 0) + 1;
       });
       const kp = c.profile?.kp || 'ไม่ระบุ';
       byKp[kp] = (byKp[kp] || 0) + 1;
+      const br = c.profile?.branch || 'ไม่ระบุ';
+      byBranch[br] = (byBranch[br] || 0) + 1;
     });
-    return { total, violence, high, referred, byStatus, byVtype, byKp };
-  }, [cases]);
+    return { total, violence, high, referred, byStatus, byVtype, byKp, byBranch };
+  }, [overviewCases]);
 
   const filtered = filter === 'all' ? cases : cases.filter((c) => c.status === filter);
 
