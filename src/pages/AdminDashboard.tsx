@@ -268,6 +268,26 @@ export default function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="overview">
+            <div className="bg-card border border-border rounded-xl p-3 mb-4 flex flex-col sm:flex-row gap-3 sm:items-center shadow-card">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <MapPin className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-xs text-muted-foreground shrink-0">พื้นที่:</span>
+                <Select value={branchFilter} onValueChange={setBranchFilter}>
+                  <SelectTrigger className="h-9 max-w-[220px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {branchOptions.map((b) => (
+                      <SelectItem key={b} value={b}>{b === 'all' ? 'ทุกพื้นที่' : b}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-[11px] text-muted-foreground ml-1">{overviewCases.length} เคส</span>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={exportCSV} variant="outline" size="sm" className="h-9"><Download className="w-3.5 h-3.5" /> CSV</Button>
+                <Button onClick={exportPDF} size="sm" className="h-9 bg-gradient-primary"><FileText className="w-3.5 h-3.5" /> PDF</Button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
               <StatCard num={stats.total} label="เคสทั้งหมด" tone="purple" />
               <StatCard num={stats.violence} label="มีความรุนแรง" tone="red" />
@@ -276,6 +296,9 @@ export default function AdminDashboard() {
             </div>
 
             <ChartBlock title="สถานะเคส" data={Object.entries(stats.byStatus).map(([k, v]) => ({ label: STATUS_LABEL[k as CaseStatus], value: v }))} />
+            {branchFilter === 'all' && (
+              <ChartBlock title="แยกตามพื้นที่" data={Object.entries(stats.byBranch).map(([k, v]) => ({ label: k, value: v }))} />
+            )}
             <ChartBlock title="ประเภทการละเมิด (จาก AI)" data={Object.entries(stats.byVtype).map(([k, v]) => ({ label: k, value: v }))} />
             <ChartBlock title="กลุ่มประชากร (KP)" data={Object.entries(stats.byKp).map(([k, v]) => ({ label: k, value: v }))} />
           </TabsContent>
