@@ -232,6 +232,23 @@ function ChartBlock({ title, data }: { title: string; data: { label: string; val
 
 function CaseDetail({ caseRow, onBack, onUpdateStatus }: { caseRow: CaseRow; onBack: () => void; onUpdateStatus: (s: CaseStatus, note?: string) => void }) {
   const [note, setNote] = useState('');
+  const [audioSigned, setAudioSigned] = useState<Record<number, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const list = caseRow.audio_urls || [];
+    if (list.length === 0) return;
+    (async () => {
+      const out: Record<number, string> = {};
+      for (const a of list) {
+        const { data } = await supabase.storage.from('case-audio').createSignedUrl(a.path, 3600);
+        if (data?.signedUrl) out[a.qIndex] = data.signedUrl;
+      }
+      if (!cancelled) setAudioSigned(out);
+    })();
+    return () => { cancelled = true; };
+  }, [caseRow.id]);
+
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="bg-gradient-dark text-white">
