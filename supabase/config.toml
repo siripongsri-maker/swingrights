@@ -1,0 +1,8 @@
+# Function configuration - both functions are publicly callable (anonymous intake & public tracker)
+project_id = "miqwpkcfrdqpvtisqzmw"
+
+[functions.analyze-case]
+verify_jwt = false
+
+[functions.track-case]
+verify_jwt = false
