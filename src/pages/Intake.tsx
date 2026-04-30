@@ -347,6 +347,9 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || 'audio/webm' });
         setAudioUrl(URL.createObjectURL(blob));
+        const newBlobs = [...audioBlobs];
+        newBlobs[qIndex] = blob;
+        patch({ audioBlobs: newBlobs });
         stream.getTracks().forEach((t) => t.stop());
       };
       mr.start();
