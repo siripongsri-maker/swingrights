@@ -771,9 +771,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       const sigStaff = staffCanvas.current!.toDataURL('image/png');
       const sigClient = clientEmpty ? null : clientCanvas.current!.toDataURL('image/png');
 
-      const { data, error } = await supabase.from('cases').insert({
+      const insertPayload: any = {
         case_code: code,
-        // @ts-expect-error - jsonb columns accept any JSON shape
         status: 'received',
         severity: intake.severity,
         has_violation: intake.hasViolation,
@@ -793,7 +792,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         signature_staff_name: staffName,
         signature_client: sigClient,
         signed_at: new Date().toISOString(),
-      }).select('id, case_code').single();
+      };
+      const { data, error } = await (supabase.from('cases') as any).insert(insertPayload).select('id, case_code').single();
 
       if (error) throw error;
 
