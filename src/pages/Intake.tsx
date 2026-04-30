@@ -307,11 +307,16 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 4. VOICE Q&A ----------------- */
 function VoiceStep({ onNext }: { onNext: () => void }) {
-  const { qIndex, answers, staffObs, profile, victim, set, patch } = useIntake();
+  const { qIndex, answers, staffObs, profile, set, patch } = useIntake();
   const [recording, setRecording] = useState(false);
   const [transcript, setTranscript] = useState(answers[qIndex]?.transcript || '');
   const [obs, setObs] = useState(staffObs[qIndex] || '');
-  const recTimer = useRef<number | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState(0);
+  const mediaRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const recogRef = useRef<any>(null);
+  const tickRef = useRef<number | null>(null);
 
   const q = QUESTIONS[qIndex];
   const total = QUESTIONS.length;
@@ -320,25 +325,80 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   useEffect(() => {
     setTranscript(answers[qIndex]?.transcript || '');
     setObs(staffObs[qIndex] || '');
+    setAudioUrl(null);
+    setElapsed(0);
   }, [qIndex]);
 
-  const toggleRec = () => {
-    if (recording) {
-      if (recTimer.current) window.clearTimeout(recTimer.current);
-      setRecording(false);
-      const sample = FAKE_TRANSCRIPTS[qIndex] || '';
-      setTranscript(sample);
-      toast.success('แปลงเสียงเป็นข้อความเรียบร้อย (เดโม)');
-    } else {
+  useEffect(() => () => { stopAll(); }, []);
+
+  const stopAll = () => {
+    try { mediaRef.current?.state === 'recording' && mediaRef.current.stop(); } catch {}
+    try { recogRef.current?.stop?.(); } catch {}
+    mediaRef.current?.stream?.getTracks?.().forEach((t) => t.stop());
+    if (tickRef.current) { window.clearInterval(tickRef.current); tickRef.current = null; }
+  };
+
+  const startRec = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      chunksRef.current = [];
+      const mr = new MediaRecorder(stream);
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || 'audio/webm' });
+        setAudioUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      mr.start();
+      mediaRef.current = mr;
       setRecording(true);
-      recTimer.current = window.setTimeout(() => {
-        setRecording(false);
-        const sample = FAKE_TRANSCRIPTS[qIndex] || '';
-        setTranscript(sample);
-        toast.success('แปลงเสียงเป็นข้อความเรียบร้อย (เดโม)');
-      }, 1500);
+      setElapsed(0);
+      tickRef.current = window.setInterval(() => setElapsed((s) => s + 1), 1000);
+
+      // Live transcription via Web Speech API (Chrome/Edge/Safari iOS support varies)
+      const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SR) {
+        const rec = new SR();
+        rec.lang = 'th-TH';
+        rec.continuous = true;
+        rec.interimResults = true;
+        let finalTxt = transcript ? transcript + ' ' : '';
+        rec.onresult = (ev: any) => {
+          let interim = '';
+          for (let i = ev.resultIndex; i < ev.results.length; i++) {
+            const r = ev.results[i];
+            if (r.isFinal) finalTxt += r[0].transcript + ' ';
+            else interim += r[0].transcript;
+          }
+          setTranscript((finalTxt + interim).trim());
+        };
+        rec.onerror = (e: any) => console.warn('Speech recognition error:', e?.error);
+        try { rec.start(); recogRef.current = rec; } catch {}
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error('ไม่สามารถเข้าถึงไมโครโฟน — ' + (e?.message || ''));
     }
   };
+
+  const stopRec = () => {
+    setRecording(false);
+    try { mediaRef.current?.stop(); } catch {}
+    try { recogRef.current?.stop?.(); } catch {}
+    if (tickRef.current) { window.clearInterval(tickRef.current); tickRef.current = null; }
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      // Fallback: use sample text so the flow still works
+      const sample = FAKE_TRANSCRIPTS[qIndex] || '';
+      if (!transcript.trim() && sample) {
+        setTranscript(sample);
+        toast.info('เบราว์เซอร์นี้ยังไม่รองรับการถอดเสียง — ใช้ข้อความตัวอย่าง');
+      }
+    } else {
+      toast.success('บันทึกเสียงและแปลงเป็นข้อความเรียบร้อย');
+    }
+  };
+
+  const toggleRec = () => (recording ? stopRec() : startRec());
 
   const saveAndAdvance = (dir: 1 | -1) => {
     const newAnswers = [...answers];
@@ -358,6 +418,9 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   const tag = (cls: string, text: string) => (
     <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium ${cls}`}>{text}</span>
   );
+
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const ss = String(elapsed % 60).padStart(2, '0');
 
   return (
     <div>
@@ -407,7 +470,12 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         >
           <Mic className="w-7 h-7 text-white" />
         </button>
-        <p className="text-xs text-muted-foreground">{recording ? 'กำลังบันทึกเสียง...' : 'กดปุ่มเพื่อเริ่มบันทึก'}</p>
+        <p className="text-xs text-muted-foreground">
+          {recording ? `กำลังบันทึกเสียง... ${mm}:${ss}` : 'กดปุ่มเพื่อเริ่มบันทึก'}
+        </p>
+        {audioUrl && !recording && (
+          <audio src={audioUrl} controls className="w-full mt-3" />
+        )}
       </div>
 
       <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl p-3 mb-4">
