@@ -76,6 +76,7 @@ const INIT: IntakeState = {
   signatureClient: '',
   caseCode: null,
   caseId: null,
+  audioBlobs: [],
 };
 
 interface Store extends IntakeState {
