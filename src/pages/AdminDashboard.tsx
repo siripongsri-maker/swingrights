@@ -492,6 +492,19 @@ function CaseDetail({ caseRow, onBack, onUpdateStatus }: { caseRow: CaseRow; onB
           {caseRow.referral_note && <p className="text-xs text-muted-foreground">{caseRow.referral_note}</p>}
         </section>
 
+        {photoSigned.length > 0 && (
+          <section className="bg-card border border-border rounded-xl p-5 shadow-card">
+            <p className="text-xs font-medium text-muted-foreground mb-3">รูปภาพประกอบ ({photoSigned.length})</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {photoSigned.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-lg overflow-hidden border border-border hover:opacity-90 transition">
+                  <img src={url} alt={`รูปประกอบ ${i + 1}`} className="w-full h-full object-cover" />
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
           <p className="text-xs font-medium text-muted-foreground mb-3">อัปเดตสถานะ</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
