@@ -156,13 +156,8 @@ function ReporterStep({ onNext }: { onNext: () => void }) {
         <Textarea value={reporter.address} onChange={(e) => update('address', e.target.value)} placeholder="ที่อยู่ปัจจุบัน หรือที่สามารถติดต่อกลับได้" />
       </Field>
 
-      <button
-        type="button"
-        onClick={() => toast.info('สาธิต: ถ่ายภาพยังไม่เปิดใช้งานในเดโม')}
-        className="w-full text-center py-3 rounded-lg border border-dashed border-border bg-muted/40 text-xs text-muted-foreground hover:border-primary hover:bg-primary-soft/40 transition mb-4 flex items-center justify-center gap-2"
-      >
-        <Camera className="w-4 h-4 text-primary" /> ถ่ายภาพ / แนบรูปประกอบ (ถ้ามี)
-      </button>
+      <PhotoUpload />
+
 
       <div className="grid grid-cols-2 gap-2.5">
         <Field label="Email">
