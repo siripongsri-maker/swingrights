@@ -78,6 +78,7 @@ const INIT: IntakeState = {
   caseCode: null,
   caseId: null,
   audioBlobs: [],
+  photos: [],
 };
 
 interface Store extends IntakeState {
