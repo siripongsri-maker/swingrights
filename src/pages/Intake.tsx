@@ -1019,6 +1019,48 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+function DobPicker({ value, onChange }: { value: string; onChange: (iso: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const selected = value ? new Date(value + 'T00:00:00') : undefined;
+  const today = new Date();
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className={cn('w-full h-10 justify-start text-left font-normal', !value && 'text-muted-foreground')}
+        >
+          <CalendarIcon className="w-4 h-4 mr-2 shrink-0" />
+          {selected ? format(selected, 'd MMM yyyy', { locale: th }) : <span>เลือกวันเกิด</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={selected}
+          defaultMonth={selected ?? new Date(today.getFullYear() - 25, today.getMonth())}
+          onSelect={(d) => {
+            if (d) {
+              const iso = format(d, 'yyyy-MM-dd');
+              onChange(iso);
+              setOpen(false);
+            }
+          }}
+          captionLayout="dropdown-buttons"
+          fromYear={1940}
+          toYear={today.getFullYear()}
+          disabled={{ after: today }}
+          locale={th}
+          initialFocus
+          className={cn('p-3 pointer-events-auto')}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-muted/40 border border-border rounded-xl p-3.5 mb-3">
