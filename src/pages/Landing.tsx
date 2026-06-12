@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Mic, Sparkles, Search, ArrowRight, Lock } from 'lucide-react';
+import { ShieldCheck, Mic, Search, ArrowRight, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Landing() {
