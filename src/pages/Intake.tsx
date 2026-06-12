@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Mic, Camera, Copy, AlertTriangle, Sparkles, ArrowRight, Loader2, ShieldCheck, ClipboardList } from 'lucide-react';
+import { Check, Mic, Camera, Copy, AlertTriangle, Sparkles, ArrowRight, Loader2, ShieldCheck, ClipboardList, CalendarIcon, X as XIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { th } from 'date-fns/locale';
 import { PhoneShell, SwingBadge } from '@/components/screening/PhoneShell';
 import { SectionDivider } from '@/components/screening/SectionDivider';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
@@ -8,11 +10,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { useIntake } from '@/store/intake';
 import { BRANCHES, GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, genCaseCode, type Severity } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'referral' | 'signature' | 'confirmed';
@@ -151,13 +156,8 @@ function ReporterStep({ onNext }: { onNext: () => void }) {
         <Textarea value={reporter.address} onChange={(e) => update('address', e.target.value)} placeholder="ที่อยู่ปัจจุบัน หรือที่สามารถติดต่อกลับได้" />
       </Field>
 
-      <button
-        type="button"
-        onClick={() => toast.info('สาธิต: ถ่ายภาพยังไม่เปิดใช้งานในเดโม')}
-        className="w-full text-center py-3 rounded-lg border border-dashed border-border bg-muted/40 text-xs text-muted-foreground hover:border-primary hover:bg-primary-soft/40 transition mb-4 flex items-center justify-center gap-2"
-      >
-        <Camera className="w-4 h-4 text-primary" /> ถ่ายภาพ / แนบรูปประกอบ (ถ้ามี)
-      </button>
+      <PhotoUpload />
+
 
       <div className="grid grid-cols-2 gap-2.5">
         <Field label="Email">
@@ -253,12 +253,16 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
       <div className="grid grid-cols-2 gap-2.5">
         <Field label="วัน/เดือน/ปีเกิด *">
-          <Input type="date" value={profile.dob} onChange={(e) => { updateP('dob', e.target.value); updateP('age', calcAge(e.target.value)); }} />
+          <DobPicker
+            value={profile.dob}
+            onChange={(iso) => { updateP('dob', iso); updateP('age', calcAge(iso)); }}
+          />
         </Field>
         <Field label="อายุ (อัตโนมัติ)">
           <Input readOnly value={profile.age} className="bg-primary-soft text-primary text-center font-medium" placeholder="ปี" />
         </Field>
       </div>
+
 
       <Field label="สัญชาติ">
         <Input value={profile.nationality} onChange={(e) => updateP('nationality', e.target.value)} placeholder="เช่น ไทย, เมียนมา..." />
@@ -860,6 +864,25 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         audioPaths.push({ qIndex: i, path, question: intake.answers[i]?.question || '' });
       }
 
+      // 1b) Upload attached photos (if any)
+      const photoPaths: { path: string; name: string }[] = [];
+      for (let i = 0; i < intake.photos.length; i++) {
+        const ph = intake.photos[i];
+        if (!ph?.blob) continue;
+        const ext = (ph.blob.type.split('/')[1] || 'jpg').split(';')[0];
+        const path = `cases/${code}/photo-${i + 1}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('case-photos')
+          .upload(path, ph.blob, { contentType: ph.blob.type, upsert: false });
+        if (upErr) {
+          console.warn(`photo upload failed for #${i + 1}:`, upErr);
+          continue;
+        }
+        photoPaths.push({ path, name: ph.name });
+      }
+
+
+
       const insertPayload: any = {
         case_code: code,
         status: 'received',
@@ -882,6 +905,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         signature_client: sigClient,
         signed_at: new Date().toISOString(),
         audio_urls: audioPaths,
+        photo_urls: photoPaths,
       };
       // NOTE: anon role can INSERT but cannot SELECT (admin-only). So no .select() here.
       const { error } = await (supabase.from('cases') as any).insert(insertPayload);
@@ -1010,6 +1034,112 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+function DobPicker({ value, onChange }: { value: string; onChange: (iso: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const selected = value ? new Date(value + 'T00:00:00') : undefined;
+  const today = new Date();
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className={cn('w-full h-10 justify-start text-left font-normal', !value && 'text-muted-foreground')}
+        >
+          <CalendarIcon className="w-4 h-4 mr-2 shrink-0" />
+          {selected ? format(selected, 'd MMM yyyy', { locale: th }) : <span>เลือกวันเกิด</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={selected}
+          defaultMonth={selected ?? new Date(today.getFullYear() - 25, today.getMonth())}
+          onSelect={(d) => {
+            if (d) {
+              const iso = format(d, 'yyyy-MM-dd');
+              onChange(iso);
+              setOpen(false);
+            }
+          }}
+          captionLayout="dropdown-buttons"
+          fromYear={1940}
+          toYear={today.getFullYear()}
+          disabled={{ after: today }}
+          locale={th}
+          initialFocus
+          className={cn('p-3 pointer-events-auto')}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function PhotoUpload() {
+  const { photos, set } = useIntake();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+
+  const addFiles = (list: FileList | null) => {
+    if (!list || !list.length) return;
+    const next = [...photos];
+    Array.from(list).forEach((f) => {
+      if (!f.type.startsWith('image/')) return;
+      if (f.size > 15 * 1024 * 1024) {
+        toast.error(`ไฟล์ ${f.name} ใหญ่เกิน 15MB`);
+        return;
+      }
+      next.push({ blob: f, previewUrl: URL.createObjectURL(f), name: f.name });
+    });
+    set('photos', next);
+  };
+
+  const remove = (i: number) => {
+    const target = photos[i];
+    if (target) URL.revokeObjectURL(target.previewUrl);
+    set('photos', photos.filter((_, idx) => idx !== i));
+  };
+
+  return (
+    <div className="mb-4">
+      <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
+        onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
+        onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" onClick={() => cameraRef.current?.click()}
+          className="py-3 rounded-lg border border-dashed border-border bg-muted/40 text-xs text-muted-foreground hover:border-primary hover:bg-primary-soft/40 transition flex items-center justify-center gap-2">
+          <Camera className="w-4 h-4 text-primary" /> ถ่ายภาพ
+        </button>
+        <button type="button" onClick={() => fileRef.current?.click()}
+          className="py-3 rounded-lg border border-dashed border-border bg-muted/40 text-xs text-muted-foreground hover:border-primary hover:bg-primary-soft/40 transition flex items-center justify-center gap-2">
+          <ClipboardList className="w-4 h-4 text-primary" /> แนบรูปภาพ
+        </button>
+      </div>
+
+      {photos.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 mt-2.5">
+          {photos.map((p, i) => (
+            <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
+              <img src={p.previewUrl} alt={p.name} className="w-full h-full object-cover" />
+              <button type="button" onClick={() => remove(i)}
+                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-destructive transition">
+                <XIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {photos.length > 0 && (
+        <p className="text-[11px] text-muted-foreground mt-1.5">แนบรูปแล้ว {photos.length} รูป</p>
+      )}
+    </div>
+  );
+}
+
+
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-muted/40 border border-border rounded-xl p-3.5 mb-3">

@@ -39,6 +39,7 @@ export interface IntakeState {
   caseCode: string | null;
   caseId: string | null;
   audioBlobs: (Blob | null)[];
+  photos: { blob: Blob; previewUrl: string; name: string }[];
 }
 
 export interface AIResult {
@@ -77,6 +78,7 @@ const INIT: IntakeState = {
   caseCode: null,
   caseId: null,
   audioBlobs: [],
+  photos: [],
 };
 
 interface Store extends IntakeState {

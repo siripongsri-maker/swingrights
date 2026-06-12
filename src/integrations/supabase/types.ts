@@ -59,6 +59,7 @@ export type Database = {
           extra_facts: string | null
           has_violation: boolean | null
           id: string
+          photo_urls: Json
           profile: Json | null
           referral_note: string | null
           referrals: Json | null
@@ -85,6 +86,7 @@ export type Database = {
           extra_facts?: string | null
           has_violation?: boolean | null
           id?: string
+          photo_urls?: Json
           profile?: Json | null
           referral_note?: string | null
           referrals?: Json | null
@@ -111,6 +113,7 @@ export type Database = {
           extra_facts?: string | null
           has_violation?: boolean | null
           id?: string
+          photo_urls?: Json
           profile?: Json | null
           referral_note?: string | null
           referrals?: Json | null

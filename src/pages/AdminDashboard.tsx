@@ -32,6 +32,7 @@ interface CaseRow {
   violation_details: any;
   extra_facts: string | null;
   audio_urls: { qIndex: number; path: string; question: string }[] | null;
+  photo_urls: { path: string; name: string }[] | null;
 }
 
 export default function AdminDashboard() {
@@ -397,21 +398,33 @@ function ChartBlock({ title, data }: { title: string; data: { label: string; val
 function CaseDetail({ caseRow, onBack, onUpdateStatus }: { caseRow: CaseRow; onBack: () => void; onUpdateStatus: (s: CaseStatus, note?: string) => void }) {
   const [note, setNote] = useState('');
   const [audioSigned, setAudioSigned] = useState<Record<number, string>>({});
+  const [photoSigned, setPhotoSigned] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     const list = caseRow.audio_urls || [];
-    if (list.length === 0) return;
+    const photos = caseRow.photo_urls || [];
     (async () => {
-      const out: Record<number, string> = {};
-      for (const a of list) {
-        const { data } = await supabase.storage.from('case-audio').createSignedUrl(a.path, 3600);
-        if (data?.signedUrl) out[a.qIndex] = data.signedUrl;
+      if (list.length > 0) {
+        const out: Record<number, string> = {};
+        for (const a of list) {
+          const { data } = await supabase.storage.from('case-audio').createSignedUrl(a.path, 3600);
+          if (data?.signedUrl) out[a.qIndex] = data.signedUrl;
+        }
+        if (!cancelled) setAudioSigned(out);
       }
-      if (!cancelled) setAudioSigned(out);
+      if (photos.length > 0) {
+        const urls: string[] = [];
+        for (const p of photos) {
+          const { data } = await supabase.storage.from('case-photos').createSignedUrl(p.path, 3600);
+          if (data?.signedUrl) urls.push(data.signedUrl);
+        }
+        if (!cancelled) setPhotoSigned(urls);
+      }
     })();
     return () => { cancelled = true; };
   }, [caseRow.id]);
+
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -478,6 +491,19 @@ function CaseDetail({ caseRow, onBack, onUpdateStatus }: { caseRow: CaseRow; onB
           </div>
           {caseRow.referral_note && <p className="text-xs text-muted-foreground">{caseRow.referral_note}</p>}
         </section>
+
+        {photoSigned.length > 0 && (
+          <section className="bg-card border border-border rounded-xl p-5 shadow-card">
+            <p className="text-xs font-medium text-muted-foreground mb-3">รูปภาพประกอบ ({photoSigned.length})</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {photoSigned.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-lg overflow-hidden border border-border hover:opacity-90 transition">
+                  <img src={url} alt={`รูปประกอบ ${i + 1}`} className="w-full h-full object-cover" />
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
           <p className="text-xs font-medium text-muted-foreground mb-3">อัปเดตสถานะ</p>
