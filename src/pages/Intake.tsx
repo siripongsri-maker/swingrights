@@ -258,12 +258,16 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
       <div className="grid grid-cols-2 gap-2.5">
         <Field label="วัน/เดือน/ปีเกิด *">
-          <Input type="date" value={profile.dob} onChange={(e) => { updateP('dob', e.target.value); updateP('age', calcAge(e.target.value)); }} />
+          <DobPicker
+            value={profile.dob}
+            onChange={(iso) => { updateP('dob', iso); updateP('age', calcAge(iso)); }}
+          />
         </Field>
         <Field label="อายุ (อัตโนมัติ)">
           <Input readOnly value={profile.age} className="bg-primary-soft text-primary text-center font-medium" placeholder="ปี" />
         </Field>
       </div>
+
 
       <Field label="สัญชาติ">
         <Input value={profile.nationality} onChange={(e) => updateP('nationality', e.target.value)} placeholder="เช่น ไทย, เมียนมา..." />
