@@ -1056,6 +1056,70 @@ function DobPicker({ value, onChange }: { value: string; onChange: (iso: string)
   );
 }
 
+function PhotoUpload() {
+  const { photos, set } = useIntake();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+
+  const addFiles = (list: FileList | null) => {
+    if (!list || !list.length) return;
+    const next = [...photos];
+    Array.from(list).forEach((f) => {
+      if (!f.type.startsWith('image/')) return;
+      if (f.size > 15 * 1024 * 1024) {
+        toast.error(`ไฟล์ ${f.name} ใหญ่เกิน 15MB`);
+        return;
+      }
+      next.push({ blob: f, previewUrl: URL.createObjectURL(f), name: f.name });
+    });
+    set('photos', next);
+  };
+
+  const remove = (i: number) => {
+    const target = photos[i];
+    if (target) URL.revokeObjectURL(target.previewUrl);
+    set('photos', photos.filter((_, idx) => idx !== i));
+  };
+
+  return (
+    <div className="mb-4">
+      <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
+        onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
+        onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" onClick={() => cameraRef.current?.click()}
+          className="py-3 rounded-lg border border-dashed border-border bg-muted/40 text-xs text-muted-foreground hover:border-primary hover:bg-primary-soft/40 transition flex items-center justify-center gap-2">
+          <Camera className="w-4 h-4 text-primary" /> ถ่ายภาพ
+        </button>
+        <button type="button" onClick={() => fileRef.current?.click()}
+          className="py-3 rounded-lg border border-dashed border-border bg-muted/40 text-xs text-muted-foreground hover:border-primary hover:bg-primary-soft/40 transition flex items-center justify-center gap-2">
+          <ClipboardList className="w-4 h-4 text-primary" /> แนบรูปภาพ
+        </button>
+      </div>
+
+      {photos.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 mt-2.5">
+          {photos.map((p, i) => (
+            <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
+              <img src={p.previewUrl} alt={p.name} className="w-full h-full object-cover" />
+              <button type="button" onClick={() => remove(i)}
+                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-destructive transition">
+                <XIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {photos.length > 0 && (
+        <p className="text-[11px] text-muted-foreground mt-1.5">แนบรูปแล้ว {photos.length} รูป</p>
+      )}
+    </div>
+  );
+}
+
+
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-muted/40 border border-border rounded-xl p-3.5 mb-3">
