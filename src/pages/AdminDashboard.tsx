@@ -398,21 +398,33 @@ function ChartBlock({ title, data }: { title: string; data: { label: string; val
 function CaseDetail({ caseRow, onBack, onUpdateStatus }: { caseRow: CaseRow; onBack: () => void; onUpdateStatus: (s: CaseStatus, note?: string) => void }) {
   const [note, setNote] = useState('');
   const [audioSigned, setAudioSigned] = useState<Record<number, string>>({});
+  const [photoSigned, setPhotoSigned] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     const list = caseRow.audio_urls || [];
-    if (list.length === 0) return;
+    const photos = caseRow.photo_urls || [];
     (async () => {
-      const out: Record<number, string> = {};
-      for (const a of list) {
-        const { data } = await supabase.storage.from('case-audio').createSignedUrl(a.path, 3600);
-        if (data?.signedUrl) out[a.qIndex] = data.signedUrl;
+      if (list.length > 0) {
+        const out: Record<number, string> = {};
+        for (const a of list) {
+          const { data } = await supabase.storage.from('case-audio').createSignedUrl(a.path, 3600);
+          if (data?.signedUrl) out[a.qIndex] = data.signedUrl;
+        }
+        if (!cancelled) setAudioSigned(out);
       }
-      if (!cancelled) setAudioSigned(out);
+      if (photos.length > 0) {
+        const urls: string[] = [];
+        for (const p of photos) {
+          const { data } = await supabase.storage.from('case-photos').createSignedUrl(p.path, 3600);
+          if (data?.signedUrl) urls.push(data.signedUrl);
+        }
+        if (!cancelled) setPhotoSigned(urls);
+      }
     })();
     return () => { cancelled = true; };
   }, [caseRow.id]);
+
 
   return (
     <div className="min-h-screen bg-muted/30">
