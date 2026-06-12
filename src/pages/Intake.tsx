@@ -255,7 +255,7 @@ function VictimStep({ onNext }: { onNext: () => void }) {
         <Field label="วัน/เดือน/ปีเกิด *">
           <DobPicker
             value={profile.dob}
-            onChange={(iso) => { updateP('dob', iso); updateP('age', calcAge(iso)); }}
+            onChange={(iso) => set('profile', { ...profile, dob: iso, age: calcAge(iso) })}
           />
         </Field>
         <Field label="อายุ (อัตโนมัติ)">
