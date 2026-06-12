@@ -39,6 +39,7 @@ export interface IntakeState {
   caseCode: string | null;
   caseId: string | null;
   audioBlobs: (Blob | null)[];
+  photos: { blob: Blob; previewUrl: string; name: string }[];
 }
 
 export interface AIResult {
