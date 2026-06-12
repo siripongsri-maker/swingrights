@@ -42,21 +42,6 @@ export default function Landing() {
           </Link>
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto text-left">
-          {[
-            { icon: Mic, title: 'บันทึกเสียง 9 คำถาม', desc: 'WHO/WHAT/WHEN/WHERE/WHY/HOW' },
-            { icon: Sparkles, title: 'AI วิเคราะห์อัตโนมัติ', desc: 'ความเสี่ยง · สรุป · คำแนะนำ' },
-            { icon: ShieldCheck, title: 'ลงนามและส่งต่อ', desc: 'ติดตามผ่านเลขอ้างอิง' },
-          ].map((f) => (
-            <div key={f.title} className="bg-card border border-border rounded-2xl p-5 shadow-card">
-              <div className="w-10 h-10 rounded-xl bg-primary-soft flex items-center justify-center mb-3">
-                <f.icon className="w-5 h-5 text-primary" />
-              </div>
-              <p className="font-medium mb-1">{f.title}</p>
-              <p className="text-sm text-muted-foreground">{f.desc}</p>
-            </div>
-          ))}
-        </div>
       </main>
     </div>
   );
