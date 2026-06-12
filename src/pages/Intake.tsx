@@ -905,6 +905,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         signature_client: sigClient,
         signed_at: new Date().toISOString(),
         audio_urls: audioPaths,
+        photo_urls: photoPaths,
       };
       // NOTE: anon role can INSERT but cannot SELECT (admin-only). So no .select() here.
       const { error } = await (supabase.from('cases') as any).insert(insertPayload);
