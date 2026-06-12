@@ -864,6 +864,25 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         audioPaths.push({ qIndex: i, path, question: intake.answers[i]?.question || '' });
       }
 
+      // 1b) Upload attached photos (if any)
+      const photoPaths: { path: string; name: string }[] = [];
+      for (let i = 0; i < intake.photos.length; i++) {
+        const ph = intake.photos[i];
+        if (!ph?.blob) continue;
+        const ext = (ph.blob.type.split('/')[1] || 'jpg').split(';')[0];
+        const path = `cases/${code}/photo-${i + 1}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from('case-photos')
+          .upload(path, ph.blob, { contentType: ph.blob.type, upsert: false });
+        if (upErr) {
+          console.warn(`photo upload failed for #${i + 1}:`, upErr);
+          continue;
+        }
+        photoPaths.push({ path, name: ph.name });
+      }
+
+
+
       const insertPayload: any = {
         case_code: code,
         status: 'received',
