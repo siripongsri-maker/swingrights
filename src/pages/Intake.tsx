@@ -939,7 +939,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
     if (!staffName.trim()) return toast.error('กรุณากรอกชื่อเจ้าหน้าที่');
     setSaving(true);
     try {
-      const code = genCaseCode();
+      const draftId = crypto.randomUUID();
       const sigStaff = staffCanvas.current!.toDataURL('image/png');
       const sigClient = clientEmpty ? null : clientCanvas.current!.toDataURL('image/png');
 
@@ -949,7 +949,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         const blob = intake.audioBlobs[i];
         if (!blob) continue;
         const ext = (blob.type.split('/')[1] || 'webm').split(';')[0];
-        const path = `cases/${code}/q${i + 1}-${Date.now()}.${ext}`;
+        const path = `cases/${draftId}/q${i + 1}-${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from('case-audio')
           .upload(path, blob, { contentType: blob.type, upsert: false });
@@ -966,7 +966,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         const ph = intake.photos[i];
         if (!ph?.blob) continue;
         const ext = (ph.blob.type.split('/')[1] || 'jpg').split(';')[0];
-        const path = `cases/${code}/photo-${i + 1}-${Date.now()}.${ext}`;
+        const path = `cases/${draftId}/photo-${i + 1}-${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from('case-photos')
           .upload(path, ph.blob, { contentType: ph.blob.type, upsert: false });
@@ -982,9 +982,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       const screeningResult = summarizeScreening(intake.screening);
       const suicideRisk = screeningResult.suicidalItem > 0;
 
-      const insertPayload: any = {
-        case_code: code,
-        status: 'received',
+      const payload: any = {
+        consent: 'true',
         severity: intake.severity,
         has_violation: intake.hasViolation,
         violation_types: intake.profile.initialViolationTypes,
@@ -1004,22 +1003,20 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         signature_staff: sigStaff,
         signature_staff_name: staffName,
         signature_client: sigClient,
-        signed_at: new Date().toISOString(),
         audio_urls: audioPaths,
         photo_urls: photoPaths,
       };
-      // NOTE: anon role can INSERT but cannot SELECT (admin-only). So no .select() here.
-      const { error } = await (supabase.from('cases') as any).insert(insertPayload);
-      if (error) {
-        console.error('insert cases error:', error);
-        throw error;
-      }
+
+      // Phase 0.4 — the case code is generated and validated server-side (SECURITY DEFINER RPC)
+      const { data: code, error } = await supabase.rpc('submit_case' as any, { _payload: payload });
+      if (error) throw error;
+      if (!code) throw new Error('บันทึกเคสไม่สำเร็จ');
 
       // แจ้งเตือนแบบ de-identified (case_code + สาขา + ระดับ เท่านั้น)
       if (suicideRisk || intake.severity === 'red' || intake.aiResult?.riskLevel === 'high') {
         void supabase.functions.invoke('notify-case', {
           body: {
-            case_code: code,
+            case_code: code as string,
             branch: intake.profile.branch,
             level: suicideRisk ? 'urgent' : intake.severity || intake.aiResult?.riskLevel || 'high',
             kind: suicideRisk ? 'suicide_risk' : 'high_risk',
@@ -1027,7 +1024,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         }).catch((err) => console.warn('notify-case failed', err));
       }
 
-      intake.patch({ caseCode: code, signatureStaff: sigStaff, signatureStaffName: staffName, signatureClient: sigClient || '' });
+      await clearDraft();
+      intake.patch({ caseCode: code as string, signatureStaff: sigStaff, signatureStaffName: staffName, signatureClient: sigClient || '' });
       toast.success(audioPaths.length
         ? `บันทึกเคสและไฟล์เสียง ${audioPaths.length} ไฟล์สำเร็จ`
         : 'บันทึกเคสสำเร็จ');
@@ -1194,32 +1192,37 @@ function PhotoUpload() {
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
-  const addFiles = (list: FileList | null) => {
+  const addFiles = async (list: FileList | null) => {
     if (!list || !list.length) return;
     const next = [...photos];
-    Array.from(list).forEach((f) => {
-      if (!f.type.startsWith('image/')) return;
+    for (const f of Array.from(list)) {
+      if (!f.type.startsWith('image/')) continue;
       if (f.size > 15 * 1024 * 1024) {
         toast.error(`ไฟล์ ${f.name} ใหญ่เกิน 15MB`);
-        return;
+        continue;
       }
-      next.push({ blob: f, previewUrl: URL.createObjectURL(f), name: f.name });
-    });
+      // Phase 0.8 — re-encode to remove EXIF/GPS before the image ever leaves the device
+      const cleaned = await stripImageMetadata(f);
+      next.push({ blob: cleaned.blob, previewUrl: URL.createObjectURL(cleaned.blob), name: cleaned.name });
+    }
     set('photos', next);
+    void savePhotoBlobs(next.map((p) => ({ blob: p.blob, name: p.name })));
   };
 
   const remove = (i: number) => {
     const target = photos[i];
     if (target) URL.revokeObjectURL(target.previewUrl);
-    set('photos', photos.filter((_, idx) => idx !== i));
+    const next = photos.filter((_, idx) => idx !== i);
+    set('photos', next);
+    void savePhotoBlobs(next.map((p) => ({ blob: p.blob, name: p.name })));
   };
 
   return (
     <div className="mb-4">
       <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
-        onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+        onChange={(e) => { void addFiles(e.target.files); e.target.value = ''; }} />
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
-        onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+        onChange={(e) => { void addFiles(e.target.files); e.target.value = ''; }} />
 
       <div className="grid grid-cols-2 gap-2">
         <button type="button" onClick={() => cameraRef.current?.click()}
@@ -1246,7 +1249,7 @@ function PhotoUpload() {
         </div>
       )}
       {photos.length > 0 && (
-        <p className="text-[11px] text-muted-foreground mt-1.5">แนบรูปแล้ว {photos.length} รูป</p>
+        <p className="text-[11px] text-muted-foreground mt-1.5">แนบรูปแล้ว {photos.length} รูป · ระบบลบข้อมูลพิกัด/EXIF ออกอัตโนมัติ</p>
       )}
     </div>
   );
