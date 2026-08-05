@@ -321,8 +321,10 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 4. VOICE Q&A ----------------- */
 function VoiceStep({ onNext }: { onNext: () => void }) {
-  const { qIndex, answers, staffObs, profile, audioBlobs, set, patch } = useIntake();
+  const { qIndex, answers, staffObs, profile, audioBlobs, consent, set, patch } = useIntake();
+  const allowServerStt = consent.cb3;
   const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [transcript, setTranscript] = useState(answers[qIndex]?.transcript || '');
   const [obs, setObs] = useState(staffObs[qIndex] || '');
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
