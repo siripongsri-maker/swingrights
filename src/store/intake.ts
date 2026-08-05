@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Severity } from '@/lib/screening';
+import { emptyScreening, type ScreeningDraft } from '@/components/screening/ScreeningTools';
 
 export interface IntakeState {
   consent: { cb1: boolean; cb2: boolean; cb3: boolean };
@@ -28,6 +29,7 @@ export interface IntakeState {
   violationDetails: string[];
   severity: Severity | null;
   specialTests: string[];
+  screening: ScreeningDraft;
   extraFacts: string;
   aiResult: AIResult | null;
   extraAnswers: Record<string, string>;
@@ -67,6 +69,7 @@ const INIT: IntakeState = {
   violationDetails: [],
   severity: null,
   specialTests: [],
+  screening: emptyScreening(),
   extraFacts: '',
   aiResult: null,
   extraAnswers: {},
