@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { useIntake } from '@/store/intake';
-import { BRANCHES, GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, genCaseCode, type Severity } from '@/lib/screening';
+import { BRANCHES, GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, type Severity } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { QuickExit } from '@/components/screening/QuickExit';
@@ -409,6 +409,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         const newBlobs = [...audioBlobs];
         newBlobs[qIndex] = blob;
         patch({ audioBlobs: newBlobs });
+        void saveAudioBlobs(newBlobs); // Phase 0.5 — survive crash / battery death
         stream.getTracks().forEach((t) => t.stop());
         void serverTranscribe(blob);
       };
@@ -1110,6 +1111,16 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
 function ConfirmedStep({ onReset }: { onReset: () => void }) {
   const { caseCode } = useIntake();
   const navigate = useNavigate();
+  const [qr, setQr] = useState<string>('');
+
+  // Phase 0.4 — QR ให้ผู้รับบริการถ่ายเก็บไว้ แทนการจดเลขอ้างอิง
+  useEffect(() => {
+    if (!caseCode) return;
+    QRCode.toDataURL(`${window.location.origin}/track?code=${caseCode}`, { width: 320, margin: 1 })
+      .then(setQr)
+      .catch(() => setQr(''));
+  }, [caseCode]);
+
   return (
     <div className="text-center">
       <div className="w-14 h-14 bg-success/15 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -1128,6 +1139,12 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
           <Copy className="w-3 h-3" /> คัดลอกเลขอ้างอิง
         </button>
         <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">เก็บเลขนี้ไว้เพื่อติดตามสถานะเคสของคุณในภายหลัง</p>
+        {qr && (
+          <div className="mt-3 flex flex-col items-center gap-1.5">
+            <img src={qr} alt={`QR code สำหรับติดตามเคส ${caseCode}`} className="w-32 h-32 rounded-lg bg-white p-1.5" />
+            <p className="text-[11px] text-muted-foreground">สแกนหรือถ่ายภาพ QR นี้เพื่อติดตามสถานะ</p>
+          </div>
+        )}
       </div>
 
       <Button onClick={() => navigate(`/track?code=${caseCode}`)} className="w-full h-12 rounded-xl bg-gradient-primary mb-2">ติดตามสถานะเคส</Button>
