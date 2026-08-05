@@ -1,6 +1,8 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Severity } from '@/lib/screening';
 import { emptyScreening, type ScreeningDraft } from '@/components/screening/ScreeningTools';
+import { DRAFT_TEXT_KEY, markDraftSaved } from '@/lib/draft';
 
 export interface IntakeState {
   consent: { cb1: boolean; cb2: boolean; cb3: boolean };
@@ -90,9 +92,38 @@ interface Store extends IntakeState {
   reset: () => void;
 }
 
-export const useIntake = create<Store>((set) => ({
-  ...INIT,
-  set: (k, v) => set({ [k]: v } as Partial<IntakeState>),
-  patch: (p) => set(p),
-  reset: () => set(INIT),
-}));
+// Phase 0.5 — text fields autosave to localStorage; binary blobs are kept in IndexedDB (see lib/draft.ts)
+export const useIntake = create<Store>()(
+  persist(
+    (set) => ({
+      ...INIT,
+      set: (k, v) => { markDraftSaved(); return set({ [k]: v } as Partial<IntakeState>); },
+      patch: (p) => { markDraftSaved(); return set(p); },
+      reset: () => set(INIT),
+    }),
+    {
+      name: DRAFT_TEXT_KEY,
+      storage: createJSONStorage(() => localStorage),
+      partialize: (s) => ({
+        consent: s.consent,
+        reporter: s.reporter,
+        victim: s.victim,
+        profile: s.profile,
+        qIndex: s.qIndex,
+        answers: s.answers,
+        staffObs: s.staffObs,
+        hasViolation: s.hasViolation,
+        violationDetails: s.violationDetails,
+        severity: s.severity,
+        specialTests: s.specialTests,
+        screening: s.screening,
+        extraFacts: s.extraFacts,
+        aiResult: s.aiResult,
+        extraAnswers: s.extraAnswers,
+        referrals: s.referrals,
+        referralNote: s.referralNote,
+        signatureStaffName: s.signatureStaffName,
+      }),
+    },
+  ),
+);
