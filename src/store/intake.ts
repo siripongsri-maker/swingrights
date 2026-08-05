@@ -52,7 +52,7 @@ export interface AIResult {
 }
 
 const INIT: IntakeState = {
-  consent: { cb1: false, cb2: false },
+  consent: { cb1: false, cb2: false, cb3: true },
   reporter: { type: 'self', name: '', address: '', email: '', phone: '' },
   victim: { name: '', contact: '' },
   profile: {
