@@ -401,20 +401,42 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
 
   const stopRec = () => {
     setRecording(false);
-    try { mediaRef.current?.stop(); } catch {}
-    try { recogRef.current?.stop?.(); } catch {}
+    try { mediaRef.current?.stop(); } catch { /* noop */ }
+    try { recogRef.current?.stop?.(); } catch { /* noop */ }
     if (tickRef.current) { window.clearInterval(tickRef.current); tickRef.current = null; }
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      // Fallback: use sample text so the flow still works
-      const sample = FAKE_TRANSCRIPTS[qIndex] || '';
-      if (!transcript.trim() && sample) {
-        setTranscript(sample);
-        toast.info('เบราว์เซอร์นี้ยังไม่รองรับการถอดเสียง — ใช้ข้อความตัวอย่าง');
-      }
-    } else {
-      toast.success('บันทึกเสียงและแปลงเป็นข้อความเรียบร้อย');
+    if (!allowServerStt) {
+      toast.info('บันทึกเสียงแล้ว — ไม่ได้ยินยอมให้ถอดความภายนอก กรุณาพิมพ์หรือจดคำตอบ');
     }
   };
+
+  // Hybrid STT: server-side transcription produces the authoritative transcript
+  // (works on iPhone/Safari where the Web Speech API is unavailable).
+  const serverTranscribe = async (blob: Blob) => {
+    if (!allowServerStt || blob.size < 2048) return;
+    setTranscribing(true);
+    try {
+      const form = new FormData();
+      const mime = (blob.type || 'audio/webm').split(';')[0];
+      const ext = mime.includes('mp4') ? 'mp4' : mime.includes('mpeg') ? 'mp3' : mime.includes('wav') ? 'wav' : mime.includes('ogg') ? 'ogg' : 'webm';
+      form.append('file', new File([blob], `recording.${ext}`, { type: mime }));
+      const { data, error } = await supabase.functions.invoke('transcribe-audio', { body: form });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const text = (data?.text || '').trim();
+      if (text) {
+        setTranscript(text);
+        toast.success('ถอดความด้วย AI เรียบร้อย');
+      } else {
+        toast.info('ไม่พบคำพูดในไฟล์เสียง กรุณาพิมพ์คำตอบ');
+      }
+    } catch (e) {
+      console.error('transcribe error', e);
+      toast.error('ถอดความอัตโนมัติไม่สำเร็จ — ใช้ข้อความที่แสดงสดหรือพิมพ์เพิ่มได้');
+    } finally {
+      setTranscribing(false);
+    }
+  };
+
 
   const toggleRec = () => (recording ? stopRec() : startRec());
 
