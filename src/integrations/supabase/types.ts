@@ -329,6 +329,9 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          status: string
+          suspended_at: string | null
+          suspended_by: string | null
           updated_at: string
         }
         Insert: {
@@ -336,6 +339,9 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id: string
+          status?: string
+          suspended_at?: string | null
+          suspended_by?: string | null
           updated_at?: string
         }
         Update: {
@@ -343,6 +349,9 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          status?: string
+          suspended_at?: string | null
+          suspended_by?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -373,6 +382,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_edit_case: {
+        Args: { _case_id: string; _user_id: string }
+        Returns: boolean
+      }
+      can_manage: { Args: { _user_id: string }; Returns: boolean }
       check_rate_limit: {
         Args: {
           _bucket: string
@@ -395,10 +409,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_active_staff: { Args: { _user_id: string }; Returns: boolean }
       log_case_access: {
         Args: { _action: string; _case_id: string; _detail?: string }
         Returns: undefined
       }
+      my_access: { Args: never; Returns: Json }
       submit_case: { Args: { _payload: Json }; Returns: string }
     }
     Enums: {

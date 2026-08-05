@@ -12,3 +12,6 @@ verify_jwt = false
 
 [functions.notify-case]
 verify_jwt = false
+
+[functions.admin-users]
+verify_jwt = true

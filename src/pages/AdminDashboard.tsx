@@ -13,9 +13,11 @@ import { CaseStatus, STATUS_LABEL, BRANCHES } from '@/lib/screening';
 import { q9Level } from '@/lib/screeningTools';
 import { printCaseReport, logExport, AI_DISCLAIMER, type CaseReportData } from '@/lib/caseReport';
 import { useCaseAlerts, type CaseAlert } from '@/hooks/useCaseAlerts';
+import { useAccess, ROLE_LABEL } from '@/hooks/useAccess';
+
 import {
   Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin,
-  Search, ChevronLeft, ChevronRight, UserCheck, CalendarClock, BellRing, ShieldAlert, Check,
+  Search, ChevronLeft, ChevronRight, UserCheck, UserCog, CalendarClock, BellRing, ShieldAlert, Check,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -68,28 +70,15 @@ export default function AdminDashboard() {
   useEffect(() => { const t = setTimeout(() => { setDebounced(search.trim()); setPage(0); }, 350); return () => clearTimeout(t); }, [search]);
   useEffect(() => { setPage(0); }, [status, branch, assignee]);
 
+  const access = useAccess();
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) { navigate('/admin/login'); return; }
-      const id = session.session.user.id;
-      let { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', id);
-      let isAdmin = roles?.some((r: any) => r.role === 'admin');
-      if (!isAdmin) {
-        await supabase.rpc('claim_demo_admin' as any);
-        const { data: roles2 } = await supabase.from('user_roles').select('role').eq('user_id', id);
-        isAdmin = roles2?.some((r: any) => r.role === 'admin');
-      }
-      if (!isAdmin) { navigate('/admin/login'); return; }
-      await supabase.rpc('ensure_staff_profile' as any, { _display_name: null });
-      if (cancelled) return;
-      setUid(id);
-      setAuthorized(true);
-      setChecking(false);
-    })();
-    return () => { cancelled = true; };
-  }, []);
+    if (access.loading) return;
+    if (!access.uid || !access.isStaff) { navigate('/admin/login'); return; }
+    setUid(access.uid);
+    setAuthorized(true);
+    setChecking(false);
+  }, [access.loading, access.uid, access.isStaff]);
+
 
   useCaseAlerts(authorized, () => {
     qc.invalidateQueries({ queryKey: ['alerts'] });
@@ -236,12 +225,23 @@ export default function AdminDashboard() {
             <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center"><ShieldCheck className="w-4 h-4" /></div>
             <div>
               <p className="font-medium">SWING Admin Dashboard</p>
-              <p className="text-[11px] text-white/60">Voice Screening · Rights & Violation Tool</p>
+              <p className="text-[11px] text-white/60">
+                Voice Screening · {access.roles.map((r) => ROLE_LABEL[r]).join(', ') || 'เจ้าหน้าที่'}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={() => navigate('/intake')} size="sm" className="bg-primary hover:bg-primary/90"><Plus className="w-4 h-4" /> เคสใหม่</Button>
+            {access.isAdmin && (
+              <Button onClick={() => navigate('/admin/users')} size="sm" variant="outline"
+                className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+                <UserCog className="w-4 h-4" /> ผู้ใช้
+              </Button>
+            )}
+            {!access.isViewer && (
+              <Button onClick={() => navigate('/intake')} size="sm" className="bg-primary hover:bg-primary/90"><Plus className="w-4 h-4" /> เคสใหม่</Button>
+            )}
             <Button onClick={logout} size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white"><LogOut className="w-4 h-4" /></Button>
+
           </div>
         </div>
       </header>
