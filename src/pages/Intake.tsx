@@ -493,8 +493,14 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       <div className="bg-muted/40 border border-border rounded-2xl p-3.5 mb-3">
         <span className="inline-block bg-accent text-accent-foreground text-[11px] px-2.5 py-1 rounded-full mr-2">{q.cat}</span>
         <span className="inline-block bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full">{q.frame}</span>
-        <p className="text-base font-medium mt-2">{q.main}</p>
-        <p className="text-xs text-muted-foreground mt-1">{q.hint}</p>
+        <div className="flex items-start gap-3 mt-2">
+          <div className="flex-1">
+            <p className="text-base font-medium">{q.main}</p>
+            <p className="text-xs text-muted-foreground mt-1">{q.hint}</p>
+          </div>
+          <SpeakButton text={q.main} className="w-14 h-14" />
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-2">กดปุ่มลำโพงเพื่อให้อ่านคำถามให้ฟัง</p>
       </div>
 
       <div className="bg-muted/40 border border-border rounded-2xl p-4 text-center mb-3">
@@ -506,7 +512,8 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         />
         <button
           onClick={toggleRec}
-          className={`w-16 h-16 rounded-full mx-auto mb-2 flex items-center justify-center transition ${
+          disabled={transcribing}
+          className={`w-16 h-16 rounded-full mx-auto mb-2 flex items-center justify-center transition disabled:opacity-50 ${
             recording ? 'bg-destructive animate-pulse-ring' : 'bg-pink-600 hover:scale-105'
           }`}
           aria-label="record"
@@ -514,12 +521,19 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           <Mic className="w-7 h-7 text-white" />
         </button>
         <p className="text-xs text-muted-foreground">
-          {recording ? `กำลังบันทึกเสียง... ${mm}:${ss}` : 'กดปุ่มเพื่อเริ่มบันทึก'}
+          {recording ? `กำลังบันทึกเสียง... ${mm}:${ss}` : transcribing ? 'กำลังถอดความด้วย AI...' : 'กดปุ่มเพื่อเริ่มบันทึก'}
         </p>
+        {transcribing && <Loader2 className="w-4 h-4 animate-spin mx-auto mt-2 text-muted-foreground" />}
+        {!allowServerStt && (
+          <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-2">
+            ไม่ได้ยินยอมให้ถอดความภายนอก — บันทึกเสียงเก็บไว้ แต่ต้องพิมพ์คำตอบเอง
+          </p>
+        )}
         {audioUrl && !recording && (
           <audio src={audioUrl} controls className="w-full mt-3" />
         )}
       </div>
+
 
       <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl p-3 mb-4">
         <p className="text-[11px] font-medium text-amber-800 dark:text-amber-300 mb-1.5 flex items-center gap-1.5">
