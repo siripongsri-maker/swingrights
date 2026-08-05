@@ -772,7 +772,19 @@ function AIStep({ onNext }: { onNext: () => void }) {
         <AlertTriangle className="w-10 h-10 text-destructive mx-auto mb-3" />
         <p className="text-sm font-medium mb-1">การวิเคราะห์ล้มเหลว</p>
         <p className="text-xs text-muted-foreground mb-4">{error}</p>
-        <Button onClick={() => window.location.reload()} variant="outline">ลองใหม่</Button>
+        <div className="flex flex-col gap-2 max-w-xs mx-auto">
+          <Button onClick={() => window.location.reload()} variant="outline">ลองใหม่</Button>
+          {/* Phase 0.11 — AI ต้องไม่บล็อกการรับเคส: ข้ามได้และให้เจ้าหน้าที่ประเมินเอง */}
+          <Button
+            onClick={() => { intake.set('aiResult', null); onNext(); }}
+            className="bg-gradient-primary rounded-xl"
+          >
+            <SkipForward className="w-4 h-4" /> ข้ามการวิเคราะห์ AI และบันทึกเคสต่อ
+          </Button>
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed max-w-xs mx-auto">
+          เคสจะถูกบันทึกครบถ้วนโดยใช้การประเมินของเจ้าหน้าที่เป็นหลัก
+        </p>
       </div>
     );
   }
@@ -797,6 +809,9 @@ function AIStep({ onNext }: { onNext: () => void }) {
         <div>
           <p className="text-sm font-medium text-primary">ผลการวิเคราะห์โดย AI</p>
           <p className="text-[11px] text-primary/80">เคสใหม่ · {new Date().toLocaleDateString('th-TH')}</p>
+          <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+            ผลนี้เป็นเพียงข้อมูลช่วยตัดสินใจ ไม่ใช่คำวินิจฉัยทางกฎหมายหรือการแพทย์ เจ้าหน้าที่ต้องทบทวนก่อนเสมอ
+          </p>
         </div>
       </div>
 
