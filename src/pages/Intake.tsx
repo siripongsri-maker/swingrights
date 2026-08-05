@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Mic, Camera, Copy, AlertTriangle, Sparkles, ArrowRight, Loader2, ShieldCheck, ClipboardList, CalendarIcon, X as XIcon } from 'lucide-react';
+import { Check, Mic, Camera, Copy, AlertTriangle, Sparkles, ArrowRight, Loader2, ShieldCheck, ClipboardList, CalendarIcon, X as XIcon, RotateCcw, Trash2, SkipForward } from 'lucide-react';
+import QRCode from 'qrcode';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { PhoneShell, SwingBadge } from '@/components/screening/PhoneShell';
@@ -17,9 +18,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { useIntake } from '@/store/intake';
-import { BRANCHES, GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, genCaseCode, type Severity } from '@/lib/screening';
+import { BRANCHES, GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, type Severity } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { QuickExit } from '@/components/screening/QuickExit';
+import { stripImageMetadata } from '@/lib/exif';
+import { clearDraft, readDraftMeta, loadAudioBlobs, loadPhotoBlobs, saveAudioBlobs, savePhotoBlobs } from '@/lib/draft';
 import { toast } from 'sonner';
 
 type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'referral' | 'signature' | 'confirmed';
@@ -29,8 +33,34 @@ export default function Intake() {
   const navigate = useNavigate();
   const intake = useIntake();
   const [step, setStep] = useState<Step>('consent');
+  const [draftAt, setDraftAt] = useState<number | null>(null);
 
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
+
+  // Phase 0.5 — offer to resume an unfinished draft (prevents re-traumatising retelling)
+  useEffect(() => {
+    const meta = readDraftMeta();
+    if (meta?.updatedAt && !intake.caseCode) setDraftAt(meta.updatedAt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const resumeDraft = async () => {
+    const [audio, photos] = await Promise.all([loadAudioBlobs(), loadPhotoBlobs()]);
+    intake.patch({
+      audioBlobs: audio,
+      photos: photos.map((p) => ({ blob: p.blob, name: p.name, previewUrl: URL.createObjectURL(p.blob) })),
+    });
+    setDraftAt(null);
+    toast.success('ทำต่อจากฉบับร่างเดิม');
+  };
+
+  const discardDraft = async () => {
+    await clearDraft();
+    intake.reset();
+    setDraftAt(null);
+    setStep('consent');
+    toast.success('เริ่มบันทึกใหม่');
+  };
 
   const goBack = () => {
     const order: Step[] = ['consent', 'reporter', 'victim', 'voice', 'assess', 'ai', 'referral', 'signature', 'confirmed'];
@@ -41,6 +71,23 @@ export default function Intake() {
 
   return (
     <PhoneShell onBack={step === 'consent' ? undefined : goBack} onClose={() => navigate('/')}>
+      <QuickExit />
+      {draftAt && (
+        <div className="mb-4 rounded-xl border border-primary/30 bg-primary-soft/50 p-3">
+          <p className="text-xs font-medium text-primary mb-1">พบฉบับร่างที่ยังบันทึกไม่เสร็จ</p>
+          <p className="text-[11px] text-muted-foreground mb-2.5">
+            บันทึกไว้เมื่อ {new Date(draftAt).toLocaleString('th-TH')} — ทำต่อได้โดยไม่ต้องเล่าเรื่องซ้ำ
+          </p>
+          <div className="flex gap-2">
+            <Button onClick={resumeDraft} className="flex-1 h-9 rounded-lg bg-gradient-primary text-xs">
+              <RotateCcw className="w-3.5 h-3.5" /> ทำต่อจากเดิม
+            </Button>
+            <Button onClick={discardDraft} variant="outline" className="flex-1 h-9 rounded-lg text-xs">
+              <Trash2 className="w-3.5 h-3.5" /> เริ่มใหม่
+            </Button>
+          </div>
+        </div>
+      )}
       {step === 'consent' && <ConsentStep onNext={() => setStep('reporter')} />}
       {step === 'reporter' && <ReporterStep onNext={() => setStep('victim')} />}
       {step === 'victim' && <VictimStep onNext={() => setStep('voice')} />}
@@ -49,7 +96,7 @@ export default function Intake() {
       {step === 'ai' && <AIStep onNext={() => setStep('referral')} />}
       {step === 'referral' && <ReferralStep onNext={() => setStep('signature')} />}
       {step === 'signature' && <SignatureStep onNext={() => setStep('confirmed')} />}
-      {step === 'confirmed' && <ConfirmedStep onReset={() => { intake.reset(); setStep('consent'); }} />}
+      {step === 'confirmed' && <ConfirmedStep onReset={() => { void clearDraft(); intake.reset(); setStep('consent'); }} />}
     </PhoneShell>
   );
 }
@@ -362,6 +409,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         const newBlobs = [...audioBlobs];
         newBlobs[qIndex] = blob;
         patch({ audioBlobs: newBlobs });
+        void saveAudioBlobs(newBlobs); // Phase 0.5 — survive crash / battery death
         stream.getTracks().forEach((t) => t.stop());
         void serverTranscribe(blob);
       };
@@ -724,7 +772,19 @@ function AIStep({ onNext }: { onNext: () => void }) {
         <AlertTriangle className="w-10 h-10 text-destructive mx-auto mb-3" />
         <p className="text-sm font-medium mb-1">การวิเคราะห์ล้มเหลว</p>
         <p className="text-xs text-muted-foreground mb-4">{error}</p>
-        <Button onClick={() => window.location.reload()} variant="outline">ลองใหม่</Button>
+        <div className="flex flex-col gap-2 max-w-xs mx-auto">
+          <Button onClick={() => window.location.reload()} variant="outline">ลองใหม่</Button>
+          {/* Phase 0.11 — AI ต้องไม่บล็อกการรับเคส: ข้ามได้และให้เจ้าหน้าที่ประเมินเอง */}
+          <Button
+            onClick={() => { intake.set('aiResult', null); onNext(); }}
+            className="bg-gradient-primary rounded-xl"
+          >
+            <SkipForward className="w-4 h-4" /> ข้ามการวิเคราะห์ AI และบันทึกเคสต่อ
+          </Button>
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed max-w-xs mx-auto">
+          เคสจะถูกบันทึกครบถ้วนโดยใช้การประเมินของเจ้าหน้าที่เป็นหลัก
+        </p>
       </div>
     );
   }
@@ -749,6 +809,9 @@ function AIStep({ onNext }: { onNext: () => void }) {
         <div>
           <p className="text-sm font-medium text-primary">ผลการวิเคราะห์โดย AI</p>
           <p className="text-[11px] text-primary/80">เคสใหม่ · {new Date().toLocaleDateString('th-TH')}</p>
+          <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+            ผลนี้เป็นเพียงข้อมูลช่วยตัดสินใจ ไม่ใช่คำวินิจฉัยทางกฎหมายหรือการแพทย์ เจ้าหน้าที่ต้องทบทวนก่อนเสมอ
+          </p>
         </div>
       </div>
 
@@ -892,7 +955,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
     if (!staffName.trim()) return toast.error('กรุณากรอกชื่อเจ้าหน้าที่');
     setSaving(true);
     try {
-      const code = genCaseCode();
+      const draftId = crypto.randomUUID();
       const sigStaff = staffCanvas.current!.toDataURL('image/png');
       const sigClient = clientEmpty ? null : clientCanvas.current!.toDataURL('image/png');
 
@@ -902,7 +965,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         const blob = intake.audioBlobs[i];
         if (!blob) continue;
         const ext = (blob.type.split('/')[1] || 'webm').split(';')[0];
-        const path = `cases/${code}/q${i + 1}-${Date.now()}.${ext}`;
+        const path = `cases/${draftId}/q${i + 1}-${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from('case-audio')
           .upload(path, blob, { contentType: blob.type, upsert: false });
@@ -919,7 +982,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         const ph = intake.photos[i];
         if (!ph?.blob) continue;
         const ext = (ph.blob.type.split('/')[1] || 'jpg').split(';')[0];
-        const path = `cases/${code}/photo-${i + 1}-${Date.now()}.${ext}`;
+        const path = `cases/${draftId}/photo-${i + 1}-${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from('case-photos')
           .upload(path, ph.blob, { contentType: ph.blob.type, upsert: false });
@@ -935,9 +998,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       const screeningResult = summarizeScreening(intake.screening);
       const suicideRisk = screeningResult.suicidalItem > 0;
 
-      const insertPayload: any = {
-        case_code: code,
-        status: 'received',
+      const payload: any = {
+        consent: 'true',
         severity: intake.severity,
         has_violation: intake.hasViolation,
         violation_types: intake.profile.initialViolationTypes,
@@ -957,22 +1019,20 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         signature_staff: sigStaff,
         signature_staff_name: staffName,
         signature_client: sigClient,
-        signed_at: new Date().toISOString(),
         audio_urls: audioPaths,
         photo_urls: photoPaths,
       };
-      // NOTE: anon role can INSERT but cannot SELECT (admin-only). So no .select() here.
-      const { error } = await (supabase.from('cases') as any).insert(insertPayload);
-      if (error) {
-        console.error('insert cases error:', error);
-        throw error;
-      }
+
+      // Phase 0.4 — the case code is generated and validated server-side (SECURITY DEFINER RPC)
+      const { data: code, error } = await supabase.rpc('submit_case' as any, { _payload: payload });
+      if (error) throw error;
+      if (!code) throw new Error('บันทึกเคสไม่สำเร็จ');
 
       // แจ้งเตือนแบบ de-identified (case_code + สาขา + ระดับ เท่านั้น)
       if (suicideRisk || intake.severity === 'red' || intake.aiResult?.riskLevel === 'high') {
         void supabase.functions.invoke('notify-case', {
           body: {
-            case_code: code,
+            case_code: code as string,
             branch: intake.profile.branch,
             level: suicideRisk ? 'urgent' : intake.severity || intake.aiResult?.riskLevel || 'high',
             kind: suicideRisk ? 'suicide_risk' : 'high_risk',
@@ -980,7 +1040,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         }).catch((err) => console.warn('notify-case failed', err));
       }
 
-      intake.patch({ caseCode: code, signatureStaff: sigStaff, signatureStaffName: staffName, signatureClient: sigClient || '' });
+      await clearDraft();
+      intake.patch({ caseCode: code as string, signatureStaff: sigStaff, signatureStaffName: staffName, signatureClient: sigClient || '' });
       toast.success(audioPaths.length
         ? `บันทึกเคสและไฟล์เสียง ${audioPaths.length} ไฟล์สำเร็จ`
         : 'บันทึกเคสสำเร็จ');
@@ -1065,6 +1126,16 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
 function ConfirmedStep({ onReset }: { onReset: () => void }) {
   const { caseCode } = useIntake();
   const navigate = useNavigate();
+  const [qr, setQr] = useState<string>('');
+
+  // Phase 0.4 — QR ให้ผู้รับบริการถ่ายเก็บไว้ แทนการจดเลขอ้างอิง
+  useEffect(() => {
+    if (!caseCode) return;
+    QRCode.toDataURL(`${window.location.origin}/track?code=${caseCode}`, { width: 320, margin: 1 })
+      .then(setQr)
+      .catch(() => setQr(''));
+  }, [caseCode]);
+
   return (
     <div className="text-center">
       <div className="w-14 h-14 bg-success/15 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -1083,6 +1154,12 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
           <Copy className="w-3 h-3" /> คัดลอกเลขอ้างอิง
         </button>
         <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">เก็บเลขนี้ไว้เพื่อติดตามสถานะเคสของคุณในภายหลัง</p>
+        {qr && (
+          <div className="mt-3 flex flex-col items-center gap-1.5">
+            <img src={qr} alt={`QR code สำหรับติดตามเคส ${caseCode}`} className="w-32 h-32 rounded-lg bg-white p-1.5" />
+            <p className="text-[11px] text-muted-foreground">สแกนหรือถ่ายภาพ QR นี้เพื่อติดตามสถานะ</p>
+          </div>
+        )}
       </div>
 
       <Button onClick={() => navigate(`/track?code=${caseCode}`)} className="w-full h-12 rounded-xl bg-gradient-primary mb-2">ติดตามสถานะเคส</Button>
@@ -1147,32 +1224,37 @@ function PhotoUpload() {
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
-  const addFiles = (list: FileList | null) => {
+  const addFiles = async (list: FileList | null) => {
     if (!list || !list.length) return;
     const next = [...photos];
-    Array.from(list).forEach((f) => {
-      if (!f.type.startsWith('image/')) return;
+    for (const f of Array.from(list)) {
+      if (!f.type.startsWith('image/')) continue;
       if (f.size > 15 * 1024 * 1024) {
         toast.error(`ไฟล์ ${f.name} ใหญ่เกิน 15MB`);
-        return;
+        continue;
       }
-      next.push({ blob: f, previewUrl: URL.createObjectURL(f), name: f.name });
-    });
+      // Phase 0.8 — re-encode to remove EXIF/GPS before the image ever leaves the device
+      const cleaned = await stripImageMetadata(f);
+      next.push({ blob: cleaned.blob, previewUrl: URL.createObjectURL(cleaned.blob), name: cleaned.name });
+    }
     set('photos', next);
+    void savePhotoBlobs(next.map((p) => ({ blob: p.blob, name: p.name })));
   };
 
   const remove = (i: number) => {
     const target = photos[i];
     if (target) URL.revokeObjectURL(target.previewUrl);
-    set('photos', photos.filter((_, idx) => idx !== i));
+    const next = photos.filter((_, idx) => idx !== i);
+    set('photos', next);
+    void savePhotoBlobs(next.map((p) => ({ blob: p.blob, name: p.name })));
   };
 
   return (
     <div className="mb-4">
       <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
-        onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+        onChange={(e) => { void addFiles(e.target.files); e.target.value = ''; }} />
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
-        onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }} />
+        onChange={(e) => { void addFiles(e.target.files); e.target.value = ''; }} />
 
       <div className="grid grid-cols-2 gap-2">
         <button type="button" onClick={() => cameraRef.current?.click()}
@@ -1199,7 +1281,7 @@ function PhotoUpload() {
         </div>
       )}
       {photos.length > 0 && (
-        <p className="text-[11px] text-muted-foreground mt-1.5">แนบรูปแล้ว {photos.length} รูป</p>
+        <p className="text-[11px] text-muted-foreground mt-1.5">แนบรูปแล้ว {photos.length} รูป · ระบบลบข้อมูลพิกัด/EXIF ออกอัตโนมัติ</p>
       )}
     </div>
   );

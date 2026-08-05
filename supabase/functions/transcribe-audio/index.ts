@@ -1,11 +1,7 @@
 // Server-side Thai speech-to-text via Lovable AI Gateway (works on iOS Safari where Web Speech API is unavailable).
 // Privacy: only the raw audio file is forwarded — no identifying case data is sent.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, rateLimit, tooMany } from "../_shared/guard.ts";
 
 const MAX_BYTES = 20 * 1024 * 1024;
 const ALLOWED = ["audio/webm", "audio/mp4", "audio/mpeg", "audio/wav", "audio/x-wav", "audio/ogg", "audio/aac", "video/mp4"];
@@ -17,6 +13,8 @@ const EXT: Record<string, string> = {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
+    if (!(await rateLimit(req, "transcribe-audio", 60, 3600))) return tooMany();
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -43,11 +41,10 @@ serve(async (req) => {
     });
 
     if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      console.error("transcription failed", res.status, body);
+      console.error("transcription failed status", res.status);
       if (res.status === 429) return json({ error: "ผู้ใช้งานหนาแน่น กรุณาลองใหม่ในอีกสักครู่" }, 429);
       if (res.status === 402) return json({ error: "เครดิต AI หมด กรุณาเติมเครดิตใน Workspace" }, 402);
-      return json({ error: "ถอดความไม่สำเร็จ", details: body }, res.status);
+      return json({ error: "ถอดความไม่สำเร็จ" }, res.status);
     }
 
     const data = await res.json();
