@@ -6,6 +6,7 @@ import { th } from 'date-fns/locale';
 import { PhoneShell, SwingBadge } from '@/components/screening/PhoneShell';
 import { SectionDivider } from '@/components/screening/SectionDivider';
 import { SpeakButton } from '@/components/screening/SpeakButton';
+import { ScreeningTools, summarizeScreening } from '@/components/screening/ScreeningTools';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -553,7 +554,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 5. ASSESS ----------------- */
 function AssessStep({ onNext }: { onNext: () => void }) {
-  const { hasViolation, violationDetails, severity, specialTests, extraFacts, set, patch } = useIntake();
+  const { hasViolation, violationDetails, severity, specialTests, extraFacts, screening, set, patch } = useIntake();
 
   const toggleDetail = (label: string) => {
     set('violationDetails', violationDetails.includes(label) ? violationDetails.filter((x) => x !== label) : [...violationDetails, label]);
@@ -643,6 +644,11 @@ function AssessStep({ onNext }: { onNext: () => void }) {
           })}
         </div>
       </Card>
+
+      <Card title="4.1 แบบคัดกรองมาตรฐาน 2Q / 9Q / NRM">
+        <ScreeningTools value={screening} onChange={(v) => set('screening', v)} />
+      </Card>
+
 
       <Card title="5. สอบข้อเท็จจริงเพิ่มเติม / บันทึกการลงพื้นที่">
         <Textarea value={extraFacts} onChange={(e) => set('extraFacts', e.target.value)} placeholder="บันทึกข้อเท็จจริงเพิ่มเติม การลงพื้นที่ พยานหลักฐาน..." />
@@ -926,6 +932,9 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
 
 
 
+      const screeningResult = summarizeScreening(intake.screening);
+      const suicideRisk = screeningResult.suicidalItem > 0;
+
       const insertPayload: any = {
         case_code: code,
         status: 'received',
@@ -934,6 +943,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         violation_types: intake.profile.initialViolationTypes,
         violation_details: intake.violationDetails,
         special_tests: intake.specialTests,
+        screening: screeningResult,
+        suicide_risk: suicideRisk,
         reporter: intake.reporter,
         victim: intake.victim,
         profile: intake.profile,
@@ -955,6 +966,18 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       if (error) {
         console.error('insert cases error:', error);
         throw error;
+      }
+
+      // แจ้งเตือนแบบ de-identified (case_code + สาขา + ระดับ เท่านั้น)
+      if (suicideRisk || intake.severity === 'red' || intake.aiResult?.riskLevel === 'high') {
+        void supabase.functions.invoke('notify-case', {
+          body: {
+            case_code: code,
+            branch: intake.profile.branch,
+            level: suicideRisk ? 'urgent' : intake.severity || intake.aiResult?.riskLevel || 'high',
+            kind: suicideRisk ? 'suicide_risk' : 'high_risk',
+          },
+        }).catch((err) => console.warn('notify-case failed', err));
       }
 
       intake.patch({ caseCode: code, signatureStaff: sigStaff, signatureStaffName: staffName, signatureClient: sigClient || '' });

@@ -14,6 +14,85 @@ export type Database = {
   }
   public: {
     Tables: {
+      case_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          branch: string | null
+          case_code: string
+          case_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          level: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          branch?: string | null
+          case_code: string
+          case_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          level: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          branch?: string | null
+          case_code?: string
+          case_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_alerts_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_exports: {
+        Row: {
+          case_code: string | null
+          case_id: string | null
+          created_at: string
+          exported_by: string
+          format: string
+          id: string
+        }
+        Insert: {
+          case_code?: string | null
+          case_id?: string | null
+          created_at?: string
+          exported_by?: string
+          format: string
+          id?: string
+        }
+        Update: {
+          case_code?: string | null
+          case_id?: string | null
+          created_at?: string
+          exported_by?: string
+          format?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_exports_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_timeline: {
         Row: {
           audio_url: string | null
@@ -52,11 +131,16 @@ export type Database = {
       cases: {
         Row: {
           ai_result: Json | null
+          ai_reviewed: boolean
+          ai_reviewed_at: string | null
+          ai_reviewed_by: string | null
           answers: Json | null
+          assigned_to: string | null
           audio_urls: Json
           case_code: string
           created_at: string
           extra_facts: string | null
+          follow_up_at: string | null
           has_violation: boolean | null
           id: string
           photo_urls: Json
@@ -64,6 +148,7 @@ export type Database = {
           referral_note: string | null
           referrals: Json | null
           reporter: Json | null
+          screening: Json
           severity: string | null
           signature_client: string | null
           signature_staff: string | null
@@ -72,6 +157,7 @@ export type Database = {
           special_tests: Json | null
           staff_observations: Json | null
           status: string
+          suicide_risk: boolean
           updated_at: string
           victim: Json | null
           violation_details: Json | null
@@ -79,11 +165,16 @@ export type Database = {
         }
         Insert: {
           ai_result?: Json | null
+          ai_reviewed?: boolean
+          ai_reviewed_at?: string | null
+          ai_reviewed_by?: string | null
           answers?: Json | null
+          assigned_to?: string | null
           audio_urls?: Json
           case_code: string
           created_at?: string
           extra_facts?: string | null
+          follow_up_at?: string | null
           has_violation?: boolean | null
           id?: string
           photo_urls?: Json
@@ -91,6 +182,7 @@ export type Database = {
           referral_note?: string | null
           referrals?: Json | null
           reporter?: Json | null
+          screening?: Json
           severity?: string | null
           signature_client?: string | null
           signature_staff?: string | null
@@ -99,6 +191,7 @@ export type Database = {
           special_tests?: Json | null
           staff_observations?: Json | null
           status?: string
+          suicide_risk?: boolean
           updated_at?: string
           victim?: Json | null
           violation_details?: Json | null
@@ -106,11 +199,16 @@ export type Database = {
         }
         Update: {
           ai_result?: Json | null
+          ai_reviewed?: boolean
+          ai_reviewed_at?: string | null
+          ai_reviewed_by?: string | null
           answers?: Json | null
+          assigned_to?: string | null
           audio_urls?: Json
           case_code?: string
           created_at?: string
           extra_facts?: string | null
+          follow_up_at?: string | null
           has_violation?: boolean | null
           id?: string
           photo_urls?: Json
@@ -118,6 +216,7 @@ export type Database = {
           referral_note?: string | null
           referrals?: Json | null
           reporter?: Json | null
+          screening?: Json
           severity?: string | null
           signature_client?: string | null
           signature_staff?: string | null
@@ -126,10 +225,35 @@ export type Database = {
           special_tests?: Json | null
           staff_observations?: Json | null
           status?: string
+          suicide_risk?: boolean
           updated_at?: string
           victim?: Json | null
           violation_details?: Json | null
           violation_types?: Json | null
+        }
+        Relationships: []
+      }
+      staff_profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -160,6 +284,11 @@ export type Database = {
     }
     Functions: {
       claim_demo_admin: { Args: never; Returns: boolean }
+      dashboard_stats: { Args: { _branch?: string }; Returns: Json }
+      ensure_staff_profile: {
+        Args: { _display_name?: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
