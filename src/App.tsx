@@ -13,6 +13,7 @@ import AdminUsers from "./pages/AdminUsers";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 import ResetPassword from "./pages/ResetPassword";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/intake" element={<Intake />} />
             <Route path="/track" element={<Track />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

@@ -173,19 +173,19 @@ export default function AdminDashboard() {
   const exportCSV = async () => {
     const { data, error } = await supabase
       .from('cases')
-      .select(sel('case_code, created_at, status, severity, profile, victim, reporter, has_violation, violation_details, ai_result, referrals, suicide_risk, assigned_to'))
+      .select(sel('case_code, created_at, status, severity, profile, victim, has_violation, violation_details, ai_result, referrals, suicide_risk, assigned_to'))
       .order('created_at', { ascending: false })
       .limit(5000);
     if (error) { toast.error('ส่งออกไม่สำเร็จ'); return; }
     const rows = (data ?? []).filter((c: any) => branch === 'all' || c.profile?.branch === branch);
-    const headers = ['เลขเคส','วันที่','สถานะ','ความรุนแรง','พื้นที่','กลุ่ม','เพศ','อายุ','ผู้รับบริการ','ผู้แจ้ง','พื้นที่เกิดเหตุ','มีการละเมิด','ประเภทการละเมิด','เสี่ยงทำร้ายตนเอง','ผู้รับผิดชอบ','คะแนน AI','สรุป AI','ส่งต่อ'];
+    const headers = ['เลขเคส','วันที่','สถานะ','ความรุนแรง','พื้นที่','กลุ่ม','เพศ','อายุ','ผู้รับบริการ (ปกปิด)','พื้นที่เกิดเหตุ','มีการละเมิด','ประเภทการละเมิด','เสี่ยงทำร้ายตนเอง','ผู้รับผิดชอบ','คะแนน AI','สรุป AI','ส่งต่อ'];
     const esc = (v: any) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
     const lines = [headers.join(',')];
     rows.forEach((c: any) => {
       lines.push([
         c.case_code, new Date(c.created_at).toLocaleString('th-TH'), STATUS_LABEL[c.status as CaseStatus], c.severity || '',
         c.profile?.branch || '', c.profile?.kp || '', c.profile?.gender || '', c.profile?.age || '',
-        c.victim?.name || '', c.reporter?.name || '', c.profile?.incidentPlace || '',
+        c.victim?.name_masked || '', c.profile?.incidentPlace || '',
         c.has_violation ? 'ใช่' : 'ไม่', (c.violation_details || []).join(' | '),
         c.suicide_risk ? 'ใช่' : '', staffName(c.assigned_to) || '',
         c.ai_result?.riskScore ?? '', c.ai_result?.summary || '', (c.referrals || []).join(' | '),
@@ -360,7 +360,7 @@ export default function AdminDashboard() {
                         {overdue && <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">เลยนัดติดตาม</span>}
                         <span className="ml-auto text-[11px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
                       </div>
-                      <p className="text-sm font-medium truncate">{c.victim?.name || '-'} · {c.profile?.kp || '-'}</p>
+                      <p className="text-sm font-medium truncate">{c.victim?.name_masked || 'ไม่ระบุชื่อ'} · {c.profile?.kp || '-'}</p>
                       <p className="text-xs text-muted-foreground truncate">{c.ai_result?.summary || c.profile?.incidentPlace || '-'}</p>
                       <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
                         <UserCheck className="w-3 h-3" /> {staffName(c.assigned_to) || 'ยังไม่มอบหมาย'}
@@ -461,6 +461,17 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   const [note, setNote] = useState('');
   const [audioSigned, setAudioSigned] = useState<Record<number, string>>({});
   const [photoSigned, setPhotoSigned] = useState<string[]>([]);
+  // PDPA: ข้อมูลระบุตัวตนอยู่คนละตาราง ต้องกดเปิดดูและระบบจะบันทึกประวัติการเข้าดูทุกครั้ง
+  const [pii, setPii] = useState<{ reporter: any; victim: any } | null>(null);
+  const [piiLoading, setPiiLoading] = useState(false);
+
+  const revealPii = async () => {
+    setPiiLoading(true);
+    const { data, error } = await supabase.rpc('get_case_pii' as any, { _case_id: caseId });
+    setPiiLoading(false);
+    if (error) { toast.error('ไม่มีสิทธิ์เข้าถึงข้อมูลส่วนบุคคลของเคสนี้'); return; }
+    setPii(data as any);
+  };
 
   const { data: c, isLoading } = useQuery({
     queryKey: ['case', caseId],
@@ -524,7 +535,14 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Button size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white"
-              onClick={() => printCaseReport({ ...c, assignee_name: staffName(c.assigned_to) } as CaseReportData)}>
+              onClick={async () => {
+                const p = pii ?? (await (async () => {
+                  const { data } = await supabase.rpc('get_case_pii' as any, { _case_id: caseId });
+                  if (data) setPii(data as any);
+                  return data as any;
+                })());
+                printCaseReport({ ...c, reporter: p?.reporter ?? null, victim: p?.victim ?? null, assignee_name: staffName(c.assigned_to) } as CaseReportData);
+              }}>
               <FileText className="w-4 h-4" /> เอกสารส่งต่อ (PDF)
             </Button>
             <StatusBadge value={c.status} /> {c.severity && <SeverityBadge value={c.severity} />}
@@ -604,11 +622,36 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           </div>
         </section>
 
-        <section className="bg-card border border-border rounded-xl p-5 shadow-card grid sm:grid-cols-2 gap-4 text-sm">
-          <div><p className="text-xs text-muted-foreground mb-1">ผู้แจ้ง</p><p>{c.reporter?.name || '-'}</p><p className="text-xs text-muted-foreground">{c.reporter?.phone}</p></div>
-          <div><p className="text-xs text-muted-foreground mb-1">ผู้รับบริการ</p><p>{c.victim?.name || '-'}</p><p className="text-xs text-muted-foreground">{c.profile?.kp} · {c.profile?.gender} · {c.profile?.age}</p></div>
-          <div><p className="text-xs text-muted-foreground mb-1">พื้นที่</p><p>{c.profile?.branch}</p></div>
-          <div><p className="text-xs text-muted-foreground mb-1">พื้นที่เกิดเหตุ</p><p>{c.profile?.incidentPlace || '-'}</p></div>
+        <section className="bg-card border border-border rounded-xl p-5 shadow-card space-y-4 text-sm">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <p className="text-xs font-medium text-muted-foreground">ข้อมูลผู้เกี่ยวข้อง</p>
+            {!pii && (
+              <Button size="sm" variant="outline" className="gap-1.5 text-xs" disabled={piiLoading} onClick={revealPii}>
+                {piiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldAlert className="w-3 h-3" />} เปิดดูข้อมูลส่วนบุคคล
+              </Button>
+            )}
+          </div>
+          {!pii && (
+            <p className="text-xs text-muted-foreground">
+              ชื่อ ที่อยู่ และเบอร์โทรถูกจัดเก็บแยกตาม PDPA · การเปิดดูจะถูกบันทึกไว้ในประวัติการเข้าถึง
+            </p>
+          )}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">ผู้แจ้ง</p>
+              <p>{pii ? (pii.reporter?.name || '-') : '••••••'}</p>
+              <p className="text-xs text-muted-foreground">{pii ? [pii.reporter?.phone, pii.reporter?.email].filter(Boolean).join(' · ') : '••••••'}</p>
+              {pii?.reporter?.address && <p className="text-xs text-muted-foreground">{pii.reporter.address}</p>}
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">ผู้รับบริการ</p>
+              <p>{pii ? (pii.victim?.name || '-') : (c.victim?.name_masked || '••••••')}</p>
+              <p className="text-xs text-muted-foreground">{c.profile?.kp} · {c.profile?.gender} · {c.profile?.age}</p>
+              {pii?.victim?.contact && <p className="text-xs text-muted-foreground">{pii.victim.contact}</p>}
+            </div>
+            <div><p className="text-xs text-muted-foreground mb-1">พื้นที่</p><p>{c.profile?.branch}</p></div>
+            <div><p className="text-xs text-muted-foreground mb-1">พื้นที่เกิดเหตุ</p><p>{c.profile?.incidentPlace || '-'}</p></div>
+          </div>
         </section>
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
