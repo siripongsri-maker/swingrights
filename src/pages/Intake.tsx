@@ -98,22 +98,32 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
       </div>
 
       {[
-        { key: 'cb1', label: 'ฉันเข้าใจและยินยอมให้บันทึกและวิเคราะห์เสียงในการสัมภาษณ์ครั้งนี้' },
-        { key: 'cb2', label: 'ฉันรับทราบว่าสามารถหยุดหรือถอนความยินยอมได้ทุกเมื่อ' },
+        { key: 'cb1', label: 'ฉันเข้าใจและยินยอมให้บันทึกและวิเคราะห์เสียงในการสัมภาษณ์ครั้งนี้', required: true },
+        { key: 'cb2', label: 'ฉันรับทราบว่าสามารถหยุดหรือถอนความยินยอมได้ทุกเมื่อ', required: true },
+        {
+          key: 'cb3',
+          label: 'ยินยอมให้ส่ง “เฉพาะไฟล์เสียง” (ไม่แนบชื่อหรือข้อมูลระบุตัวตน) ไปถอดความด้วยระบบ AI ภายนอก เพื่อให้ได้ข้อความที่แม่นยำ',
+          note: 'ไม่ยินยอมก็ได้ — เจ้าหน้าที่จะพิมพ์หรือจดคำตอบแทน (ยังบันทึกเสียงเก็บไว้ในระบบตามปกติ)',
+          required: false,
+        },
       ].map((c) => (
         <button
           key={c.key}
-          onClick={() => set('consent', { ...consent, [c.key as 'cb1' | 'cb2']: !consent[c.key as 'cb1' | 'cb2'] })}
+          onClick={() => set('consent', { ...consent, [c.key]: !consent[c.key as 'cb1' | 'cb2' | 'cb3'] })}
           className="flex gap-2.5 items-start mb-3 w-full text-left"
         >
           <span className={`w-[18px] h-[18px] mt-0.5 rounded border flex items-center justify-center transition shrink-0 ${
-            consent[c.key as 'cb1' | 'cb2'] ? 'bg-primary border-primary' : 'bg-card border-border'
+            consent[c.key as 'cb1' | 'cb2' | 'cb3'] ? 'bg-primary border-primary' : 'bg-card border-border'
           }`}>
-            {consent[c.key as 'cb1' | 'cb2'] && <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />}
+            {consent[c.key as 'cb1' | 'cb2' | 'cb3'] && <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />}
           </span>
-          <span className="text-sm">{c.label}</span>
+          <span className="text-sm">
+            {c.label}
+            {!c.required && <span className="block text-[11px] text-muted-foreground mt-0.5">{c.note}</span>}
+          </span>
         </button>
       ))}
+
 
       <Button onClick={onNext} disabled={!ready} className="w-full mt-3 h-12 rounded-xl bg-gradient-primary shadow-elegant">
         <Check className="w-4 h-4" /> ยินยอม เริ่มต้นการสัมภาษณ์
