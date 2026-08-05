@@ -74,9 +74,9 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const parsed = await parseBody(req, analyzeCaseSchema);
-    if (parsed.error) return parsed.error;
-    const body = parsed.data as unknown as Payload;
+    const v = await parseBody(req, analyzeCaseSchema);
+    if (v.error) return v.error;
+    const body = v.data as unknown as Payload;
 
     // ---- de-identification ------------------------------------------------
     const deident = (t: string) => {
