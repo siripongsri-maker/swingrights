@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { PhoneShell, SwingBadge } from '@/components/screening/PhoneShell';
 import { SectionDivider } from '@/components/screening/SectionDivider';
+import { SpeakButton } from '@/components/screening/SpeakButton';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
