@@ -12,6 +12,7 @@ export default function Landing() {
           </div>
           <span className="font-medium tracking-wide">SWING · Voice Screening</span>
         </div>
+        <Link to="/privacy" className="text-xs text-muted-foreground hover:text-primary mr-4">นโยบายความเป็นส่วนตัว (PDPA)</Link>
         <Link to="/admin/login" className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1">
           <Lock className="w-3 h-3" /> เจ้าหน้าที่
         </Link>

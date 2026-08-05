@@ -170,7 +170,10 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
       <Button onClick={onNext} disabled={!ready} className="w-full mt-3 h-12 rounded-xl bg-gradient-primary shadow-elegant">
         <Check className="w-4 h-4" /> ยินยอม เริ่มต้นการสัมภาษณ์
       </Button>
-      <Link to="/" className="block text-center text-xs text-muted-foreground mt-3 underline-offset-4 hover:underline">
+      <Link to="/privacy" target="_blank" className="block text-center text-xs text-primary mt-3 underline underline-offset-4">
+        อ่านนโยบายความเป็นส่วนตัว (PDPA) และสิทธิของคุณ
+      </Link>
+      <Link to="/" className="block text-center text-xs text-muted-foreground mt-2 underline-offset-4 hover:underline">
         ยังไม่พร้อม / ไม่ยินยอมในขณะนี้
       </Link>
     </div>
