@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      case_access_log: {
+        Row: {
+          action: string
+          actor: string
+          case_code: string | null
+          case_id: string | null
+          created_at: string
+          detail: string | null
+          id: string
+        }
+        Insert: {
+          action: string
+          actor?: string
+          case_code?: string | null
+          case_id?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor?: string
+          case_code?: string | null
+          case_id?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       case_alerts: {
         Row: {
           acknowledged_at: string | null
@@ -58,6 +88,36 @@ export type Database = {
           },
         ]
       }
+      case_audit: {
+        Row: {
+          action: string
+          actor: string | null
+          case_code: string | null
+          case_id: string | null
+          changed_fields: string[]
+          created_at: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          case_code?: string | null
+          case_id?: string | null
+          changed_fields?: string[]
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          case_code?: string | null
+          case_id?: string | null
+          changed_fields?: string[]
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       case_exports: {
         Row: {
           case_code: string | null
@@ -98,6 +158,7 @@ export type Database = {
           audio_url: string | null
           case_id: string
           created_at: string
+          created_by: string | null
           id: string
           note: string | null
           status: string
@@ -106,6 +167,7 @@ export type Database = {
           audio_url?: string | null
           case_id: string
           created_at?: string
+          created_by?: string | null
           id?: string
           note?: string | null
           status: string
@@ -114,6 +176,7 @@ export type Database = {
           audio_url?: string | null
           case_id?: string
           created_at?: string
+          created_by?: string | null
           id?: string
           note?: string | null
           status?: string
@@ -139,6 +202,8 @@ export type Database = {
           audio_urls: Json
           case_code: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           extra_facts: string | null
           follow_up_at: string | null
           has_violation: boolean | null
@@ -173,6 +238,8 @@ export type Database = {
           audio_urls?: Json
           case_code: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           extra_facts?: string | null
           follow_up_at?: string | null
           has_violation?: boolean | null
@@ -207,6 +274,8 @@ export type Database = {
           audio_urls?: Json
           case_code?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           extra_facts?: string | null
           follow_up_at?: string | null
           has_violation?: boolean | null
@@ -230,6 +299,27 @@ export type Database = {
           victim?: Json | null
           violation_details?: Json | null
           violation_types?: Json | null
+        }
+        Relationships: []
+      }
+      rate_limits: {
+        Row: {
+          bucket: string
+          created_at: string
+          id: number
+          ident: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          id?: number
+          ident: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          id?: number
+          ident?: string
         }
         Relationships: []
       }
@@ -283,12 +373,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      claim_demo_admin: { Args: never; Returns: boolean }
+      check_rate_limit: {
+        Args: {
+          _bucket: string
+          _ident: string
+          _limit: number
+          _window_seconds: number
+        }
+        Returns: boolean
+      }
       dashboard_stats: { Args: { _branch?: string }; Returns: Json }
       ensure_staff_profile: {
         Args: { _display_name?: string }
         Returns: undefined
       }
+      gen_case_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -296,6 +395,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_case_access: {
+        Args: { _action: string; _case_id: string; _detail?: string }
+        Returns: undefined
+      }
+      submit_case: { Args: { _payload: Json }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "staff" | "manager" | "caseworker" | "viewer"
