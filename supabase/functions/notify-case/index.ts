@@ -1,6 +1,7 @@
 // แจ้งเตือนเคสเสี่ยงสูง — ข้อความ de-identified เท่านั้น (case_code + สาขา + ระดับ)
 // ช่องทาง: LINE Messaging API (push) + Resend email สำรอง
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { parseBody, notifyCaseSchema } from "../_shared/schemas.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,13 +18,10 @@ interface Body {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const body = (await req.json()) as Body;
-    const code = (body.case_code || "").trim();
-    if (!/^[A-Z0-9-]{6,32}$/.test(code)) {
-      return new Response(JSON.stringify({ error: "invalid case_code" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const parsed = await parseBody(req, notifyCaseSchema);
+    if (parsed.error) return parsed.error;
+    const body = parsed.data;
+    const code = body.case_code;
     const branch = (body.branch || "ไม่ระบุ").slice(0, 60);
     const level = (body.level || "high").slice(0, 20);
     const urgent = body.kind === "suicide_risk";

@@ -3,6 +3,7 @@
 // Phase 0.3: IP-based rate limiting.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders, rateLimit, tooMany, scrubText, maskName } from "../_shared/guard.ts";
+import { parseBody, analyzeCaseSchema } from "../_shared/schemas.ts";
 
 interface Payload {
   reporter: any;
@@ -73,7 +74,9 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const body = (await req.json()) as Payload;
+    const parsed = await parseBody(req, analyzeCaseSchema);
+    if (parsed.error) return parsed.error;
+    const body = parsed.data as unknown as Payload;
 
     // ---- de-identification ------------------------------------------------
     const deident = (t: string) => {

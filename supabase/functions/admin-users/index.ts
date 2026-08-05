@@ -1,6 +1,7 @@
 // จัดการบัญชีเจ้าหน้าที่ (เชิญ / กำหนดบทบาท / ระงับ-คืนสิทธิ์ / รีเซ็ตรหัสผ่าน)
 // เรียกได้เฉพาะผู้ใช้ที่ล็อกอินและมีบทบาท admin เท่านั้น
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
+import { adminUsersSchema } from "../_shared/schemas.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,8 +35,13 @@ Deno.serve(async (req) => {
   const { data: prof } = await admin.from("staff_profiles").select("status").eq("id", caller.id).maybeSingle();
   if (!isAdmin || (prof?.status ?? "active") !== "active") return json({ error: "forbidden" }, 403);
 
-  let body: Record<string, string> = {};
-  try { body = await req.json(); } catch { /* ignore */ }
+  let raw: unknown = {};
+  try { raw = await req.json(); } catch { /* ignore */ }
+  const parsed = adminUsersSchema.safeParse(raw);
+  if (!parsed.success) {
+    return json({ error: "ข้อมูลที่ส่งมาไม่ถูกต้อง", fields: parsed.error.flatten().fieldErrors }, 400);
+  }
+  const body = parsed.data as Record<string, string>;
   const action = body.action;
 
   try {
