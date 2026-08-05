@@ -153,6 +153,38 @@ export type Database = {
           },
         ]
       }
+      case_pii: {
+        Row: {
+          case_id: string
+          created_at: string
+          reporter: Json | null
+          updated_at: string
+          victim: Json | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          reporter?: Json | null
+          updated_at?: string
+          victim?: Json | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          reporter?: Json | null
+          updated_at?: string
+          victim?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_pii_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_timeline: {
         Row: {
           audio_url: string | null
@@ -402,6 +434,7 @@ export type Database = {
         Returns: undefined
       }
       gen_case_code: { Args: never; Returns: string }
+      get_case_pii: { Args: { _case_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -414,6 +447,7 @@ export type Database = {
         Args: { _action: string; _case_id: string; _detail?: string }
         Returns: undefined
       }
+      mask_name: { Args: { _name: string }; Returns: string }
       my_access: { Args: never; Returns: Json }
       submit_case: { Args: { _payload: Json }; Returns: string }
     }
