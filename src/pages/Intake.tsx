@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Mic, Camera, Copy, AlertTriangle, Sparkles, ArrowRight, Loader2, ShieldCheck, ClipboardList, CalendarIcon, X as XIcon } from 'lucide-react';
+import { Check, Mic, Camera, Copy, AlertTriangle, Sparkles, ArrowRight, Loader2, ShieldCheck, ClipboardList, CalendarIcon, X as XIcon, RotateCcw, Trash2, SkipForward } from 'lucide-react';
+import QRCode from 'qrcode';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { PhoneShell, SwingBadge } from '@/components/screening/PhoneShell';
@@ -20,6 +21,9 @@ import { useIntake } from '@/store/intake';
 import { BRANCHES, GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, genCaseCode, type Severity } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
+import { QuickExit } from '@/components/screening/QuickExit';
+import { stripImageMetadata } from '@/lib/exif';
+import { clearDraft, readDraftMeta, loadAudioBlobs, loadPhotoBlobs, saveAudioBlobs, savePhotoBlobs } from '@/lib/draft';
 import { toast } from 'sonner';
 
 type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'referral' | 'signature' | 'confirmed';
@@ -29,8 +33,34 @@ export default function Intake() {
   const navigate = useNavigate();
   const intake = useIntake();
   const [step, setStep] = useState<Step>('consent');
+  const [draftAt, setDraftAt] = useState<number | null>(null);
 
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
+
+  // Phase 0.5 — offer to resume an unfinished draft (prevents re-traumatising retelling)
+  useEffect(() => {
+    const meta = readDraftMeta();
+    if (meta?.updatedAt && !intake.caseCode) setDraftAt(meta.updatedAt);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const resumeDraft = async () => {
+    const [audio, photos] = await Promise.all([loadAudioBlobs(), loadPhotoBlobs()]);
+    intake.patch({
+      audioBlobs: audio,
+      photos: photos.map((p) => ({ blob: p.blob, name: p.name, previewUrl: URL.createObjectURL(p.blob) })),
+    });
+    setDraftAt(null);
+    toast.success('ทำต่อจากฉบับร่างเดิม');
+  };
+
+  const discardDraft = async () => {
+    await clearDraft();
+    intake.reset();
+    setDraftAt(null);
+    setStep('consent');
+    toast.success('เริ่มบันทึกใหม่');
+  };
 
   const goBack = () => {
     const order: Step[] = ['consent', 'reporter', 'victim', 'voice', 'assess', 'ai', 'referral', 'signature', 'confirmed'];
@@ -41,6 +71,23 @@ export default function Intake() {
 
   return (
     <PhoneShell onBack={step === 'consent' ? undefined : goBack} onClose={() => navigate('/')}>
+      <QuickExit />
+      {draftAt && (
+        <div className="mb-4 rounded-xl border border-primary/30 bg-primary-soft/50 p-3">
+          <p className="text-xs font-medium text-primary mb-1">พบฉบับร่างที่ยังบันทึกไม่เสร็จ</p>
+          <p className="text-[11px] text-muted-foreground mb-2.5">
+            บันทึกไว้เมื่อ {new Date(draftAt).toLocaleString('th-TH')} — ทำต่อได้โดยไม่ต้องเล่าเรื่องซ้ำ
+          </p>
+          <div className="flex gap-2">
+            <Button onClick={resumeDraft} className="flex-1 h-9 rounded-lg bg-gradient-primary text-xs">
+              <RotateCcw className="w-3.5 h-3.5" /> ทำต่อจากเดิม
+            </Button>
+            <Button onClick={discardDraft} variant="outline" className="flex-1 h-9 rounded-lg text-xs">
+              <Trash2 className="w-3.5 h-3.5" /> เริ่มใหม่
+            </Button>
+          </div>
+        </div>
+      )}
       {step === 'consent' && <ConsentStep onNext={() => setStep('reporter')} />}
       {step === 'reporter' && <ReporterStep onNext={() => setStep('victim')} />}
       {step === 'victim' && <VictimStep onNext={() => setStep('voice')} />}
@@ -49,7 +96,7 @@ export default function Intake() {
       {step === 'ai' && <AIStep onNext={() => setStep('referral')} />}
       {step === 'referral' && <ReferralStep onNext={() => setStep('signature')} />}
       {step === 'signature' && <SignatureStep onNext={() => setStep('confirmed')} />}
-      {step === 'confirmed' && <ConfirmedStep onReset={() => { intake.reset(); setStep('consent'); }} />}
+      {step === 'confirmed' && <ConfirmedStep onReset={() => { void clearDraft(); intake.reset(); setStep('consent'); }} />}
     </PhoneShell>
   );
 }
