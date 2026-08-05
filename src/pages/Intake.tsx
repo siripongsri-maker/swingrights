@@ -368,6 +368,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         newBlobs[qIndex] = blob;
         patch({ audioBlobs: newBlobs });
         stream.getTracks().forEach((t) => t.stop());
+        void serverTranscribe(blob);
       };
       mr.start();
       mediaRef.current = mr;
