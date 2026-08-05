@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
 import { PhoneShell, SwingBadge } from '@/components/screening/PhoneShell';
 import { SectionDivider } from '@/components/screening/SectionDivider';
+import { SpeakButton } from '@/components/screening/SpeakButton';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,17 +23,6 @@ import { toast } from 'sonner';
 
 type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'referral' | 'signature' | 'confirmed';
 
-const FAKE_TRANSCRIPTS = [
-  'ถูกลูกค้าทำร้ายร่างกาย เมื่อประมาณเดือนที่แล้วในห้องพัก',
-  'ลูกค้าประจำคนหนึ่ง อายุประมาณ 40 มาที่ห้องพัก',
-  'ตบและลากผมไปกระแทกผนัง ทุบกระเป๋าเงิน',
-  'ใช้กำลังบีบคอ ใช้มือฟาดที่หน้า',
-  'ที่ห้องพักย่านสีลม ซอย 2',
-  'ประมาณวันที่ 15 เมษายน ตอนกลางคืน',
-  'เริ่มจากปฏิเสธที่จะให้บริการเพิ่มเติม จนเขาโกรธและทำร้าย',
-  'คิดว่าเพราะเขาเมาและไม่พอใจที่ปฏิเสธ',
-  'อยากได้คำปรึกษาด้านกฎหมาย และอยากเข้าตรวจสุขภาพจิต',
-];
 
 export default function Intake() {
   const navigate = useNavigate();
@@ -77,7 +67,11 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
     <div>
       <SwingBadge />
       <h1 className="text-2xl font-medium text-foreground leading-tight mt-3 text-balance">ก่อนเริ่มการสัมภาษณ์</h1>
-      <p className="text-sm text-muted-foreground mt-1 mb-5">Before We Begin</p>
+      <div className="flex items-center justify-between gap-3 mt-1 mb-5">
+        <p className="text-sm text-muted-foreground">Before We Begin</p>
+        <SpeakButton text={items.join(' ')} label="ฟังข้อตกลง" />
+      </div>
+
 
       <div className="bg-muted/60 border border-border rounded-2xl p-4 space-y-3 mb-4">
         {items.map((t, i) => (
@@ -98,22 +92,32 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
       </div>
 
       {[
-        { key: 'cb1', label: 'ฉันเข้าใจและยินยอมให้บันทึกและวิเคราะห์เสียงในการสัมภาษณ์ครั้งนี้' },
-        { key: 'cb2', label: 'ฉันรับทราบว่าสามารถหยุดหรือถอนความยินยอมได้ทุกเมื่อ' },
+        { key: 'cb1', label: 'ฉันเข้าใจและยินยอมให้บันทึกและวิเคราะห์เสียงในการสัมภาษณ์ครั้งนี้', required: true },
+        { key: 'cb2', label: 'ฉันรับทราบว่าสามารถหยุดหรือถอนความยินยอมได้ทุกเมื่อ', required: true },
+        {
+          key: 'cb3',
+          label: 'ยินยอมให้ส่ง “เฉพาะไฟล์เสียง” (ไม่แนบชื่อหรือข้อมูลระบุตัวตน) ไปถอดความด้วยระบบ AI ภายนอก เพื่อให้ได้ข้อความที่แม่นยำ',
+          note: 'ไม่ยินยอมก็ได้ — เจ้าหน้าที่จะพิมพ์หรือจดคำตอบแทน (ยังบันทึกเสียงเก็บไว้ในระบบตามปกติ)',
+          required: false,
+        },
       ].map((c) => (
         <button
           key={c.key}
-          onClick={() => set('consent', { ...consent, [c.key as 'cb1' | 'cb2']: !consent[c.key as 'cb1' | 'cb2'] })}
+          onClick={() => set('consent', { ...consent, [c.key]: !consent[c.key as 'cb1' | 'cb2' | 'cb3'] })}
           className="flex gap-2.5 items-start mb-3 w-full text-left"
         >
           <span className={`w-[18px] h-[18px] mt-0.5 rounded border flex items-center justify-center transition shrink-0 ${
-            consent[c.key as 'cb1' | 'cb2'] ? 'bg-primary border-primary' : 'bg-card border-border'
+            consent[c.key as 'cb1' | 'cb2' | 'cb3'] ? 'bg-primary border-primary' : 'bg-card border-border'
           }`}>
-            {consent[c.key as 'cb1' | 'cb2'] && <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />}
+            {consent[c.key as 'cb1' | 'cb2' | 'cb3'] && <Check className="w-3 h-3 text-primary-foreground" strokeWidth={3} />}
           </span>
-          <span className="text-sm">{c.label}</span>
+          <span className="text-sm">
+            {c.label}
+            {!c.required && <span className="block text-[11px] text-muted-foreground mt-0.5">{c.note}</span>}
+          </span>
         </button>
       ))}
+
 
       <Button onClick={onNext} disabled={!ready} className="w-full mt-3 h-12 rounded-xl bg-gradient-primary shadow-elegant">
         <Check className="w-4 h-4" /> ยินยอม เริ่มต้นการสัมภาษณ์
@@ -311,8 +315,10 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 4. VOICE Q&A ----------------- */
 function VoiceStep({ onNext }: { onNext: () => void }) {
-  const { qIndex, answers, staffObs, profile, audioBlobs, set, patch } = useIntake();
+  const { qIndex, answers, staffObs, profile, audioBlobs, consent, set, patch } = useIntake();
+  const allowServerStt = consent.cb3;
   const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [transcript, setTranscript] = useState(answers[qIndex]?.transcript || '');
   const [obs, setObs] = useState(staffObs[qIndex] || '');
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -356,6 +362,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         newBlobs[qIndex] = blob;
         patch({ audioBlobs: newBlobs });
         stream.getTracks().forEach((t) => t.stop());
+        void serverTranscribe(blob);
       };
       mr.start();
       mediaRef.current = mr;
@@ -391,20 +398,42 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
 
   const stopRec = () => {
     setRecording(false);
-    try { mediaRef.current?.stop(); } catch {}
-    try { recogRef.current?.stop?.(); } catch {}
+    try { mediaRef.current?.stop(); } catch { /* noop */ }
+    try { recogRef.current?.stop?.(); } catch { /* noop */ }
     if (tickRef.current) { window.clearInterval(tickRef.current); tickRef.current = null; }
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      // Fallback: use sample text so the flow still works
-      const sample = FAKE_TRANSCRIPTS[qIndex] || '';
-      if (!transcript.trim() && sample) {
-        setTranscript(sample);
-        toast.info('เบราว์เซอร์นี้ยังไม่รองรับการถอดเสียง — ใช้ข้อความตัวอย่าง');
-      }
-    } else {
-      toast.success('บันทึกเสียงและแปลงเป็นข้อความเรียบร้อย');
+    if (!allowServerStt) {
+      toast.info('บันทึกเสียงแล้ว — ไม่ได้ยินยอมให้ถอดความภายนอก กรุณาพิมพ์หรือจดคำตอบ');
     }
   };
+
+  // Hybrid STT: server-side transcription produces the authoritative transcript
+  // (works on iPhone/Safari where the Web Speech API is unavailable).
+  const serverTranscribe = async (blob: Blob) => {
+    if (!allowServerStt || blob.size < 2048) return;
+    setTranscribing(true);
+    try {
+      const form = new FormData();
+      const mime = (blob.type || 'audio/webm').split(';')[0];
+      const ext = mime.includes('mp4') ? 'mp4' : mime.includes('mpeg') ? 'mp3' : mime.includes('wav') ? 'wav' : mime.includes('ogg') ? 'ogg' : 'webm';
+      form.append('file', new File([blob], `recording.${ext}`, { type: mime }));
+      const { data, error } = await supabase.functions.invoke('transcribe-audio', { body: form });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const text = (data?.text || '').trim();
+      if (text) {
+        setTranscript(text);
+        toast.success('ถอดความด้วย AI เรียบร้อย');
+      } else {
+        toast.info('ไม่พบคำพูดในไฟล์เสียง กรุณาพิมพ์คำตอบ');
+      }
+    } catch (e) {
+      console.error('transcribe error', e);
+      toast.error('ถอดความอัตโนมัติไม่สำเร็จ — ใช้ข้อความที่แสดงสดหรือพิมพ์เพิ่มได้');
+    } finally {
+      setTranscribing(false);
+    }
+  };
+
 
   const toggleRec = () => (recording ? stopRec() : startRec());
 
@@ -458,8 +487,14 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       <div className="bg-muted/40 border border-border rounded-2xl p-3.5 mb-3">
         <span className="inline-block bg-accent text-accent-foreground text-[11px] px-2.5 py-1 rounded-full mr-2">{q.cat}</span>
         <span className="inline-block bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full">{q.frame}</span>
-        <p className="text-base font-medium mt-2">{q.main}</p>
-        <p className="text-xs text-muted-foreground mt-1">{q.hint}</p>
+        <div className="flex items-start gap-3 mt-2">
+          <div className="flex-1">
+            <p className="text-base font-medium">{q.main}</p>
+            <p className="text-xs text-muted-foreground mt-1">{q.hint}</p>
+          </div>
+          <SpeakButton text={q.main} className="w-14 h-14" />
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-2">กดปุ่มลำโพงเพื่อให้อ่านคำถามให้ฟัง</p>
       </div>
 
       <div className="bg-muted/40 border border-border rounded-2xl p-4 text-center mb-3">
@@ -471,7 +506,8 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         />
         <button
           onClick={toggleRec}
-          className={`w-16 h-16 rounded-full mx-auto mb-2 flex items-center justify-center transition ${
+          disabled={transcribing}
+          className={`w-16 h-16 rounded-full mx-auto mb-2 flex items-center justify-center transition disabled:opacity-50 ${
             recording ? 'bg-destructive animate-pulse-ring' : 'bg-pink-600 hover:scale-105'
           }`}
           aria-label="record"
@@ -479,12 +515,19 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           <Mic className="w-7 h-7 text-white" />
         </button>
         <p className="text-xs text-muted-foreground">
-          {recording ? `กำลังบันทึกเสียง... ${mm}:${ss}` : 'กดปุ่มเพื่อเริ่มบันทึก'}
+          {recording ? `กำลังบันทึกเสียง... ${mm}:${ss}` : transcribing ? 'กำลังถอดความด้วย AI...' : 'กดปุ่มเพื่อเริ่มบันทึก'}
         </p>
+        {transcribing && <Loader2 className="w-4 h-4 animate-spin mx-auto mt-2 text-muted-foreground" />}
+        {!allowServerStt && (
+          <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-2">
+            ไม่ได้ยินยอมให้ถอดความภายนอก — บันทึกเสียงเก็บไว้ แต่ต้องพิมพ์คำตอบเอง
+          </p>
+        )}
         {audioUrl && !recording && (
           <audio src={audioUrl} controls className="w-full mt-3" />
         )}
       </div>
+
 
       <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl p-3 mb-4">
         <p className="text-[11px] font-medium text-amber-800 dark:text-amber-300 mb-1.5 flex items-center gap-1.5">

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Severity } from '@/lib/screening';
 
 export interface IntakeState {
-  consent: { cb1: boolean; cb2: boolean };
+  consent: { cb1: boolean; cb2: boolean; cb3: boolean };
   reporter: {
     type: 'self' | 'other';
     name: string;
@@ -52,7 +52,7 @@ export interface AIResult {
 }
 
 const INIT: IntakeState = {
-  consent: { cb1: false, cb2: false },
+  consent: { cb1: false, cb2: false, cb3: true },
   reporter: { type: 'self', name: '', address: '', email: '', phone: '' },
   victim: { name: '', contact: '' },
   profile: {
