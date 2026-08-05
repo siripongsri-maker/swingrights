@@ -67,7 +67,11 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
     <div>
       <SwingBadge />
       <h1 className="text-2xl font-medium text-foreground leading-tight mt-3 text-balance">ก่อนเริ่มการสัมภาษณ์</h1>
-      <p className="text-sm text-muted-foreground mt-1 mb-5">Before We Begin</p>
+      <div className="flex items-center justify-between gap-3 mt-1 mb-5">
+        <p className="text-sm text-muted-foreground">Before We Begin</p>
+        <SpeakButton text={items.join(' ')} label="ฟังข้อตกลง" />
+      </div>
+
 
       <div className="bg-muted/60 border border-border rounded-2xl p-4 space-y-3 mb-4">
         {items.map((t, i) => (
