@@ -475,14 +475,16 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
     if (!c) return;
     let cancelled = false;
     (async () => {
+      // Phase 0.6 — audit every access to sensitive media, and keep links short-lived (5 นาที)
+      void supabase.rpc('log_case_access' as any, { _case_id: c.id, _action: 'view_media' });
       const out: Record<number, string> = {};
       for (const a of (c.audio_urls || [])) {
-        const { data } = await supabase.storage.from('case-audio').createSignedUrl(a.path, 3600);
+        const { data } = await supabase.storage.from('case-audio').createSignedUrl(a.path, 300);
         if (data?.signedUrl) out[a.qIndex] = data.signedUrl;
       }
       const urls: string[] = [];
       for (const p of (c.photo_urls || [])) {
-        const { data } = await supabase.storage.from('case-photos').createSignedUrl(p.path, 3600);
+        const { data } = await supabase.storage.from('case-photos').createSignedUrl(p.path, 300);
         if (data?.signedUrl) urls.push(data.signedUrl);
       }
       if (!cancelled) { setAudioSigned(out); setPhotoSigned(urls); }

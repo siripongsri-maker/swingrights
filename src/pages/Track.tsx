@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/screening/StatusBadge';
 import { CaseStatus, STATUS_LABEL } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { QuickExit } from '@/components/screening/QuickExit';
 
 interface Result {
   found: boolean;
@@ -40,6 +41,7 @@ export default function Track() {
 
   return (
     <PhoneShell title="ติดตามเคส" onClose={() => navigate('/')} contained={false}>
+      <QuickExit />
       <div className="px-5 pt-6 pb-4 text-center">
         <span className="inline-block bg-primary-soft text-primary text-[10px] tracking-widest px-3 py-1 rounded-full mb-3">SWING FOUNDATION</span>
         <h1 className="text-xl font-medium">ตรวจสอบสถานะเคส</h1>
