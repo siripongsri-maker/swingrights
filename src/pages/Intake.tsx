@@ -644,6 +644,11 @@ function AssessStep({ onNext }: { onNext: () => void }) {
         </div>
       </Card>
 
+      <Card title="4.1 แบบคัดกรองมาตรฐาน 2Q / 9Q / NRM">
+        <ScreeningTools value={screening} onChange={(v) => set('screening', v)} />
+      </Card>
+
+
       <Card title="5. สอบข้อเท็จจริงเพิ่มเติม / บันทึกการลงพื้นที่">
         <Textarea value={extraFacts} onChange={(e) => set('extraFacts', e.target.value)} placeholder="บันทึกข้อเท็จจริงเพิ่มเติม การลงพื้นที่ พยานหลักฐาน..." />
       </Card>
