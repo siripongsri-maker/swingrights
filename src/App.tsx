@@ -21,6 +21,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <ErrorBoundary>
+    <I18nProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
