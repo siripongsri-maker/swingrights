@@ -218,13 +218,13 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="bg-gradient-dark text-white">
+    <div className="min-h-screen bg-gradient-leaf grain">
+      <header className="bg-gradient-dark text-white sticky top-0 z-30 shadow-elegant">
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center"><ShieldCheck className="w-4 h-4" /></div>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-white/10 rounded-2xl flex items-center justify-center"><ShieldCheck className="w-4 h-4" /></div>
             <div>
-              <p className="font-medium">SWING Admin Dashboard</p>
+              <p className="font-display font-medium">SWING Admin Dashboard</p>
               <p className="text-[11px] text-white/60">
                 Voice Screening · {access.roles.map((r) => ROLE_LABEL[r]).join(', ') || 'เจ้าหน้าที่'}
               </p>
