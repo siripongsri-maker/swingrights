@@ -4,7 +4,7 @@ import { PhoneShell } from '@/components/screening/PhoneShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/screening/StatusBadge';
-import { CaseStatus, STATUS_LABEL } from '@/lib/screening';
+import { CaseStatus } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { QuickExit } from '@/components/screening/QuickExit';
