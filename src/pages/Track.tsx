@@ -8,6 +8,8 @@ import { CaseStatus, STATUS_LABEL } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { QuickExit } from '@/components/screening/QuickExit';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { useI18n } from '@/i18n';
 
 interface Result {
   found: boolean;
@@ -18,6 +20,8 @@ interface Result {
 const STATUS_ORDER: CaseStatus[] = ['received', 'inprogress', 'completed'];
 
 export default function Track() {
+  const { t, lang } = useI18n();
+  const locale = lang === 'th' ? 'th-TH' : 'en-US';
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [code, setCode] = useState(params.get('code') || '');
@@ -40,12 +44,13 @@ export default function Track() {
   useEffect(() => { if (code) search(code); /* eslint-disable-line */ }, []);
 
   return (
-    <PhoneShell title="ติดตามเคส" onClose={() => navigate('/')} contained={false}>
+    <PhoneShell title={t('track.header')} onClose={() => navigate('/')} contained={false}>
       <QuickExit />
+      <div className="flex justify-center pt-4"><LanguageToggle /></div>
       <div className="px-5 pt-6 pb-4 text-center">
         <span className="inline-block bg-primary-soft text-primary text-[10px] tracking-widest px-3 py-1 rounded-full mb-3">SWING FOUNDATION</span>
-        <h1 className="text-xl font-medium">ตรวจสอบสถานะเคส</h1>
-        <p className="text-sm text-muted-foreground mt-1">กรอกเลขอ้างอิงที่ได้รับ</p>
+        <h1 className="text-xl font-medium">{t('track.title')}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t('track.subtitle')}</p>
       </div>
       <div className="px-4 pb-4">
         <Input
@@ -57,7 +62,7 @@ export default function Track() {
           className="h-12 text-center font-mono tracking-widest text-base"
         />
         <Button onClick={() => search(code)} disabled={loading} className="w-full mt-3 h-11 rounded-xl bg-gradient-primary">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'ค้นหา'}
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.search')}
         </Button>
       </div>
 
@@ -65,7 +70,7 @@ export default function Track() {
         <div className="px-4 pb-6">
           {!result.found ? (
             <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 text-center text-sm text-destructive">
-              ไม่พบเคสที่มีเลขอ้างอิงนี้
+              {t('track.notfound')}
             </div>
           ) : (
             <div className="bg-muted/40 border border-border rounded-xl p-4 animate-fade-in">
@@ -73,8 +78,8 @@ export default function Track() {
                 <span className="font-mono text-xs bg-foreground/90 text-background px-2 py-1 rounded">{result.case!.case_code}</span>
                 <StatusBadge value={result.case!.status} />
               </div>
-              <p className="text-xs text-muted-foreground mb-1">พื้นที่: {result.case!.branch || '-'}</p>
-              <p className="text-xs text-muted-foreground mb-4">บันทึกเมื่อ: {new Date(result.case!.created_at).toLocaleString('th-TH')}</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('track.area')}: {result.case!.branch || '-'}</p>
+              <p className="text-xs text-muted-foreground mb-4">{t('track.savedAt')}: {new Date(result.case!.created_at).toLocaleString(locale)}</p>
 
               <div className="space-y-3">
                 {STATUS_ORDER.map((s, i) => {
@@ -88,10 +93,10 @@ export default function Track() {
                         {i < STATUS_ORDER.length - 1 && <span className={`flex-1 w-0.5 my-1 ${reached && !isCancelled ? 'bg-primary' : 'bg-border'}`} />}
                       </div>
                       <div className="flex-1 pb-3">
-                        <p className={`text-sm font-medium ${reached && !isCancelled ? 'text-foreground' : 'text-muted-foreground'}`}>{STATUS_LABEL[s]}</p>
+                        <p className={`text-sm font-medium ${reached && !isCancelled ? 'text-foreground' : 'text-muted-foreground'}`}>{t(`status.${s}`)}</p>
                         {event && (
                           <>
-                            <p className="text-[11px] text-muted-foreground">{new Date(event.created_at).toLocaleString('th-TH')}</p>
+                            <p className="text-[11px] text-muted-foreground">{new Date(event.created_at).toLocaleString(locale)}</p>
                             {event.note && <p className="text-xs text-muted-foreground mt-1 bg-card border border-border rounded-md px-2 py-1.5">{event.note}</p>}
                           </>
                         )}
@@ -100,7 +105,7 @@ export default function Track() {
                   );
                 })}
                 {result.case!.status === 'cancelled' && (
-                  <div className="bg-destructive/10 border border-destructive/30 rounded-md p-2 text-xs text-destructive">เคสถูกยกเลิก</div>
+                  <div className="bg-destructive/10 border border-destructive/30 rounded-md p-2 text-xs text-destructive">{t('track.cancelled')}</div>
                 )}
               </div>
             </div>

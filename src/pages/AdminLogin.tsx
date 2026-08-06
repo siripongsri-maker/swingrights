@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { useI18n } from '@/i18n';
 
 export default function AdminLogin() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +20,7 @@ export default function AdminLogin() {
   const [otp, setOtp] = useState('');
 
   const finish = () => {
-    toast.success('เข้าสู่ระบบสำเร็จ');
+    toast.success(t('login.success'));
     navigate('/admin');
   };
 
@@ -32,21 +35,21 @@ export default function AdminLogin() {
   };
 
   const signIn = async () => {
-    if (!email.trim() || !password) return toast.error('กรุณากรอกอีเมลและรหัสผ่าน');
+    if (!email.trim() || !password) return toast.error(t('login.fillBoth'));
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw error;
       await continueAfterPassword();
     } catch (e: any) {
-      toast.error(e?.message || 'เข้าสู่ระบบไม่สำเร็จ');
+      toast.error(e?.message || t('login.failed'));
     } finally {
       setLoading(false);
     }
   };
 
   const verifyOtp = async () => {
-    if (!mfaFactorId || otp.trim().length < 6) return toast.error('กรอกรหัส 6 หลักจากแอป Authenticator');
+    if (!mfaFactorId || otp.trim().length < 6) return toast.error(t('login.otpPrompt'));
     setLoading(true);
     try {
       const { data: ch, error: chErr } = await supabase.auth.mfa.challenge({ factorId: mfaFactorId });
@@ -55,66 +58,66 @@ export default function AdminLogin() {
       if (error) throw error;
       finish();
     } catch (e: any) {
-      toast.error(e?.message || 'รหัสยืนยันไม่ถูกต้อง');
+      toast.error(e?.message || t('login.otpInvalid'));
     } finally {
       setLoading(false);
     }
   };
 
   const forgot = async () => {
-    if (!email.trim()) return toast.error('กรอกอีเมลก่อน แล้วกดลืมรหัสผ่านอีกครั้ง');
+    if (!email.trim()) return toast.error(t('login.emailFirst'));
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) return toast.error(error.message);
-    toast.success('ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมลแล้ว');
+    toast.success(t('login.resetSent'));
   };
 
   return (
     <div className="min-h-screen bg-gradient-soft flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-elegant p-6">
+        <div className="flex justify-end mb-2"><LanguageToggle /></div>
         <div className="text-center mb-5">
           <div className="w-12 h-12 rounded-xl bg-gradient-primary mx-auto flex items-center justify-center shadow-elegant mb-3">
             <ShieldCheck className="w-6 h-6 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-medium">เข้าสู่ระบบเจ้าหน้าที่</h1>
+          <h1 className="text-xl font-medium">{t('login.title')}</h1>
           <p className="text-sm text-muted-foreground">SWING Foundation Admin</p>
         </div>
 
         {mfaFactorId ? (
           <>
             <div className="mb-4">
-              <Label className="text-xs text-muted-foreground mb-1.5 block">รหัสยืนยัน 6 หลัก (Authenticator)</Label>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">{t('login.otp')}</Label>
               <Input value={otp} onChange={(e) => setOtp(e.target.value)} inputMode="numeric" maxLength={6} autoFocus />
             </div>
             <Button onClick={verifyOtp} disabled={loading} className="w-full h-11 rounded-xl bg-gradient-primary">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'ยืนยันรหัส'}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('login.verify')}
             </Button>
           </>
         ) : (
           <>
             <div className="mb-3">
-              <Label className="text-xs text-muted-foreground mb-1.5 block">อีเมลหน่วยงาน</Label>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">{t('login.email')}</Label>
               <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="username" />
             </div>
             <div className="mb-4">
-              <Label className="text-xs text-muted-foreground mb-1.5 block">รหัสผ่าน</Label>
+              <Label className="text-xs text-muted-foreground mb-1.5 block">{t('login.password')}</Label>
               <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete="current-password"
                 onKeyDown={(e) => { if (e.key === 'Enter') void signIn(); }} />
             </div>
 
             <Button onClick={signIn} disabled={loading} className="w-full h-11 rounded-xl bg-gradient-primary">
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'เข้าสู่ระบบ'}
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('login.submit')}
             </Button>
             <button onClick={forgot} disabled={loading} className="w-full mt-2 text-xs text-muted-foreground hover:text-primary">
-              ลืมรหัสผ่าน? ส่งลิงก์ตั้งรหัสใหม่
+              {t('login.forgot')}
             </button>
           </>
         )}
 
         <div className="mt-5 bg-muted/50 border border-border rounded-lg p-3 text-[11px] leading-relaxed text-muted-foreground">
-          ระบบนี้เก็บข้อมูลผู้เสียหายที่มีความอ่อนไหวสูง บัญชีเปิดใช้โดยผู้ดูแลระบบเท่านั้น
-          และแนะนำให้เปิดการยืนยันตัวตนสองชั้น (TOTP) ทุกบัญชี
+          {t('login.notice')}
         </div>
       </div>
     </div>
