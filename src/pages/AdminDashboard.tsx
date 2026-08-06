@@ -423,8 +423,8 @@ export default function AdminDashboard() {
 function StatCard({ num, label, tone }: { num: number; label: string; tone: 'purple' | 'red' | 'amber' | 'default' }) {
   const cls = tone === 'purple' ? 'text-primary' : tone === 'red' ? 'text-destructive' : tone === 'amber' ? 'text-warning' : 'text-foreground';
   return (
-    <div className="bg-card border border-border rounded-xl p-4 text-center shadow-card">
-      <p className={`text-3xl font-medium ${cls}`}>{num}</p>
+    <div className="bg-card border border-border rounded-[1.25rem] p-4 text-center shadow-card hover-lift animate-bloom">
+      <p className={`font-display text-3xl font-medium ${cls} tabular-nums`}>{num}</p>
       <p className="text-xs text-muted-foreground mt-1">{label}</p>
     </div>
   );
@@ -434,8 +434,8 @@ function ChartBlock({ title, data }: { title: string; data: { label: string; val
   const max = Math.max(...data.map((d) => d.value), 1);
   const visible = data.filter((d) => d.value > 0);
   return (
-    <div className="bg-card border border-border rounded-xl p-4 mb-4 shadow-card">
-      <p className="text-xs font-medium text-muted-foreground mb-3">{title}</p>
+    <div className="bg-card border border-border rounded-[1.25rem] p-5 mb-4 shadow-card animate-bloom">
+      <p className="text-xs font-medium text-muted-foreground mb-3 tracking-wide">{title}</p>
       {visible.length === 0 ? <p className="text-xs text-muted-foreground">ยังไม่มีข้อมูล</p> : (
         <div className="space-y-2">
           {visible.map((d) => (
