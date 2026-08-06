@@ -11,6 +11,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { I18nProvider } from "@/i18n";
 
 import ResetPassword from "./pages/ResetPassword";
 import Privacy from "./pages/Privacy";
