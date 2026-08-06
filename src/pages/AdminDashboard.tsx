@@ -218,13 +218,13 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="bg-gradient-dark text-white">
+    <div className="min-h-screen bg-gradient-leaf grain">
+      <header className="bg-gradient-dark text-white sticky top-0 z-30 shadow-elegant">
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center"><ShieldCheck className="w-4 h-4" /></div>
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-white/10 rounded-2xl flex items-center justify-center"><ShieldCheck className="w-4 h-4" /></div>
             <div>
-              <p className="font-medium">SWING Admin Dashboard</p>
+              <p className="font-display font-medium">SWING Admin Dashboard</p>
               <p className="text-[11px] text-white/60">
                 Voice Screening · {access.roles.map((r) => ROLE_LABEL[r]).join(', ') || 'เจ้าหน้าที่'}
               </p>
@@ -423,8 +423,8 @@ export default function AdminDashboard() {
 function StatCard({ num, label, tone }: { num: number; label: string; tone: 'purple' | 'red' | 'amber' | 'default' }) {
   const cls = tone === 'purple' ? 'text-primary' : tone === 'red' ? 'text-destructive' : tone === 'amber' ? 'text-warning' : 'text-foreground';
   return (
-    <div className="bg-card border border-border rounded-xl p-4 text-center shadow-card">
-      <p className={`text-3xl font-medium ${cls}`}>{num}</p>
+    <div className="bg-card border border-border rounded-[1.25rem] p-4 text-center shadow-card hover-lift animate-bloom">
+      <p className={`font-display text-3xl font-medium ${cls} tabular-nums`}>{num}</p>
       <p className="text-xs text-muted-foreground mt-1">{label}</p>
     </div>
   );
@@ -434,15 +434,15 @@ function ChartBlock({ title, data }: { title: string; data: { label: string; val
   const max = Math.max(...data.map((d) => d.value), 1);
   const visible = data.filter((d) => d.value > 0);
   return (
-    <div className="bg-card border border-border rounded-xl p-4 mb-4 shadow-card">
-      <p className="text-xs font-medium text-muted-foreground mb-3">{title}</p>
+    <div className="bg-card border border-border rounded-[1.25rem] p-5 mb-4 shadow-card animate-bloom">
+      <p className="text-xs font-medium text-muted-foreground mb-3 tracking-wide">{title}</p>
       {visible.length === 0 ? <p className="text-xs text-muted-foreground">ยังไม่มีข้อมูล</p> : (
         <div className="space-y-2">
           {visible.map((d) => (
             <div key={d.label} className="flex items-center gap-3">
               <span className="text-xs w-32 truncate">{d.label}</span>
-              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-primary rounded-full transition-all" style={{ width: `${(d.value / max) * 100}%` }} />
+              <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-primary rounded-full transition-all duration-700" style={{ width: `${(d.value / max) * 100}%` }} />
               </div>
               <span className="text-xs font-medium w-6 text-right tabular-nums">{d.value}</span>
             </div>
@@ -525,10 +525,10 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   const s = c.screening || {};
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="bg-gradient-dark text-white">
+    <div className="min-h-screen bg-gradient-leaf grain">
+      <header className="bg-gradient-dark text-white sticky top-0 z-30 shadow-elegant">
         <div className="max-w-4xl mx-auto px-5 py-4 flex items-center gap-3">
-          <button onClick={onBack} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"><ArrowLeft className="w-4 h-4" /></button>
+          <button onClick={onBack} className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition"><ArrowLeft className="w-4 h-4" /></button>
           <div>
             <p className="font-mono text-sm">{c.case_code}</p>
             <p className="text-[11px] text-white/60">{new Date(c.created_at).toLocaleString('th-TH')}</p>

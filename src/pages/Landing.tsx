@@ -1,49 +1,100 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Mic, Search, ArrowRight, Lock } from 'lucide-react';
+import { ShieldCheck, Mic, Search, ArrowRight, Lock, Leaf, HeartHandshake, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function Landing() {
   return (
-    <div className="min-h-screen bg-gradient-soft">
-      <header className="max-w-5xl mx-auto px-5 pt-8 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-elegant">
-            <ShieldCheck className="w-4 h-4 text-primary-foreground" />
+    <div className="min-h-screen bg-background">
+      <div className="relative overflow-hidden bg-gradient-leaf grain">
+        <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-primary/10 blur-3xl animate-floaty" />
+        <div className="pointer-events-none absolute top-40 -left-20 w-72 h-72 rounded-full bg-primary-soft/60 blur-3xl animate-floaty" style={{ animationDelay: '1.5s' }} />
+
+        <header className="relative max-w-5xl mx-auto px-5 pt-7 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-elegant">
+              <Leaf className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <span className="font-display font-medium tracking-tight">SWING · Voice Screening</span>
           </div>
-          <span className="font-medium tracking-wide">SWING · Voice Screening</span>
-        </div>
-        <Link to="/privacy" className="text-xs text-muted-foreground hover:text-primary mr-4">นโยบายความเป็นส่วนตัว (PDPA)</Link>
-        <Link to="/admin/login" className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1">
-          <Lock className="w-3 h-3" /> เจ้าหน้าที่
-        </Link>
-      </header>
+          <div className="flex items-center gap-4">
+            <Link to="/privacy" className="hidden sm:inline text-xs text-muted-foreground hover:text-primary transition-colors">
+              นโยบายความเป็นส่วนตัว
+            </Link>
+            <Link
+              to="/admin/login"
+              className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1 rounded-full border border-border bg-card/70 backdrop-blur px-3 py-1.5 transition-colors"
+            >
+              <Lock className="w-3 h-3" /> เจ้าหน้าที่
+            </Link>
+          </div>
+        </header>
 
-      <main className="max-w-5xl mx-auto px-5 pt-16 pb-20 text-center">
-        <span className="inline-block bg-primary-soft text-primary text-[10px] font-medium tracking-[0.14em] px-3 py-1.5 rounded-full mb-5">
-          SWING FOUNDATION · RIGHTS & VIOLATION TOOL
-        </span>
-        <h1 className="text-4xl sm:text-5xl font-medium leading-tight text-balance mb-4">
-          คัดกรองเสียง · บันทึกการละเมิดสิทธิ์<br />
-          <span className="bg-gradient-primary bg-clip-text text-transparent">ด้วย AI ที่เคียงข้างเจ้าหน้าที่</span>
-        </h1>
-        <p className="text-base text-muted-foreground max-w-xl mx-auto mb-8 text-balance">
-          เครื่องมือสัมภาษณ์ผู้ถูกละเมิด พร้อมประเมินความเสี่ยง สรุปสถานการณ์ และแนะนำการส่งต่อโดยอัตโนมัติ
-        </p>
+        <main className="relative max-w-5xl mx-auto px-5 pt-14 pb-16">
+          <div className="text-center animate-slide-up">
+            <span className="inline-flex items-center gap-1.5 bg-card/80 backdrop-blur border border-border text-primary text-[10px] font-medium tracking-[0.16em] px-3.5 py-1.5 rounded-full mb-5">
+              <Sparkles className="w-3 h-3" /> RIGHTS & VIOLATION TOOL
+            </span>
+            <h1 className="font-display text-4xl sm:text-[3.25rem] font-medium leading-[1.1] text-balance mb-4">
+              พื้นที่ปลอดภัย<br />
+              <span className="text-primary">สำหรับเสียงที่ถูกละเมิด</span>
+            </h1>
+            <p className="text-base text-muted-foreground max-w-lg mx-auto mb-8 text-balance leading-relaxed">
+              เล่าเรื่องด้วยเสียงของคุณเอง ทีละคำถาม ไม่เร่งรัด — ระบบจะช่วยประเมินความเสี่ยงและส่งต่อความช่วยเหลือให้อัตโนมัติ
+            </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
-          <Link to="/intake">
-            <Button size="lg" className="h-12 px-6 rounded-xl bg-gradient-primary shadow-elegant">
-              <Mic className="w-4 h-4" /> เริ่มสัมภาษณ์เคสใหม่ <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
-          <Link to="/track">
-            <Button size="lg" variant="outline" className="h-12 px-6 rounded-xl">
-              <Search className="w-4 h-4" /> ติดตามสถานะเคส
-            </Button>
-          </Link>
-        </div>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to="/intake">
+                <Button size="lg" className="h-13 px-7 py-6 rounded-full bg-gradient-primary shadow-elegant hover-lift text-base">
+                  <Mic className="w-4 h-4" /> เริ่มเล่าเรื่องของคุณ <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+              <Link to="/track">
+                <Button size="lg" variant="outline" className="h-13 px-7 py-6 rounded-full bg-card/70 backdrop-blur hover-lift text-base">
+                  <Search className="w-4 h-4" /> ติดตามสถานะเคส
+                </Button>
+              </Link>
+            </div>
+          </div>
 
-      </main>
+          {/* Bento grid */}
+          <section className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-14">
+            <article className="sm:col-span-2 relative overflow-hidden rounded-[1.75rem] bg-card border border-border p-6 shadow-card hover-lift animate-bloom">
+              <div className="w-10 h-10 rounded-2xl bg-primary-soft flex items-center justify-center mb-4">
+                <HeartHandshake className="w-5 h-5 text-primary" />
+              </div>
+              <h2 className="font-display text-xl font-medium mb-1.5">เล่าได้ในจังหวะของคุณ</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
+                ทีละคำถาม เหมือนคุยกับคนที่รับฟัง หยุดพักเมื่อไหร่ก็ได้ ระบบเก็บฉบับร่างไว้ให้ ไม่ต้องเล่าซ้ำ
+              </p>
+              <div className="pointer-events-none absolute -bottom-10 -right-6 w-40 h-40 rounded-full bg-gradient-primary opacity-10" />
+            </article>
+
+            <article className="rounded-[1.75rem] bg-primary text-primary-foreground p-6 shadow-elegant hover-lift animate-bloom" style={{ animationDelay: '80ms' }}>
+              <ShieldCheck className="w-5 h-5 mb-4 opacity-90" />
+              <h2 className="font-display text-xl font-medium mb-1.5">เป็นความลับ</h2>
+              <p className="text-sm opacity-85 leading-relaxed">
+                ข้อมูลส่วนบุคคลแยกเก็บและเข้ารหัส ตามมาตรฐาน PDPA
+              </p>
+            </article>
+
+            <article className="rounded-[1.75rem] bg-card border border-border p-6 shadow-card hover-lift animate-bloom" style={{ animationDelay: '140ms' }}>
+              <p className="font-display text-3xl font-medium text-primary tabular-nums">9</p>
+              <p className="text-sm text-muted-foreground mt-1">คำถามคัดกรองด้วยเสียง</p>
+            </article>
+
+            <article className="sm:col-span-2 rounded-[1.75rem] bg-accent border border-border p-6 shadow-card hover-lift animate-bloom" style={{ animationDelay: '200ms' }}>
+              <h2 className="font-display text-lg font-medium text-accent-foreground mb-1.5">ต้องการความช่วยเหลือเร่งด่วน?</h2>
+              <p className="text-sm text-accent-foreground/80 leading-relaxed">
+                สายด่วนสุขภาพจิต <a href="tel:1323" className="font-medium underline underline-offset-4">1323</a> · ตลอด 24 ชั่วโมง
+              </p>
+            </article>
+          </section>
+        </main>
+      </div>
+
+      <footer className="max-w-5xl mx-auto px-5 py-8 text-center text-xs text-muted-foreground">
+        © SWING Foundation · <Link to="/privacy" className="hover:text-primary">นโยบายความเป็นส่วนตัว (PDPA)</Link>
+      </footer>
     </div>
   );
 }
