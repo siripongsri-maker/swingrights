@@ -441,8 +441,8 @@ function ChartBlock({ title, data }: { title: string; data: { label: string; val
           {visible.map((d) => (
             <div key={d.label} className="flex items-center gap-3">
               <span className="text-xs w-32 truncate">{d.label}</span>
-              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-primary rounded-full transition-all" style={{ width: `${(d.value / max) * 100}%` }} />
+              <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-primary rounded-full transition-all duration-700" style={{ width: `${(d.value / max) * 100}%` }} />
               </div>
               <span className="text-xs font-medium w-6 text-right tabular-nums">{d.value}</span>
             </div>
