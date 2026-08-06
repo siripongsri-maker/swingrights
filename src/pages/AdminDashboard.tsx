@@ -525,10 +525,10 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   const s = c.screening || {};
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="bg-gradient-dark text-white">
+    <div className="min-h-screen bg-gradient-leaf grain">
+      <header className="bg-gradient-dark text-white sticky top-0 z-30 shadow-elegant">
         <div className="max-w-4xl mx-auto px-5 py-4 flex items-center gap-3">
-          <button onClick={onBack} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"><ArrowLeft className="w-4 h-4" /></button>
+          <button onClick={onBack} className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition"><ArrowLeft className="w-4 h-4" /></button>
           <div>
             <p className="font-mono text-sm">{c.case_code}</p>
             <p className="text-[11px] text-white/60">{new Date(c.created_at).toLocaleString('th-TH')}</p>
