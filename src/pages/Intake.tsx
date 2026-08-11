@@ -18,7 +18,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { useIntake } from '@/store/intake';
-import { BRANCHES, GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, type Severity } from '@/lib/screening';
+import { AreaPicker } from '@/components/screening/AreaPicker';
+import { GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, type Severity } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { QuickExit } from '@/components/screening/QuickExit';
@@ -284,20 +285,36 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
       <SectionDivider>ข้อมูลพื้นฐาน</SectionDivider>
 
-      <div className="grid grid-cols-2 gap-2.5">
-        <Field label="พื้นที่รับเรื่อง *">
-          <Select value={profile.branch} onValueChange={(v) => updateP('branch', v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{BRANCHES.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
-          </Select>
-        </Field>
-        <Field label="กลุ่มประชากร (KP) *">
-          <Select value={profile.kp} onValueChange={(v) => updateP('kp', v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{KP_GROUPS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
-          </Select>
-        </Field>
-      </div>
+      <Field label="พื้นที่รับเรื่อง (จังหวัด / อำเภอ / ตำบล) *">
+        <AreaPicker
+          value={{
+            province: profile.province || '',
+            district: profile.district || '',
+            subdistrict: profile.subdistrict || '',
+            zip: profile.zip || '',
+            geo: profile.geo ?? null,
+          }}
+          onChange={(v) =>
+            set('profile', {
+              ...profile,
+              province: v.province,
+              district: v.district,
+              subdistrict: v.subdistrict,
+              zip: v.zip || '',
+              geo: v.geo ?? null,
+              branch: v.province || profile.branch,
+            })
+          }
+        />
+      </Field>
+
+      <Field label="กลุ่มประชากร (KP) *">
+        <Select value={profile.kp} onValueChange={(v) => updateP('kp', v)}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>{KP_GROUPS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+        </Select>
+      </Field>
+
 
       <Field label="เพศสภาพ *">
         <Select value={profile.gender} onValueChange={(v) => updateP('gender', v)}>

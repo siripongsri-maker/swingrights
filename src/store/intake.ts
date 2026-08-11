@@ -16,6 +16,11 @@ export interface IntakeState {
   victim: { name: string; contact: string };
   profile: {
     branch: string;
+    province: string;
+    district: string;
+    subdistrict: string;
+    zip: string;
+    geo: { lat: number; lng: number } | null;
     kp: string;
     gender: string;
     dob: string;
@@ -60,7 +65,8 @@ const INIT: IntakeState = {
   reporter: { type: 'self', name: '', address: '', email: '', phone: '' },
   victim: { name: '', contact: '' },
   profile: {
-    branch: 'สีลม (Silom)', kp: 'FSW', gender: 'หญิง',
+    branch: 'กรุงเทพมหานคร', province: 'กรุงเทพมหานคร', district: '', subdistrict: '', zip: '', geo: null,
+    kp: 'FSW', gender: 'หญิง',
     dob: '', age: '', nationality: 'ไทย', incidentPlace: '',
     initialViolationTypes: [],
   },
