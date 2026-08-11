@@ -16,6 +16,11 @@ export interface IntakeState {
   victim: { name: string; contact: string };
   profile: {
     branch: string;
+    province: string;
+    district: string;
+    subdistrict: string;
+    zip: string;
+    geo: { lat: number; lng: number } | null;
     kp: string;
     gender: string;
     dob: string;
