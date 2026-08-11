@@ -166,7 +166,10 @@ export default function AdminDashboard() {
 
   const logout = async () => { await supabase.auth.signOut(); navigate('/admin/login'); };
 
-  const branchOptions = useMemo(() => ['all', ...BRANCHES], []);
+  const branchOptions = useMemo(() => {
+    const fromData = Object.keys(statsQ.data?.by_branch ?? {}).filter((b) => b && b !== 'ไม่ระบุ');
+    return ['all', ...Array.from(new Set([...fromData, ...BRANCHES])).sort((a, b) => a.localeCompare(b, 'th'))];
+  }, [statsQ.data]);
   const stats = statsQ.data;
   const totalPages = Math.max(1, Math.ceil((casesQ.data?.count ?? 0) / PAGE_SIZE));
 
@@ -649,7 +652,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
               <p className="text-xs text-muted-foreground">{c.profile?.kp} · {c.profile?.gender} · {c.profile?.age}</p>
               {pii?.victim?.contact && <p className="text-xs text-muted-foreground">{pii.victim.contact}</p>}
             </div>
-            <div><p className="text-xs text-muted-foreground mb-1">พื้นที่</p><p>{c.profile?.branch}</p></div>
+            <div><p className="text-xs text-muted-foreground mb-1">พื้นที่</p><p>{[c.profile?.subdistrict && `ต.${c.profile.subdistrict}`, c.profile?.district && `อ.${c.profile.district}`, c.profile?.province || c.profile?.branch].filter(Boolean).join(' ')}</p>{c.profile?.geo && <a className="text-[11px] text-primary underline" href={`https://www.openstreetmap.org/?mlat=${c.profile.geo.lat}&mlon=${c.profile.geo.lng}#map=16/${c.profile.geo.lat}/${c.profile.geo.lng}`} target="_blank" rel="noreferrer">ดูหมุดบนแผนที่</a>}</div>
             <div><p className="text-xs text-muted-foreground mb-1">พื้นที่เกิดเหตุ</p><p>{c.profile?.incidentPlace || '-'}</p></div>
           </div>
         </section>
