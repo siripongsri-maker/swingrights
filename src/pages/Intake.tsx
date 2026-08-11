@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { useIntake } from '@/store/intake';
+import { AreaPicker } from '@/components/screening/AreaPicker';
 import { BRANCHES, GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, type Severity } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
