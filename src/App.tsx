@@ -31,6 +31,8 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/intake" element={<Intake />} />
             <Route path="/track" element={<Track />} />
+            <Route path="/recover" element={<Recover />} />
+
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/reset-password" element={<ResetPassword />} />
