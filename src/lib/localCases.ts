@@ -107,26 +107,28 @@ export async function saveLocalCase(opts: {
   const now = Date.now();
   const list = readIndex();
   const prev = list.find((r) => r.id === opts.id);
+  const prevRec = getLocalCase(opts.id);
+
+  // Never lose previously captured content when a later call only carries an error
+  const state = opts.state ?? prevRec?.state;
+  const payload = opts.payload ?? prevRec?.payload;
 
   const meta: LocalCaseMeta = {
     id: opts.id,
     kind: opts.kind,
     createdAt: prev?.createdAt ?? now,
     updatedAt: now,
-    ...describe(opts.state, opts.payload),
+    ...describe(state, payload),
     error: opts.error ?? prev?.error,
     attempts: opts.kind === 'failed' ? (prev?.attempts ?? 0) + (opts.error ? 1 : 0) : prev?.attempts,
   };
 
   try {
-    localStorage.setItem(REC_PREFIX + opts.id, JSON.stringify({
-      ...meta,
-      state: opts.state ?? undefined,
-      payload: opts.payload ?? undefined,
-    }));
+    localStorage.setItem(REC_PREFIX + opts.id, JSON.stringify({ ...meta, state, payload }));
   } catch { /* quota — index still records the attempt */ }
 
   writeIndex([meta, ...list.filter((r) => r.id !== opts.id)]);
+
 
   if (opts.audio || opts.photos) {
     try {
