@@ -97,7 +97,7 @@ export default function Landing() {
       </div>
 
       <footer className="max-w-5xl mx-auto px-5 py-8 text-center text-xs text-muted-foreground">
-        © SWING Foundation · <Link to="/privacy" className="hover:text-primary">{t('landing.footer')}</Link>
+        © SWING Foundation · <Link to="/privacy" className="hover:text-primary">{t('landing.footer')}</Link> · <Link to="/recover" className="hover:text-primary">กู้เคสค้างในเครื่อง</Link>
       </footer>
     </div>
   );
