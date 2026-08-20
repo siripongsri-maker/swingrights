@@ -25,7 +25,9 @@ import { cn } from '@/lib/utils';
 import { QuickExit } from '@/components/screening/QuickExit';
 import { stripImageMetadata } from '@/lib/exif';
 import { clearDraft, readDraftMeta, loadAudioBlobs, loadPhotoBlobs, saveAudioBlobs, savePhotoBlobs } from '@/lib/draft';
+import { saveLocalCase, deleteLocalCase, listLocalCases, importLegacyDraft, currentSessionId, rotateSessionId } from '@/lib/localCases';
 import { toast } from 'sonner';
+
 
 type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'referral' | 'signature' | 'confirmed';
 
