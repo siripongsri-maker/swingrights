@@ -132,7 +132,7 @@ export default function Intake() {
       {step === 'ai' && <AIStep onNext={() => setStep('referral')} />}
       {step === 'referral' && <ReferralStep onNext={() => setStep('signature')} />}
       {step === 'signature' && <SignatureStep onNext={() => setStep('confirmed')} />}
-      {step === 'confirmed' && <ConfirmedStep onReset={() => { void clearDraft(); intake.reset(); setStep('consent'); }} />}
+      {step === 'confirmed' && <ConfirmedStep onReset={() => { void clearDraft(); rotateSessionId(); intake.reset(); setStep('consent'); }} />}
     </PhoneShell>
   );
 }
