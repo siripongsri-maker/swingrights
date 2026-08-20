@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.submit_case(jsonb) TO anon, authenticated;
