@@ -37,6 +37,7 @@ export default function Intake() {
   const intake = useIntake();
   const [step, setStep] = useState<Step>('consent');
   const [draftAt, setDraftAt] = useState<number | null>(null);
+  const [pending, setPending] = useState(0);
 
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
 
@@ -44,8 +45,30 @@ export default function Intake() {
   useEffect(() => {
     const meta = readDraftMeta();
     if (meta?.updatedAt && !intake.caseCode) setDraftAt(meta.updatedAt);
+    void importLegacyDraft().then(() => setPending(listLocalCases().length));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Multi-case vault — every session gets its own slot so nothing overwrites an earlier case
+  useEffect(() => {
+    if (intake.caseCode) return;
+    const hasContent =
+      intake.victim.name || intake.reporter.name ||
+      intake.answers.some((a) => a?.transcript?.trim());
+    if (!hasContent) return;
+    const timer = setTimeout(() => {
+      const { set: _s, patch: _p, reset: _r, photos, audioBlobs, ...state } = useIntake.getState() as any;
+      void saveLocalCase({
+        id: currentSessionId(),
+        kind: 'draft',
+        state,
+        audio: audioBlobs,
+        photos: photos.map((p: any) => ({ blob: p.blob, name: p.name })),
+      }).then(() => setPending(listLocalCases().length));
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [intake]);
+
 
   const resumeDraft = async () => {
     const [audio, photos] = await Promise.all([loadAudioBlobs(), loadPhotoBlobs()]);
