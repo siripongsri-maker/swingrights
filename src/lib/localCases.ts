@@ -160,6 +160,14 @@ export async function getLocalCaseBlobs(id: string): Promise<LocalCaseBlobs> {
   } catch { return { audio: [], photos: [] }; }
 }
 
+export async function clearAllLocalCases() {
+  for (const r of readIndex()) {
+    try { localStorage.removeItem(REC_PREFIX + r.id); } catch { /* ignore */ }
+    try { await del(r.id, blobStore); } catch { /* ignore */ }
+  }
+  try { localStorage.removeItem(INDEX_KEY); } catch { /* ignore */ }
+}
+
 export async function deleteLocalCase(id: string) {
   try { localStorage.removeItem(REC_PREFIX + id); } catch { /* ignore */ }
   writeIndex(readIndex().filter((r) => r.id !== id));
