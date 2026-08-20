@@ -114,6 +114,16 @@ export default function Intake() {
           </div>
         </div>
       )}
+      {pending > 1 && (
+        <button
+          onClick={() => navigate('/recover')}
+          className="mb-4 w-full text-left rounded-xl border border-border bg-muted/40 p-3"
+        >
+          <p className="text-xs font-medium">มีเคสค้างในเครื่องนี้ {pending} รายการ</p>
+          <p className="text-[11px] text-muted-foreground">แตะเพื่อเปิดหน้ากู้เคสและส่งเข้าระบบ</p>
+        </button>
+      )}
+
       {step === 'consent' && <ConsentStep onNext={() => setStep('reporter')} />}
       {step === 'reporter' && <ReporterStep onNext={() => setStep('victim')} />}
       {step === 'victim' && <VictimStep onNext={() => setStep('voice')} />}
