@@ -7,6 +7,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "./pages/Landing";
 import Intake from "./pages/Intake";
 import Track from "./pages/Track";
+import Recover from "./pages/Recover";
+
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
@@ -31,6 +33,8 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/intake" element={<Intake />} />
             <Route path="/track" element={<Track />} />
+            <Route path="/recover" element={<Recover />} />
+
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/reset-password" element={<ResetPassword />} />

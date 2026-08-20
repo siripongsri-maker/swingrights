@@ -25,7 +25,9 @@ import { cn } from '@/lib/utils';
 import { QuickExit } from '@/components/screening/QuickExit';
 import { stripImageMetadata } from '@/lib/exif';
 import { clearDraft, readDraftMeta, loadAudioBlobs, loadPhotoBlobs, saveAudioBlobs, savePhotoBlobs } from '@/lib/draft';
+import { saveLocalCase, deleteLocalCase, listLocalCases, importLegacyDraft, currentSessionId, rotateSessionId } from '@/lib/localCases';
 import { toast } from 'sonner';
+
 
 type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'referral' | 'signature' | 'confirmed';
 
@@ -35,6 +37,7 @@ export default function Intake() {
   const intake = useIntake();
   const [step, setStep] = useState<Step>('consent');
   const [draftAt, setDraftAt] = useState<number | null>(null);
+  const [pending, setPending] = useState(0);
 
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
 
@@ -42,8 +45,30 @@ export default function Intake() {
   useEffect(() => {
     const meta = readDraftMeta();
     if (meta?.updatedAt && !intake.caseCode) setDraftAt(meta.updatedAt);
+    void importLegacyDraft().then(() => setPending(listLocalCases().length));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Multi-case vault — every session gets its own slot so nothing overwrites an earlier case
+  useEffect(() => {
+    if (intake.caseCode) return;
+    const hasContent =
+      intake.victim.name || intake.reporter.name ||
+      intake.answers.some((a) => a?.transcript?.trim());
+    if (!hasContent) return;
+    const timer = setTimeout(() => {
+      const { set: _s, patch: _p, reset: _r, photos, audioBlobs, ...state } = useIntake.getState() as any;
+      void saveLocalCase({
+        id: currentSessionId(),
+        kind: 'draft',
+        state,
+        audio: audioBlobs,
+        photos: photos.map((p: any) => ({ blob: p.blob, name: p.name })),
+      }).then(() => setPending(listLocalCases().length));
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [intake]);
+
 
   const resumeDraft = async () => {
     const [audio, photos] = await Promise.all([loadAudioBlobs(), loadPhotoBlobs()]);
@@ -89,6 +114,16 @@ export default function Intake() {
           </div>
         </div>
       )}
+      {pending > 1 && (
+        <button
+          onClick={() => navigate('/recover')}
+          className="mb-4 w-full text-left rounded-xl border border-border bg-muted/40 p-3"
+        >
+          <p className="text-xs font-medium">มีเคสค้างในเครื่องนี้ {pending} รายการ</p>
+          <p className="text-[11px] text-muted-foreground">แตะเพื่อเปิดหน้ากู้เคสและส่งเข้าระบบ</p>
+        </button>
+      )}
+
       {step === 'consent' && <ConsentStep onNext={() => setStep('reporter')} />}
       {step === 'reporter' && <ReporterStep onNext={() => setStep('victim')} />}
       {step === 'victim' && <VictimStep onNext={() => setStep('voice')} />}
@@ -97,7 +132,7 @@ export default function Intake() {
       {step === 'ai' && <AIStep onNext={() => setStep('referral')} />}
       {step === 'referral' && <ReferralStep onNext={() => setStep('signature')} />}
       {step === 'signature' && <SignatureStep onNext={() => setStep('confirmed')} />}
-      {step === 'confirmed' && <ConfirmedStep onReset={() => { void clearDraft(); intake.reset(); setStep('consent'); }} />}
+      {step === 'confirmed' && <ConfirmedStep onReset={() => { void clearDraft(); rotateSessionId(); intake.reset(); setStep('consent'); }} />}
     </PhoneShell>
   );
 }
@@ -1043,6 +1078,16 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         photo_urls: photoPaths,
       };
 
+      // Safety net — keep a full copy on-device BEFORE we rely on the network
+      const sessionId = currentSessionId();
+      await saveLocalCase({
+        id: sessionId,
+        kind: 'failed',
+        payload,
+        audio: intake.audioBlobs,
+        photos: intake.photos.map((p) => ({ blob: p.blob, name: p.name })),
+      });
+
       // Phase 0.4 — the case code is generated and validated server-side (SECURITY DEFINER RPC)
       const { data: code, error } = await supabase.rpc('submit_case' as any, { _payload: payload });
       if (error) throw error;
@@ -1060,6 +1105,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         }).catch((err) => console.warn('notify-case failed', err));
       }
 
+      await deleteLocalCase(sessionId);
+      rotateSessionId();
       await clearDraft();
       intake.patch({ caseCode: code as string, signatureStaff: sigStaff, signatureStaffName: staffName, signatureClient: sigClient || '' });
       toast.success(audioPaths.length
@@ -1068,11 +1115,20 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       onNext();
     } catch (e: any) {
       console.error(e);
-      toast.error(e?.message || 'บันทึกล้มเหลว');
+      try {
+        await saveLocalCase({
+          id: currentSessionId(),
+          kind: 'failed',
+          payload: undefined,
+          error: e?.message || 'unknown error',
+        });
+      } catch { /* ignore */ }
+      toast.error(`${e?.message || 'บันทึกล้มเหลว'} — เก็บสำเนาไว้ในเครื่องแล้ว ส่งซ้ำได้ที่หน้า /recover`);
     } finally {
       setSaving(false);
     }
   };
+
 
   const sevText = intake.severity ? SEV_LABEL[intake.severity] : '-';
 

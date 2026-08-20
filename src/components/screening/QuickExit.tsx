@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { LogOut } from 'lucide-react';
 import { clearDraft } from '@/lib/draft';
+import { clearAllLocalCases } from '@/lib/localCases';
 
 const SAFE_URL = 'https://www.google.co.th/search?q=พยากรณ์อากาศวันนี้';
 
 async function escape(wipeDraft: boolean) {
-  if (wipeDraft) await clearDraft();
+  if (wipeDraft) { await clearDraft(); await clearAllLocalCases(); }
   try {
     window.history.replaceState(null, '', '/');
     window.location.replace(SAFE_URL);
