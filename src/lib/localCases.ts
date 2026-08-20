@@ -17,6 +17,34 @@ const REC_PREFIX = 'swing-case-vault:';
 
 export type LocalCaseKind = 'draft' | 'failed';
 
+/* --------------------------- session id ------------------------------ */
+
+const SESSION_KEY = 'swing-intake-session-id';
+
+/** Stable id for the intake session currently being typed on this device. */
+export function currentSessionId(): string {
+  try {
+    let id = localStorage.getItem(SESSION_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(SESSION_KEY, id);
+    }
+    return id;
+  } catch {
+    return 'session-fallback';
+  }
+}
+
+/** Start a fresh slot so the next case does not overwrite the previous one. */
+export function rotateSessionId(): string {
+  try {
+    const id = crypto.randomUUID();
+    localStorage.setItem(SESSION_KEY, id);
+    return id;
+  } catch { return 'session-fallback'; }
+}
+
+
 export interface LocalCaseMeta {
   id: string;
   kind: LocalCaseKind;
