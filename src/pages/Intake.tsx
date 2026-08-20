@@ -1078,6 +1078,16 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         photo_urls: photoPaths,
       };
 
+      // Safety net — keep a full copy on-device BEFORE we rely on the network
+      const sessionId = currentSessionId();
+      await saveLocalCase({
+        id: sessionId,
+        kind: 'failed',
+        payload,
+        audio: intake.audioBlobs,
+        photos: intake.photos.map((p) => ({ blob: p.blob, name: p.name })),
+      });
+
       // Phase 0.4 — the case code is generated and validated server-side (SECURITY DEFINER RPC)
       const { data: code, error } = await supabase.rpc('submit_case' as any, { _payload: payload });
       if (error) throw error;
@@ -1095,6 +1105,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         }).catch((err) => console.warn('notify-case failed', err));
       }
 
+      await deleteLocalCase(sessionId);
+      rotateSessionId();
       await clearDraft();
       intake.patch({ caseCode: code as string, signatureStaff: sigStaff, signatureStaffName: staffName, signatureClient: sigClient || '' });
       toast.success(audioPaths.length
@@ -1103,11 +1115,20 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       onNext();
     } catch (e: any) {
       console.error(e);
-      toast.error(e?.message || 'บันทึกล้มเหลว');
+      try {
+        await saveLocalCase({
+          id: currentSessionId(),
+          kind: 'failed',
+          payload: undefined,
+          error: e?.message || 'unknown error',
+        });
+      } catch { /* ignore */ }
+      toast.error(`${e?.message || 'บันทึกล้มเหลว'} — เก็บสำเนาไว้ในเครื่องแล้ว ส่งซ้ำได้ที่หน้า /recover`);
     } finally {
       setSaving(false);
     }
   };
+
 
   const sevText = intake.severity ? SEV_LABEL[intake.severity] : '-';
 
