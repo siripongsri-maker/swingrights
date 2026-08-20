@@ -1,0 +1,1 @@
+UPDATE public.cases SET deleted_at = now() WHERE case_code = 'SW-H2G4SVSL';
