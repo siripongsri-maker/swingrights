@@ -48,7 +48,7 @@ export function normalizeGeoText(s: string): string {
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '') // latin combining diacritics
-    .replace(/[ๆ่-๋]/g, '') // thai tone marks (keep ์ etc. minimal impact)
+    .replace(/[่-๋]/g, '') // thai tone marks
     .replace(TH_PREFIX, '')
     .replace(/[^\p{L}\p{N} ]+/gu, ' ')
     .replace(/\s+/g, ' ')
