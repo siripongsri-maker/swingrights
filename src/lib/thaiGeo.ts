@@ -164,3 +164,112 @@ export function geoSearchScore(_value: string, search: string, keywords?: string
   }
   return best;
 }
+
+// ─── Search-term highlighting ───────────────────────────────────────────────
+// Splits a visible label into hit/plain segments for the current query,
+// using the same normalization pipeline as the search (Thai tone-mark
+// stripping, case folding, romanization simplification, alias expansion)
+// while mapping every match back to the original string indices.
+
+export interface HiSeg { t: string; hit: boolean }
+
+interface Unit { lo: number; hi: number; c: string }
+
+const ROMAN_DIGRAPHS: [string, string][] = [
+  ['ph', 'p'], ['kh', 'k'], ['th', 't'], ['ch', 'c'], ['sh', 's'], ['ng', 'n'],
+  ['aa', 'a'], ['ee', 'e'], ['oo', 'o'], ['uu', 'u'],
+];
+
+// Combining/above/below marks dropped by the search normalization
+// (Thai sara i/ii/…, mai han akat, thanthakhat, tone marks, latin diacritics).
+const MARK_CLASS = /[\u0300-\u036f\u0e31\u0e34-\u0e3a\u0e47-\u0e4b]/;
+
+/** Case/mark-insensitive skeleton of `s`; every unit maps back to original code-unit indices. */
+function skeletonUnits(s: string): Unit[] {
+  const raw: Unit[] = [];
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (MARK_CLASS.test(ch)) continue; // combining/vowel/tone marks attach to neighbours
+    const base = ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    for (const bc of base) {
+      raw.push({ lo: i, hi: i + 1, c: /[^\p{L}\p{N} ]/u.test(bc) ? ' ' : bc });
+    }
+  }
+  // collapse space runs into a single unit spanning the run
+  const out: Unit[] = [];
+  for (const u of raw) {
+    const last = out[out.length - 1];
+    if (u.c === ' ' && last?.c === ' ') last.hi = u.hi;
+    else out.push({ ...u });
+  }
+  return out;
+}
+
+/** Apply the same digraph collapses as simplifyRoman, keeping index ranges. */
+function simplifyUnits(units: Unit[]): Unit[] {
+  const out: Unit[] = [];
+  let i = 0;
+  while (i < units.length) {
+    const two = units[i].c + (units[i + 1]?.c ?? '');
+    const rep = units[i].c !== ' ' && ROMAN_DIGRAPHS.find(([a]) => a === two);
+    if (rep) {
+      out.push({ lo: units[i].lo, hi: units[i + 1].hi, c: rep[1] });
+      i += 2;
+    } else {
+      out.push(units[i]);
+      i++;
+    }
+  }
+  return out;
+}
+
+/**
+ * Split `text` into segments, marking the parts that match `rawQuery`.
+ * Returns null when the query is empty or nothing matches (render text as-is).
+ */
+export function highlightGeoText(text: string, rawQuery: string): HiSeg[] | null {
+  const qs = expandGeoQueries(rawQuery);
+  if (!qs.length || !text) return null;
+
+  const base = skeletonUnits(text);
+  const simp = simplifyUnits(base);
+  const marks = new Array<boolean>(text.length).fill(false);
+
+  const applyAll = (units: Unit[], q: string) => {
+    const str = units.map((u) => u.c).join('');
+    for (const tok of q.split(' ').filter(Boolean)) {
+      let from = 0;
+      for (;;) {
+        const at = str.indexOf(tok, from);
+        if (at < 0) break;
+        for (let k = at; k < at + tok.length; k++) {
+          const u = units[k];
+          for (let j = u.lo; j < u.hi; j++) marks[j] = true;
+        }
+        from = at + tok.length;
+      }
+    }
+  };
+  // Try every expanded query form against both skeleton levels —
+  // normalized forms hit the base skeleton, simplified/alias forms hit the simplified one.
+  for (const q of qs) { applyAll(base, q); applyAll(simp, q); }
+
+  if (!marks.some(Boolean)) return null;
+  // Absorb combining marks sitting between/next to hits so a highlighted
+  // syllable never splits (e.g. "เชียง" stays one segment even though the
+  // search normalization drops ี).
+  for (let i = 0; i < text.length; i++) {
+    if (!marks[i] && text[i] === ' ' && marks[i - 1] && marks[i + 1]) marks[i] = true;
+    if (!marks[i] && MARK_CLASS.test(text[i]) && (marks[i - 1] || marks[i + 1])) marks[i] = true;
+  }
+  const segs: HiSeg[] = [];
+  let i = 0;
+  while (i < text.length) {
+    let j = i;
+    const h = marks[i];
+    while (j < text.length && marks[j] === h) j++;
+    segs.push({ t: text.slice(i, j), hit: h });
+    i = j;
+  }
+  return segs;
+}

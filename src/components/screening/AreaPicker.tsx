@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { MapPicker } from './MapPicker';
-import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, type ProvinceRow } from '@/lib/thaiGeo';
+import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, highlightGeoText, type ProvinceRow } from '@/lib/thaiGeo';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
@@ -23,13 +23,33 @@ interface ComboOption {
   keywords?: string[];
 }
 
+/** Renders `text` with the parts matching `q` highlighted (TH/EN/fuzzy-aware). */
+function Hi({ text, q }: { text: string; q: string }) {
+  const segs = useMemo(() => highlightGeoText(text, q), [text, q]);
+  if (!segs) return <>{text}</>;
+  return (
+    <>
+      {segs.map((s, i) =>
+        s.hit ? (
+          <mark key={i} className="bg-primary-soft text-primary font-semibold rounded-[4px] px-px">
+            {s.t}
+          </mark>
+        ) : (
+          <span key={i}>{s.t}</span>
+        ),
+      )}
+    </>
+  );
+}
+
 function Combo({
   label, value, options, disabled, onSelect,
 }: { label: string; value: string; options: ComboOption[]; disabled?: boolean; onSelect: (v: string) => void }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const { t } = useI18n();
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSearch(''); }}>
       <PopoverTrigger asChild>
         <Button
           type="button"
@@ -44,7 +64,11 @@ function Combo({
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[--radix-popover-trigger-width] z-[1200]" align="start">
         <Command filter={geoSearchScore}>
-          <CommandInput placeholder={`${t('common.search')} ${label}... (TH/EN)`} />
+          <CommandInput
+            placeholder={`${t('common.search')} ${label}... (TH/EN)`}
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandList className="max-h-64">
             <CommandEmpty>{t('area.notfound')}</CommandEmpty>
             <CommandGroup>
@@ -56,8 +80,8 @@ function Combo({
                   onSelect={() => { onSelect(o.v); setOpen(false); }}
                 >
                   <Check className={cn('me-2 h-4 w-4', value === o.v ? 'opacity-100' : 'opacity-0')} />
-                  <span className="flex-1">{o.v}</span>
-                  {o.sub && <span className="text-[11px] text-muted-foreground ms-2">{o.sub}</span>}
+                  <span className="flex-1"><Hi text={o.v} q={search} /></span>
+                  {o.sub && <span className="text-[11px] text-muted-foreground ms-2"><Hi text={o.sub} q={search} /></span>}
                 </CommandItem>
               ))}
             </CommandGroup>
