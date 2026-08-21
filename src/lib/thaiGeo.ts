@@ -340,19 +340,28 @@ export function distKm(a: [number, number], b: [number, number]): number {
 
 /**
  * Nearest province to a coordinate, measured against every tambon center
- * (more accurate than province centroids near borders).
+ * (more accurate than province centroids near borders). Provinces whose
+ * tambons lack coordinates — currently only Bangkok — fall back to a
+ * known city-center point (TH_CENTER) so they still participate.
  */
 export function nearestProvince(geo: ProvinceRow[], lat: number, lng: number): { province: string; km: number } | null {
   let best: { province: string; km: number } | null = null;
   const here: [number, number] = [lat, lng];
   for (const p of geo) {
+    let minKm = Infinity;
     for (const d of p.d) {
       for (const s of d.s) {
         if (!s.c) continue;
         const km = distKm(here, s.c);
-        if (!best || km < best.km) best = { province: p.n, km };
+        if (km < minKm) minKm = km;
       }
     }
+    if (minKm === Infinity) {
+      // No tambon coords in this province — only Bangkok in the current dataset.
+      if (p.n !== 'กรุงเทพมหานคร') continue;
+      minKm = distKm(here, TH_CENTER);
+    }
+    if (!best || minKm < best.km) best = { province: p.n, km: minKm };
   }
   return best;
 }
