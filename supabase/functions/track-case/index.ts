@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z, parseBody, corsJson, caseCode } from "../_shared/schemas.ts";
-import { rateLimited, tooManyRequests, resolveIdent } from "../_shared/guard.ts";
+import { rateLimit, tooMany } from "../_shared/guard.ts";
 
 const schema = z.object({ case_code: caseCode });
 
@@ -16,8 +16,8 @@ serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const db = createClient(url, serviceKey, { auth: { persistSession: false } });
 
-  const ident = resolveIdent(req);
-  if (await rateLimited(db, "track-case", ident, 10, 600)) return tooManyRequests(corsJson);
+  // 10 lookups / 10 นาที ต่อ IP
+  if (!(await rateLimit(req, "track-case", 10, 600))) return tooMany();
 
   const { data: c, error: qErr } = await db
     .from("cases")
