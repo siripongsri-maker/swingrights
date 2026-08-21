@@ -259,6 +259,7 @@ export function highlightGeoText(text: string, rawQuery: string): HiSeg[] | null
   // syllable never splits (e.g. "เชียง" stays one segment even though the
   // search normalization drops ี).
   for (let i = 0; i < text.length; i++) {
+    if (!marks[i] && text[i] === ' ' && marks[i - 1] && marks[i + 1]) marks[i] = true;
     if (!marks[i] && MARK_CLASS.test(text[i]) && (marks[i - 1] || marks[i + 1])) marks[i] = true;
   }
   const segs: HiSeg[] = [];
