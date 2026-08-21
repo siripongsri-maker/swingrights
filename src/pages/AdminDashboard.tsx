@@ -490,6 +490,50 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
     },
   });
 
+  const { data: questions = [] } = useQuery({
+    queryKey: ['case-questions', caseId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('case_questions' as never)
+        .select('id,question,answer_text,answer_audio_url,answered_at,created_at')
+        .eq('case_id', caseId)
+        .order('created_at');
+      return (data ?? []) as unknown as { id: string; question: string; answer_text: string | null; answer_audio_url: string | null; answered_at: string | null; created_at: string }[];
+    },
+  });
+
+  const { data: partners = [] } = useQuery({
+    queryKey: ['case-partners', c?.profile?.province ?? null],
+    enabled: !!c,
+    queryFn: async () => {
+      const prov = c?.profile?.province || c?.profile?.branch;
+      let q = supabase.from('referral_partners' as never)
+        .select('id,name,org_type,province,district,phone,email,address,services')
+        .eq('active', true);
+      if (prov) q = q.or(`province.eq.${prov},province.is.null`);
+      const { data } = await q.order('name');
+      return (data ?? []) as unknown as { id: string; name: string; org_type: string; province: string | null; district: string | null; phone: string | null; email: string | null; address: string | null; services: string[] }[];
+    },
+  });
+
+  const askQuestion = async () => {
+    const q = newQuestion.trim();
+    if (!q) return;
+    const { data: sess } = await supabase.auth.getUser();
+    const { error } = await supabase.from('case_questions' as never)
+      .insert({ case_id: caseId, question: q.slice(0, 1000), asked_by: sess.user?.id } as never);
+    if (error) { toast.error('ส่งคำถามไม่สำเร็จ'); return; }
+    setNewQuestion('');
+    toast.success('ส่งคำถามแล้ว — ผู้รายงานจะเห็นเมื่อติดตามเคสด้วยรหัส');
+    qc.invalidateQueries({ queryKey: ['case-questions', caseId] });
+  };
+
+  const playAnswerAudio = async (qid: string, path: string) => {
+    if (answerAudio[qid]) return;
+    const { data } = await supabase.storage.from('case-audio').createSignedUrl(path, 300);
+    if (data?.signedUrl) setAnswerAudio((prev) => ({ ...prev, [qid]: data.signedUrl }));
+  };
+
   useEffect(() => {
     if (!c) return;
     let cancelled = false;
