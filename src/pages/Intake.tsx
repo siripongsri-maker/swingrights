@@ -125,15 +125,18 @@ export default function Intake() {
         </button>
       )}
 
-      {step === 'consent' && <ConsentStep onNext={() => setStep('reporter')} />}
-      {step === 'reporter' && <ReporterStep onNext={() => setStep('victim')} />}
-      {step === 'victim' && <VictimStep onNext={() => setStep('voice')} />}
-      {step === 'voice' && <VoiceStep onNext={() => setStep('assess')} />}
-      {step === 'assess' && <AssessStep onNext={() => setStep('ai')} />}
-      {step === 'ai' && <AIStep onNext={() => setStep('referral')} />}
-      {step === 'referral' && <ReferralStep onNext={() => setStep('signature')} />}
-      {step === 'signature' && <SignatureStep onNext={() => setStep('confirmed')} />}
-      {step === 'confirmed' && <ConfirmedStep onReset={() => { void clearDraft(); rotateSessionId(); intake.reset(); setStep('consent'); }} />}
+      {/* key={step} remounts each step so the fade transition plays on every change */}
+      <div key={step} className="animate-fade-in">
+        {step === 'consent' && <ConsentStep onNext={() => setStep('reporter')} />}
+        {step === 'reporter' && <ReporterStep onNext={() => setStep('victim')} />}
+        {step === 'victim' && <VictimStep onNext={() => setStep('voice')} />}
+        {step === 'voice' && <VoiceStep onNext={() => setStep('assess')} />}
+        {step === 'assess' && <AssessStep onNext={() => setStep('ai')} />}
+        {step === 'ai' && <AIStep onNext={() => setStep('referral')} />}
+        {step === 'referral' && <ReferralStep onNext={() => setStep('signature')} />}
+        {step === 'signature' && <SignatureStep onNext={() => setStep('confirmed')} />}
+        {step === 'confirmed' && <ConfirmedStep onReset={() => { void clearDraft(); rotateSessionId(); intake.reset(); setStep('consent'); }} />}
+      </div>
     </PhoneShell>
   );
 }

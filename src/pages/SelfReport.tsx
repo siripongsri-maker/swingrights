@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Check, Copy, HeartHandshake, Loader2, MapPin, Paperclip, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Copy, Loader2, MapPin, Paperclip, X } from 'lucide-react';
+import bloomImg from '@/assets/bloom.png';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -196,6 +197,8 @@ export default function SelfReport() {
           </>
         )}
 
+        {/* key={step} remounts each step so the fade transition plays on every change */}
+        <div key={step} className="animate-fade-in space-y-5">
         {step === 'consent' && (
           <div className="space-y-4">
             <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
