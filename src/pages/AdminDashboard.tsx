@@ -18,6 +18,7 @@ import { useAccess, ROLE_LABEL } from '@/hooks/useAccess';
 import {
   Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin,
   Search, ChevronLeft, ChevronRight, UserCheck, UserCog, CalendarClock, BellRing, ShieldAlert, Check,
+  MessageCircleQuestion, Send, Building2, Volume2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -467,6 +468,10 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   // PDPA: ข้อมูลระบุตัวตนอยู่คนละตาราง ต้องกดเปิดดูและระบบจะบันทึกประวัติการเข้าดูทุกครั้ง
   const [pii, setPii] = useState<{ reporter: any; victim: any } | null>(null);
   const [piiLoading, setPiiLoading] = useState(false);
+  // คำถามถึงผู้รายงาน (ตอบกลับผ่านหน้า /track ด้วยรหัสเคส) + หน่วยงานรับส่งต่อรายพื้นที่
+  const [newQuestion, setNewQuestion] = useState('');
+  const [answerAudio, setAnswerAudio] = useState<Record<string, string>>({});
+
 
   const revealPii = async () => {
     setPiiLoading(true);
