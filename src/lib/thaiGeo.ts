@@ -165,6 +165,38 @@ export function geoSearchScore(_value: string, search: string, keywords?: string
   return best;
 }
 
+/** Why an option matched: exact > prefix > word > token > partial; 'alias' when only a nickname/alias form matched. */
+export type GeoMatchKind = 'exact' | 'prefix' | 'word' | 'token' | 'partial' | 'alias';
+
+export function geoSearchReason(search: string, keywords?: string[]): GeoMatchKind | null {
+  const raw = normalizeGeoText(search);
+  if (!raw) return null;
+  const keys = (keywords ?? []).filter(Boolean);
+  if (!keys.length) return null;
+  const rankQ = (q: string): GeoMatchKind | null => {
+    const tokens = q.split(' ').filter(Boolean);
+    let best: GeoMatchKind | null = null;
+    for (const k of keys) {
+      if (k === q) return 'exact';
+      if (k.startsWith(q)) { if (!best) best = 'prefix'; continue; }
+      const words = k.split(' ');
+      if (words.some((w) => w.startsWith(q))) { if (!best || best === 'partial') best = 'word'; continue; }
+      if (tokens.length > 1 && tokens.every((tk) => words.some((w) => w.startsWith(tk)) || k.includes(tk))) {
+        if (!best || best === 'partial') best = 'token';
+        continue;
+      }
+      if (k.includes(q) && !best) best = 'partial';
+    }
+    return best;
+  };
+  for (const q of [raw, simplifyRoman(raw)]) {
+    const r = rankQ(q);
+    if (r) return r;
+  }
+  for (const a of GEO_ALIAS_MAP.get(simplifyRoman(raw)) ?? []) if (rankQ(a)) return 'alias';
+  return null;
+}
+
 // ─── Search-term highlighting ───────────────────────────────────────────────
 // Splits a visible label into hit/plain segments for the current query,
 // using the same normalization pipeline as the search (Thai tone-mark

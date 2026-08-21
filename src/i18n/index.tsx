@@ -343,6 +343,7 @@ const BASE_DICT: Dict = {
   'area.match.word': { th: 'มีคำที่ขึ้นต้นตรง', en: 'Matching word', my: 'ကိုက်ညီသော စကားလုံး', km: 'ពាក្យត្រូវគ្នា', lo: 'ຄຳກົງກັນ' },
   'area.match.partial': { th: 'มีส่วนที่ตรง', en: 'Partial match', my: 'တစ်စိတ်တစ်ဒေသ ကိုက်ညီ', km: 'ត្រូវគ្នាខ្លះ', lo: 'ກົງກັນບາງສ່ວນ' },
   'area.match.alias': { th: 'ชื่อที่นิยมเรียก', en: 'Common nickname', my: 'အများသုံး အမည်ဝှက်', km: 'ឈ្មោះហៅក្រៅ', lo: 'ຊື່ຫຼິ້ນທີ່ນິຍົມ' },
+  'area.match.token': { th: 'ตรงทุกคำในชื่อ', en: 'All words match', my: 'စကားလုံးတိုင်း ကိုက်ညီ', km: 'ពាក្យទាំងអស់ត្រូវគ្នា', lo: 'ກົງທຸກຄຳໃນຊື່' },
   'area.loading': {
     th: 'กำลังโหลดรายชื่อจังหวัด/อำเภอ/ตำบล...', en: 'Loading province/district/subdistrict list...',
     my: 'ဒေသစာရင်း ရယူနေသည်...', km: 'កំពុងផ្ទុកបញ្ជីតំបន់...', lo: 'ກຳລັງໂຫຼດລາຍຊື່ພື້ນທີ່...',
