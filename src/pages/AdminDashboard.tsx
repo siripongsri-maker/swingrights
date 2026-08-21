@@ -730,6 +730,69 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           {c.referral_note && <p className="text-xs text-muted-foreground">{c.referral_note}</p>}
         </section>
 
+        {partners.length > 0 && (
+          <section className="bg-card border border-border rounded-xl p-5 shadow-card">
+            <p className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5" /> หน่วยงานรับส่งต่อในพื้นที่{c.profile?.province ? ` (${c.profile.province})` : ''}
+            </p>
+            <div className="space-y-2.5">
+              {partners.map((p) => (
+                <div key={p.id} className="border border-border/60 rounded-lg p-3 text-sm">
+                  <p className="font-medium text-[13px]">{p.name}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {[p.district, p.province].filter(Boolean).join(' · ') || 'ทุกพื้นที่'}
+                    {p.phone ? ` · โทร ${p.phone}` : ''}{p.email ? ` · ${p.email}` : ''}
+                  </p>
+                  {Array.isArray(p.services) && p.services.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {p.services.map((sv, i) => <span key={i} className="text-[10px] bg-muted px-2 py-0.5 rounded-full">{sv}</span>)}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="bg-card border border-border rounded-xl p-5 shadow-card space-y-3">
+          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+            <MessageCircleQuestion className="w-3.5 h-3.5" /> ถามคำถามเพิ่มเติมถึงผู้รายงาน (ตอบผ่านหน้าติดตามเคส)
+          </p>
+          {questions.map((q) => (
+            <div key={q.id} className="border border-border/60 rounded-lg p-3 space-y-2">
+              <p className="text-sm font-medium">{q.question}</p>
+              <p className="text-[10px] text-muted-foreground">{new Date(q.created_at).toLocaleString('th-TH')}</p>
+              {q.answer_text || q.answer_audio_url ? (
+                <div className="bg-muted/50 rounded-md p-2.5 space-y-1.5">
+                  <p className="text-[10px] uppercase tracking-wider text-primary">คำตอบจากผู้รายงาน</p>
+                  {q.answer_text && <p className="text-sm">{q.answer_text}</p>}
+                  {q.answer_audio_url && (
+                    answerAudio[q.id]
+                      ? <audio src={answerAudio[q.id]} controls className="w-full h-9" />
+                      : <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => void playAnswerAudio(q.id, q.answer_audio_url!)}>
+                          <Volume2 className="w-3 h-3 mr-1" /> ฟังเสียงตอบ
+                        </Button>
+                  )}
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted-foreground">รอคำตอบ — ผู้รายงานใช้รหัส {c.case_code} ในหน้าติดตามเคส</p>
+              )}
+            </div>
+          ))}
+          <div className="flex gap-2">
+            <Textarea
+              value={newQuestion}
+              onChange={(e) => setNewQuestion(e.target.value)}
+              placeholder="พิมพ์คำถามถึงผู้รายงาน..."
+              className="min-h-[44px] text-sm"
+              maxLength={1000}
+            />
+            <Button size="sm" className="self-end" disabled={!newQuestion.trim()} onClick={() => void askQuestion()}>
+              <Send className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </section>
+
         {photoSigned.length > 0 && (
           <section className="bg-card border border-border rounded-xl p-5 shadow-card">
             <p className="text-xs font-medium text-muted-foreground mb-3">รูปภาพประกอบ ({photoSigned.length})</p>
