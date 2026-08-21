@@ -1014,21 +1014,19 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       const sigStaff = staffCanvas.current!.toDataURL('image/png');
       const sigClient = clientEmpty ? null : clientCanvas.current!.toDataURL('image/png');
 
-      // 1) Upload audio recordings (if any) to private storage bucket under cases/<code>/
+      // 1) Upload audio recordings (if any) via the validated upload endpoint
       const audioPaths: { qIndex: number; path: string; question: string }[] = [];
       for (let i = 0; i < intake.audioBlobs.length; i++) {
         const blob = intake.audioBlobs[i];
         if (!blob) continue;
         const ext = (blob.type.split('/')[1] || 'webm').split(';')[0];
         const path = `cases/${draftId}/q${i + 1}-${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from('case-audio')
-          .upload(path, blob, { contentType: blob.type, upsert: false });
-        if (upErr) {
-          console.warn(`audio upload failed for q${i + 1}:`, upErr);
+        const up = await uploadCaseMedia('audio', path, blob);
+        if (!up) {
+          console.warn(`audio upload failed for q${i + 1}`);
           continue; // don't block case save if one upload fails
         }
-        audioPaths.push({ qIndex: i, path, question: intake.answers[i]?.question || '' });
+        audioPaths.push({ qIndex: i, path: up.path, question: intake.answers[i]?.question || '' });
       }
 
       // 1b) Upload attached photos (if any)
@@ -1038,14 +1036,12 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         if (!ph?.blob) continue;
         const ext = (ph.blob.type.split('/')[1] || 'jpg').split(';')[0];
         const path = `cases/${draftId}/photo-${i + 1}-${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage
-          .from('case-photos')
-          .upload(path, ph.blob, { contentType: ph.blob.type, upsert: false });
-        if (upErr) {
-          console.warn(`photo upload failed for #${i + 1}:`, upErr);
+        const up = await uploadCaseMedia('photo', path, ph.blob);
+        if (!up) {
+          console.warn(`photo upload failed for #${i + 1}`);
           continue;
         }
-        photoPaths.push({ path, name: ph.name });
+        photoPaths.push({ path: up.path, name: ph.name });
       }
 
 

@@ -51,9 +51,9 @@ export async function resubmitLocalCase(id: string): Promise<string> {
       if (!blob) continue;
       const ext = (blob.type.split('/')[1] || 'webm').split(';')[0];
       const path = `cases/${folder}/q${i + 1}-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('case-audio').upload(path, blob, { contentType: blob.type, upsert: false });
-      if (error) { console.warn('audio upload failed', error); continue; }
-      paths.push({ qIndex: i, path, question: payload.answers?.[i]?.question || '' });
+      const up = await uploadCaseMedia('audio', path, blob);
+      if (!up) { console.warn('audio upload failed'); continue; }
+      paths.push({ qIndex: i, path: up.path, question: payload.answers?.[i]?.question || '' });
     }
     payload.audio_urls = paths;
   }
@@ -65,9 +65,9 @@ export async function resubmitLocalCase(id: string): Promise<string> {
       if (!ph?.blob) continue;
       const ext = (ph.blob.type.split('/')[1] || 'jpg').split(';')[0];
       const path = `cases/${folder}/photo-${i + 1}-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('case-photos').upload(path, ph.blob, { contentType: ph.blob.type, upsert: false });
-      if (error) { console.warn('photo upload failed', error); continue; }
-      paths.push({ path, name: ph.name });
+      const up = await uploadCaseMedia('photo', path, ph.blob);
+      if (!up) { console.warn('photo upload failed'); continue; }
+      paths.push({ path: up.path, name: ph.name });
     }
     payload.photo_urls = paths;
   }
