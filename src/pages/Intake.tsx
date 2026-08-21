@@ -9,6 +9,7 @@ import { SectionDivider } from '@/components/screening/SectionDivider';
 import { SpeakButton } from '@/components/screening/SpeakButton';
 import { ScreeningTools, summarizeScreening } from '@/components/screening/ScreeningTools';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
+import { uploadCaseMedia } from '@/lib/uploadMedia';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
