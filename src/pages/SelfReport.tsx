@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Check, Copy, HeartHandshake, Loader2, MapPin, Paperclip, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Copy, Loader2, MapPin, Paperclip, X } from 'lucide-react';
+import bloomImg from '@/assets/bloom.png';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -196,6 +197,8 @@ export default function SelfReport() {
           </>
         )}
 
+        {/* key={step} remounts each step so the fade transition plays on every change */}
+        <div key={step} className="animate-fade-in space-y-5">
         {step === 'consent' && (
           <div className="space-y-4">
             <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
@@ -334,9 +337,14 @@ export default function SelfReport() {
 
         {step === 'done' && caseCode && (
           <div className="space-y-5 text-center py-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-              <HeartHandshake className="w-8 h-8 text-primary" />
-            </div>
+            <img
+              src={bloomImg}
+              alt=""
+              width={1024}
+              height={1024}
+              loading="lazy"
+              className="w-28 h-28 mx-auto animate-pop"
+            />
             <h1 className="font-display text-xl font-bold">{t('report.success.title')}</h1>
             <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-5">
               <p className="text-xs text-muted-foreground mb-1.5">{t('report.success.code')}</p>
@@ -355,6 +363,7 @@ export default function SelfReport() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </PhoneShell>
   );
