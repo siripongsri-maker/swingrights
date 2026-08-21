@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Mic, Camera, Copy, AlertTriangle, Sparkles, ArrowRight, Loader2, ShieldCheck, ClipboardList, CalendarIcon, X as XIcon, RotateCcw, Trash2, SkipForward } from 'lucide-react';
+import { Check, Mic, Camera, Copy, AlertTriangle, Sparkles, ArrowRight, Loader2, ShieldCheck, ClipboardList, CalendarIcon, X as XIcon, RotateCcw, Trash2, SkipForward, Send, Pencil, Scale, FileText, Share2, HeartHandshake, ChevronDown, Printer } from 'lucide-react';
 import QRCode from 'qrcode';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
