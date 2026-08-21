@@ -87,6 +87,19 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
 
   const center = tambon?.c ?? null;
 
+  const provinceOptions = useMemo<ComboOption[]>(
+    () => (geo ?? []).map((p) => ({ v: p.n, sub: p.e, keywords: geoKeywords(p.n, p.e) })),
+    [geo],
+  );
+  const districtOptions = useMemo<ComboOption[]>(
+    () => (province?.d ?? []).map((d) => ({ v: d.n, sub: d.e, keywords: geoKeywords(d.n, d.e) })),
+    [province],
+  );
+  const tambonOptions = useMemo<ComboOption[]>(
+    () => (district?.s ?? []).map((s) => ({ v: s.n, sub: s.e || (s.z ? String(s.z) : undefined), keywords: geoKeywords(s.n, s.e, s.z) })),
+    [district],
+  );
+
   return (
     <div className="space-y-2.5">
       {loading ? (
@@ -98,7 +111,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
           <Combo
             label={t('area.province')}
             value={value.province}
-            options={(geo ?? []).map((p) => ({ v: p.n, sub: p.e }))}
+            options={provinceOptions}
             onSelect={(v) => onChange({ ...value, province: v, district: '', subdistrict: '', zip: '' })}
           />
           <div className="grid grid-cols-2 gap-2.5">
@@ -106,14 +119,14 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
               label={t('area.district')}
               value={value.district}
               disabled={!province}
-              options={(province?.d ?? []).map((d) => ({ v: d.n, sub: d.e }))}
+              options={districtOptions}
               onSelect={(v) => onChange({ ...value, district: v, subdistrict: '', zip: '' })}
             />
             <Combo
               label={t('area.subdistrict')}
               value={value.subdistrict}
               disabled={!district}
-              options={(district?.s ?? []).map((s) => ({ v: s.n, sub: s.z ? String(s.z) : undefined }))}
+              options={tambonOptions}
               onSelect={(v) => {
                 const row = district?.s.find((s) => s.n === v);
                 onChange({ ...value, subdistrict: v, zip: row?.z ? String(row.z) : '' });
