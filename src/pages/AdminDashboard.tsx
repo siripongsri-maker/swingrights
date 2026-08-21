@@ -13,7 +13,7 @@ import { CaseStatus, STATUS_LABEL, BRANCHES } from '@/lib/screening';
 import { q9Level } from '@/lib/screeningTools';
 import { printCaseReport, logExport, AI_DISCLAIMER, type CaseReportData } from '@/lib/caseReport';
 import { useCaseAlerts, type CaseAlert } from '@/hooks/useCaseAlerts';
-import { useAccess, ROLE_LABEL } from '@/hooks/useAccess';
+import { useAccess, useRoleLabels } from '@/hooks/useAccess';
 
 import {
   Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin,
@@ -23,6 +23,8 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { printCaseDocument, docInputFromReport, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 const PAGE_SIZE = 20;
 
@@ -55,6 +57,8 @@ interface Stats {
 }
 
 export default function AdminDashboard() {
+  const { t } = useI18n();
+  const roleLabels = useRoleLabels();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [authorized, setAuthorized] = useState(false);
@@ -182,7 +186,7 @@ export default function AdminDashboard() {
       .select(sel('case_code, created_at, status, severity, profile, victim, has_violation, violation_details, ai_result, referrals, suicide_risk, assigned_to'))
       .order('created_at', { ascending: false })
       .limit(5000);
-    if (error) { toast.error('ส่งออกไม่สำเร็จ'); return; }
+    if (error) { toast.error(t('dash.csv.exportFailed')); return; }
     const rows = (data ?? []).filter((c: any) => branch === 'all' || c.profile?.branch === branch);
     const headers = ['เลขเคส','วันที่','สถานะ','ความรุนแรง','พื้นที่','กลุ่ม','เพศ','อายุ','ผู้รับบริการ (ปกปิด)','พื้นที่เกิดเหตุ','มีการละเมิด','ประเภทการละเมิด','เสี่ยงทำร้ายตนเอง','ผู้รับผิดชอบ','คะแนน AI','สรุป AI','ส่งต่อ'];
     const esc = (v: any) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
@@ -192,8 +196,8 @@ export default function AdminDashboard() {
         c.case_code, new Date(c.created_at).toLocaleString('th-TH'), STATUS_LABEL[c.status as CaseStatus], c.severity || '',
         c.profile?.branch || '', c.profile?.kp || '', c.profile?.gender || '', c.profile?.age || '',
         c.victim?.name_masked || '', c.profile?.incidentPlace || '',
-        c.has_violation ? 'ใช่' : 'ไม่', (c.violation_details || []).join(' | '),
-        c.suicide_risk ? 'ใช่' : '', staffName(c.assigned_to) || '',
+        c.has_violation ? t('dash.csv.yes') : t('dash.csv.no'), (c.violation_details || []).join(' | '),
+        c.suicide_risk ? t('dash.csv.yes') : '', staffName(c.assigned_to) || '',
         c.ai_result?.riskScore ?? '', c.ai_result?.summary || '', (c.referrals || []).join(' | '),
       ].map(esc).join(','));
     });
@@ -205,7 +209,7 @@ export default function AdminDashboard() {
     a.click();
     URL.revokeObjectURL(url);
     await logExport({ format: 'csv_summary', case_code: null });
-    toast.success(`ส่งออก CSV ${rows.length} เคสแล้ว (บันทึกการส่งออกแล้ว)`);
+    toast.success(t('dash.export.csvSuccess', { n: rows.length }));
   };
 
   if (checking) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -232,7 +236,7 @@ export default function AdminDashboard() {
             <div>
               <p className="font-display font-medium">SWING Admin Dashboard</p>
               <p className="text-[11px] text-white/60">
-                Voice Screening · {access.roles.map((r) => ROLE_LABEL[r]).join(', ') || 'เจ้าหน้าที่'}
+                Voice Screening · {access.roles.map((r) => roleLabels[r]).join(', ') || t('dash.staffFallback')}
               </p>
             </div>
           </div>
@@ -241,17 +245,18 @@ export default function AdminDashboard() {
               <>
                 <Button onClick={() => navigate('/admin/users')} size="sm" variant="outline"
                   className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
-                  <UserCog className="w-4 h-4" /> ผู้ใช้
+                  <UserCog className="w-4 h-4" /> {t('dash.nav.users')}
                 </Button>
                 <Button onClick={() => navigate('/admin/partners')} size="sm" variant="outline"
                   className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
-                  <Building2 className="w-4 h-4" /> หน่วยงาน
+                  <Building2 className="w-4 h-4" /> {t('dash.nav.partners')}
                 </Button>
               </>
             )}
             {!access.isViewer && (
-              <Button onClick={() => navigate('/intake')} size="sm" className="bg-primary hover:bg-primary/90"><Plus className="w-4 h-4" /> เคสใหม่</Button>
+              <Button onClick={() => navigate('/intake')} size="sm" className="bg-primary hover:bg-primary/90"><Plus className="w-4 h-4" /> {t('dash.nav.newCase')}</Button>
             )}
+            <LanguageToggle className="bg-white/5 border-white/20 text-white/80 hover:text-white" />
             <Button onClick={logout} size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white"><LogOut className="w-4 h-4" /></Button>
 
           </div>
@@ -262,47 +267,47 @@ export default function AdminDashboard() {
         {(alertsQ.data?.length ?? 0) > 0 && (
           <div className="mb-4 border-2 border-destructive/50 bg-destructive/5 rounded-xl p-4">
             <p className="text-sm font-medium text-destructive flex items-center gap-2 mb-2">
-              <BellRing className="w-4 h-4" /> แจ้งเตือนเคสเสี่ยงสูงที่ยังไม่รับทราบ ({alertsQ.data?.length})
+              <BellRing className="w-4 h-4" /> {t('dash.alerts.title', { n: alertsQ.data?.length })}
             </p>
             <div className="space-y-1.5">
               {alertsQ.data?.map((a) => (
                 <div key={a.id} className="flex items-center gap-2 text-xs bg-card border border-border rounded-lg px-3 py-2">
                   {a.kind === 'suicide_risk' && <ShieldAlert className="w-3.5 h-3.5 text-destructive shrink-0" />}
                   <span className="font-mono">{a.case_code}</span>
-                  <span className="text-muted-foreground">· {a.branch || 'ไม่ระบุ'} · ระดับ {a.level}</span>
+                  <span className="text-muted-foreground">· {a.branch || t('dash.alerts.unspecified')} · {t('dash.alerts.level', { level: a.level })}</span>
                   <span className="text-muted-foreground ml-auto hidden sm:inline">{new Date(a.created_at).toLocaleString('th-TH')}</span>
-                  <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => a.case_id && setSelectedId(a.case_id)}>เปิดเคส</Button>
-                  <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => ackAlert.mutate(a.id)}><Check className="w-3 h-3" /> รับทราบ</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => a.case_id && setSelectedId(a.case_id)}>{t('dash.alerts.openCase')}</Button>
+                  <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => ackAlert.mutate(a.id)}><Check className="w-3 h-3" /> {t('dash.alerts.ack')}</Button>
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2">ข้อความแจ้งเตือนทุกช่องทางเป็นแบบไม่ระบุตัวตน (รหัสเคส · พื้นที่ · ระดับ)</p>
+            <p className="text-[10px] text-muted-foreground mt-2">{t('dash.alerts.footnote')}</p>
           </div>
         )}
 
         <Tabs defaultValue="overview">
           <TabsList className="mb-4">
-            <TabsTrigger value="overview">ภาพรวม</TabsTrigger>
-            <TabsTrigger value="cases">จัดการเคส</TabsTrigger>
-            <TabsTrigger value="caseload">Caseload</TabsTrigger>
-            <TabsTrigger value="tracker">Tracker</TabsTrigger>
+            <TabsTrigger value="overview">{t('dash.tabs.overview')}</TabsTrigger>
+            <TabsTrigger value="cases">{t('dash.tabs.cases')}</TabsTrigger>
+            <TabsTrigger value="caseload">{t('dash.tabs.caseload')}</TabsTrigger>
+            <TabsTrigger value="tracker">{t('dash.tabs.tracker')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
             <div className="bg-card border border-border rounded-xl p-3 mb-4 flex flex-col sm:flex-row gap-3 sm:items-center shadow-card">
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <MapPin className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-xs text-muted-foreground shrink-0">พื้นที่:</span>
+                <span className="text-xs text-muted-foreground shrink-0">{t('dash.filter.area')}</span>
                 <Select value={branch} onValueChange={setBranch}>
                   <SelectTrigger className="h-9 max-w-[220px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {branchOptions.map((b) => <SelectItem key={b} value={b}>{b === 'all' ? 'ทุกพื้นที่' : b}</SelectItem>)}
+                    {branchOptions.map((b) => <SelectItem key={b} value={b}>{b === 'all' ? t('dash.filter.allAreas') : b}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <span className="text-[11px] text-muted-foreground ml-1">{stats?.total ?? 0} เคส</span>
+                <span className="text-[11px] text-muted-foreground ml-1">{t('dash.filter.caseCount', { n: stats?.total ?? 0 })}</span>
               </div>
               <div className="flex gap-2">
-                <Button onClick={exportCSV} variant="outline" size="sm" className="h-9"><Download className="w-3.5 h-3.5" /> CSV</Button>
+                <Button onClick={exportCSV} variant="outline" size="sm" className="h-9"><Download className="w-3.5 h-3.5" /> {t('dash.export.csv')}</Button>
               </div>
             </div>
 
@@ -311,16 +316,16 @@ export default function AdminDashboard() {
             ) : (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-                  <StatCard num={stats?.total ?? 0} label="เคสทั้งหมด" tone="purple" />
-                  <StatCard num={stats?.open ?? 0} label="ยังไม่ปิดเคส" tone="default" />
-                  <StatCard num={stats?.suicide_risk ?? 0} label="เสี่ยงทำร้ายตนเอง" tone="red" />
-                  <StatCard num={stats?.unassigned ?? 0} label="ยังไม่มอบหมาย" tone="amber" />
-                  <StatCard num={stats?.overdue_follow_up ?? 0} label="เลยนัดติดตาม" tone="amber" />
+                  <StatCard num={stats?.total ?? 0} label={t('dash.stat.total')} tone="purple" />
+                  <StatCard num={stats?.open ?? 0} label={t('dash.stat.open')} tone="default" />
+                  <StatCard num={stats?.suicide_risk ?? 0} label={t('dash.stat.suicideRisk')} tone="red" />
+                  <StatCard num={stats?.unassigned ?? 0} label={t('dash.stat.unassigned')} tone="amber" />
+                  <StatCard num={stats?.overdue_follow_up ?? 0} label={t('dash.stat.overdue')} tone="amber" />
                 </div>
-                <ChartBlock title="สถานะเคส" data={Object.entries(stats?.by_status ?? {}).map(([k, v]) => ({ label: STATUS_LABEL[k as CaseStatus] || k, value: v }))} />
-                <ChartBlock title="ระดับความรุนแรง" data={Object.entries(stats?.by_severity ?? {}).map(([k, v]) => ({ label: k, value: v }))} />
-                {branch === 'all' && <ChartBlock title="แยกตามพื้นที่" data={Object.entries(stats?.by_branch ?? {}).map(([k, v]) => ({ label: k, value: v }))} />}
-                <ChartBlock title="กลุ่มประชากร (KP)" data={Object.entries(stats?.by_kp ?? {}).map(([k, v]) => ({ label: k, value: v }))} />
+                <ChartBlock title={t('dash.chart.byStatus')} data={Object.entries(stats?.by_status ?? {}).map(([k, v]) => ({ label: t(`status.${k}`), value: v }))} noDataLabel={t('dash.chart.noData')} />
+                <ChartBlock title={t('dash.chart.bySeverity')} data={Object.entries(stats?.by_severity ?? {}).map(([k, v]) => ({ label: k, value: v }))} noDataLabel={t('dash.chart.noData')} />
+                {branch === 'all' && <ChartBlock title={t('dash.chart.byBranch')} data={Object.entries(stats?.by_branch ?? {}).map(([k, v]) => ({ label: k, value: v }))} noDataLabel={t('dash.chart.noData')} />}
+                <ChartBlock title={t('dash.chart.byKp')} data={Object.entries(stats?.by_kp ?? {}).map(([k, v]) => ({ label: k, value: v }))} noDataLabel={t('dash.chart.noData')} />
               </>
             )}
           </TabsContent>
@@ -329,25 +334,25 @@ export default function AdminDashboard() {
             <div className="bg-card border border-border rounded-xl p-3 mb-4 grid sm:grid-cols-4 gap-2 shadow-card">
               <div className="relative sm:col-span-1">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ค้นหาเลขเคส" className="h-9 pl-8 text-sm" />
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('dash.filter.searchPlaceholder')} className="h-9 pl-8 text-sm" />
               </div>
               <Select value={status} onValueChange={(v) => setStatus(v as any)}>
-                <SelectTrigger className="h-9"><SelectValue placeholder="สถานะ" /></SelectTrigger>
+                <SelectTrigger className="h-9"><SelectValue placeholder={t('dash.filter.status')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">ทุกสถานะ</SelectItem>
-                  {(['received', 'inprogress', 'completed', 'cancelled'] as CaseStatus[]).map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+                  <SelectItem value="all">{t('dash.filter.allStatuses')}</SelectItem>
+                  {(['received', 'inprogress', 'completed', 'cancelled'] as CaseStatus[]).map((s) => <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Select value={branch} onValueChange={setBranch}>
                 <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>{branchOptions.map((b) => <SelectItem key={b} value={b}>{b === 'all' ? 'ทุกพื้นที่' : b}</SelectItem>)}</SelectContent>
+                <SelectContent>{branchOptions.map((b) => <SelectItem key={b} value={b}>{b === 'all' ? t('dash.filter.allAreas') : b}</SelectItem>)}</SelectContent>
               </Select>
               <Select value={assignee} onValueChange={setAssignee}>
                 <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">ผู้รับผิดชอบทั้งหมด</SelectItem>
-                  <SelectItem value="me">เคสของฉัน</SelectItem>
-                  <SelectItem value="unassigned">ยังไม่มอบหมาย</SelectItem>
+                  <SelectItem value="all">{t('dash.filter.allAssignees')}</SelectItem>
+                  <SelectItem value="me">{t('dash.filter.myCases')}</SelectItem>
+                  <SelectItem value="unassigned">{t('dash.filter.unassigned')}</SelectItem>
                   {(staffQ.data ?? []).map((s) => <SelectItem key={s.id} value={s.id}>{s.display_name || s.email}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -356,7 +361,7 @@ export default function AdminDashboard() {
             {casesQ.isLoading ? (
               <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>
             ) : (casesQ.data?.rows.length ?? 0) === 0 ? (
-              <p className="text-sm text-center text-muted-foreground py-12">ไม่พบเคสตามเงื่อนไข</p>
+              <p className="text-sm text-center text-muted-foreground py-12">{t('dash.cases.noneFound')}</p>
             ) : (
               <div className="space-y-2">
                 {casesQ.data?.rows.map((c) => {
@@ -368,15 +373,15 @@ export default function AdminDashboard() {
                         <span className="font-mono text-[11px] bg-foreground/90 text-background px-2 py-1 rounded">{c.case_code}</span>
                         <StatusBadge value={c.status} />
                         {c.severity && <SeverityBadge value={c.severity} />}
-                        {c.suicide_risk && <span className="text-[10px] bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full">เสี่ยงทำร้ายตนเอง</span>}
-                        {overdue && <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">เลยนัดติดตาม</span>}
+                        {c.suicide_risk && <span className="text-[10px] bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full">{t('dash.cases.suicideRiskBadge')}</span>}
+                        {overdue && <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">{t('dash.cases.overdueBadge')}</span>}
                         <span className="ml-auto text-[11px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
                       </div>
-                      <p className="text-sm font-medium truncate">{c.victim?.name_masked || 'ไม่ระบุชื่อ'} · {c.profile?.kp || '-'}</p>
+                      <p className="text-sm font-medium truncate">{c.victim?.name_masked || t('dash.cases.unnamed')} · {c.profile?.kp || '-'}</p>
                       <p className="text-xs text-muted-foreground truncate">{c.ai_result?.summary || c.profile?.incidentPlace || '-'}</p>
                       <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                        <UserCheck className="w-3 h-3" /> {staffName(c.assigned_to) || 'ยังไม่มอบหมาย'}
-                        {c.follow_up_at && <> · <CalendarClock className="w-3 h-3" /> นัด {new Date(c.follow_up_at).toLocaleDateString('th-TH')}</>}
+                        <UserCheck className="w-3 h-3" /> {staffName(c.assigned_to) || t('dash.cases.unassigned')}
+                        {c.follow_up_at && <> · <CalendarClock className="w-3 h-3" /> {t('dash.cases.followUp', { date: new Date(c.follow_up_at).toLocaleDateString('th-TH') })}</>}
                       </p>
                     </button>
                   );
@@ -386,7 +391,7 @@ export default function AdminDashboard() {
 
             <div className="flex items-center justify-between mt-4">
               <span className="text-xs text-muted-foreground">
-                {casesQ.data?.count ?? 0} เคส · หน้า {page + 1}/{totalPages}
+                {t('dash.cases.pageInfo', { n: casesQ.data?.count ?? 0, page: page + 1, total: totalPages })}
               </span>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage((p) => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
@@ -397,33 +402,33 @@ export default function AdminDashboard() {
 
           <TabsContent value="caseload">
             <div className="bg-card border border-border rounded-xl p-5 shadow-card">
-              <p className="text-sm font-medium mb-3">ภาระงานรายเจ้าหน้าที่ (Caseload)</p>
+              <p className="text-sm font-medium mb-3">{t('dash.caseload.title')}</p>
               <div className="space-y-2">
                 {Object.entries(stats?.by_caseworker ?? {}).map(([k, v]) => (
                   <div key={k} className="flex items-center gap-3 text-sm border-b border-border/60 pb-2 last:border-none">
                     <UserCheck className="w-4 h-4 text-primary" />
-                    <span className="flex-1 truncate">{k === 'unassigned' ? 'ยังไม่มอบหมาย' : staffName(k)}</span>
+                    <span className="flex-1 truncate">{k === 'unassigned' ? t('dash.filter.unassigned') : staffName(k)}</span>
                     <span className="tabular-nums font-medium">{v}</span>
                     <Button size="sm" variant="outline" className="h-7 text-[11px]"
-                      onClick={() => { setAssignee(k === 'unassigned' ? 'unassigned' : k); toast.info('กรองเคสของผู้รับผิดชอบนี้ในแท็บจัดการเคสแล้ว'); }}>
-                      ดูเคส
+                      onClick={() => { setAssignee(k === 'unassigned' ? 'unassigned' : k); toast.info(t('dash.caseload.filteredToast')); }}>
+                      {t('dash.caseload.viewCases')}
                     </Button>
                   </div>
                 ))}
-                {Object.keys(stats?.by_caseworker ?? {}).length === 0 && <p className="text-xs text-muted-foreground">ยังไม่มีข้อมูล</p>}
+                {Object.keys(stats?.by_caseworker ?? {}).length === 0 && <p className="text-xs text-muted-foreground">{t('dash.caseload.noData')}</p>}
               </div>
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <StatCard num={stats?.unassigned ?? 0} label="ยังไม่มอบหมาย" tone="amber" />
-                <StatCard num={stats?.overdue_follow_up ?? 0} label="เลยนัดติดตาม" tone="red" />
+                <StatCard num={stats?.unassigned ?? 0} label={t('dash.stat.unassigned')} tone="amber" />
+                <StatCard num={stats?.overdue_follow_up ?? 0} label={t('dash.stat.overdue')} tone="red" />
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="tracker">
             <div className="bg-card border border-border rounded-xl p-5 mb-3">
-              <p className="font-medium mb-1">ส่งลิงก์ Tracker ให้ผู้ร้องเรียน</p>
-              <p className="text-sm text-muted-foreground mb-3 leading-relaxed">ผู้รับบริการกรอกเลขอ้างอิงเพื่อติดตามสถานะเคสตัวเองได้ โดยไม่เห็นข้อมูลเคสอื่น</p>
-              <Button onClick={() => navigate('/track')} className="bg-gradient-primary">เปิดหน้า Tracker</Button>
+              <p className="font-medium mb-1">{t('dash.tracker.title')}</p>
+              <p className="text-sm text-muted-foreground mb-3 leading-relaxed">{t('dash.tracker.body')}</p>
+              <Button onClick={() => navigate('/track')} className="bg-gradient-primary">{t('dash.tracker.open')}</Button>
             </div>
           </TabsContent>
         </Tabs>
@@ -442,13 +447,13 @@ function StatCard({ num, label, tone }: { num: number; label: string; tone: 'pur
   );
 }
 
-function ChartBlock({ title, data }: { title: string; data: { label: string; value: number }[] }) {
+function ChartBlock({ title, data, noDataLabel }: { title: string; data: { label: string; value: number }[]; noDataLabel: string }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   const visible = data.filter((d) => d.value > 0);
   return (
     <div className="bg-card border border-border rounded-[1.25rem] p-5 mb-4 shadow-card animate-bloom">
       <p className="text-xs font-medium text-muted-foreground mb-3 tracking-wide">{title}</p>
-      {visible.length === 0 ? <p className="text-xs text-muted-foreground">ยังไม่มีข้อมูล</p> : (
+      {visible.length === 0 ? <p className="text-xs text-muted-foreground">{noDataLabel}</p> : (
         <div className="space-y-2">
           {visible.map((d) => (
             <div key={d.label} className="flex items-center gap-3">
@@ -469,6 +474,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   caseId: string; staff: Staff[]; staffName: (id: string | null) => string | null;
   onBack: () => void; onChanged: () => void;
 }) {
+  const { t } = useI18n();
   const qc = useQueryClient();
   const [note, setNote] = useState('');
   const [audioSigned, setAudioSigned] = useState<Record<number, string>>({});
@@ -485,7 +491,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
     setPiiLoading(true);
     const { data, error } = await supabase.rpc('get_case_pii' as any, { _case_id: caseId });
     setPiiLoading(false);
-    if (error) { toast.error('ไม่มีสิทธิ์เข้าถึงข้อมูลส่วนบุคคลของเคสนี้'); return; }
+    if (error) { toast.error(t('dash.detail.piiNoAccess')); return; }
     setPii(data as any);
   };
 
@@ -530,9 +536,9 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
     const { data: sess } = await supabase.auth.getUser();
     const { error } = await supabase.from('case_questions' as never)
       .insert({ case_id: caseId, question: q.slice(0, 1000), asked_by: sess.user?.id } as never);
-    if (error) { toast.error('ส่งคำถามไม่สำเร็จ'); return; }
+    if (error) { toast.error(t('dash.detail.sendQuestionFailed')); return; }
     setNewQuestion('');
-    toast.success('ส่งคำถามแล้ว — ผู้รายงานจะเห็นเมื่อติดตามเคสด้วยรหัส');
+    toast.success(t('dash.detail.sendQuestionSuccess'));
     qc.invalidateQueries({ queryKey: ['case-questions', caseId] });
   };
 
@@ -565,7 +571,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
 
   const patchCase = async (patch: Record<string, unknown>, msg: string) => {
     const { error } = await supabase.from('cases').update(patch as never).eq('id', caseId);
-    if (error) { toast.error('บันทึกไม่สำเร็จ'); return; }
+    if (error) { toast.error(t('dash.detail.saveFailed')); return; }
     toast.success(msg);
     qc.invalidateQueries({ queryKey: ['case', caseId] });
     onChanged();
@@ -573,9 +579,9 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
 
   const updateStatus = async (status: CaseStatus) => {
     const { error } = await supabase.from('cases').update({ status } as never).eq('id', caseId);
-    if (error) { toast.error('อัปเดตไม่สำเร็จ'); return; }
+    if (error) { toast.error(t('dash.detail.statusUpdateFailed')); return; }
     await supabase.from('case_timeline').insert({ case_id: caseId, status, note: note || null } as never);
-    toast.success('อัปเดตสถานะแล้ว');
+    toast.success(t('dash.detail.statusUpdateSuccess'));
     qc.invalidateQueries({ queryKey: ['case', caseId] });
     onChanged();
   };
@@ -614,12 +620,12 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
-                  <FileText className="w-4 h-4" /> เอกสาร <ChevronDown className="w-3.5 h-3.5" />
+                  <FileText className="w-4 h-4" /> {t('dash.detail.docsMenu')} <ChevronDown className="w-3.5 h-3.5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
                 <DropdownMenuItem onClick={() => void withPii((full) => printCaseReport(full))}>
-                  <Printer className="w-4 h-4" /> รายงานเคสฉบับเต็ม (PDF)
+                  <Printer className="w-4 h-4" /> {t('dash.detail.fullReportPdf')}
                 </DropdownMenuItem>
                 {DOC_KINDS.map((dk) => (
                   <DropdownMenuItem key={dk.key} onClick={() => void withPii((full) => printCaseDocument(dk.key, docInputFromReport(full)))}>
@@ -637,7 +643,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
         {c.suicide_risk && (
           <section className="border-2 border-destructive rounded-xl p-4 bg-destructive/5">
             <p className="text-sm font-semibold text-destructive flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4" /> เคสนี้มีความเสี่ยงทำร้ายตนเอง — ติดตามตามขั้นตอน safety planning และสายด่วน 1323
+              <ShieldAlert className="w-4 h-4" /> {t('dash.detail.suicideBanner')}
             </p>
           </section>
         )}
@@ -645,21 +651,21 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
         {/* Case assignment & follow-up */}
         <section className="bg-card border border-border rounded-xl p-5 shadow-card grid sm:grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-muted-foreground mb-1.5">ผู้รับผิดชอบเคส</p>
-            <Select value={c.assigned_to ?? 'none'} onValueChange={(v) => patchCase({ assigned_to: v === 'none' ? null : v }, 'มอบหมายเคสแล้ว')}>
-              <SelectTrigger className="h-9"><SelectValue placeholder="เลือกเจ้าหน้าที่" /></SelectTrigger>
+            <p className="text-xs text-muted-foreground mb-1.5">{t('dash.detail.assignee')}</p>
+            <Select value={c.assigned_to ?? 'none'} onValueChange={(v) => patchCase({ assigned_to: v === 'none' ? null : v }, t('dash.detail.assignedToast'))}>
+              <SelectTrigger className="h-9"><SelectValue placeholder={t('dash.detail.selectStaff')} /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">ยังไม่มอบหมาย</SelectItem>
+                <SelectItem value="none">{t('dash.filter.unassigned')}</SelectItem>
                 {staff.map((st) => <SelectItem key={st.id} value={st.id}>{st.display_name || st.email}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground mb-1.5">วันนัดติดตาม</p>
+            <p className="text-xs text-muted-foreground mb-1.5">{t('dash.detail.followUpDate')}</p>
             <Input
               type="date"
               value={c.follow_up_at ? new Date(c.follow_up_at).toISOString().slice(0, 10) : ''}
-              onChange={(e) => patchCase({ follow_up_at: e.target.value ? new Date(e.target.value).toISOString() : null }, 'ตั้งวันนัดติดตามแล้ว')}
+              onChange={(e) => patchCase({ follow_up_at: e.target.value ? new Date(e.target.value).toISOString() : null }, t('dash.detail.followUpSetToast'))}
               className="h-9"
             />
           </div>
@@ -667,7 +673,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
 
         {c.ai_result && (
           <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-            <p className="text-xs font-medium text-primary mb-2">ความเห็นเบื้องต้นจากระบบ AI</p>
+            <p className="text-xs font-medium text-primary mb-2">{t('dash.detail.aiOpinion')}</p>
             <div className="flex items-center gap-3 mb-3">
               <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                 <div className={`h-full ${c.ai_result.riskLevel === 'high' ? 'bg-destructive' : c.ai_result.riskLevel === 'medium' ? 'bg-warning' : 'bg-success'}`} style={{ width: `${c.ai_result.riskScore}%` }} />
@@ -687,76 +693,76 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
                 disabled={c.ai_reviewed}
                 onClick={async () => {
                   const { data: sess } = await supabase.auth.getUser();
-                  patchCase({ ai_reviewed: true, ai_reviewed_at: new Date().toISOString(), ai_reviewed_by: sess.user?.id }, 'บันทึกการทบทวนผล AI แล้ว');
+                  patchCase({ ai_reviewed: true, ai_reviewed_at: new Date().toISOString(), ai_reviewed_by: sess.user?.id }, t('dash.detail.aiReviewedToast'));
                 }}>
-                <Check className="w-3 h-3" /> {c.ai_reviewed ? `เจ้าหน้าที่ทบทวนแล้ว${c.ai_reviewed_at ? ` · ${new Date(c.ai_reviewed_at).toLocaleDateString('th-TH')}` : ''}` : 'ทำเครื่องหมายว่าทบทวนแล้ว'}
+                <Check className="w-3 h-3" /> {c.ai_reviewed ? t('dash.detail.aiReviewedLabel', { date: c.ai_reviewed_at ? ` · ${new Date(c.ai_reviewed_at).toLocaleDateString('th-TH')}` : '' }) : t('dash.detail.markReviewed')}
               </Button>
             </div>
           </section>
         )}
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-          <p className="text-xs font-medium text-muted-foreground mb-3">ผลแบบคัดกรองมาตรฐาน</p>
+          <p className="text-xs font-medium text-muted-foreground mb-3">{t('dash.detail.standardScreening')}</p>
           <div className="grid sm:grid-cols-2 gap-3 text-sm">
-            <div><span className="text-muted-foreground text-xs">2Q: </span>{s.q2Positive === undefined ? '-' : s.q2Positive ? 'ผิดปกติ' : 'ปกติ'}</div>
+            <div><span className="text-muted-foreground text-xs">2Q: </span>{s.q2Positive === undefined ? '-' : s.q2Positive ? t('dash.detail.q2Abnormal') : t('dash.detail.q2Normal')}</div>
             <div><span className="text-muted-foreground text-xs">9Q: </span>{typeof s.q9Total === 'number' ? `${s.q9Total} — ${q9Level(s.q9Total).label}` : '-'}</div>
-            <div><span className="text-muted-foreground text-xs">ข้อ 9 (ทำร้ายตนเอง): </span>{c.suicide_risk ? 'พบความเสี่ยง' : 'ไม่พบ'}</div>
-            <div><span className="text-muted-foreground text-xs">NRM: </span>{s.nrmPositive === undefined ? '-' : s.nrmPositive ? 'เข้าข่ายค้ามนุษย์' : 'ยังไม่เข้าเกณฑ์'}{s.nrmUnder18 ? ' · ผู้เยาว์' : ''}</div>
+            <div><span className="text-muted-foreground text-xs">{t('dash.detail.q9SelfHarmLabel')}</span>{c.suicide_risk ? t('dash.detail.riskFound') : t('dash.detail.riskNotFound')}</div>
+            <div><span className="text-muted-foreground text-xs">NRM: </span>{s.nrmPositive === undefined ? '-' : s.nrmPositive ? t('dash.detail.nrmTrafficking') : t('dash.detail.nrmNotYet')}{s.nrmUnder18 ? t('dash.detail.nrmMinor') : ''}</div>
           </div>
         </section>
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card space-y-4 text-sm">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <p className="text-xs font-medium text-muted-foreground">ข้อมูลผู้เกี่ยวข้อง</p>
+            <p className="text-xs font-medium text-muted-foreground">{t('dash.detail.relatedInfo')}</p>
             {!pii && (
               <Button size="sm" variant="outline" className="gap-1.5 text-xs" disabled={piiLoading} onClick={revealPii}>
-                {piiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldAlert className="w-3 h-3" />} เปิดดูข้อมูลส่วนบุคคล
+                {piiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldAlert className="w-3 h-3" />} {t('dash.detail.revealPii')}
               </Button>
             )}
           </div>
           {!pii && (
             <p className="text-xs text-muted-foreground">
-              ชื่อ ที่อยู่ และเบอร์โทรถูกจัดเก็บแยกตาม PDPA · การเปิดดูจะถูกบันทึกไว้ในประวัติการเข้าถึง
+              {t('dash.detail.piiHint')}
             </p>
           )}
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">ผู้แจ้ง</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.reporter')}</p>
               <p>{pii ? (pii.reporter?.name || '-') : '••••••'}</p>
               <p className="text-xs text-muted-foreground">{pii ? [pii.reporter?.phone, pii.reporter?.email].filter(Boolean).join(' · ') : '••••••'}</p>
               {pii?.reporter?.address && <p className="text-xs text-muted-foreground">{pii.reporter.address}</p>}
             </div>
             <div>
-              <p className="text-xs text-muted-foreground mb-1">ผู้รับบริการ</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.client')}</p>
               <p>{pii ? (pii.victim?.name || '-') : (c.victim?.name_masked || '••••••')}</p>
               <p className="text-xs text-muted-foreground">{c.profile?.kp} · {c.profile?.gender} · {c.profile?.age}</p>
               {pii?.victim?.contact && <p className="text-xs text-muted-foreground">{pii.victim.contact}</p>}
             </div>
-            <div><p className="text-xs text-muted-foreground mb-1">พื้นที่</p><p>{[c.profile?.subdistrict && `ต.${c.profile.subdistrict}`, c.profile?.district && `อ.${c.profile.district}`, c.profile?.province || c.profile?.branch].filter(Boolean).join(' ')}</p>{c.profile?.geo && <a className="text-[11px] text-primary underline" href={`https://www.openstreetmap.org/?mlat=${c.profile.geo.lat}&mlon=${c.profile.geo.lng}#map=16/${c.profile.geo.lat}/${c.profile.geo.lng}`} target="_blank" rel="noreferrer">ดูหมุดบนแผนที่</a>}</div>
-            <div><p className="text-xs text-muted-foreground mb-1">พื้นที่เกิดเหตุ</p><p>{c.profile?.incidentPlace || '-'}</p></div>
+            <div><p className="text-xs text-muted-foreground mb-1">{t('dash.detail.area')}</p><p>{[c.profile?.subdistrict && `ต.${c.profile.subdistrict}`, c.profile?.district && `อ.${c.profile.district}`, c.profile?.province || c.profile?.branch].filter(Boolean).join(' ')}</p>{c.profile?.geo && <a className="text-[11px] text-primary underline" href={`https://www.openstreetmap.org/?mlat=${c.profile.geo.lat}&mlon=${c.profile.geo.lng}#map=16/${c.profile.geo.lat}/${c.profile.geo.lng}`} target="_blank" rel="noreferrer">{t('dash.detail.viewOnMap')}</a>}</div>
+            <div><p className="text-xs text-muted-foreground mb-1">{t('dash.detail.incidentPlace')}</p><p>{c.profile?.incidentPlace || '-'}</p></div>
           </div>
         </section>
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-          <p className="text-xs font-medium text-muted-foreground mb-3">บันทึกการสัมภาษณ์</p>
+          <p className="text-xs font-medium text-muted-foreground mb-3">{t('dash.detail.interviewLog')}</p>
           <div className="space-y-3">
             {(c.answers || []).map((a: any, i: number) => (
               <div key={i} className="border-b border-border/60 pb-3 last:border-none last:pb-0">
                 <p className="text-[10px] uppercase tracking-wider text-primary mb-1">{a.cat}</p>
                 <p className="text-xs text-muted-foreground mb-1">{a.question}</p>
-                <p className="text-sm bg-muted/40 border border-border rounded-md p-2">{a.transcript || '(ไม่มีคำตอบ)'}</p>
+                <p className="text-sm bg-muted/40 border border-border rounded-md p-2">{a.transcript || t('dash.detail.noAnswer')}</p>
                 {audioSigned[i] && <audio src={audioSigned[i]} controls className="w-full mt-2 h-9" />}
-                {c.staff_observations?.[i] && <p className="text-xs text-amber-700 dark:text-amber-300 mt-1.5">หมายเหตุ: {c.staff_observations[i]}</p>}
+                {c.staff_observations?.[i] && <p className="text-xs text-amber-700 dark:text-amber-300 mt-1.5">{t('dash.detail.staffNote', { note: c.staff_observations[i] })}</p>}
               </div>
             ))}
           </div>
         </section>
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-          <p className="text-xs font-medium text-muted-foreground mb-2">การส่งต่อ</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.referrals')}</p>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {(c.referrals || []).map((r: string, i: number) => <span key={i} className="text-[11px] bg-primary-soft text-primary px-2 py-1 rounded-full">{r}</span>)}
-            {(!c.referrals || c.referrals.length === 0) && <span className="text-xs text-muted-foreground">ยังไม่มี</span>}
+            {(!c.referrals || c.referrals.length === 0) && <span className="text-xs text-muted-foreground">{t('dash.detail.none')}</span>}
           </div>
           {c.referral_note && <p className="text-xs text-muted-foreground">{c.referral_note}</p>}
         </section>
@@ -764,15 +770,15 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
         {partners.length > 0 && (
           <section className="bg-card border border-border rounded-xl p-5 shadow-card">
             <p className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5" /> หน่วยงานรับส่งต่อในพื้นที่{c.profile?.province ? ` (${c.profile.province})` : ''}
+              <Building2 className="w-3.5 h-3.5" /> {t('dash.detail.localPartners', { province: c.profile?.province ? ` (${c.profile.province})` : '' })}
             </p>
             <div className="space-y-2.5">
               {partners.map((p) => (
                 <div key={p.id} className="border border-border/60 rounded-lg p-3 text-sm">
                   <p className="font-medium text-[13px]">{p.name}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {[p.district, p.province].filter(Boolean).join(' · ') || 'ทุกพื้นที่'}
-                    {p.phone ? ` · โทร ${p.phone}` : ''}{p.email ? ` · ${p.email}` : ''}
+                    {[p.district, p.province].filter(Boolean).join(' · ') || t('dash.detail.allAreas')}
+                    {p.phone ? t('dash.detail.phone', { phone: p.phone }) : ''}{p.email ? ` · ${p.email}` : ''}
                   </p>
                   {Array.isArray(p.services) && p.services.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
@@ -787,7 +793,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card space-y-3">
           <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-            <MessageCircleQuestion className="w-3.5 h-3.5" /> ถามคำถามเพิ่มเติมถึงผู้รายงาน (ตอบผ่านหน้าติดตามเคส)
+            <MessageCircleQuestion className="w-3.5 h-3.5" /> {t('dash.detail.askQuestionsTitle')}
           </p>
           {questions.map((q) => (
             <div key={q.id} className="border border-border/60 rounded-lg p-3 space-y-2">
@@ -795,18 +801,18 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
               <p className="text-[10px] text-muted-foreground">{new Date(q.created_at).toLocaleString('th-TH')}</p>
               {q.answer_text || q.answer_audio_url ? (
                 <div className="bg-muted/50 rounded-md p-2.5 space-y-1.5">
-                  <p className="text-[10px] uppercase tracking-wider text-primary">คำตอบจากผู้รายงาน</p>
+                  <p className="text-[10px] uppercase tracking-wider text-primary">{t('dash.detail.answerFromReporter')}</p>
                   {q.answer_text && <p className="text-sm">{q.answer_text}</p>}
                   {q.answer_audio_url && (
                     answerAudio[q.id]
                       ? <audio src={answerAudio[q.id]} controls className="w-full h-9" />
                       : <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => void playAnswerAudio(q.id, q.answer_audio_url!)}>
-                          <Volume2 className="w-3 h-3 mr-1" /> ฟังเสียงตอบ
+                          <Volume2 className="w-3 h-3 mr-1" /> {t('dash.detail.listenAnswer')}
                         </Button>
                   )}
                 </div>
               ) : (
-                <p className="text-[11px] text-muted-foreground">รอคำตอบ — ผู้รายงานใช้รหัส {c.case_code} ในหน้าติดตามเคส</p>
+                <p className="text-[11px] text-muted-foreground">{t('dash.detail.waitingAnswer', { code: c.case_code })}</p>
               )}
             </div>
           ))}
@@ -814,7 +820,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
             <Textarea
               value={newQuestion}
               onChange={(e) => setNewQuestion(e.target.value)}
-              placeholder="พิมพ์คำถามถึงผู้รายงาน..."
+              placeholder={t('dash.detail.questionPlaceholder')}
               className="min-h-[44px] text-sm"
               maxLength={1000}
             />
@@ -826,11 +832,11 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
 
         {photoSigned.length > 0 && (
           <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-            <p className="text-xs font-medium text-muted-foreground mb-3">รูปภาพประกอบ ({photoSigned.length})</p>
+            <p className="text-xs font-medium text-muted-foreground mb-3">{t('dash.detail.photos', { n: photoSigned.length })}</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {photoSigned.map((url, i) => (
                 <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-lg overflow-hidden border border-border hover:opacity-90 transition">
-                  <img src={url} alt={`รูปประกอบ ${i + 1}`} className="w-full h-full object-cover" />
+                  <img src={url} alt={t('dash.detail.photoAlt', { n: i + 1 })} className="w-full h-full object-cover" />
                 </a>
               ))}
             </div>
@@ -838,21 +844,21 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
         )}
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-          <p className="text-xs font-medium text-muted-foreground mb-3">อัปเดตสถานะ</p>
+          <p className="text-xs font-medium text-muted-foreground mb-3">{t('dash.detail.updateStatus')}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
             {(['received', 'inprogress', 'completed', 'cancelled'] as CaseStatus[]).map((st) => (
               <button key={st} onClick={() => updateStatus(st)}
                 className={`text-xs py-2 rounded-lg border transition ${c.status === st ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary'}`}>
-                {STATUS_LABEL[st]}
+                {t(`status.${st}`)}
               </button>
             ))}
           </div>
-          <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="หมายเหตุการอัปเดต (ไม่บังคับ)" className="min-h-[60px]" />
+          <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('dash.detail.notePlaceholder')} className="min-h-[60px]" />
         </section>
 
         {c.signature_staff && (
           <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-            <p className="text-xs font-medium text-muted-foreground mb-2">ลายเซ็นเจ้าหน้าที่ — {c.signature_staff_name}</p>
+            <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.staffSignature', { name: c.signature_staff_name })}</p>
             <img src={c.signature_staff} alt="signature" className="bg-white border border-border rounded-md max-h-24" />
           </section>
         )}

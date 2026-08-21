@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
-
-const UPDATED = '5 สิงหาคม 2569';
+import { useI18n } from '@/i18n';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -13,6 +12,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default function Privacy() {
+  const { t } = useI18n();
+  const UPDATED = t('privacy.updatedDate');
+
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="bg-gradient-dark text-white">
@@ -22,101 +24,92 @@ export default function Privacy() {
           </Link>
           <div>
             <h1 className="text-lg font-semibold flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> นโยบายความเป็นส่วนตัว (PDPA)
+              <ShieldCheck className="w-4 h-4" /> {t('privacy.title')}
             </h1>
-            <p className="text-xs text-white/70">มูลนิธิ SWING · ปรับปรุงล่าสุด {UPDATED}</p>
+            <p className="text-xs text-white/70">{t('privacy.updated').replace('{date}', UPDATED)}</p>
           </div>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-5 py-6 space-y-4">
-        <Section title="1. ผู้ควบคุมข้อมูลส่วนบุคคล">
+        <Section title={t('privacy.s1.title')}>
           <p>
-            มูลนิธิเพื่อนพนักงานบริการ (SWING) เป็นผู้ควบคุมข้อมูลส่วนบุคคลของระบบคัดกรองการละเมิดสิทธิด้วยเสียงนี้
-            ติดต่อเจ้าหน้าที่คุ้มครองข้อมูล (DPO) ได้ที่อีเมล <span className="text-foreground">dpo@swingthailand.org</span>
+            {t('privacy.s1.p1')} <span className="text-foreground">dpo@swingthailand.org</span>
           </p>
         </Section>
 
-        <Section title="2. ข้อมูลที่เก็บรวบรวม">
+        <Section title={t('privacy.s2.title')}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>ข้อมูลระบุตัวตน: ชื่อ-นามสกุล ที่อยู่ เบอร์โทร อีเมลของผู้แจ้งและผู้รับบริการ</li>
-            <li>ข้อมูลอ่อนไหว: กลุ่มประชากร เพศสภาพ สถานะสุขภาพจิต (2Q/9Q) และรายละเอียดเหตุการณ์ละเมิด</li>
-            <li>ไฟล์เสียงสัมภาษณ์ ข้อความถอดเสียง รูปภาพประกอบ และลายเซ็นอิเล็กทรอนิกส์</li>
-            <li>ข้อมูลการใช้งานระบบเท่าที่จำเป็นเพื่อความปลอดภัย (เวลาเข้าดูเคส ผู้เข้าดู)</li>
+            <li>{t('privacy.s2.li1')}</li>
+            <li>{t('privacy.s2.li2')}</li>
+            <li>{t('privacy.s2.li3')}</li>
+            <li>{t('privacy.s2.li4')}</li>
           </ul>
         </Section>
 
-        <Section title="3. ฐานทางกฎหมายและวัตถุประสงค์">
+        <Section title={t('privacy.s3.title')}>
           <p>
-            เก็บและใช้ข้อมูลบนฐาน <strong className="text-foreground">ความยินยอมโดยชัดแจ้ง</strong> (มาตรา 26 สำหรับข้อมูลอ่อนไหว)
-            และฐานประโยชน์สำคัญต่อชีวิตในกรณีฉุกเฉินที่มีความเสี่ยงต่อชีวิต เพื่อวัตถุประสงค์:
-            รับเรื่องและช่วยเหลือผู้ถูกละเมิดสิทธิ ส่งต่อหน่วยงานที่เกี่ยวข้อง และจัดทำสถิติแบบไม่ระบุตัวตน
+            {t('privacy.s3.p1.pre')} <strong className="text-foreground">{t('privacy.s3.p1.strong')}</strong>{' '}
+            {t('privacy.s3.p1.post')}
           </p>
         </Section>
 
-        <Section title="4. การเก็บข้อมูลแบบแยกส่วน (data minimisation)">
+        <Section title={t('privacy.s4.title')}>
           <p>
-            ข้อมูลระบุตัวตน (ชื่อ ที่อยู่ เบอร์โทร) ถูกจัดเก็บแยกจากเนื้อหาเคสในตารางเฉพาะที่ไม่มีผู้ใดอ่านได้โดยตรง
-            ต้องเรียกผ่านฟังก์ชันที่ตรวจสิทธิ์และ <strong className="text-foreground">บันทึกประวัติการเข้าดูทุกครั้ง</strong>
-            หน้ารายการเคสจะแสดงเพียงชื่อแบบปกปิด (เช่น ส•••) และรหัสเคสเท่านั้น
+            {t('privacy.s4.p1.pre')} <strong className="text-foreground">{t('privacy.s4.p1.strong')}</strong>{' '}
+            {t('privacy.s4.p1.post')}
           </p>
         </Section>
 
-        <Section title="5. การใช้ AI">
+        <Section title={t('privacy.s5.title')}>
           <p>
-            ระบบใช้ AI ช่วยถอดเสียงและสรุปความเสี่ยงเบื้องต้น ข้อมูลจะถูก
-            <strong className="text-foreground">ลบข้อมูลระบุตัวตนออกก่อนส่งประมวลผลทุกครั้ง</strong>
-            ไม่มีการนำข้อมูลไปฝึกโมเดล และผลลัพธ์ของ AI เป็นเพียงข้อเสนอแนะ — การตัดสินใจทั้งหมดทำโดยเจ้าหน้าที่
+            {t('privacy.s5.p1.pre')}{' '}
+            <strong className="text-foreground">{t('privacy.s5.p1.strong')}</strong>{' '}
+            {t('privacy.s5.p1.post')}
           </p>
         </Section>
 
-        <Section title="6. ผู้ที่เข้าถึงข้อมูลได้">
+        <Section title={t('privacy.s6.title')}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>ผู้ดูแลระบบ / หัวหน้างาน: เข้าถึงเคสทั้งหมดเท่าที่จำเป็นต่อการกำกับดูแล</li>
-            <li>นักสังคมสงเคราะห์: เข้าถึงข้อมูลระบุตัวตนเฉพาะเคสที่ได้รับมอบหมาย</li>
-            <li>ผู้อ่านอย่างเดียว: เห็นเฉพาะข้อมูลเคสแบบไม่ระบุตัวตน</li>
-            <li>หน่วยงานภายนอกจะได้รับข้อมูลเฉพาะเมื่อเจ้าของข้อมูลยินยอมให้ส่งต่อ</li>
+            <li>{t('privacy.s6.li1')}</li>
+            <li>{t('privacy.s6.li2')}</li>
+            <li>{t('privacy.s6.li3')}</li>
+            <li>{t('privacy.s6.li4')}</li>
           </ul>
         </Section>
 
-        <Section title="7. ระยะเวลาจัดเก็บ">
-          <p>
-            เก็บข้อมูลเคส 5 ปีนับจากวันปิดเคส (สอดคล้องกับอายุความคดี) ไฟล์เสียงและรูปภาพเก็บ 1 ปีหลังปิดเคส
-            เมื่อครบกำหนดจะลบหรือทำให้ไม่สามารถระบุตัวบุคคลได้
-          </p>
+        <Section title={t('privacy.s7.title')}>
+          <p>{t('privacy.s7.p1')}</p>
         </Section>
 
-        <Section title="8. สิทธิของเจ้าของข้อมูล">
-          <p>ท่านมีสิทธิตาม พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 ได้แก่</p>
+        <Section title={t('privacy.s8.title')}>
+          <p>{t('privacy.s8.intro')}</p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>ขอเข้าถึงและขอสำเนาข้อมูล</li>
-            <li>ขอแก้ไขให้ถูกต้องเป็นปัจจุบัน</li>
-            <li>ขอลบ ทำลาย หรือทำให้ไม่ระบุตัวตน</li>
-            <li>ขอระงับการใช้ / คัดค้านการประมวลผล</li>
-            <li>ถอนความยินยอมเมื่อใดก็ได้ โดยไม่กระทบการช่วยเหลือที่ได้ดำเนินการไปแล้ว</li>
-            <li>ร้องเรียนต่อสำนักงานคณะกรรมการคุ้มครองข้อมูลส่วนบุคคล</li>
+            <li>{t('privacy.s8.li1')}</li>
+            <li>{t('privacy.s8.li2')}</li>
+            <li>{t('privacy.s8.li3')}</li>
+            <li>{t('privacy.s8.li4')}</li>
+            <li>{t('privacy.s8.li5')}</li>
+            <li>{t('privacy.s8.li6')}</li>
           </ul>
-          <p>
-            ใช้สิทธิได้โดยแจ้งรหัสเคสของท่านมาที่ dpo@swingthailand.org หรือติดต่อเจ้าหน้าที่ที่รับเรื่อง
-            ระบบจะดำเนินการภายใน 30 วัน
-          </p>
+          <p>{t('privacy.s8.p2')}</p>
         </Section>
 
-        <Section title="9. มาตรการความปลอดภัย">
+        <Section title={t('privacy.s9.title')}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>เข้ารหัสข้อมูลระหว่างส่งและขณะจัดเก็บ</li>
-            <li>ควบคุมสิทธิ์ระดับแถวข้อมูล (RLS) ตามบทบาทผู้ใช้</li>
-            <li>ไฟล์เสียง/รูปภาพเป็นที่จัดเก็บแบบปิด เปิดดูผ่านลิงก์ชั่วคราวอายุ 5 นาที</li>
-            <li>ออกจากระบบอัตโนมัติเมื่อไม่มีการใช้งาน 20 นาที และบันทึก audit log ทุกการแก้ไข</li>
+            <li>{t('privacy.s9.li1')}</li>
+            <li>{t('privacy.s9.li2')}</li>
+            <li>{t('privacy.s9.li3')}</li>
+            <li>{t('privacy.s9.li4')}</li>
           </ul>
         </Section>
 
-        <Section title="10. เหตุละเมิดข้อมูล">
-          <p>หากเกิดเหตุละเมิดข้อมูลส่วนบุคคล มูลนิธิจะแจ้งสำนักงานฯ ภายใน 72 ชั่วโมง และแจ้งเจ้าของข้อมูลเมื่อมีความเสี่ยงสูง</p>
+        <Section title={t('privacy.s10.title')}>
+          <p>{t('privacy.s10.p1')}</p>
         </Section>
 
         <p className="text-xs text-muted-foreground text-center pb-6">
-          เอกสารนี้จัดทำโดยมูลนิธิ SWING เพื่ออธิบายแนวปฏิบัติของระบบ · ไม่ใช่การรับรองหรือตรวจสอบโดยบุคคลที่สาม
+          {t('privacy.footer')}
         </p>
       </main>
     </div>

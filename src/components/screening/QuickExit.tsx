@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { LogOut } from 'lucide-react';
 import { clearDraft } from '@/lib/draft';
 import { clearAllLocalCases } from '@/lib/localCases';
+import { useI18n } from '@/i18n';
 
 const SAFE_URL = 'https://www.google.co.th/search?q=พยากรณ์อากาศวันนี้';
 
@@ -22,6 +23,7 @@ async function escape(wipeDraft: boolean) {
  * Press Esc twice quickly as a keyboard shortcut.
  */
 export function QuickExit({ wipeDraft = true }: { wipeDraft?: boolean }) {
+  const { t } = useI18n();
   useEffect(() => {
     let last = 0;
     const onKey = (e: KeyboardEvent) => {
@@ -38,11 +40,11 @@ export function QuickExit({ wipeDraft = true }: { wipeDraft?: boolean }) {
     <button
       type="button"
       onClick={() => void escape(wipeDraft)}
-      aria-label="ออกจากหน้านี้ทันที และล้างข้อมูลที่กรอกไว้ในเครื่อง"
-      className="fixed bottom-4 right-4 z-50 flex items-center gap-1.5 rounded-full bg-destructive px-4 py-2.5 text-xs font-medium text-destructive-foreground shadow-elegant transition hover:opacity-90 active:scale-95"
+      aria-label={t('guard.quickExitAria')}
+      className="fixed bottom-4 end-4 z-50 flex items-center gap-1.5 rounded-full bg-destructive px-4 py-2.5 text-xs font-medium text-destructive-foreground shadow-elegant transition hover:opacity-90 active:scale-95"
     >
       <LogOut className="h-4 w-4" />
-      ออกด่วน
+      {t('guard.quickExit')}
     </button>
   );
 }

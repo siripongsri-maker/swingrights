@@ -10,15 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAccess } from '@/hooks/useAccess';
+import { useI18n } from '@/i18n';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
-const ORG_TYPES = [
-  { v: 'hospital', label: 'โรงพยาบาล / สุขภาพ' },
-  { v: 'legal', label: 'กฎหมาย / ทนาย' },
-  { v: 'ngo', label: 'องค์กรภาคประชาชน' },
-  { v: 'shelter', label: 'ศูนย์พักพิง' },
-  { v: 'police', label: 'ตำรวจ / หน่วยงานรัฐ' },
-  { v: 'hotline', label: 'สายด่วน' },
-  { v: 'other', label: 'อื่น ๆ' },
+const ORG_TYPE_KEYS: { v: string; key: string }[] = [
+  { v: 'hospital', key: 'partners.orgType.hospital' },
+  { v: 'legal', key: 'partners.orgType.legal' },
+  { v: 'ngo', key: 'partners.orgType.ngo' },
+  { v: 'shelter', key: 'partners.orgType.shelter' },
+  { v: 'police', key: 'partners.orgType.police' },
+  { v: 'hotline', key: 'partners.orgType.hotline' },
+  { v: 'other', key: 'partners.orgType.other' },
 ];
 
 interface Partner {
@@ -38,6 +40,8 @@ interface Partner {
 const EMPTY = { name: '', org_type: 'ngo', province: '', district: '', phone: '', email: '', address: '', services: '', notes: '' };
 
 export default function AdminPartners() {
+  const { t } = useI18n();
+  const ORG_TYPES = ORG_TYPE_KEYS.map((o) => ({ v: o.v, label: t(o.key) }));
   const { isAdmin, loading } = useAccess();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -61,7 +65,7 @@ export default function AdminPartners() {
   const set = (k: keyof typeof EMPTY, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const add = async () => {
-    if (!form.name.trim()) { toast.error('กรุณากรอกชื่อหน่วยงาน'); return; }
+    if (!form.name.trim()) { toast.error(t('partners.error.nameRequired')); return; }
     setSaving(true);
     const services = form.services.split(',').map((s) => s.trim()).filter(Boolean);
     const { error } = await supabase.from('referral_partners' as never).insert({
@@ -77,8 +81,8 @@ export default function AdminPartners() {
       active: true,
     } as never);
     setSaving(false);
-    if (error) { toast.error('บันทึกไม่สำเร็จ'); return; }
-    toast.success('เพิ่มหน่วยงานแล้ว');
+    if (error) { toast.error(t('partners.error.saveFailed')); return; }
+    toast.success(t('partners.success.added'));
     setForm(EMPTY);
     setOpen(false);
     qc.invalidateQueries({ queryKey: ['admin-partners'] });
@@ -86,15 +90,15 @@ export default function AdminPartners() {
 
   const toggle = async (p: Partner) => {
     const { error } = await supabase.from('referral_partners' as never).update({ active: !p.active } as never).eq('id', p.id);
-    if (error) { toast.error('อัปเดตไม่สำเร็จ'); return; }
+    if (error) { toast.error(t('partners.error.updateFailed')); return; }
     qc.invalidateQueries({ queryKey: ['admin-partners'] });
   };
 
   const remove = async (p: Partner) => {
-    if (!window.confirm(`ลบ "${p.name}" ออกจากรายชื่อหน่วยงานรับส่งต่อ?`)) return;
+    if (!window.confirm(t('partners.confirmDelete', { name: p.name }))) return;
     const { error } = await supabase.from('referral_partners' as never).delete().eq('id', p.id);
-    if (error) { toast.error('ลบไม่สำเร็จ'); return; }
-    toast.success('ลบแล้ว');
+    if (error) { toast.error(t('partners.error.deleteFailed')); return; }
+    toast.success(t('partners.success.deleted'));
     qc.invalidateQueries({ queryKey: ['admin-partners'] });
   };
 
@@ -102,7 +106,7 @@ export default function AdminPartners() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
   if (!isAdmin) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">เฉพาะผู้ดูแลระบบ</div>;
+    return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">{t('partners.adminOnly')}</div>;
   }
 
   const typeLabel = (v: string) => ORG_TYPES.find((o) => o.v === v)?.label ?? v;
@@ -115,17 +119,18 @@ export default function AdminPartners() {
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <h1 className="font-display font-semibold">หน่วยงานรับส่งต่อ</h1>
-            <p className="text-[11px] text-white/60">เครือข่ายช่วยเหลือรายพื้นที่ — ใช้แนะนำในรายละเอียดเคส</p>
+            <h1 className="font-display font-semibold">{t('partners.header.title')}</h1>
+            <p className="text-[11px] text-white/60">{t('partners.header.subtitle')}</p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
+            <LanguageToggle className="ml-auto bg-white/5 border-white/20 text-white/80 hover:text-white" />
             <DialogTrigger asChild>
-              <Button size="sm" className="ml-auto"><Plus className="w-4 h-4 mr-1" /> เพิ่มหน่วยงาน</Button>
+              <Button size="sm"><Plus className="w-4 h-4 mr-1" /> {t('partners.add')}</Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>เพิ่มหน่วยงานรับส่งต่อ</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{t('partners.add.title')}</DialogTitle></DialogHeader>
               <div className="grid gap-3 py-2">
-                <Input placeholder="ชื่อหน่วยงาน *" value={form.name} onChange={(e) => set('name', e.target.value)} maxLength={200} />
+                <Input placeholder={t('partners.form.namePlaceholder')} value={form.name} onChange={(e) => set('name', e.target.value)} maxLength={200} />
                 <Select value={form.org_type} onValueChange={(v) => set('org_type', v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -133,18 +138,18 @@ export default function AdminPartners() {
                   </SelectContent>
                 </Select>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="จังหวัด (เว้นว่าง = ทุกพื้นที่)" value={form.province} onChange={(e) => set('province', e.target.value)} maxLength={80} />
-                  <Input placeholder="อำเภอ/เขต" value={form.district} onChange={(e) => set('district', e.target.value)} maxLength={80} />
+                  <Input placeholder={t('partners.form.provincePlaceholder')} value={form.province} onChange={(e) => set('province', e.target.value)} maxLength={80} />
+                  <Input placeholder={t('partners.form.districtPlaceholder')} value={form.district} onChange={(e) => set('district', e.target.value)} maxLength={80} />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="โทรศัพท์" value={form.phone} onChange={(e) => set('phone', e.target.value)} maxLength={60} />
-                  <Input placeholder="อีเมล" value={form.email} onChange={(e) => set('email', e.target.value)} maxLength={120} />
+                  <Input placeholder={t('partners.form.phonePlaceholder')} value={form.phone} onChange={(e) => set('phone', e.target.value)} maxLength={60} />
+                  <Input placeholder={t('partners.form.emailPlaceholder')} value={form.email} onChange={(e) => set('email', e.target.value)} maxLength={120} />
                 </div>
-                <Input placeholder="ที่อยู่" value={form.address} onChange={(e) => set('address', e.target.value)} maxLength={300} />
-                <Input placeholder="บริการที่ให้ (คั่นด้วย ,) เช่น ตรวจสุขภาพ, ให้คำปรึกษากฎหมาย" value={form.services} onChange={(e) => set('services', e.target.value)} maxLength={500} />
-                <Textarea placeholder="หมายเหตุภายใน" value={form.notes} onChange={(e) => set('notes', e.target.value)} maxLength={1000} rows={2} />
+                <Input placeholder={t('partners.form.addressPlaceholder')} value={form.address} onChange={(e) => set('address', e.target.value)} maxLength={300} />
+                <Input placeholder={t('partners.form.servicesPlaceholder')} value={form.services} onChange={(e) => set('services', e.target.value)} maxLength={500} />
+                <Textarea placeholder={t('partners.form.notesPlaceholder')} value={form.notes} onChange={(e) => set('notes', e.target.value)} maxLength={1000} rows={2} />
                 <Button onClick={() => void add()} disabled={saving}>
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'บันทึก'}
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('partners.save')}
                 </Button>
               </div>
             </DialogContent>
@@ -155,7 +160,7 @@ export default function AdminPartners() {
       <main className="max-w-4xl mx-auto px-4 sm:px-5 py-6 space-y-3">
         {partners.length === 0 && (
           <div className="bg-card border border-border rounded-xl p-8 text-center text-sm text-muted-foreground">
-            ยังไม่มีหน่วยงานในระบบ — กด "เพิ่มหน่วยงาน" เพื่อเริ่มสร้างเครือข่ายรายพื้นที่
+            {t('partners.empty')}
           </div>
         )}
         {partners.map((p) => (
@@ -168,10 +173,10 @@ export default function AdminPartners() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="font-medium text-sm">{p.name}</h2>
                   <span className="text-[10px] bg-primary-soft text-primary px-2 py-0.5 rounded-full">{typeLabel(p.org_type)}</span>
-                  {!p.active && <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">ปิดใช้งาน</span>}
+                  {!p.active && <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{t('partners.inactive')}</span>}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> {[p.district, p.province].filter(Boolean).join(' · ') || 'ทุกพื้นที่'}
+                  <MapPin className="w-3 h-3" /> {[p.district, p.province].filter(Boolean).join(' · ') || t('partners.allAreas')}
                 </p>
                 <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs text-muted-foreground">
                   {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
@@ -185,10 +190,10 @@ export default function AdminPartners() {
               </div>
               <div className="flex flex-col gap-1.5 shrink-0">
                 <Button size="sm" variant="outline" className="h-8 text-[11px]" onClick={() => void toggle(p)}>
-                  {p.active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}
+                  {p.active ? t('partners.disable') : t('partners.enable')}
                 </Button>
                 <Button size="sm" variant="ghost" className="h-8 text-[11px] text-destructive" onClick={() => void remove(p)}>
-                  <Trash2 className="w-3 h-3 mr-1" /> ลบ
+                  <Trash2 className="w-3 h-3 mr-1" /> {t('partners.delete')}
                 </Button>
               </div>
             </div>

@@ -3,8 +3,9 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { Loader2, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { useAccess, type AppRole, ROLE_LABEL } from '@/hooks/useAccess';
+import { useAccess, type AppRole, useRoleLabels } from '@/hooks/useAccess';
 import { useIdleLogout } from '@/hooks/useIdleLogout';
+import { useI18n } from '@/i18n';
 
 interface Props {
   children: ReactNode | ((access: ReturnType<typeof useAccess>) => ReactNode);
@@ -15,6 +16,8 @@ interface Props {
 export function ProtectedRoute({ children, allow }: Props) {
   const access = useAccess();
   const location = useLocation();
+  const { t } = useI18n();
+  const roleLabels = useRoleLabels();
   useIdleLogout(!!access.uid);
 
   if (access.loading) {
@@ -37,20 +40,20 @@ export function ProtectedRoute({ children, allow }: Props) {
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="max-w-sm w-full text-center border border-border rounded-2xl p-8 bg-card">
           <ShieldAlert className="w-10 h-10 text-destructive mx-auto mb-3" />
-          <h1 className="text-lg font-medium mb-1">ไม่มีสิทธิ์เข้าถึง</h1>
+          <h1 className="text-lg font-medium mb-1">{t('guard.accessDenied')}</h1>
           <p className="text-sm text-muted-foreground mb-4">
             {access.status === 'suspended'
-              ? 'บัญชีของคุณถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ'
+              ? t('guard.suspended')
               : access.roles.length === 0
-                ? 'บัญชีนี้ยังไม่ได้รับสิทธิ์เจ้าหน้าที่ กรุณาติดต่อผู้ดูแลระบบ'
-                : `บทบาทของคุณ (${access.roles.map((r) => ROLE_LABEL[r]).join(', ')}) ไม่สามารถเข้าหน้านี้ได้`}
+                ? t('guard.noRole')
+                : t('guard.roleDenied', { roles: access.roles.map((r) => roleLabels[r]).join(', ') })}
           </p>
           <Button
             variant="outline"
             size="sm"
             onClick={async () => { await supabase.auth.signOut(); window.location.href = '/admin/login'; }}
           >
-            ออกจากระบบ
+            {t('guard.signOut')}
           </Button>
         </div>
       </div>

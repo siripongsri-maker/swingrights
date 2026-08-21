@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useI18n } from '@/i18n';
 
 export type AppRole = 'admin' | 'manager' | 'caseworker' | 'viewer' | 'staff';
 
@@ -20,6 +21,7 @@ export interface Access {
   isStaff: boolean;
 }
 
+/** @deprecated Use useRoleLabels() inside components for translated labels. */
 export const ROLE_LABEL: Record<AppRole, string> = {
   admin: 'ผู้ดูแลระบบ',
   manager: 'หัวหน้างาน',
@@ -27,6 +29,18 @@ export const ROLE_LABEL: Record<AppRole, string> = {
   viewer: 'ผู้ดูอย่างเดียว',
   staff: 'เจ้าหน้าที่',
 };
+
+/** Translated role labels — call from a component. */
+export function useRoleLabels(): Record<AppRole, string> {
+  const { t } = useI18n();
+  return {
+    admin: t('access.role.admin'),
+    manager: t('access.role.manager'),
+    caseworker: t('access.role.caseworker'),
+    viewer: t('access.role.viewer'),
+    staff: t('access.role.staff'),
+  };
+}
 
 export const ASSIGNABLE_ROLES: AppRole[] = ['admin', 'manager', 'caseworker', 'viewer'];
 

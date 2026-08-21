@@ -31,12 +31,14 @@ import { saveLocalCase, deleteLocalCase, listLocalCases, importLegacyDraft, curr
 import { toast } from 'sonner';
 import { printCaseDocument, docInputFromIntake, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
 import { printCaseReport, type CaseReportData } from '@/lib/caseReport';
+import { useI18n } from "@/i18n";
 
 
 type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'referral' | 'signature' | 'confirmed';
 
 
 export default function Intake() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const intake = useIntake();
   const [step, setStep] = useState<Step>('consent');
@@ -81,7 +83,7 @@ export default function Intake() {
       photos: photos.map((p) => ({ blob: p.blob, name: p.name, previewUrl: URL.createObjectURL(p.blob) })),
     });
     setDraftAt(null);
-    toast.success('ทำต่อจากฉบับร่างเดิม');
+    toast.success(t('intake.toast.resumedDraft'));
   };
 
   const discardDraft = async () => {
@@ -89,7 +91,7 @@ export default function Intake() {
     intake.reset();
     setDraftAt(null);
     setStep('consent');
-    toast.success('เริ่มบันทึกใหม่');
+    toast.success(t('intake.toast.startedNew'));
   };
 
   const goBack = () => {
@@ -104,16 +106,16 @@ export default function Intake() {
       <QuickExit />
       {draftAt && (
         <div className="mb-4 rounded-xl border border-primary/30 bg-primary-soft/50 p-3">
-          <p className="text-xs font-medium text-primary mb-1">พบฉบับร่างที่ยังบันทึกไม่เสร็จ</p>
+          <p className="text-xs font-medium text-primary mb-1">{t('intake.draft.found')}</p>
           <p className="text-[11px] text-muted-foreground mb-2.5">
-            บันทึกไว้เมื่อ {new Date(draftAt).toLocaleString('th-TH')} — ทำต่อได้โดยไม่ต้องเล่าเรื่องซ้ำ
+            {t('intake.draft.savedAt', { date: new Date(draftAt).toLocaleString('th-TH') })}
           </p>
           <div className="flex gap-2">
             <Button onClick={resumeDraft} className="flex-1 h-9 rounded-lg bg-gradient-primary text-xs">
-              <RotateCcw className="w-3.5 h-3.5" /> ทำต่อจากเดิม
+              <RotateCcw className="w-3.5 h-3.5" /> {t('intake.draft.resume')}
             </Button>
             <Button onClick={discardDraft} variant="outline" className="flex-1 h-9 rounded-lg text-xs">
-              <Trash2 className="w-3.5 h-3.5" /> เริ่มใหม่
+              <Trash2 className="w-3.5 h-3.5" /> {t('intake.draft.startNew')}
             </Button>
           </div>
         </div>
@@ -123,8 +125,8 @@ export default function Intake() {
           onClick={() => navigate('/recover')}
           className="mb-4 w-full text-left rounded-xl border border-border bg-muted/40 p-3"
         >
-          <p className="text-xs font-medium">มีเคสค้างในเครื่องนี้ {pending} รายการ</p>
-          <p className="text-[11px] text-muted-foreground">แตะเพื่อเปิดหน้ากู้เคสและส่งเข้าระบบ</p>
+          <p className="text-xs font-medium">{t('intake.pending.count', { n: pending })}</p>
+          <p className="text-[11px] text-muted-foreground">{t('intake.pending.tap')}</p>
         </button>
       )}
 
@@ -146,21 +148,22 @@ export default function Intake() {
 
 /* ----------------- 1. CONSENT ----------------- */
 function ConsentStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const { consent, set } = useIntake();
   const items = [
-    'การสนทนานี้เป็นไปโดยสมัครใจ คุณสามารถหยุดได้ทุกเมื่อ',
-    'เสียงของคุณจะถูกแปลงเป็นข้อความโดย AI เพื่อการประเมินเท่านั้น',
-    'ข้อมูลเก็บเป็นความลับ ไม่เปิดเผยต่อบุคคลภายนอกโดยไม่ได้รับอนุญาต',
-    'คุณมีสิทธิขอตรวจสอบและแก้ไขข้อมูลของตัวเองได้ทุกเวลา',
+    t('intake.consent.item1'),
+    t('intake.consent.item2'),
+    t('intake.consent.item3'),
+    t('intake.consent.item4'),
   ];
   const ready = consent.cb1 && consent.cb2;
   return (
     <div>
       <SwingBadge />
-      <h1 className="text-2xl font-medium text-foreground leading-tight mt-3 text-balance">ก่อนเริ่มการสัมภาษณ์</h1>
+      <h1 className="text-2xl font-medium text-foreground leading-tight mt-3 text-balance">{t('intake.consent.title')}</h1>
       <div className="flex items-center justify-between gap-3 mt-1 mb-5">
-        <p className="text-sm text-muted-foreground">Before We Begin</p>
-        <SpeakButton text={items.join(' ')} label="ฟังข้อตกลง" />
+        <p className="text-sm text-muted-foreground">{t('intake.consent.subtitle')}</p>
+        <SpeakButton text={items.join(' ')} label={t('intake.consent.listen')} />
       </div>
 
 
@@ -178,17 +181,17 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
       <div className="bg-destructive/10 dark:bg-destructive/20 border border-destructive/30 rounded-xl p-3 mb-5 flex gap-2.5 items-start">
         <span className="bg-destructive text-destructive-foreground text-[10px] font-medium px-1.5 py-0.5 rounded">SOS</span>
         <p className="text-xs text-destructive leading-relaxed">
-          หากอยู่ในอันตราย โทร <strong>1300</strong> (กรมกิจการสตรี) หรือ <strong>1669</strong> (ฉุกเฉิน)
+          {t('intake.consent.sos').split('1300')[0]}<strong>1300</strong>{t('intake.consent.sos').split('1300')[1].split('1669')[0]}<strong>1669</strong>{t('intake.consent.sos').split('1669')[1]}
         </p>
       </div>
 
       {[
-        { key: 'cb1', label: 'ฉันเข้าใจและยินยอมให้บันทึกและวิเคราะห์เสียงในการสัมภาษณ์ครั้งนี้', required: true },
-        { key: 'cb2', label: 'ฉันรับทราบว่าสามารถหยุดหรือถอนความยินยอมได้ทุกเมื่อ', required: true },
+        { key: 'cb1', label: t('intake.consent.cb1'), required: true },
+        { key: 'cb2', label: t('intake.consent.cb2'), required: true },
         {
           key: 'cb3',
-          label: 'ยินยอมให้ส่ง “เฉพาะไฟล์เสียง” (ไม่แนบชื่อหรือข้อมูลระบุตัวตน) ไปถอดความด้วยระบบ AI ภายนอก เพื่อให้ได้ข้อความที่แม่นยำ',
-          note: 'ไม่ยินยอมก็ได้ — เจ้าหน้าที่จะพิมพ์หรือจดคำตอบแทน (ยังบันทึกเสียงเก็บไว้ในระบบตามปกติ)',
+          label: t('intake.consent.cb3label'),
+          note: t('intake.consent.cb3note'),
           required: false,
         },
       ].map((c) => (
@@ -211,13 +214,13 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
 
 
       <Button onClick={onNext} disabled={!ready} className="w-full mt-3 h-12 rounded-xl bg-gradient-primary shadow-elegant">
-        <Check className="w-4 h-4" /> ยินยอม เริ่มต้นการสัมภาษณ์
+        <Check className="w-4 h-4" /> {t('intake.consent.start')}
       </Button>
       <Link to="/privacy" target="_blank" className="block text-center text-xs text-primary mt-3 underline underline-offset-4">
-        อ่านนโยบายความเป็นส่วนตัว (PDPA) และสิทธิของคุณ
+        {t('intake.consent.privacyLink')}
       </Link>
       <Link to="/" className="block text-center text-xs text-muted-foreground mt-2 underline-offset-4 hover:underline">
-        ยังไม่พร้อม / ไม่ยินยอมในขณะนี้
+        {t('intake.consent.notReady')}
       </Link>
     </div>
   );
@@ -226,32 +229,33 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
 /* ----------------- 2. REPORTER ----------------- */
 function ReporterStep({ onNext }: { onNext: () => void }) {
   const { reporter, set } = useIntake();
+  const { t } = useI18n();
   const update = (k: keyof typeof reporter, v: string) => set('reporter', { ...reporter, [k]: v });
   return (
     <div>
-      <p className="text-[11px] text-muted-foreground">ข้อมูลผู้แจ้ง / ผู้ร้องเรียน</p>
-      <h1 className="text-xl font-medium mt-1 mb-4">ข้อมูลผู้แจ้ง</h1>
+      <p className="text-[11px] text-muted-foreground">{t('intake.reporter.eyebrow')}</p>
+      <h1 className="text-xl font-medium mt-1 mb-4">{t('intake.reporter.title')}</h1>
 
-      <Label className="text-xs text-muted-foreground mb-1.5 block">สถานะผู้แจ้ง *</Label>
+      <Label className="text-xs text-muted-foreground mb-1.5 block">{t('intake.reporter.statusLabel')}</Label>
       <div className="flex gap-1.5 mb-4">
-        {(['self', 'other'] as const).map((t) => (
+        {(['self', 'other'] as const).map((opt) => (
           <button
-            key={t}
-            onClick={() => set('reporter', { ...reporter, type: t })}
+            key={opt}
+            onClick={() => set('reporter', { ...reporter, type: opt })}
             className={`flex-1 py-2.5 rounded-lg text-sm border transition ${
-              reporter.type === t ? 'bg-primary-soft border-primary text-primary font-medium' : 'bg-muted/60 border-border text-muted-foreground'
+              reporter.type === opt ? 'bg-primary-soft border-primary text-primary font-medium' : 'bg-muted/60 border-border text-muted-foreground'
             }`}
           >
-            {t === 'self' ? 'ร้องเรียนด้วยตนเอง' : 'ร้องเรียนให้ผู้อื่น'}
+            {opt === 'self' ? t('intake.reporter.self') : t('intake.reporter.other')}
           </button>
         ))}
       </div>
 
-      <Field label="ชื่อ-นามสกุล ผู้แจ้ง *">
-        <Input value={reporter.name} onChange={(e) => update('name', e.target.value)} placeholder="ชื่อ-นามสกุล" />
+      <Field label={t('intake.reporter.nameLabel')}>
+        <Input value={reporter.name} onChange={(e) => update('name', e.target.value)} placeholder={t('intake.common.namePlaceholder')} />
       </Field>
-      <Field label="ที่อยู่ที่ติดต่อได้">
-        <Textarea value={reporter.address} onChange={(e) => update('address', e.target.value)} placeholder="ที่อยู่ปัจจุบัน หรือที่สามารถติดต่อกลับได้" />
+      <Field label={t('intake.reporter.addressLabel')}>
+        <Textarea value={reporter.address} onChange={(e) => update('address', e.target.value)} placeholder={t('intake.reporter.addressPlaceholder')} />
       </Field>
 
       <PhotoUpload />
@@ -261,14 +265,14 @@ function ReporterStep({ onNext }: { onNext: () => void }) {
         <Field label="Email">
           <Input type="email" value={reporter.email} onChange={(e) => update('email', e.target.value)} placeholder="example@mail.com" />
         </Field>
-        <Field label="เบอร์ติดต่อกลับ *">
+        <Field label={t('intake.reporter.phoneLabel')}>
           <Input type="tel" value={reporter.phone} onChange={(e) => update('phone', e.target.value)} placeholder="08x-xxx-xxxx" />
         </Field>
       </div>
 
       <Button
         onClick={() => {
-          if (!reporter.name.trim()) return toast.error('กรุณากรอกชื่อผู้แจ้ง');
+          if (!reporter.name.trim()) return toast.error(t('intake.reporter.errName'));
           onNext();
         }}
         className="w-full mt-4 h-12 rounded-xl bg-gradient-primary"
@@ -281,17 +285,18 @@ function ReporterStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 3. VICTIM ----------------- */
 function VictimStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const { victim, profile, reporter, patch, set } = useIntake();
   const updateV = (k: keyof typeof victim, v: string) => set('victim', { ...victim, [k]: v });
   const updateP = (k: keyof typeof profile, v: any) => set('profile', { ...profile, [k]: v });
 
   const calcAge = (dob: string) => {
     if (!dob) return '';
-    const b = new Date(dob), t = new Date();
-    let age = t.getFullYear() - b.getFullYear();
-    const m = t.getMonth() - b.getMonth();
-    if (m < 0 || (m === 0 && t.getDate() < b.getDate())) age--;
-    return `${age} ปี`;
+    const b = new Date(dob), now = new Date();
+    let age = now.getFullYear() - b.getFullYear();
+    const m = now.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
+    return t('intake.victim.ageYears', { age });
   };
 
   const toggleVT = (label: string) => {
@@ -301,8 +306,8 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
   return (
     <div>
-      <p className="text-[11px] text-muted-foreground">ข้อมูลผู้ถูกละเมิด / ผู้รับบริการ</p>
-      <h1 className="text-xl font-medium mt-1 mb-4">ข้อมูลผู้รับบริการ</h1>
+      <p className="text-[11px] text-muted-foreground">{t('intake.victim.eyebrow')}</p>
+      <h1 className="text-xl font-medium mt-1 mb-4">{t('intake.victim.title')}</h1>
 
       {reporter.type === 'self' && (
         <button
@@ -310,24 +315,24 @@ function VictimStep({ onNext }: { onNext: () => void }) {
             patch({
               victim: { name: reporter.name, contact: `${reporter.address} ${reporter.phone}`.trim() },
             });
-            toast.success('คัดลอกข้อมูลจากผู้แจ้งแล้ว');
+            toast.success(t('intake.victim.copied'));
           }}
           className="w-full mb-4 flex items-center gap-2 text-xs text-primary bg-primary-soft/50 border border-primary/20 rounded-lg p-2.5 hover:bg-primary-soft transition"
         >
-          <Copy className="w-3.5 h-3.5" /> ใช้ข้อมูลเดียวกับผู้แจ้ง
+          <Copy className="w-3.5 h-3.5" /> {t('intake.victim.copyFromReporter')}
         </button>
       )}
 
-      <Field label="ชื่อ-นามสกุล ผู้ถูกละเมิด *">
-        <Input value={victim.name} onChange={(e) => updateV('name', e.target.value)} placeholder="ชื่อ-นามสกุล" />
+      <Field label={t('intake.victim.nameLabel')}>
+        <Input value={victim.name} onChange={(e) => updateV('name', e.target.value)} placeholder={t('intake.common.namePlaceholder')} />
       </Field>
-      <Field label="ที่อยู่และเบอร์ติดต่อ">
-        <Textarea value={victim.contact} onChange={(e) => updateV('contact', e.target.value)} placeholder="ที่อยู่ปัจจุบัน + เบอร์โทร" />
+      <Field label={t('intake.victim.contactLabel')}>
+        <Textarea value={victim.contact} onChange={(e) => updateV('contact', e.target.value)} placeholder={t('intake.victim.contactPlaceholder')} />
       </Field>
 
-      <SectionDivider>ข้อมูลพื้นฐาน</SectionDivider>
+      <SectionDivider>{t('intake.victim.basicInfo')}</SectionDivider>
 
-      <Field label="พื้นที่รับเรื่อง (จังหวัด / อำเภอ / ตำบล) *">
+      <Field label={t('intake.victim.areaLabel')}>
         <AreaPicker
           value={{
             province: profile.province || '',
@@ -350,47 +355,48 @@ function VictimStep({ onNext }: { onNext: () => void }) {
         />
       </Field>
 
-      <Field label="กลุ่มประชากร (KP) *">
+      <Field label={t('intake.victim.kpLabel')}>
         <Select value={profile.kp} onValueChange={(v) => updateP('kp', v)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>{KP_GROUPS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+          <SelectContent>{KP_GROUPS.map((b, i) => <SelectItem key={b} value={b}>{t(`screening.kp.${i}` as any)}</SelectItem>)}</SelectContent>
         </Select>
       </Field>
 
 
-      <Field label="เพศสภาพ *">
+      <Field label={t('intake.victim.genderLabel')}>
         <Select value={profile.gender} onValueChange={(v) => updateP('gender', v)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>{GENDERS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+          <SelectContent>{GENDERS.map((b, i) => <SelectItem key={b} value={b}>{t(`screening.gender.${i}` as any)}</SelectItem>)}</SelectContent>
         </Select>
       </Field>
 
       <div className="grid grid-cols-2 gap-2.5">
-        <Field label="วัน/เดือน/ปีเกิด *">
+        <Field label={t('intake.victim.dobLabel')}>
           <DobPicker
             value={profile.dob}
             onChange={(iso) => set('profile', { ...profile, dob: iso, age: calcAge(iso) })}
           />
         </Field>
-        <Field label="อายุ (อัตโนมัติ)">
-          <Input readOnly value={profile.age} className="bg-primary-soft text-primary text-center font-medium" placeholder="ปี" />
+        <Field label={t('intake.victim.ageLabel')}>
+          <Input readOnly value={profile.age} className="bg-primary-soft text-primary text-center font-medium" placeholder={t('intake.victim.agePlaceholder')} />
         </Field>
       </div>
 
 
-      <Field label="สัญชาติ">
-        <Input value={profile.nationality} onChange={(e) => updateP('nationality', e.target.value)} placeholder="เช่น ไทย, เมียนมา..." />
+      <Field label={t('intake.victim.nationalityLabel')}>
+        <Input value={profile.nationality} onChange={(e) => updateP('nationality', e.target.value)} placeholder={t('intake.victim.nationalityPlaceholder')} />
       </Field>
 
-      <SectionDivider>ประเด็นเบื้องต้น</SectionDivider>
+      <SectionDivider>{t('intake.victim.initialIssues')}</SectionDivider>
 
-      <Field label="พื้นที่เกิดเหตุ">
-        <Input value={profile.incidentPlace} onChange={(e) => updateP('incidentPlace', e.target.value)} placeholder="เช่น ห้องพักย่านสีลม / ที่ทำงาน / ออนไลน์" />
+      <Field label={t('intake.victim.incidentPlaceLabel')}>
+        <Input value={profile.incidentPlace} onChange={(e) => updateP('incidentPlace', e.target.value)} placeholder={t('intake.victim.incidentPlacePlaceholder')} />
       </Field>
 
-      <Label className="text-xs text-muted-foreground mb-1.5 block">ประเภทการละเมิด (เลือกเบื้องต้น) *</Label>
+      <Label className="text-xs text-muted-foreground mb-1.5 block">{t('intake.victim.violationTypeLabel')}</Label>
       <div className="grid grid-cols-2 gap-2 mb-4">
         {VIOLATION_TYPES.map((vt, i) => {
+          const label = t(`screening.violationType.${vt.id}` as any);
           const selected = profile.initialViolationTypes.includes(vt.label);
           return (
             <button
@@ -403,7 +409,7 @@ function VictimStep({ onNext }: { onNext: () => void }) {
               <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                 selected ? 'bg-destructive text-destructive-foreground' : 'bg-card border border-border'
               }`}>{i + 1}</span>
-              <span className="text-[11px] leading-tight">{vt.label.replace('ละเมิด', '')}</span>
+              <span className="text-[11px] leading-tight">{label.replace(t('intake.row.type'), '')}</span>
             </button>
           );
         })}
@@ -411,13 +417,13 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
       <Button
         onClick={() => {
-          if (!victim.name.trim()) return toast.error('กรุณากรอกชื่อผู้รับบริการ');
-          if (profile.initialViolationTypes.length === 0) return toast.error('กรุณาเลือกประเภทการละเมิด');
+          if (!victim.name.trim()) return toast.error(t('intake.victim.errName'));
+          if (profile.initialViolationTypes.length === 0) return toast.error(t('intake.victim.errViolationType'));
           onNext();
         }}
         className="w-full h-12 rounded-xl bg-gradient-primary"
       >
-        ถัดไป: เริ่มสัมภาษณ์ <ArrowRight className="w-4 h-4" />
+        {t('intake.victim.nextBtn')} <ArrowRight className="w-4 h-4" />
       </Button>
     </div>
   );
@@ -425,6 +431,7 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 4. VOICE Q&A (chat style) ----------------- */
 function VoiceStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const { qIndex, answers, staffObs, profile, audioBlobs, consent, patch } = useIntake();
   const allowServerStt = consent.cb3;
   const [recording, setRecording] = useState(false);
@@ -509,7 +516,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       }
     } catch (e: any) {
       console.error(e);
-      toast.error('ไม่สามารถเข้าถึงไมโครโฟน — ' + (e?.message || ''));
+      toast.error(t('intake.voice.micError', { msg: e?.message || '' }));
     }
   };
 
@@ -519,7 +526,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
     try { recogRef.current?.stop?.(); } catch { /* noop */ }
     if (tickRef.current) { window.clearInterval(tickRef.current); tickRef.current = null; }
     if (!allowServerStt) {
-      toast.info('บันทึกเสียงแล้ว — ไม่ได้ยินยอมให้ถอดความภายนอก กรุณาพิมพ์หรือจดคำตอบ');
+      toast.info(t('intake.voice.noConsentRecorded'));
     }
   };
 
@@ -539,13 +546,13 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       const text = (data?.text || '').trim();
       if (text) {
         setTranscript(text);
-        toast.success('ถอดความด้วย AI เรียบร้อย');
+        toast.success(t('intake.voice.transcribeSuccess'));
       } else {
-        toast.info('ไม่พบคำพูดในไฟล์เสียง กรุณาพิมพ์คำตอบ');
+        toast.info(t('intake.voice.noSpeechFound'));
       }
     } catch (e) {
       console.error('transcribe error', e);
-      toast.error('ถอดความอัตโนมัติไม่สำเร็จ — ใช้ข้อความที่แสดงสดหรือพิมพ์เพิ่มได้');
+      toast.error(t('intake.voice.transcribeError'));
     } finally {
       setTranscribing(false);
     }
@@ -562,7 +569,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   };
 
   const saveAndAdvance = (dir: 1 | -1) => {
-    if (recording) { toast.info('กรุณาหยุดบันทึกเสียงก่อน'); return; }
+    if (recording) { toast.info(t('intake.voice.stopFirst')); return; }
     const { newAnswers, newObs } = persistCurrent();
     const next = qIndex + dir;
     if (next < 0) return;
@@ -593,7 +600,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
     <div className="pb-14">
       {/* header */}
       <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-        <span>สนทนาคัดกรอง · คำถามที่ {qIndex + 1} จาก {total}</span>
+        <span>{t('intake.voice.progress', { current: qIndex + 1, total })}</span>
         <span className="tabular-nums">{Math.round(pct)}%</span>
       </div>
       <Progress value={pct} className="h-1 mb-2" />
@@ -608,7 +615,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       <div ref={chatRef} className="bg-muted/30 border border-border rounded-2xl p-3 space-y-3 h-[42vh] min-h-[300px] overflow-y-auto mb-3">
         <div className="flex justify-center">
           <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-3 py-1">
-            เริ่มการสัมภาษณ์ — ตอบได้ทั้งเสียงและพิมพ์
+            {t('intake.voice.introBubble')}
           </span>
         </div>
 
@@ -621,18 +628,18 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
               {ans && (
                 <div className="flex justify-end">
                   <div className="max-w-[88%] bg-gradient-primary text-primary-foreground rounded-2xl rounded-tr-md px-3.5 py-2.5 shadow-card">
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{ans.transcript || '(ไม่มีคำตอบ)'}</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{ans.transcript || t('intake.voice.noAnswer')}</p>
                     {audioBlobs[i] && <HistoryAudio blob={audioBlobs[i]!} />}
                     {staffObs[i] && (
                       <p className="text-[11px] mt-1.5 bg-amber-100 text-amber-900 rounded-md px-2 py-1 leading-relaxed">
-                        บันทึกเจ้าหน้าที่: {staffObs[i]}
+                        {t('intake.voice.staffNotePrefix', { note: staffObs[i] })}
                       </p>
                     )}
                     <button
                       onClick={() => jumpTo(i)}
                       className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-primary-foreground/70 hover:text-primary-foreground transition"
                     >
-                      <Pencil className="w-2.5 h-2.5" /> แก้ไขคำตอบนี้
+                      <Pencil className="w-2.5 h-2.5" /> {t('intake.voice.editAnswer')}
                     </button>
                   </div>
                 </div>
@@ -648,7 +655,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           <div className="flex justify-end">
             <div className="bg-muted border border-border rounded-2xl rounded-tr-md px-4 py-3 flex items-center gap-2">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-              <span className="text-xs text-muted-foreground">AI กำลังถอดเสียงเป็นข้อความ...</span>
+              <span className="text-xs text-muted-foreground">{t('intake.voice.transcribing')}</span>
             </div>
           </div>
         )}
@@ -659,7 +666,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         <Textarea
           value={transcript}
           onChange={(e) => setTranscript(e.target.value)}
-          placeholder="พิมพ์คำตอบ หรือกดไมค์เพื่อพูด..."
+          placeholder={t('intake.voice.composerPlaceholder')}
           className="bg-muted/40 border-0 text-sm min-h-[52px] resize-none focus-visible:ring-1"
         />
         {audioBlobs[qIndex] && !recording && (
@@ -669,7 +676,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           <button
             onClick={toggleRec}
             disabled={transcribing}
-            aria-label="record"
+            aria-label={t('intake.voice.recordAria')}
             className={`w-11 h-11 rounded-full flex items-center justify-center transition shrink-0 disabled:opacity-50 ${
               recording ? 'bg-destructive text-destructive-foreground animate-pulse-ring' : 'bg-primary-soft text-primary hover:scale-105'
             }`}
@@ -678,12 +685,12 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           </button>
           <div className="flex-1 min-w-0">
             {recording ? (
-              <p className="text-xs text-destructive font-medium tabular-nums">กำลังบันทึกเสียง {mm}:{ss} — กดไมค์อีกครั้งเพื่อหยุด</p>
+              <p className="text-xs text-destructive font-medium tabular-nums">{t('intake.voice.recordingTime', { time: `${mm}:${ss}` })}</p>
             ) : transcribing ? (
-              <p className="text-xs text-muted-foreground">รอผลถอดความสักครู่...</p>
+              <p className="text-xs text-muted-foreground">{t('intake.voice.waitingTranscribe')}</p>
             ) : (
               <p className="text-[11px] text-muted-foreground truncate">
-                {allowServerStt ? 'พูดได้เลย ระบบถอดเสียงให้อัตโนมัติ' : 'ไม่ได้ยินยอมถอดความภายนอก — พิมพ์คำตอบเอง'}
+                {allowServerStt ? t('intake.voice.speakHint') : t('intake.voice.noConsentHint')}
               </p>
             )}
           </div>
@@ -692,7 +699,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
               onClick={() => saveAndAdvance(-1)}
               className="text-[11px] text-muted-foreground underline underline-offset-2 shrink-0 px-1"
             >
-              ย้อนกลับ
+              {t('common.back')}
             </button>
           )}
           <Button
@@ -700,7 +707,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
             disabled={recording || transcribing}
             className="rounded-xl bg-gradient-primary h-10 shrink-0"
           >
-            {isLast ? 'เสร็จสิ้นการสัมภาษณ์' : 'ส่งคำตอบ'}
+            {isLast ? t('intake.voice.finishInterview') : t('intake.voice.sendAnswer')}
             {isLast ? <ArrowRight className="w-4 h-4" /> : <Send className="w-4 h-4" />}
           </Button>
         </div>
@@ -711,13 +718,13 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-400 font-medium"
         >
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showObs ? 'rotate-180' : ''}`} />
-          บันทึกของเจ้าหน้าที่ {obs && !showObs ? '· มีบันทึกแล้ว' : ''}
+          {t('intake.voice.staffObsToggle')} {obs && !showObs ? `· ${t('intake.voice.hasNote')}` : ''}
         </button>
         {showObs && (
           <Textarea
             value={obs}
             onChange={(e) => setObs(e.target.value)}
-            placeholder="ลักษณะที่สังเกต / ข้อเท็จจริงเพิ่มเติม เช่น ร่องรอยฟกช้ำ, สีหน้าหวาดกลัว..."
+            placeholder={t('intake.voice.obsPlaceholder')}
             className="mt-1.5 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/40 text-sm min-h-[48px]"
           />
         )}
@@ -728,6 +735,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
 
 /* chat bubbles */
 function QuestionBubble({ q, index, current }: { q: (typeof QUESTIONS)[number]; index: number; current?: boolean }) {
+  const { t } = useI18n();
   return (
     <div className={`flex gap-2.5 ${current ? 'animate-fade-in' : ''}`}>
       <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center shrink-0 shadow-card">
@@ -735,15 +743,15 @@ function QuestionBubble({ q, index, current }: { q: (typeof QUESTIONS)[number]; 
       </div>
       <div className="max-w-[88%] bg-card border border-border rounded-2xl rounded-tl-md px-3.5 py-2.5 shadow-card">
         <div className="flex items-center gap-1.5 mb-1">
-          <span className="text-[9px] font-medium text-primary tracking-widest">คำถามที่ {index + 1}</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent text-accent-foreground">{q.cat}</span>
+          <span className="text-[9px] font-medium text-primary tracking-widest">{t('intake.voice.questionNumber', { n: index + 1 })}</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent text-accent-foreground">{t(q.cat as any)}</span>
           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">{q.frame}</span>
         </div>
-        <p className="text-sm leading-relaxed">{q.main}</p>
+        <p className="text-sm leading-relaxed">{t(q.main as any)}</p>
         {current && (
           <div className="flex items-center gap-2 mt-2">
-            <SpeakButton text={q.main} />
-            <p className="text-[10px] text-muted-foreground">{q.hint}</p>
+            <SpeakButton text={t(q.main as any)} />
+            <p className="text-[10px] text-muted-foreground">{t(q.hint as any)}</p>
           </div>
         )}
       </div>
@@ -764,6 +772,7 @@ function HistoryAudio({ blob }: { blob: Blob }) {
 
 /* ----------------- 5. ASSESS ----------------- */
 function AssessStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const { hasViolation, violationDetails, severity, specialTests, extraFacts, screening, set, patch } = useIntake();
 
   const toggleDetail = (label: string) => {
@@ -775,30 +784,31 @@ function AssessStep({ onNext }: { onNext: () => void }) {
 
   return (
     <div>
-      <h1 className="text-lg font-medium">ประเมินสภาพปัญหา</h1>
-      <p className="text-sm text-muted-foreground mb-4">เจ้าหน้าที่ประเมินก่อนส่งให้ AI วิเคราะห์</p>
+      <h1 className="text-lg font-medium">{t('intake.assess.title')}</h1>
+      <p className="text-sm text-muted-foreground mb-4">{t('intake.assess.subtitle')}</p>
 
-      <Card title="1. มีการละเมิดสิทธิ์เกิดขึ้นหรือไม่?">
+      <Card title={t('intake.assess.q1title')}>
         <div className="flex gap-2">
           <button
             onClick={() => set('hasViolation', true)}
             className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition ${
               hasViolation === true ? 'bg-destructive/10 border-destructive text-destructive' : 'bg-card border-border text-muted-foreground'
             }`}
-          >ใช่ มีการละเมิด</button>
+          >{t('intake.assess.yes')}</button>
           <button
             onClick={() => set('hasViolation', false)}
             className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition ${
               hasViolation === false ? 'bg-success/10 border-success text-success' : 'bg-card border-border text-muted-foreground'
             }`}
-          >ไม่ใช่</button>
+          >{t('intake.assess.no')}</button>
         </div>
       </Card>
 
       {hasViolation && (
-        <Card title="2. ละเมิดสิทธิ์ด้านใด (เลือกได้หลายข้อ)">
+        <Card title={t('intake.assess.q2title')}>
           <div className="grid grid-cols-2 gap-2">
             {VIOLATION_TYPES.map((vt, i) => {
+          const label = t(`screening.violationType.${vt.id}` as any);
               const sel = violationDetails.includes(vt.label);
               return (
                 <button key={vt.id} onClick={() => toggleDetail(vt.label)}
@@ -806,7 +816,7 @@ function AssessStep({ onNext }: { onNext: () => void }) {
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${sel ? 'bg-destructive text-destructive-foreground' : 'bg-muted'}`}>
                     {String.fromCharCode(97 + i)}
                   </span>
-                  <span className="text-[11px]">{vt.label.replace('ละเมิด', '')}</span>
+                  <span className="text-[11px]">{label.replace(t('intake.row.type'), '')}</span>
                 </button>
               );
             })}
@@ -814,7 +824,7 @@ function AssessStep({ onNext }: { onNext: () => void }) {
         </Card>
       )}
 
-      <Card title="3. ระดับความรุนแรงของปัญหา">
+      <Card title={t('intake.assess.q3title')}>
         <div className="flex gap-2 mb-2">
           {(['green', 'yellow', 'red'] as Severity[]).map((s) => {
             const active = severity === s;
@@ -826,28 +836,28 @@ function AssessStep({ onNext }: { onNext: () => void }) {
             return (
               <button key={s} onClick={() => set('severity', s)} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition flex items-center justify-center gap-1.5 ${cls}`}>
                 <span className={`w-2 h-2 rounded-full ${s === 'green' ? 'bg-success' : s === 'yellow' ? 'bg-warning' : 'bg-danger'}`} />
-                {s === 'green' ? 'เขียว' : s === 'yellow' ? 'เหลือง' : 'แดง'}
+                {t(`intake.severity.${s}` as any)}
               </button>
             );
           })}
         </div>
-        <p className="text-[11px] text-muted-foreground leading-relaxed">เขียว: ไม่เร่งด่วน · เหลือง: ติดตามใกล้ชิด · แดง: ฉุกเฉิน ต้องดำเนินการทันที</p>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">{t('intake.assess.severityLegend')}</p>
       </Card>
 
-      <Card title="4. แบบทดสอบพิเศษที่ควรทำ">
+      <Card title={t('intake.assess.q4title')}>
         <div className="bg-primary-soft/50 border border-primary/20 rounded-lg p-3 space-y-2">
-          {SPECIAL_TESTS.map((t) => {
-            const done = specialTests.includes(t.id);
+          {SPECIAL_TESTS.map((test) => {
+            const done = specialTests.includes(test.id);
             return (
-              <div key={t.id} className="flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-md bg-primary text-primary-foreground text-[11px] font-medium flex items-center justify-center shrink-0">{t.short}</span>
+              <div key={test.id} className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-md bg-primary text-primary-foreground text-[11px] font-medium flex items-center justify-center shrink-0">{test.short}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm">{t.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{t.desc}</p>
+                  <p className="text-sm">{test.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{test.desc}</p>
                 </div>
-                <button onClick={() => toggleTest(t.id)}
+                <button onClick={() => toggleTest(test.id)}
                   className={`text-[11px] px-3 py-1.5 rounded-full text-white shrink-0 ${done ? 'bg-success' : 'bg-primary'}`}>
-                  {done ? '✓ ทำแล้ว' : 'ทำแล้ว'}
+                  {done ? t('intake.assess.done') : t('intake.assess.markDone')}
                 </button>
               </div>
             );
@@ -855,21 +865,21 @@ function AssessStep({ onNext }: { onNext: () => void }) {
         </div>
       </Card>
 
-      <Card title="4.1 แบบคัดกรองมาตรฐาน 2Q / 9Q / NRM">
+      <Card title={t('intake.assess.q41title')}>
         <ScreeningTools value={screening} onChange={(v) => set('screening', v)} />
       </Card>
 
 
-      <Card title="5. สอบข้อเท็จจริงเพิ่มเติม / บันทึกการลงพื้นที่">
-        <Textarea value={extraFacts} onChange={(e) => set('extraFacts', e.target.value)} placeholder="บันทึกข้อเท็จจริงเพิ่มเติม การลงพื้นที่ พยานหลักฐาน..." />
+      <Card title={t('intake.assess.q5title')}>
+        <Textarea value={extraFacts} onChange={(e) => set('extraFacts', e.target.value)} placeholder={t('intake.assess.extraFactsPlaceholder')} />
       </Card>
 
       <Button onClick={() => {
-        if (hasViolation === null) return toast.error('กรุณาตอบข้อ 1');
-        if (!severity) return toast.error('กรุณาเลือกระดับความรุนแรง');
+        if (hasViolation === null) return toast.error(t('intake.assess.errQ1'));
+        if (!severity) return toast.error(t('intake.assess.errSeverity'));
         onNext();
       }} className="w-full mt-4 h-12 rounded-xl bg-gradient-primary">
-        <Sparkles className="w-4 h-4" /> วิเคราะห์ด้วย AI
+        <Sparkles className="w-4 h-4" /> {t('intake.assess.analyzeBtn')}
       </Button>
     </div>
   );
@@ -877,16 +887,17 @@ function AssessStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 6. AI ----------------- */
 function AIStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const intake = useIntake();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [stepLabel, setStepLabel] = useState('กำลังประมวลผลคำตอบ');
+  const [stepLabel, setStepLabel] = useState(t('intake.ai.step1'));
 
   useEffect(() => {
     let cancelled = false;
-    const labels = ['กำลังประมวลผลคำตอบ', 'ตรวจสอบรูปแบบการละเมิด', 'ประเมินความเสี่ยง', 'สร้างคำแนะนำเพิ่มเติม'];
+    const labels = [t('intake.ai.step1'), t('intake.ai.step2'), t('intake.ai.step3'), t('intake.ai.step4')];
     let i = 0;
-    const t = window.setInterval(() => { i = (i + 1) % labels.length; setStepLabel(labels[i]); }, 1100);
+    const timer = window.setInterval(() => { i = (i + 1) % labels.length; setStepLabel(labels[i]); }, 1100);
 
     (async () => {
       try {
@@ -910,11 +921,11 @@ function AIStep({ onNext }: { onNext: () => void }) {
         setLoading(false);
       } catch (e: any) {
         if (cancelled) return;
-        setError(e?.message || 'การวิเคราะห์ล้มเหลว');
+        setError(e?.message || t('intake.ai.failed'));
         setLoading(false);
       }
     })();
-    return () => { cancelled = true; window.clearInterval(t); };
+    return () => { cancelled = true; window.clearInterval(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -922,7 +933,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
     return (
       <div className="text-center py-12">
         <Loader2 className="w-11 h-11 animate-spin text-primary mx-auto mb-4" />
-        <p className="text-sm text-muted-foreground leading-relaxed">AI กำลังวิเคราะห์การสัมภาษณ์<br />กรุณารอสักครู่</p>
+        <p className="text-sm text-muted-foreground leading-relaxed">{t('intake.ai.analyzing')}<br />{t('intake.ai.pleaseWait')}</p>
         <p className="text-xs text-primary/80 mt-2">{stepLabel}</p>
       </div>
     );
@@ -932,20 +943,20 @@ function AIStep({ onNext }: { onNext: () => void }) {
     return (
       <div className="text-center py-10">
         <AlertTriangle className="w-10 h-10 text-destructive mx-auto mb-3" />
-        <p className="text-sm font-medium mb-1">การวิเคราะห์ล้มเหลว</p>
+        <p className="text-sm font-medium mb-1">{t('intake.ai.failed')}</p>
         <p className="text-xs text-muted-foreground mb-4">{error}</p>
         <div className="flex flex-col gap-2 max-w-xs mx-auto">
-          <Button onClick={() => window.location.reload()} variant="outline">ลองใหม่</Button>
+          <Button onClick={() => window.location.reload()} variant="outline">{t('intake.ai.retry')}</Button>
           {/* Phase 0.11 — AI ต้องไม่บล็อกการรับเคส: ข้ามได้และให้เจ้าหน้าที่ประเมินเอง */}
           <Button
             onClick={() => { intake.set('aiResult', null); onNext(); }}
             className="bg-gradient-primary rounded-xl"
           >
-            <SkipForward className="w-4 h-4" /> ข้ามการวิเคราะห์ AI และบันทึกเคสต่อ
+            <SkipForward className="w-4 h-4" /> {t('intake.ai.skip')}
           </Button>
         </div>
         <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed max-w-xs mx-auto">
-          เคสจะถูกบันทึกครบถ้วนโดยใช้การประเมินของเจ้าหน้าที่เป็นหลัก
+          {t('intake.ai.skipNote')}
         </p>
       </div>
     );
@@ -969,16 +980,16 @@ function AIStep({ onNext }: { onNext: () => void }) {
           <Sparkles className="w-4 h-4 text-primary-foreground" />
         </div>
         <div>
-          <p className="text-sm font-medium text-primary">ผลการวิเคราะห์โดย AI</p>
-          <p className="text-[11px] text-primary/80">เคสใหม่ · {new Date().toLocaleDateString('th-TH')}</p>
+          <p className="text-sm font-medium text-primary">{t('intake.ai.resultTitle')}</p>
+          <p className="text-[11px] text-primary/80">{t('intake.ai.newCase', { date: new Date().toLocaleDateString('th-TH') })}</p>
           <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
-            ผลนี้เป็นเพียงข้อมูลช่วยตัดสินใจ ไม่ใช่คำวินิจฉัยทางกฎหมายหรือการแพทย์ เจ้าหน้าที่ต้องทบทวนก่อนเสมอ
+            {t('intake.ai.disclaimer')}
           </p>
         </div>
       </div>
 
       <div className="bg-muted/40 border border-border rounded-xl p-3.5 mb-3">
-        <p className="text-[11px] text-muted-foreground mb-2">ระดับความเสี่ยงที่ประเมินได้</p>
+        <p className="text-[11px] text-muted-foreground mb-2">{t('intake.ai.riskLevel')}</p>
         <div className="flex items-center gap-2.5">
           <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
             <div className={`h-full rounded-full transition-all duration-1000 ${fillCls}`} style={{ width: `${r.riskScore}%` }} />
@@ -986,17 +997,17 @@ function AIStep({ onNext }: { onNext: () => void }) {
           <span className="text-sm font-medium tabular-nums">{r.riskScore}</span>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          {r.riskLevel === 'high' ? '⚠️ ความเสี่ยงสูง — แนะนำดำเนินการทันที' : r.riskLevel === 'medium' ? 'ความเสี่ยงปานกลาง — ติดตามใกล้ชิด' : 'ความเสี่ยงต่ำ — ติดตามตามรอบ'}
+          {r.riskLevel === 'high' ? t('intake.ai.riskHigh') : r.riskLevel === 'medium' ? t('intake.ai.riskMed') : t('intake.ai.riskLow')}
         </p>
       </div>
 
       <div className="bg-muted/40 border border-border rounded-xl p-3.5 mb-3">
-        <p className="text-[11px] text-muted-foreground mb-1.5">สรุปสถานการณ์</p>
+        <p className="text-[11px] text-muted-foreground mb-1.5">{t('intake.ai.summaryTitle')}</p>
         <p className="text-sm leading-relaxed">{r.summary}</p>
       </div>
 
       <div className="mb-4">
-        <p className="text-[11px] text-muted-foreground mb-1.5">ประเภทการละเมิดที่พบ</p>
+        <p className="text-[11px] text-muted-foreground mb-1.5">{t('intake.ai.violationTagsTitle')}</p>
         <div className="flex flex-wrap gap-1.5">
           {r.violationTags.map((t, i) => (
             <span key={i} className={`text-[11px] px-2.5 py-1 rounded-full font-medium ${tagCls[t.type] || 'bg-muted'}`}>{t.label}</span>
@@ -1005,7 +1016,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
       </div>
 
       <div className="bg-success/5 border border-success/30 rounded-xl p-3.5 mb-4">
-        <p className="text-[11px] font-medium text-success mb-2">คำแนะนำเบื้องต้นสำหรับเจ้าหน้าที่</p>
+        <p className="text-[11px] font-medium text-success mb-2">{t('intake.ai.recommendationsTitle')}</p>
         {r.recommendations.map((rec, i) => (
           <div key={i} className="flex gap-2 text-xs text-success mb-1.5 last:mb-0">
             <span className="w-1.5 h-1.5 mt-1.5 rounded-full bg-success shrink-0" /> <span>{rec}</span>
@@ -1016,7 +1027,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
       {r.followUpQuestions.length > 0 && (
         <div className="mb-4">
           <p className="text-xs font-medium text-foreground mb-2 flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3 text-primary" /> คำถามเพิ่มเติม (จาก AI)
+            <Sparkles className="w-3 h-3 text-primary" /> {t('intake.ai.followupTitle')}
           </p>
           {r.followUpQuestions.map((q, i) => (
             <div key={i} className="bg-muted/40 border border-border rounded-xl p-3 mb-2">
@@ -1025,7 +1036,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
               <Textarea
                 value={intake.extraAnswers[`q${i}`] || ''}
                 onChange={(e) => intake.set('extraAnswers', { ...intake.extraAnswers, [`q${i}`]: e.target.value })}
-                placeholder="พิมพ์คำตอบ..."
+                placeholder={t('intake.common.typeAnswerPlaceholder')}
                 className="bg-card text-sm min-h-[52px]"
               />
             </div>
@@ -1034,7 +1045,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
       )}
 
       <Button onClick={onNext} className="w-full h-12 rounded-xl bg-gradient-primary">
-        ต่อไป: เลือกการส่งต่อ <ArrowRight className="w-4 h-4" />
+        {t('intake.ai.nextBtn')} <ArrowRight className="w-4 h-4" />
       </Button>
     </div>
   );
@@ -1042,12 +1053,13 @@ function AIStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 7. REFERRAL ----------------- */
 function ReferralStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const { referrals, referralNote, set } = useIntake();
   const toggle = (name: string) => set('referrals', referrals.includes(name) ? referrals.filter((x) => x !== name) : [...referrals, name]);
   return (
     <div>
-      <h1 className="text-lg font-medium mb-1">การส่งต่อ</h1>
-      <p className="text-sm text-muted-foreground mb-4">เลือกหน่วยงานสำหรับส่งต่อเคส</p>
+      <h1 className="text-lg font-medium mb-1">{t('intake.referral.title')}</h1>
+      <p className="text-sm text-muted-foreground mb-4">{t('intake.referral.subtitle')}</p>
       <div className="grid grid-cols-2 gap-2 mb-3">
         {REFERRAL_OPTIONS.map((r) => {
           const sel = referrals.includes(r.name);
@@ -1060,14 +1072,15 @@ function ReferralStep({ onNext }: { onNext: () => void }) {
           );
         })}
       </div>
-      <Textarea value={referralNote} onChange={(e) => set('referralNote', e.target.value)} placeholder="บันทึกการส่งต่อ ชื่อหน่วยงาน เบอร์ติดต่อ..." className="mb-4 min-h-[64px]" />
-      <Button onClick={onNext} className="w-full h-12 rounded-xl bg-gradient-primary">ถัดไป: ลงนามรับรอง <ArrowRight className="w-4 h-4" /></Button>
+      <Textarea value={referralNote} onChange={(e) => set('referralNote', e.target.value)} placeholder={t('intake.referral.notePlaceholder')} className="mb-4 min-h-[64px]" />
+      <Button onClick={onNext} className="w-full h-12 rounded-xl bg-gradient-primary">{t('intake.referral.nextBtn')} <ArrowRight className="w-4 h-4" /></Button>
     </div>
   );
 }
 
 /* ----------------- 8. SIGNATURE & SAVE ----------------- */
 function SignatureStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const intake = useIntake();
   const [staffName, setStaffName] = useState(intake.signatureStaffName);
   const [saving, setSaving] = useState(false);
@@ -1113,8 +1126,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
   };
 
   const save = async () => {
-    if (staffEmpty) return toast.error('กรุณาลงลายเซ็นเจ้าหน้าที่');
-    if (!staffName.trim()) return toast.error('กรุณากรอกชื่อเจ้าหน้าที่');
+    if (staffEmpty) return toast.error(t('intake.sig.errStaffSig'));
+    if (!staffName.trim()) return toast.error(t('intake.sig.errStaffName'));
     setSaving(true);
     try {
       const draftId = crypto.randomUUID();
@@ -1194,7 +1207,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       // Phase 0.4 — the case code is generated and validated server-side (SECURITY DEFINER RPC)
       const { data: code, error } = await supabase.rpc('submit_case' as any, { _payload: payload });
       if (error) throw error;
-      if (!code) throw new Error('บันทึกเคสไม่สำเร็จ');
+      if (!code) throw new Error(t('intake.sig.saveFailed'));
 
       // แจ้งเตือนแบบ de-identified (case_code + สาขา + ระดับ เท่านั้น)
       if (suicideRisk || intake.severity === 'red' || intake.aiResult?.riskLevel === 'high') {
@@ -1212,9 +1225,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       rotateSessionId();
       await clearDraft();
       intake.patch({ caseCode: code as string, signatureStaff: sigStaff, signatureStaffName: staffName, signatureClient: sigClient || '' });
-      toast.success(audioPaths.length
-        ? `บันทึกเคสและไฟล์เสียง ${audioPaths.length} ไฟล์สำเร็จ`
-        : 'บันทึกเคสสำเร็จ');
+      toast.success(audioPaths.length ? t('intake.sig.savedWithAudio', { n: audioPaths.length }) : t('intake.sig.saved'));
       onNext();
     } catch (e: any) {
       console.error(e);
@@ -1226,7 +1237,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
           error: e?.message || 'unknown error',
         });
       } catch { /* ignore */ }
-      toast.error(`${e?.message || 'บันทึกล้มเหลว'} — เก็บสำเนาไว้ในเครื่องแล้ว ส่งซ้ำได้ที่หน้า /recover`);
+      toast.error(t('intake.sig.saveError', { msg: e?.message || t('intake.sig.saveFailed') }));
     } finally {
       setSaving(false);
     }
@@ -1242,60 +1253,60 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
           <ShieldCheck className="w-4 h-4 text-success-foreground" />
         </div>
         <div>
-          <p className="text-sm font-medium text-success">สรุปและรับรองความถูกต้อง</p>
-          <p className="text-xs text-success/80">ตรวจสอบข้อมูลทั้งหมดก่อนลงนาม</p>
+          <p className="text-sm font-medium text-success">{t('intake.sig.summaryTitle')}</p>
+          <p className="text-xs text-success/80">{t('intake.sig.summarySubtitle')}</p>
         </div>
       </div>
 
-      <SummaryBlock title="ผู้แจ้ง">
-        <Row k="ชื่อ" v={intake.reporter.name} />
-        <Row k="โทร" v={intake.reporter.phone || '-'} />
+      <SummaryBlock title={t('intake.sig.blockReporter')}>
+        <Row k={t('intake.row.name')} v={intake.reporter.name} />
+        <Row k={t('intake.row.phone')} v={intake.reporter.phone || '-'} />
       </SummaryBlock>
 
-      <SummaryBlock title="ผู้ถูกละเมิด">
-        <Row k="ชื่อ" v={intake.victim.name} />
-        <Row k="กลุ่ม / เพศ" v={`${intake.profile.kp} · ${intake.profile.gender}`} />
-        <Row k="อายุ / สัญชาติ" v={`${intake.profile.age || '-'} · ${intake.profile.nationality}`} />
+      <SummaryBlock title={t('intake.sig.blockVictim')}>
+        <Row k={t('intake.row.name')} v={intake.victim.name} />
+        <Row k={t('intake.row.kpGender')} v={`${intake.profile.kp} · ${intake.profile.gender}`} />
+        <Row k={t('intake.row.ageNationality')} v={`${intake.profile.age || '-'} · ${intake.profile.nationality}`} />
       </SummaryBlock>
 
-      <SummaryBlock title="ข้อมูลการละเมิด">
-        <Row k="พื้นที่เกิดเหตุ" v={intake.profile.incidentPlace || '-'} />
-        <Row k="ประเภท" v={intake.violationDetails.join(', ') || intake.profile.initialViolationTypes.join(', ') || '-'} />
-        <Row k="ความรุนแรง" v={sevText} />
-        <Row k="แบบทดสอบ" v={intake.specialTests.length ? intake.specialTests.join(', ').toUpperCase() : 'ไม่มี'} />
+      <SummaryBlock title={t('intake.sig.blockViolation')}>
+        <Row k={t('intake.row.incidentPlace')} v={intake.profile.incidentPlace || '-'} />
+        <Row k={t('intake.row.type')} v={intake.violationDetails.join(', ') || intake.profile.initialViolationTypes.join(', ') || '-'} />
+        <Row k={t('intake.row.severity')} v={sevText} />
+        <Row k={t('intake.row.tests')} v={intake.specialTests.length ? intake.specialTests.join(', ').toUpperCase() : t('intake.common.none')} />
       </SummaryBlock>
 
-      <SummaryBlock title="การส่งต่อ">
-        <p className="text-xs text-muted-foreground">{intake.referrals.join(' · ') || 'ยังไม่ได้เลือก'}</p>
+      <SummaryBlock title={t('intake.sig.blockReferral')}>
+        <p className="text-xs text-muted-foreground">{intake.referrals.join(' · ') || t('intake.referral.notSelected')}</p>
         {intake.referralNote && <p className="text-xs text-muted-foreground mt-2">{intake.referralNote}</p>}
       </SummaryBlock>
 
       <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-xl p-3 mb-4 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
-        <strong>คำรับรอง:</strong> ข้าพเจ้าขอรับรองว่าข้อมูลที่บันทึกในแบบฟอร์มนี้เป็นความจริงทุกประการ และได้รับความยินยอมจากผู้รับบริการในการบันทึกและวิเคราะห์ข้อมูลดังกล่าวแล้ว
+        <strong>{t('intake.sig.certifyLabel')}</strong> {t('intake.sig.certifyText')}
       </div>
 
       <div className="mb-4">
-        <p className="text-xs font-medium text-muted-foreground mb-2">ลายเซ็นเจ้าหน้าที่</p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">{t('intake.sig.staffSigLabel')}</p>
         <div className="relative bg-card border border-border rounded-xl overflow-hidden">
           <canvas ref={staffCanvas} width={400} height={100} className="block w-full h-[100px] cursor-crosshair touch-none" />
-          {staffEmpty && <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 pointer-events-none">เซ็นชื่อที่นี่</p>}
+          {staffEmpty && <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 pointer-events-none">{t('intake.sig.signHere')}</p>}
         </div>
-        <button onClick={() => clear('staff')} className="text-[11px] text-muted-foreground underline mt-1">ล้างลายเซ็น</button>
-        <Input value={staffName} onChange={(e) => setStaffName(e.target.value)} placeholder="ชื่อ-นามสกุล เจ้าหน้าที่" className="mt-2" />
+        <button onClick={() => clear('staff')} className="text-[11px] text-muted-foreground underline mt-1">{t('intake.sig.clearSig')}</button>
+        <Input value={staffName} onChange={(e) => setStaffName(e.target.value)} placeholder={t('intake.sig.staffNamePlaceholder')} className="mt-2" />
       </div>
 
       <div className="mb-4">
-        <p className="text-xs font-medium text-muted-foreground mb-2">ลายเซ็นผู้รับบริการ (ถ้ามี)</p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">{t('intake.sig.clientSigLabel')}</p>
         <div className="relative bg-card border border-border rounded-xl overflow-hidden">
           <canvas ref={clientCanvas} width={400} height={100} className="block w-full h-[100px] cursor-crosshair touch-none" />
-          {clientEmpty && <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 pointer-events-none">เซ็นชื่อที่นี่ (ไม่บังคับ)</p>}
+          {clientEmpty && <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 pointer-events-none">{t('intake.sig.signHere')} (ไม่บังคับ)</p>}
         </div>
-        <button onClick={() => clear('client')} className="text-[11px] text-muted-foreground underline mt-1">ล้างลายเซ็น</button>
+        <button onClick={() => clear('client')} className="text-[11px] text-muted-foreground underline mt-1">{t('intake.sig.clearSig')}</button>
       </div>
 
       <Button onClick={save} disabled={saving} className="w-full h-12 rounded-xl bg-gradient-primary">
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-        ยืนยันและบันทึกเคส
+        {t('intake.sig.confirmBtn')}
       </Button>
     </div>
   );
@@ -1310,6 +1321,7 @@ const DOC_ICONS: Record<DocKind, React.ReactNode> = {
 };
 
 function ConfirmedStep({ onReset }: { onReset: () => void }) {
+  const { t } = useI18n();
   const intake = useIntake();
   const { caseCode } = intake;
   const navigate = useNavigate();
@@ -1357,46 +1369,46 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
       <div className="w-14 h-14 bg-success/15 rounded-full flex items-center justify-center mx-auto mb-3">
         <Check className="w-7 h-7 text-success" strokeWidth={3} />
       </div>
-      <h1 className="text-lg font-medium">บันทึกเคสสำเร็จ</h1>
-      <p className="text-sm text-muted-foreground mb-5">เคสของคุณได้รับการบันทึกเรียบร้อยแล้ว</p>
+      <h1 className="text-lg font-medium">{t('intake.confirmed.title')}</h1>
+      <p className="text-sm text-muted-foreground mb-5">{t('intake.confirmed.subtitle')}</p>
 
       <div className="bg-gradient-dark rounded-xl p-4 mb-4">
-        <p className="text-[11px] text-primary-glow tracking-wider mb-1.5">เลขอ้างอิงเคส</p>
+        <p className="text-[11px] text-primary-glow tracking-wider mb-1.5">{t('intake.confirmed.caseCodeLabel')}</p>
         <p className="text-3xl font-medium text-white tracking-widest font-mono">{caseCode}</p>
         <button
-          onClick={() => { navigator.clipboard.writeText(caseCode || ''); toast.success('คัดลอกแล้ว'); }}
+          onClick={() => { navigator.clipboard.writeText(caseCode || ''); toast.success(t('intake.confirmed.copied')); }}
           className="inline-flex items-center gap-1.5 text-[11px] text-primary-glow bg-primary/20 border border-primary/40 rounded-full px-3 py-1 mt-2"
         >
-          <Copy className="w-3 h-3" /> คัดลอกเลขอ้างอิง
+          <Copy className="w-3 h-3" /> {t('intake.confirmed.copyBtn')}
         </button>
-        <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">เก็บเลขนี้ไว้เพื่อติดตามสถานะเคสของคุณในภายหลัง</p>
+        <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">{t('intake.confirmed.keepCodeHint')}</p>
         {qr && (
           <div className="mt-3 flex flex-col items-center gap-1.5">
-            <img src={qr} alt={`QR code สำหรับติดตามเคส ${caseCode}`} className="w-32 h-32 rounded-lg bg-white p-1.5" />
-            <p className="text-[11px] text-muted-foreground">สแกนหรือถ่ายภาพ QR นี้เพื่อติดตามสถานะ</p>
+            <img src={qr} alt={t('intake.confirmed.qrAlt', { code: caseCode || '' })} className="w-32 h-32 rounded-lg bg-white p-1.5" />
+            <p className="text-[11px] text-muted-foreground">{t('intake.confirmed.qrHint')}</p>
           </div>
         )}
       </div>
 
-      {/* สรุปเคส */}
+      {/* {t('intake.confirmed.caseSummary')} */}
       <div className="text-left mb-4">
-        <p className="text-[10px] font-medium text-muted-foreground tracking-widest uppercase mb-2">สรุปเคส</p>
-        <SummaryBlock title="ผู้รับบริการ">
-          <Row k="ชื่อ" v={intake.victim.name || '-'} />
-          <Row k="กลุ่ม / เพศ" v={`${intake.profile.kp} · ${intake.profile.gender}`} />
-          <Row k="พื้นที่" v={`${intake.profile.province || intake.profile.branch}${intake.profile.incidentPlace ? ` · ${intake.profile.incidentPlace}` : ''}`} />
+        <p className="text-[10px] font-medium text-muted-foreground tracking-widest uppercase mb-2">{t('intake.confirmed.caseSummary')}</p>
+        <SummaryBlock title={t('intake.confirmed.blockClient')}>
+          <Row k={t('intake.row.name')} v={intake.victim.name || '-'} />
+          <Row k={t('intake.row.kpGender')} v={`${intake.profile.kp} · ${intake.profile.gender}`} />
+          <Row k={t('intake.confirmed.rowArea')} v={`${intake.profile.province || intake.profile.branch}${intake.profile.incidentPlace ? ` · ${intake.profile.incidentPlace}` : ''}`} />
         </SummaryBlock>
-        <SummaryBlock title="การประเมิน">
-          <Row k="ประเภทการละเมิด" v={(intake.violationDetails.length ? intake.violationDetails : intake.profile.initialViolationTypes).join(', ') || '-'} />
-          <Row k="ความรุนแรง" v={intake.severity ? SEV_LABEL[intake.severity] : '-'} />
-          <Row k="9Q / NRM" v={`${intake.screening.q9.reduce((a, b) => a + b, 0)} คะแนน · ${nrmPositive(intake.screening.nrm, intake.screening.nrmUnder18) ? 'NRM เข้าข่าย' : 'NRM ไม่เข้าเกณฑ์'}`} />
-          <Row k="การส่งต่อ" v={intake.referrals.join(' · ') || 'ยังไม่ได้เลือก'} />
+        <SummaryBlock title={t('intake.confirmed.blockAssessment')}>
+          <Row k={t('intake.confirmed.rowViolationType')} v={(intake.violationDetails.length ? intake.violationDetails : intake.profile.initialViolationTypes).join(', ') || '-'} />
+          <Row k={t('intake.row.severity')} v={intake.severity ? SEV_LABEL[intake.severity] : '-'} />
+          <Row k={t('intake.confirmed.rowScore')} v={t('intake.confirmed.scorePoints', { score: intake.screening.q9.reduce((a, b) => a + b, 0), nrm: nrmPositive(intake.screening.nrm, intake.screening.nrmUnder18) ? t('intake.confirmed.nrmYes') : t('intake.confirmed.nrmNo') })} />
+          <Row k={t('intake.confirmed.rowReferral')} v={intake.referrals.join(' · ') || t('intake.referral.notSelected')} />
         </SummaryBlock>
       </div>
 
       {/* เอกสารสำหรับดำเนินเคสต่อ */}
       <div className="text-left mb-4">
-        <p className="text-[10px] font-medium text-muted-foreground tracking-widest uppercase mb-2">เอกสารสำหรับดำเนินการต่อ (พิมพ์/บันทึก PDF)</p>
+        <p className="text-[10px] font-medium text-muted-foreground tracking-widest uppercase mb-2">{t('intake.confirmed.docsTitle')}</p>
         <div className="grid grid-cols-2 gap-2">
           {DOC_KINDS.map((dk) => (
             <button
@@ -1413,13 +1425,13 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
           ))}
         </div>
         <Button onClick={printFull} variant="outline" className="w-full mt-2 rounded-xl h-10 text-xs">
-          <Printer className="w-3.5 h-3.5" /> รายงานเคสฉบับเต็ม (Case Report)
+          <Printer className="w-3.5 h-3.5" /> {t('intake.confirmed.fullReportBtn')}
         </Button>
-        <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">พิมพ์เอกสารก่อนกด "บันทึกเคสใหม่" — หลังจากนั้นสามารถพิมพ์ซ้ำได้จากหน้า Dashboard ของเจ้าหน้าที่</p>
+        <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">{t('intake.confirmed.printHint')}</p>
       </div>
 
-      <Button onClick={() => navigate(`/track?code=${caseCode}`)} className="w-full h-12 rounded-xl bg-gradient-primary mb-2">ติดตามสถานะเคส</Button>
-      <Button variant="outline" onClick={onReset} className="w-full rounded-xl">บันทึกเคสใหม่</Button>
+      <Button onClick={() => navigate(`/track?code=${caseCode}`)} className="w-full h-12 rounded-xl bg-gradient-primary mb-2">{t('intake.confirmed.trackBtn')}</Button>
+      <Button variant="outline" onClick={onReset} className="w-full rounded-xl">{t('intake.confirmed.newCaseBtn')}</Button>
     </div>
   );
 }
@@ -1435,6 +1447,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function DobPicker({ value, onChange }: { value: string; onChange: (iso: string) => void }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const selected = value ? new Date(value + 'T00:00:00') : undefined;
   const today = new Date();
@@ -1447,7 +1460,7 @@ function DobPicker({ value, onChange }: { value: string; onChange: (iso: string)
           className={cn('w-full h-10 justify-start text-left font-normal', !value && 'text-muted-foreground')}
         >
           <CalendarIcon className="w-4 h-4 mr-2 shrink-0" />
-          {selected ? format(selected, 'd MMM yyyy', { locale: th }) : <span>เลือกวันเกิด</span>}
+          {selected ? format(selected, 'd MMM yyyy', { locale: th }) : <span>{t('intake.dob.placeholder')}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -1476,6 +1489,7 @@ function DobPicker({ value, onChange }: { value: string; onChange: (iso: string)
 }
 
 function PhotoUpload() {
+  const { t } = useI18n();
   const { photos, set } = useIntake();
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -1486,7 +1500,7 @@ function PhotoUpload() {
     for (const f of Array.from(list)) {
       if (!f.type.startsWith('image/')) continue;
       if (f.size > 15 * 1024 * 1024) {
-        toast.error(`ไฟล์ ${f.name} ใหญ่เกิน 15MB`);
+        toast.error(t('intake.photo.tooLarge', { name: f.name }));
         continue;
       }
       // Phase 0.8 — re-encode to remove EXIF/GPS before the image ever leaves the device
@@ -1515,11 +1529,11 @@ function PhotoUpload() {
       <div className="grid grid-cols-2 gap-2">
         <button type="button" onClick={() => cameraRef.current?.click()}
           className="py-3 rounded-lg border border-dashed border-border bg-muted/40 text-xs text-muted-foreground hover:border-primary hover:bg-primary-soft/40 transition flex items-center justify-center gap-2">
-          <Camera className="w-4 h-4 text-primary" /> ถ่ายภาพ
+          <Camera className="w-4 h-4 text-primary" /> {t('intake.photo.takePhoto')}
         </button>
         <button type="button" onClick={() => fileRef.current?.click()}
           className="py-3 rounded-lg border border-dashed border-border bg-muted/40 text-xs text-muted-foreground hover:border-primary hover:bg-primary-soft/40 transition flex items-center justify-center gap-2">
-          <ClipboardList className="w-4 h-4 text-primary" /> แนบรูปภาพ
+          <ClipboardList className="w-4 h-4 text-primary" /> {t('intake.photo.attach')}
         </button>
       </div>
 
@@ -1537,7 +1551,7 @@ function PhotoUpload() {
         </div>
       )}
       {photos.length > 0 && (
-        <p className="text-[11px] text-muted-foreground mt-1.5">แนบรูปแล้ว {photos.length} รูป · ระบบลบข้อมูลพิกัด/EXIF ออกอัตโนมัติ</p>
+        <p className="text-[11px] text-muted-foreground mt-1.5">{t('intake.photo.attachedCount', { n: photos.length })}</p>
       )}
     </div>
   );

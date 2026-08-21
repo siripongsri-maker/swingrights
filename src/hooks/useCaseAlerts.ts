@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 
 export interface CaseAlert {
   id: string;
@@ -13,8 +14,10 @@ export interface CaseAlert {
   created_at: string;
 }
 
-/** Realtime in-app toast — de-identified: case_code + สาขา + ระดับ เท่านั้น */
+/** Realtime in-app toast — de-identified: case_code + branch + level only */
 export function useCaseAlerts(enabled: boolean, onAlert?: (a: CaseAlert) => void) {
+  const { t } = useI18n();
+
   useEffect(() => {
     if (!enabled) return;
     const channel = supabase
@@ -22,12 +25,13 @@ export function useCaseAlerts(enabled: boolean, onAlert?: (a: CaseAlert) => void
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'case_alerts' }, (payload) => {
         const a = payload.new as CaseAlert;
         const urgent = a.kind === 'suicide_risk';
-        const msg = `${a.case_code} · ${a.branch || 'ไม่ระบุพื้นที่'} · ระดับ ${a.level}`;
-        if (urgent) toast.error(`🚨 เคสเสี่ยงทำร้ายตนเอง — ${msg}`, { duration: 20000 });
-        else toast.warning(`⚠️ เคสความเสี่ยงสูง — ${msg}`, { duration: 12000 });
+        const area = a.branch || t('access.alerts.unspecifiedArea');
+        const msg = `${a.case_code} · ${area} · ${t('access.alerts.levelPrefix', { level: a.level })}`;
+        if (urgent) toast.error(t('access.alerts.selfHarmRisk', { msg }), { duration: 20000 });
+        else toast.warning(t('access.alerts.highRisk', { msg }), { duration: 12000 });
         onAlert?.(a);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [enabled]);
+  }, [enabled, t]);
 }

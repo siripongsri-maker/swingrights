@@ -5,9 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ROLE_LABEL, ASSIGNABLE_ROLES, type AppRole } from '@/hooks/useAccess';
+import { useRoleLabels, ASSIGNABLE_ROLES, type AppRole } from '@/hooks/useAccess';
 import { ArrowLeft, Loader2, UserPlus, KeyRound, Ban, RotateCcw, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 interface StaffUser {
   id: string;
@@ -26,6 +28,8 @@ async function callAdmin(payload: Record<string, unknown>) {
 }
 
 export default function AdminUsers() {
+  const { t } = useI18n();
+  const ROLE_LABEL = useRoleLabels();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [email, setEmail] = useState('');
@@ -44,19 +48,19 @@ export default function AdminUsers() {
       action: 'invite', email, role, display_name: name,
       redirect_to: `${window.location.origin}/reset-password`,
     }),
-    onSuccess: () => { toast.success('ส่งคำเชิญแล้ว'); setEmail(''); setName(''); refresh(); },
+    onSuccess: () => { toast.success(t('users.invite.success')); setEmail(''); setName(''); refresh(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const setRoleM = useMutation({
     mutationFn: (v: { user_id: string; role: AppRole }) => callAdmin({ action: 'set_role', ...v }),
-    onSuccess: () => { toast.success('อัปเดตบทบาทแล้ว'); refresh(); },
+    onSuccess: () => { toast.success(t('users.role.updateSuccess')); refresh(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const setStatus = useMutation({
     mutationFn: (v: { user_id: string; status: 'active' | 'suspended' }) => callAdmin({ action: 'set_status', ...v }),
-    onSuccess: () => { toast.success('อัปเดตสถานะบัญชีแล้ว'); refresh(); },
+    onSuccess: () => { toast.success(t('users.status.updateSuccess')); refresh(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -64,7 +68,7 @@ export default function AdminUsers() {
     mutationFn: (v: { email: string }) => callAdmin({
       action: 'reset_password', email: v.email, redirect_to: `${window.location.origin}/reset-password`,
     }),
-    onSuccess: () => toast.success('ส่งลิงก์ตั้งรหัสผ่านใหม่แล้ว'),
+    onSuccess: () => toast.success(t('users.resetPassword.success')),
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -79,19 +83,20 @@ export default function AdminUsers() {
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5" />
             <div>
-              <p className="font-medium">จัดการบัญชีเจ้าหน้าที่</p>
-              <p className="text-[11px] text-white/60">เชิญผู้ใช้ · กำหนดบทบาท · ระงับบัญชี</p>
+              <p className="font-medium">{t('users.header.title')}</p>
+              <p className="text-[11px] text-white/60">{t('users.header.subtitle')}</p>
             </div>
           </div>
+          <LanguageToggle className="ml-auto bg-white/5 border-white/20 text-white/80 hover:text-white" />
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-5 py-6 space-y-6">
         <section className="bg-card border border-border rounded-xl p-4">
-          <p className="text-sm font-medium mb-3 flex items-center gap-2"><UserPlus className="w-4 h-4 text-primary" /> เชิญเจ้าหน้าที่ใหม่</p>
+          <p className="text-sm font-medium mb-3 flex items-center gap-2"><UserPlus className="w-4 h-4 text-primary" /> {t('users.invite.title')}</p>
           <div className="grid gap-2 sm:grid-cols-[1.4fr_1fr_1fr_auto]">
-            <Input placeholder="อีเมล" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <Input placeholder="ชื่อที่แสดง (ไม่บังคับ)" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input placeholder={t('users.invite.emailPlaceholder')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input placeholder={t('users.invite.namePlaceholder')} value={name} onChange={(e) => setName(e.target.value)} />
             <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -99,17 +104,17 @@ export default function AdminUsers() {
               </SelectContent>
             </Select>
             <Button onClick={() => invite.mutate()} disabled={!email || invite.isPending}>
-              {invite.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'ส่งคำเชิญ'}
+              {invite.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t('users.invite.send')}
             </Button>
           </div>
           <p className="text-[11px] text-muted-foreground mt-2">
-            ผู้ถูกเชิญจะได้รับอีเมลเพื่อกำหนดรหัสผ่าน จากนั้นเข้าสู่ระบบที่ /admin/login
+            {t('users.invite.note')}
           </p>
         </section>
 
         <section className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border text-sm font-medium">
-            รายชื่อเจ้าหน้าที่ {usersQ.data ? `(${usersQ.data.length})` : ''}
+            {t('users.list.title')} {usersQ.data ? `(${usersQ.data.length})` : ''}
           </div>
           {usersQ.isLoading && <div className="p-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
           {usersQ.error && <div className="p-6 text-sm text-destructive">{(usersQ.error as Error).message}</div>}
@@ -119,30 +124,30 @@ export default function AdminUsers() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{u.display_name || u.email}</p>
                   <p className="text-xs text-muted-foreground truncate">{u.email}</p>
-                  {u.status === 'suspended' && <span className="text-[11px] text-destructive">ถูกระงับการใช้งาน</span>}
+                  {u.status === 'suspended' && <span className="text-[11px] text-destructive">{t('users.list.suspended')}</span>}
                 </div>
                 <Select
                   value={u.roles[0] ?? ''}
                   onValueChange={(v) => setRoleM.mutate({ user_id: u.id, role: v as AppRole })}
                 >
-                  <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="ยังไม่มีบทบาท" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder={t('users.role.placeholder')} /></SelectTrigger>
                   <SelectContent>
                     {ASSIGNABLE_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => u.email && resetPw.mutate({ email: u.email })} disabled={!u.email}>
-                    <KeyRound className="w-3.5 h-3.5" /> รีเซ็ตรหัส
+                    <KeyRound className="w-3.5 h-3.5" /> {t('users.resetPassword')}
                   </Button>
                   {u.status === 'active' ? (
                     <Button size="sm" variant="outline" className="text-destructive"
                       onClick={() => setStatus.mutate({ user_id: u.id, status: 'suspended' })}>
-                      <Ban className="w-3.5 h-3.5" /> ระงับ
+                      <Ban className="w-3.5 h-3.5" /> {t('users.suspend')}
                     </Button>
                   ) : (
                     <Button size="sm" variant="outline"
                       onClick={() => setStatus.mutate({ user_id: u.id, status: 'active' })}>
-                      <RotateCcw className="w-3.5 h-3.5" /> คืนสิทธิ์
+                      <RotateCcw className="w-3.5 h-3.5" /> {t('users.restore')}
                     </Button>
                   )}
                 </div>
