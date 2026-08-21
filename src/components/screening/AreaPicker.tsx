@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronsUpDown, Loader2, LocateFixed, MapPin, X } from 'lucide-react';
+import { Check, ChevronsUpDown, Languages, Loader2, LocateFixed, MapPin, Navigation, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { MapPicker } from './MapPicker';
-import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, geoSearchReason, highlightGeoText, type ProvinceRow } from '@/lib/thaiGeo';
+import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, geoSearchReason, highlightGeoText, nearestProvince, type ProvinceRow } from '@/lib/thaiGeo';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
@@ -44,11 +44,13 @@ function Hi({ text, q }: { text: string; q: string }) {
 }
 
 function Combo({
-  label, value, options, disabled, onSelect,
-}: { label: string; value: string; options: ComboOption[]; disabled?: boolean; onSelect: (v: string) => void }) {
+  label, value, options, disabled, enFirst, onSelect,
+}: { label: string; value: string; options: ComboOption[]; disabled?: boolean; enFirst?: boolean; onSelect: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const { t } = useI18n();
+  const selected = options.find((o) => o.v === value);
+  const display = value && enFirst && selected?.sub ? `${selected.sub} (${selected.v})` : value || label;
   return (
     <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSearch(''); }}>
       <PopoverTrigger asChild>
@@ -59,22 +61,36 @@ function Combo({
           disabled={disabled}
           className={cn('w-full justify-between font-normal', !value && 'text-muted-foreground')}
         >
-          <span className="truncate">{value || label}</span>
+          <span className="truncate">{display}</span>
           <ChevronsUpDown className="w-4 h-4 opacity-50 shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[--radix-popover-trigger-width] z-[1200]" align="start">
         <Command filter={geoSearchScore}>
-          <CommandInput
-            placeholder={`${t('common.search')} ${label}... (TH/EN)`}
-            value={search}
-            onValueChange={setSearch}
-          />
+          <div className="relative">
+            <CommandInput
+              placeholder={`${t('common.search')} ${label}... (TH/EN)`}
+              value={search}
+              onValueChange={setSearch}
+            />
+            {search && (
+              <button
+                type="button"
+                aria-label={t('area.clearSearch')}
+                onClick={() => setSearch('')}
+                className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
           <CommandList className="max-h-64">
             <CommandEmpty>{t('area.notfound')}</CommandEmpty>
             <CommandGroup>
               {options.map((o) => {
                 const reason = search.trim() ? geoSearchReason(search, o.keywords) : null;
+                const primary = enFirst && o.sub ? o.sub : o.v;
+                const secondary = enFirst && o.sub ? o.v : o.sub;
                 return (
                   <CommandItem
                     key={o.v}
@@ -83,8 +99,8 @@ function Combo({
                     onSelect={() => { onSelect(o.v); setOpen(false); }}
                   >
                     <Check className={cn('me-2 h-4 w-4', value === o.v ? 'opacity-100' : 'opacity-0')} />
-                    <span className="flex-1"><Hi text={o.v} q={search} /></span>
-                    {o.sub && <span className="text-[11px] text-muted-foreground ms-2"><Hi text={o.sub} q={search} /></span>}
+                    <span className="flex-1"><Hi text={primary} q={search} /></span>
+                    {secondary && <span className="text-[11px] text-muted-foreground ms-2"><Hi text={secondary} q={search} /></span>}
                     {o.zip && (
                       <span className="ms-2 shrink-0 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] leading-none text-secondary-foreground">
                         {o.zip}
@@ -111,6 +127,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
   const [geo, setGeo] = useState<ProvinceRow[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMap, setShowMap] = useState(!!value.geo);
+  const [enFirst, setEnFirst] = useState(false);
 
   useEffect(() => {
     loadThaiGeo()
@@ -118,6 +135,22 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
       .catch(() => toast.error(t('area.loadError')))
       .finally(() => setLoading(false));
   }, []);
+
+  /** Quick action: pick the province whose centroid is closest to the device's location. */
+  const pickNearestProvince = () => {
+    if (!navigator.geolocation) return toast.error(t('area.geoUnsupported'));
+    if (!geo?.length) return;
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        const best = nearestProvince(geo, p.coords.latitude, p.coords.longitude);
+        if (!best) return;
+        onChange({ ...value, province: best.province, district: '', subdistrict: '', zip: '' });
+        toast.success(t('area.nearMeFound', { name: best.province, km: Math.round(best.km) }));
+      },
+      () => toast.error(t('area.geoDenied')),
+      { enableHighAccuracy: false, timeout: 10000 },
+    );
+  };
 
   const province = useMemo(() => geo?.find((p) => p.n === value.province) ?? null, [geo, value.province]);
   const district = useMemo(() => province?.d.find((d) => d.n === value.district) ?? null, [province, value.district]);
@@ -151,6 +184,22 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
 
   return (
     <div className="space-y-2.5">
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button type="button" size="sm" variant="outline" className="text-xs" onClick={pickNearestProvince} disabled={loading}>
+          <Navigation className="w-3.5 h-3.5 me-1" /> {t('area.nearMe')}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={enFirst ? 'secondary' : 'outline'}
+          className="text-xs"
+          aria-pressed={enFirst}
+          onClick={() => setEnFirst((s) => !s)}
+        >
+          <Languages className="w-3.5 h-3.5 me-1" /> {t('area.toggleNames')}
+        </Button>
+      </div>
+
       {loading ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
           <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t('area.loading')}
@@ -161,6 +210,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
             label={t('area.province')}
             value={value.province}
             options={provinceOptions}
+            enFirst={enFirst}
             onSelect={(v) => onChange({ ...value, province: v, district: '', subdistrict: '', zip: '' })}
           />
           <div className="grid grid-cols-2 gap-2.5">
@@ -169,6 +219,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
               value={value.district}
               disabled={!province}
               options={districtOptions}
+              enFirst={enFirst}
               onSelect={(v) => onChange({ ...value, district: v, subdistrict: '', zip: '' })}
             />
             <Combo
@@ -176,6 +227,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
               value={value.subdistrict}
               disabled={!district}
               options={tambonOptions}
+              enFirst={enFirst}
               onSelect={(v) => {
                 const row = district?.s.find((s) => s.n === v);
                 onChange({ ...value, subdistrict: v, zip: row?.z ? String(row.z) : '' });
