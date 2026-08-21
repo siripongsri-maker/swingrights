@@ -78,7 +78,7 @@ const RAW_ALIASES: Record<string, string[]> = {
   khorat: ['nakhon ratchasima'],
   korat: ['nakhon ratchasima'],
   chiengmai: ['chiang mai'],
-  chieng mai: ['chiang mai'],
+  'chieng mai': ['chiang mai'],
   pattaya: ['bang lamung', 'chon buri'],
   pataya: ['bang lamung', 'chon buri'],
   huahin: ['prachuap khiri khan'],
