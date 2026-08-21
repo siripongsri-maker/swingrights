@@ -200,7 +200,7 @@ export default function Track() {
                             disabled={draft.sending || (!draft.text.trim() && !draft.blob)}
                             onClick={() => void sendAnswer(q.id)}
                           >
-                            {draft.sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-3.5 h-3.5 mr-1" />{t('track.answer.send')}</>}
+                            {draft.sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-3.5 h-3.5 me-1 rtl:-scale-x-100" />{t('track.answer.send')}</>}
                           </Button>
                         </div>
                       )}
@@ -212,10 +212,10 @@ export default function Track() {
 
             <div>
               <h2 className="font-display font-semibold text-sm mb-3">Timeline</h2>
-              <ol className="relative border-l-2 border-primary/25 ml-2 space-y-4">
+              <ol className="relative border-s-2 border-primary/25 ms-2 space-y-4">
                 {data.timeline.map((tItem, i) => (
-                  <li key={i} className="ml-4 animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
-                    <span className="absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-primary border-2 border-background animate-pop" style={{ animationDelay: `${i * 80 + 150}ms` }} />
+                  <li key={i} className="ms-4 animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+                    <span className="absolute -start-[7px] mt-1 w-3 h-3 rounded-full bg-primary border-2 border-background animate-pop" style={{ animationDelay: `${i * 80 + 150}ms` }} />
                     <p className="text-sm font-medium">
                       <StatusBadge value={toStatus(tItem.status)} />
                     </p>

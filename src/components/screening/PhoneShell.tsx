@@ -20,7 +20,7 @@ export function PhoneShell({ title = 'voice screening', onBack, onClose, childre
             aria-label="back"
             className="w-8 h-8 rounded-full bg-white/15 text-white/80 hover:bg-white/25 flex items-center justify-center transition"
           >
-            {onBack ? <ArrowLeft className="w-4 h-4" /> : <X className="w-4 h-4" />}
+            {onBack ? <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" /> : <X className="w-4 h-4" />}
           </button>
           <span className="text-xs text-white/75 tracking-widest font-display">{title}</span>
           <div className="w-8 h-8 flex items-center justify-center">{trailing}</div>
