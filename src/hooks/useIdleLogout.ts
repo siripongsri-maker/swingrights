@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n';
 
 const EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'visibilitychange'];
 
@@ -13,6 +14,7 @@ const EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'vi
 export function useIdleLogout(enabled: boolean, timeoutMs = 20 * 60_000, warnMs = 60_000) {
   const timer = useRef<number | null>(null);
   const warnTimer = useRef<number | null>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!enabled) return;
@@ -25,14 +27,14 @@ export function useIdleLogout(enabled: boolean, timeoutMs = 20 * 60_000, warnMs 
     const logout = async () => {
       clear();
       await supabase.auth.signOut();
-      toast.error('ออกจากระบบอัตโนมัติเนื่องจากไม่มีการใช้งาน');
+      toast.error(t('access.idle.loggedOut'));
       window.location.href = '/admin/login';
     };
 
     const reset = () => {
       clear();
       warnTimer.current = window.setTimeout(() => {
-        toast.warning('ไม่มีการใช้งาน — ระบบจะออกจากระบบใน 1 นาที');
+        toast.warning(t('access.idle.warning'));
       }, Math.max(0, timeoutMs - warnMs));
       timer.current = window.setTimeout(logout, timeoutMs);
     };
@@ -43,5 +45,5 @@ export function useIdleLogout(enabled: boolean, timeoutMs = 20 * 60_000, warnMs 
       clear();
       EVENTS.forEach((e) => window.removeEventListener(e, reset));
     };
-  }, [enabled, timeoutMs, warnMs]);
+  }, [enabled, timeoutMs, warnMs, t]);
 }

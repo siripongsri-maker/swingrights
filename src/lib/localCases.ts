@@ -87,8 +87,8 @@ function describe(state: any, payload: any): Pick<LocalCaseMeta, 'label' | 'area
   const p = src?.profile || {};
   const answers = Array.isArray(src?.answers) ? src.answers.filter((a: any) => a?.transcript?.trim()).length : 0;
   return {
-    label: name?.trim() ? name.trim() : 'ไม่ระบุชื่อ',
-    area: [p.province || p.branch, p.district].filter(Boolean).join(' / ') || 'ไม่ระบุพื้นที่',
+    label: name?.trim() ? name.trim() : 'vault.unnamed',
+    area: [p.province || p.branch, p.district].filter(Boolean).join(' / ') || 'vault.unknownArea',
     answers,
   };
 }

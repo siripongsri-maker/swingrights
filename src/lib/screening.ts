@@ -24,15 +24,15 @@ export const VIOLATION_TYPES = [
 ];
 
 export const QUESTIONS = [
-  { cat: 'WHAT - เกิดอะไรขึ้น', frame: 'WHAT', main: 'เกิดอะไรขึ้น ช่วยเล่าให้ฟังหน่อย', hint: '(ลำดับเหตุการณ์โดยรวม)' },
-  { cat: 'WHO - ผู้กระทำ', frame: 'WHO', main: 'ใครเป็นผู้กระทำ?', hint: '(ความสัมพันธ์ จำนวนคน)' },
-  { cat: 'WHAT - การกระทำ', frame: 'WHAT', main: 'เขาทำอะไร หรือเราถูกทำอะไร?', hint: '(ลักษณะการกระทำที่เกิดขึ้น)' },
-  { cat: 'HOW - วิธีการ', frame: 'HOW', main: 'เขาทำอย่างไร หรือเราถูกกระทำอย่างไร?', hint: '(วิธีการ เครื่องมือ)' },
-  { cat: 'WHERE - สถานที่', frame: 'WHERE', main: 'เรื่องที่เกิดขึ้น เกิดขึ้นที่ไหน?', hint: '(สถานที่เกิดเหตุ)' },
-  { cat: 'WHEN - เวลา', frame: 'WHEN', main: 'เรื่องที่เกิดขึ้น เกิดขึ้นเมื่อไหร่?', hint: '(วัน เวลา ความถี่)' },
-  { cat: 'TIMELINE - ลำดับเหตุการณ์', frame: 'WHEN', main: 'ไล่ Timeline เหตุการณ์ที่เกิดขึ้น?', hint: '(ลำดับก่อน-หลัง)' },
-  { cat: 'WHY - สาเหตุ', frame: 'WHY', main: 'สาเหตุเกิดจากอะไร?', hint: '(บริบท ความขัดแย้ง)' },
-  { cat: 'NEEDS - ความต้องการ', frame: 'WHAT', main: 'อยากให้ SWING ช่วยเหลือเรื่องอะไรบ้าง?', hint: '(สิ่งที่ต้องการความช่วยเหลือ)' },
+  { cat: "screening.q0.cat", frame: "WHAT", main: "screening.q0.main", hint: "screening.q0.hint" },
+  { cat: "screening.q1.cat", frame: "WHO", main: "screening.q1.main", hint: "screening.q1.hint" },
+  { cat: "screening.q2.cat", frame: "WHAT", main: "screening.q2.main", hint: "screening.q2.hint" },
+  { cat: "screening.q3.cat", frame: "HOW", main: "screening.q3.main", hint: "screening.q3.hint" },
+  { cat: "screening.q4.cat", frame: "WHERE", main: "screening.q4.main", hint: "screening.q4.hint" },
+  { cat: "screening.q5.cat", frame: "WHEN", main: "screening.q5.main", hint: "screening.q5.hint" },
+  { cat: "screening.q6.cat", frame: "TIMELINE", main: "screening.q6.main", hint: "screening.q6.hint" },
+  { cat: "screening.q7.cat", frame: "WHY", main: "screening.q7.main", hint: "screening.q7.hint" },
+  { cat: "screening.q8.cat", frame: "NEEDS", main: "screening.q8.main", hint: "screening.q8.hint" },
 ];
 
 export const REFERRAL_OPTIONS = [

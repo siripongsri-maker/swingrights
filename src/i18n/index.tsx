@@ -29,10 +29,17 @@ export const SPEECH_LOCALE: Record<Lang, string> = {
   lo: 'lo-LA',
 };
 
-type Entry = { th: string; en: string; my?: string; km?: string; lo?: string };
+export type Entry = { th: string; en: string; my?: string; km?: string; lo?: string };
 type Dict = Record<string, Entry>;
 
-export const DICT: Dict = {
+import { INTAKE_DICT } from './dict/intake';
+import { DASH_DICT } from './dict/dash';
+import { ADMIN_DICT } from './dict/admin';
+import { MISC_DICT } from './dict/misc';
+import { TOOLS_DICT } from './dict/tools';
+import { PRIVACY_DICT } from './dict/privacy';
+
+const BASE_DICT: Dict = {
   // ---------- Common ----------
   'app.name': {
     th: 'SWING · คัดกรองด้วยเสียง', en: 'SWING · Voice Screening',
@@ -151,6 +158,9 @@ export const DICT: Dict = {
     my: 'ဤကုတ်ဖြင့် အမှုမတွေ့ပါ', km: 'រកមិនឃើញករណីជាមួយលេខកូដនេះទេ', lo: 'ບໍ່ພົບເຄສທີ່ມີລະຫັດນີ້',
   },
   'track.area': { th: 'พื้นที่', en: 'Area', my: 'ဒေသ', km: 'តំបន់', lo: 'ພື້ນທີ່' },
+  'track.timeline': { th: 'เส้นเวลา', en: 'Timeline', my: 'ဖြစ်စဉ်မျဉ်း', km: 'លំដាប់ព្រឹត្តិការណ៍', lo: 'ໄທມ໌ລາຍ' },
+  'notfound.title': { th: 'ไม่พบหน้าที่คุณต้องการ', en: 'Oops! Page not found', my: 'စာမျက်နှာ မတွေ့ပါ', km: 'រកមិនឃើញទំព័រ', lo: 'ບໍ່ພົບໜ້າທີ່ຕ້ອງການ' },
+  'notfound.home': { th: 'กลับหน้าหลัก', en: 'Return to Home', my: 'ပင်မစာမျက်နှာသို့', km: 'ត្រឡប់ទៅទំព័រដើម', lo: 'ກັບໜ້າຫຼັກ' },
   'track.savedAt': { th: 'บันทึกเมื่อ', en: 'Submitted', my: 'တင်သွင်းချိန်', km: 'បានដាក់ស្នើ', lo: 'ບັນທຶກເມື່ອ' },
   'track.cancelled': {
     th: 'เคสถูกยกเลิก', en: 'This case was cancelled',
@@ -428,10 +438,21 @@ interface Ctx {
   lang: Lang;
   dir: TextDir;
   setLang: (l: Lang) => void;
-  t: (key: keyof typeof DICT | string) => string;
+  t: (key: keyof typeof DICT | string, vars?: Record<string, string | number>) => string;
 }
 
 const I18nContext = createContext<Ctx>({ lang: 'th', dir: 'ltr', setLang: () => {}, t: (k) => String(k) });
+
+/** Full dictionary: base (public pages) + per-area fragments. */
+export const DICT: Dict = {
+  ...BASE_DICT,
+  ...INTAKE_DICT,
+  ...DASH_DICT,
+  ...ADMIN_DICT,
+  ...MISC_DICT,
+  ...TOOLS_DICT,
+  ...PRIVACY_DICT,
+};
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
@@ -453,11 +474,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(STORAGE_KEY, l); } catch { /* noop */ }
   }, []);
 
-  // Fallback chain: selected language → English → Thai → raw key
-  const t = useCallback((key: string) => {
+  // Fallback chain: selected language → English → Thai → raw key.
+  // Optional {var} interpolation: t('x', { n: 3 }) replaces "{n}".
+  const t = useCallback((key: string, vars?: Record<string, string | number>) => {
     const e = DICT[key];
-    if (!e) return key;
-    return e[lang] ?? e.en ?? e.th ?? key;
+    let s = e ? (e[lang] ?? e.en ?? e.th ?? key) : key;
+    if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v));
+    return s;
   }, [lang]);
 
   return <I18nContext.Provider value={{ lang, dir, setLang, t }}>{children}</I18nContext.Provider>;

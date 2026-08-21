@@ -211,7 +211,7 @@ export default function Track() {
             )}
 
             <div>
-              <h2 className="font-display font-semibold text-sm mb-3">Timeline</h2>
+              <h2 className="font-display font-semibold text-sm mb-3">{t('track.timeline')}</h2>
               <ol className="relative border-s-2 border-primary/25 ms-2 space-y-4">
                 {data.timeline.map((tItem, i) => (
                   <li key={i} className="ms-4 animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>

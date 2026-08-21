@@ -37,7 +37,7 @@ export function buildPayloadFromState(state: any) {
 /** Uploads local media then calls submit_case. Returns the new case code. */
 export async function resubmitLocalCase(id: string): Promise<string> {
   const rec = getLocalCase(id);
-  if (!rec) throw new Error('ไม่พบข้อมูลเคสในเครื่อง');
+  if (!rec) throw new Error('vault.err.notFound');
 
   const payload = rec.payload ? { ...rec.payload } : buildPayloadFromState(rec.state);
   payload.consent = 'true';
@@ -75,7 +75,7 @@ export async function resubmitLocalCase(id: string): Promise<string> {
 
   const { data: code, error } = await supabase.rpc('submit_case' as any, { _payload: payload });
   if (error) throw error;
-  if (!code) throw new Error('บันทึกเคสไม่สำเร็จ');
+  if (!code) throw new Error('vault.err.saveFailed');
 
   await deleteLocalCase(id);
   return code as string;

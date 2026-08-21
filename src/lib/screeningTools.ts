@@ -1,76 +1,54 @@
 // แบบคัดกรองมาตรฐาน: 2Q / 9Q (กรมสุขภาพจิต) และ NRM (แบบคัดแยกผู้เสียหายจากการค้ามนุษย์)
+// Question/option text lives in i18n dict (tools.*); this module keeps ids/keys/scoring stable.
 
-export const Q2_ITEMS = [
-  'ใน 2 สัปดาห์ที่ผ่านมา รวมวันนี้ ท่านรู้สึกหดหู่ เศร้า หรือท้อแท้สิ้นหวังหรือไม่',
-  'ใน 2 สัปดาห์ที่ผ่านมา รวมวันนี้ ท่านรู้สึกเบื่อ ทำอะไรก็ไม่เพลิดเพลินหรือไม่',
-];
+export const Q2_ITEM_IDS = ['q2_1', 'q2_2'] as const;
 
-export const Q9_ITEMS = [
-  'เบื่อ ไม่สนใจอยากทำอะไร',
-  'ไม่สบายใจ ซึมเศร้า ท้อแท้',
-  'หลับยาก หรือหลับๆ ตื่นๆ หรือหลับมากไป',
-  'เหนื่อยง่าย หรือไม่ค่อยมีแรง',
-  'เบื่ออาหาร หรือกินมากเกินไป',
-  'รู้สึกไม่ดีกับตัวเอง คิดว่าตัวเองล้มเหลว หรือทำให้ตนเอง/ครอบครัวผิดหวัง',
-  'สมาธิไม่ดีเวลาทำอะไร เช่น ดูโทรทัศน์ ฟังวิทยุ หรือทำงานที่ต้องใช้ความตั้งใจ',
-  'พูดช้า ทำอะไรช้าลงจนคนอื่นสังเกตเห็นได้ หรือกระสับกระส่ายจนอยู่ไม่นิ่งเหมือนเคย',
-  'คิดทำร้ายตนเอง หรือคิดว่าถ้าตายไปคงจะดี',
-];
+export const Q9_ITEM_IDS = [
+  'q9_1', 'q9_2', 'q9_3', 'q9_4', 'q9_5', 'q9_6', 'q9_7', 'q9_8', 'q9_9',
+] as const;
 
-export const Q9_SCALE = [
-  { v: 0, label: 'ไม่มีเลย' },
-  { v: 1, label: 'เป็นบางวัน (1-7 วัน)' },
-  { v: 2, label: 'เป็นบ่อย (>7 วัน)' },
-  { v: 3, label: 'เป็นทุกวัน' },
-];
+export const Q9_SCALE_IDS = [
+  { v: 0, id: 'never' },
+  { v: 1, id: 'someDays' },
+  { v: 2, id: 'often' },
+  { v: 3, id: 'everyDay' },
+] as const;
 
+// label kept in Thai for non-i18n consumers (reports/admin exports); UI components should
+// translate via t(`tools.level.${id}`) instead of using .label directly.
 export function q9Level(total: number) {
-  if (total < 7) return { label: 'ไม่มีอาการซึมเศร้า', tone: 'green' as const };
-  if (total <= 12) return { label: 'ซึมเศร้าระดับน้อย', tone: 'yellow' as const };
-  if (total <= 18) return { label: 'ซึมเศร้าระดับปานกลาง', tone: 'amber' as const };
-  return { label: 'ซึมเศร้าระดับรุนแรง', tone: 'red' as const };
+  if (total < 7) return { id: 'none', label: 'ไม่มีอาการซึมเศร้า', tone: 'green' as const };
+  if (total <= 12) return { id: 'mild', label: 'ซึมเศร้าระดับน้อย', tone: 'yellow' as const };
+  if (total <= 18) return { id: 'moderate', label: 'ซึมเศร้าระดับปานกลาง', tone: 'amber' as const };
+  return { id: 'severe', label: 'ซึมเศร้าระดับรุนแรง', tone: 'red' as const };
 }
 
 // NRM — แบบคัดแยกเบื้องต้น (Act / Means / Purpose ตามนิยามการค้ามนุษย์)
 export const NRM_SECTIONS = [
   {
     key: 'act',
-    title: 'การกระทำ (Act)',
-    items: [
-      'ถูกจัดหา ชักชวน หรือพามาจากที่อื่นเพื่อทำงานนี้',
-      'ถูกส่งต่อ/ขายต่อให้บุคคลหรือสถานประกอบการอื่น',
-      'ถูกกักตัวหรือจัดที่พักโดยผู้ควบคุมงาน',
-    ],
+    titleId: 'tools.nrm.section.act',
+    items: ['act_1', 'act_2', 'act_3'],
   },
   {
     key: 'means',
-    title: 'วิธีการ (Means)',
-    items: [
-      'ถูกหลอกลวงเรื่องลักษณะงาน ค่าตอบแทน หรือเงื่อนไข',
-      'ถูกยึดเอกสารประจำตัว/หนังสือเดินทาง',
-      'มีภาระหนี้ที่ต้องใช้คืนด้วยการทำงาน (debt bondage)',
-      'ถูกขู่ทำร้าย ข่มขู่ครอบครัว หรือใช้กำลังบังคับ',
-      'ถูกจำกัดการเดินทางหรือการติดต่อกับภายนอก',
-    ],
+    titleId: 'tools.nrm.section.means',
+    items: ['means_1', 'means_2', 'means_3', 'means_4', 'means_5'],
   },
   {
     key: 'purpose',
-    title: 'วัตถุประสงค์ (Purpose)',
-    items: [
-      'ถูกบังคับให้ให้บริการทางเพศหรือทำงานโดยไม่สมัครใจ',
-      'ไม่ได้รับค่าตอบแทน หรือได้รับน้อยกว่าที่ตกลงอย่างมาก',
-      'ทำงานเกินเวลาหรือในสภาพที่เป็นอันตราย โดยปฏิเสธไม่ได้',
-    ],
+    titleId: 'tools.nrm.section.purpose',
+    items: ['purpose_1', 'purpose_2', 'purpose_3'],
   },
 ] as const;
 
-export const NRM_UNDER18 = 'ผู้เสียหายอายุต่ำกว่า 18 ปี';
+export const NRM_UNDER18_ID = 'tools.nrm.under18';
 
 export interface ScreeningResult {
   q2: (0 | 1)[];
-  q2Positive: boolean;
   q9: number[];
   q9Total: number;
+  q2Positive: boolean;
   q9Level: string;
   suicidalItem: number;
   nrm: Record<string, boolean[]>;
@@ -85,15 +63,7 @@ export function nrmPositive(nrm: Record<string, boolean[]>, under18: boolean) {
 }
 
 export const HOTLINE_1323 = {
-  name: 'สายด่วนสุขภาพจิต 1323',
   tel: '1323',
-  note: 'ให้บริการฟรี 24 ชั่วโมง',
 };
 
-export const SAFETY_PLAN_STEPS = [
-  'อยู่กับผู้รับบริการ ไม่ปล่อยให้อยู่คนเดียวจนกว่าจะประเมินความปลอดภัยเสร็จ',
-  'ถามตรงๆ ว่ามีแผน วิธีการ หรือกำหนดเวลาในการทำร้ายตนเองหรือไม่',
-  'นำสิ่งของที่อาจใช้ทำร้ายตนเองออกจากบริเวณ และประสานผู้ใกล้ชิดที่ไว้ใจได้',
-  'โทร 1323 ร่วมกับผู้รับบริการ หรือส่งต่อโรงพยาบาล/จิตแพทย์ทันทีหากมีความเสี่ยงสูง',
-  'บันทึกข้อตกลงความปลอดภัย เบอร์ติดต่อฉุกเฉิน และนัดติดตามภายใน 24-48 ชั่วโมง',
-];
+export const SAFETY_PLAN_STEP_IDS = ['step_1', 'step_2', 'step_3', 'step_4', 'step_5'];
