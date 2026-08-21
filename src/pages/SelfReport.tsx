@@ -363,6 +363,7 @@ export default function SelfReport() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </PhoneShell>
   );
