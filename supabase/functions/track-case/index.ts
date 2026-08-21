@@ -32,7 +32,7 @@ serve(async (req) => {
   const { data: tl } = await db
     .from("case_timeline")
     .select("status,note,created_at")
-    .eq("case_code", data.case_code)
+    .eq("case_id", c.id)
     .order("created_at", { ascending: true });
 
   const { data: qs } = await db
