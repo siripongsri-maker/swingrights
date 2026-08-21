@@ -292,10 +292,10 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
   const calcAge = (dob: string) => {
     if (!dob) return '';
-    const b = new Date(dob), t = new Date();
-    let age = t.getFullYear() - b.getFullYear();
-    const m = t.getMonth() - b.getMonth();
-    if (m < 0 || (m === 0 && t.getDate() < b.getDate())) age--;
+    const b = new Date(dob), now = new Date();
+    let age = now.getFullYear() - b.getFullYear();
+    const m = now.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
     return t('intake.victim.ageYears', { age });
   };
 
