@@ -148,6 +148,7 @@ export default function Intake() {
 
 /* ----------------- 1. CONSENT ----------------- */
 function ConsentStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const { consent, set } = useIntake();
   const items = [
     t('intake.consent.item1'),
@@ -284,6 +285,7 @@ function ReporterStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 3. VICTIM ----------------- */
 function VictimStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const { victim, profile, reporter, patch, set } = useIntake();
   const updateV = (k: keyof typeof victim, v: string) => set('victim', { ...victim, [k]: v });
   const updateP = (k: keyof typeof profile, v: any) => set('profile', { ...profile, [k]: v });
@@ -429,6 +431,7 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 4. VOICE Q&A (chat style) ----------------- */
 function VoiceStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const { qIndex, answers, staffObs, profile, audioBlobs, consent, patch } = useIntake();
   const allowServerStt = consent.cb3;
   const [recording, setRecording] = useState(false);
@@ -732,6 +735,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
 
 /* chat bubbles */
 function QuestionBubble({ q, index, current }: { q: (typeof QUESTIONS)[number]; index: number; current?: boolean }) {
+  const { t } = useI18n();
   return (
     <div className={`flex gap-2.5 ${current ? 'animate-fade-in' : ''}`}>
       <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center shrink-0 shadow-card">
@@ -768,6 +772,7 @@ function HistoryAudio({ blob }: { blob: Blob }) {
 
 /* ----------------- 5. ASSESS ----------------- */
 function AssessStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const { hasViolation, violationDetails, severity, specialTests, extraFacts, screening, set, patch } = useIntake();
 
   const toggleDetail = (label: string) => {
@@ -882,16 +887,17 @@ function AssessStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 6. AI ----------------- */
 function AIStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const intake = useIntake();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [stepLabel, setStepLabel] = useState('กำลังประมวลผลคำตอบ');
+  const [stepLabel, setStepLabel] = useState(t('intake.ai.step1'));
 
   useEffect(() => {
     let cancelled = false;
     const labels = [t('intake.ai.step1'), t('intake.ai.step2'), t('intake.ai.step3'), t('intake.ai.step4')];
     let i = 0;
-    const t = window.setInterval(() => { i = (i + 1) % labels.length; setStepLabel(labels[i]); }, 1100);
+    const timer = window.setInterval(() => { i = (i + 1) % labels.length; setStepLabel(labels[i]); }, 1100);
 
     (async () => {
       try {
@@ -919,7 +925,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
         setLoading(false);
       }
     })();
-    return () => { cancelled = true; window.clearInterval(t); };
+    return () => { cancelled = true; window.clearInterval(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1047,6 +1053,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 7. REFERRAL ----------------- */
 function ReferralStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const { referrals, referralNote, set } = useIntake();
   const toggle = (name: string) => set('referrals', referrals.includes(name) ? referrals.filter((x) => x !== name) : [...referrals, name]);
   return (
@@ -1073,6 +1080,7 @@ function ReferralStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 8. SIGNATURE & SAVE ----------------- */
 function SignatureStep({ onNext }: { onNext: () => void }) {
+  const { t } = useI18n();
   const intake = useIntake();
   const [staffName, setStaffName] = useState(intake.signatureStaffName);
   const [saving, setSaving] = useState(false);
@@ -1199,7 +1207,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       // Phase 0.4 — the case code is generated and validated server-side (SECURITY DEFINER RPC)
       const { data: code, error } = await supabase.rpc('submit_case' as any, { _payload: payload });
       if (error) throw error;
-      if (!code) throw new Error('บันทึกเคสไม่สำเร็จ');
+      if (!code) throw new Error(t('intake.sig.saveFailed'));
 
       // แจ้งเตือนแบบ de-identified (case_code + สาขา + ระดับ เท่านั้น)
       if (suicideRisk || intake.severity === 'red' || intake.aiResult?.riskLevel === 'high') {
@@ -1313,6 +1321,7 @@ const DOC_ICONS: Record<DocKind, React.ReactNode> = {
 };
 
 function ConfirmedStep({ onReset }: { onReset: () => void }) {
+  const { t } = useI18n();
   const intake = useIntake();
   const { caseCode } = intake;
   const navigate = useNavigate();
@@ -1392,7 +1401,7 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
         <SummaryBlock title={t('intake.confirmed.blockAssessment')}>
           <Row k={t('intake.confirmed.rowViolationType')} v={(intake.violationDetails.length ? intake.violationDetails : intake.profile.initialViolationTypes).join(', ') || '-'} />
           <Row k={t('intake.row.severity')} v={intake.severity ? SEV_LABEL[intake.severity] : '-'} />
-          <Row k={t('intake.confirmed.rowScore')} v={`${intake.screening.q9.reduce((a, b) => a + b, 0)} คะแนน · ${nrmPositive(intake.screening.nrm, intake.screening.nrmUnder18) ? 'NRM เข้าข่าย' : 'NRM ไม่เข้าเกณฑ์'}`} />
+          <Row k={t('intake.confirmed.rowScore')} v={t('intake.confirmed.scorePoints', { score: intake.screening.q9.reduce((a, b) => a + b, 0), nrm: nrmPositive(intake.screening.nrm, intake.screening.nrmUnder18) ? t('intake.confirmed.nrmYes') : t('intake.confirmed.nrmNo') })} />
           <Row k={t('intake.confirmed.rowReferral')} v={intake.referrals.join(' · ') || t('intake.referral.notSelected')} />
         </SummaryBlock>
       </div>
@@ -1438,6 +1447,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function DobPicker({ value, onChange }: { value: string; onChange: (iso: string) => void }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const selected = value ? new Date(value + 'T00:00:00') : undefined;
   const today = new Date();
