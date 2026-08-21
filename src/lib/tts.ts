@@ -128,12 +128,13 @@ function concat(chunks: Uint8Array[]): Uint8Array {
 }
 
 async function readSse(body: ReadableStream<Uint8Array>, onData: (data: string) => void) {
-  const reader = body.pipeThrough(new TextDecoderStream()).getReader();
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
   let buf = '';
   for (;;) {
     const { value, done } = await reader.read();
     if (done) break;
-    buf += value;
+    buf += decoder.decode(value, { stream: true });
     let idx: number;
     while ((idx = buf.indexOf('\n\n')) >= 0) {
       const raw = buf.slice(0, idx);
