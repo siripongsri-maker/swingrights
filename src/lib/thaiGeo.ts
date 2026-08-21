@@ -185,8 +185,8 @@ function skeletonUnits(s: string): Unit[] {
   const raw: Unit[] = [];
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
-    if (/[̀-่ͯ-๋]/.test(ch)) continue; // standalone combining/tone marks
-    const base = ch.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    if (/[\u0300-\u036f\u0e48-\u0e4b]/.test(ch)) continue; // standalone combining/tone marks
+    const base = ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     for (const bc of base) {
       raw.push({ lo: i, hi: i + 1, c: /[^\p{L}\p{N} ]/u.test(bc) ? ' ' : bc });
     }
