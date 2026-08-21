@@ -228,6 +228,7 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
 /* ----------------- 2. REPORTER ----------------- */
 function ReporterStep({ onNext }: { onNext: () => void }) {
   const { reporter, set } = useIntake();
+  const { t } = useI18n();
   const update = (k: keyof typeof reporter, v: string) => set('reporter', { ...reporter, [k]: v });
   return (
     <div>
