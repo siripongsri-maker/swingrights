@@ -73,9 +73,9 @@ export default function Landing() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
-                <Link to="/intake">
+                <Link to="/report">
                   <Button size="lg" className="h-13 px-7 py-6 rounded-full bg-gradient-primary shadow-elegant hover-lift text-base w-full sm:w-auto">
-                    <Mic className="w-4 h-4" /> {t('landing.cta.start')} <ArrowRight className="w-4 h-4" />
+                    <HeartHandshake className="w-4 h-4" /> {t('landing.cta.report')} <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
                 <Link to="/track">
@@ -85,8 +85,8 @@ export default function Landing() {
                 </Link>
               </div>
               <div className="mt-4">
-                <Link to="/report" className="inline-flex items-center gap-1.5 text-sm text-primary underline underline-offset-4 hover:text-primary/80 transition">
-                  <HeartHandshake className="w-4 h-4" /> {t('landing.cta.report')}
+                <Link to="/intake" className="inline-flex items-center gap-1.5 text-sm text-primary underline underline-offset-4 hover:text-primary/80 transition">
+                  <Mic className="w-4 h-4" /> {t('landing.cta.start')} ({t('nav.staff')})
                 </Link>
               </div>
             </div>
