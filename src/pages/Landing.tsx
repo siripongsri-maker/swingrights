@@ -58,6 +58,11 @@ export default function Landing() {
                 </Button>
               </Link>
             </div>
+            <div className="mt-4">
+              <Link to="/report" className="inline-flex items-center gap-1.5 text-sm text-primary underline underline-offset-4 hover:text-primary/80 transition">
+                <HeartHandshake className="w-4 h-4" /> {t('landing.cta.report')}
+              </Link>
+            </div>
           </div>
 
           {/* Bento grid */}
