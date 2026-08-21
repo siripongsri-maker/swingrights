@@ -1,7 +1,7 @@
 // เอกสารนำส่งดำเนินเคส — บันทึกแจ้งความ / บันทึกข้อความ / บันทึกส่งตัว / บันทึกให้การช่วยเหลือ
 // พิมพ์เป็น PDF ผ่านหน้าต่างพิมพ์ของเบราว์เซอร์ และบันทึก log การ export ทุกครั้ง
 import { SEV_LABEL } from '@/lib/screening';
-import { q9Level } from '@/lib/screeningTools';
+import { q9Level, nrmPositive } from '@/lib/screeningTools';
 import { AI_DISCLAIMER, logExport, type CaseReportData } from '@/lib/caseReport';
 import type { IntakeState } from '@/store/intake';
 import { toast } from 'sonner';
@@ -337,7 +337,7 @@ export function docInputFromIntake(s: IntakeState): DocInput {
       q2Positive: sc.q2.some((v) => v === 1),
       q9Total,
       suicidalItem: sc.q9[8] ?? 0,
-      nrmPositive: undefined as boolean | undefined, // computed below
+      nrmPositive: nrmPositive(sc.nrm, sc.nrmUnder18),
       nrmUnder18: sc.nrmUnder18,
     },
     extraFacts: s.extraFacts,
