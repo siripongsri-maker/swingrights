@@ -28,6 +28,8 @@ import { stripImageMetadata } from '@/lib/exif';
 import { clearDraft, readDraftMeta, loadAudioBlobs, loadPhotoBlobs, saveAudioBlobs, savePhotoBlobs } from '@/lib/draft';
 import { saveLocalCase, deleteLocalCase, listLocalCases, importLegacyDraft, currentSessionId, rotateSessionId } from '@/lib/localCases';
 import { toast } from 'sonner';
+import { printCaseDocument, docInputFromIntake, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
+import { printCaseReport, type CaseReportData } from '@/lib/caseReport';
 
 
 type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'referral' | 'signature' | 'confirmed';
@@ -1318,6 +1320,35 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
       .then(setQr)
       .catch(() => setQr(''));
   }, [caseCode]);
+
+  const printDoc = (kind: DocKind) => printCaseDocument(kind, docInputFromIntake(useIntake.getState()));
+
+  const printFull = () => {
+    const s = useIntake.getState();
+    printCaseReport({
+      id: s.caseId ?? '',
+      case_code: caseCode ?? '',
+      status: 'new',
+      severity: s.severity,
+      created_at: new Date().toISOString(),
+      reporter: s.reporter,
+      victim: s.victim,
+      profile: s.profile,
+      answers: s.answers,
+      staff_observations: s.staffObs,
+      ai_result: s.aiResult,
+      screening: summarizeScreening(s.screening),
+      suicide_risk: (s.screening.q9[8] ?? 0) > 0,
+      has_violation: s.hasViolation,
+      violation_details: s.violationDetails,
+      extra_facts: s.extraFacts,
+      referrals: s.referrals,
+      referral_note: s.referralNote,
+      signature_staff: s.signatureStaff,
+      signature_staff_name: s.signatureStaffName,
+      signature_client: s.signatureClient || null,
+    } as CaseReportData);
+  };
 
   return (
     <div className="text-center">
