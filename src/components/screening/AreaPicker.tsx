@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { MapPicker } from './MapPicker';
-import { loadThaiGeo, formatArea, type ProvinceRow } from '@/lib/thaiGeo';
+import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, type ProvinceRow } from '@/lib/thaiGeo';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
@@ -17,9 +17,15 @@ export interface AreaValue {
   geo?: { lat: number; lng: number } | null;
 }
 
+interface ComboOption {
+  v: string;
+  sub?: string;
+  keywords?: string[];
+}
+
 function Combo({
   label, value, options, disabled, onSelect,
-}: { label: string; value: string; options: { v: string; sub?: string }[]; disabled?: boolean; onSelect: (v: string) => void }) {
+}: { label: string; value: string; options: ComboOption[]; disabled?: boolean; onSelect: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const { t } = useI18n();
   return (
@@ -37,16 +43,21 @@ function Combo({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[--radix-popover-trigger-width] z-[1200]" align="start">
-        <Command>
-          <CommandInput placeholder={`${t('common.search')} ${label}...`} />
+        <Command filter={geoSearchScore}>
+          <CommandInput placeholder={`${t('common.search')} ${label}... (TH/EN)`} />
           <CommandList className="max-h-64">
             <CommandEmpty>{t('area.notfound')}</CommandEmpty>
             <CommandGroup>
               {options.map((o) => (
-                <CommandItem key={o.v} value={`${o.v} ${o.sub ?? ''}`} onSelect={() => { onSelect(o.v); setOpen(false); }}>
+                <CommandItem
+                  key={o.v}
+                  value={`${o.v} ${o.sub ?? ''}`}
+                  keywords={o.keywords}
+                  onSelect={() => { onSelect(o.v); setOpen(false); }}
+                >
                   <Check className={cn('me-2 h-4 w-4', value === o.v ? 'opacity-100' : 'opacity-0')} />
                   <span className="flex-1">{o.v}</span>
-                  {o.sub && <span className="text-[11px] text-muted-foreground ml-2">{o.sub}</span>}
+                  {o.sub && <span className="text-[11px] text-muted-foreground ms-2">{o.sub}</span>}
                 </CommandItem>
               ))}
             </CommandGroup>
