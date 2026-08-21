@@ -1376,6 +1376,46 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
         )}
       </div>
 
+      {/* สรุปเคส */}
+      <div className="text-left mb-4">
+        <p className="text-[10px] font-medium text-muted-foreground tracking-widest uppercase mb-2">สรุปเคส</p>
+        <SummaryBlock title="ผู้รับบริการ">
+          <Row k="ชื่อ" v={intake.victim.name || '-'} />
+          <Row k="กลุ่ม / เพศ" v={`${intake.profile.kp} · ${intake.profile.gender}`} />
+          <Row k="พื้นที่" v={`${intake.profile.province || intake.profile.branch}${intake.profile.incidentPlace ? ` · ${intake.profile.incidentPlace}` : ''}`} />
+        </SummaryBlock>
+        <SummaryBlock title="การประเมิน">
+          <Row k="ประเภทการละเมิด" v={(intake.violationDetails.length ? intake.violationDetails : intake.profile.initialViolationTypes).join(', ') || '-'} />
+          <Row k="ความรุนแรง" v={intake.severity ? SEV_LABEL[intake.severity] : '-'} />
+          <Row k="9Q / NRM" v={`${intake.screening.q9.reduce((a, b) => a + b, 0)} คะแนน · ${nrmPositive(intake.screening.nrm, intake.screening.nrmUnder18) ? 'NRM เข้าข่าย' : 'NRM ไม่เข้าเกณฑ์'}`} />
+          <Row k="การส่งต่อ" v={intake.referrals.join(' · ') || 'ยังไม่ได้เลือก'} />
+        </SummaryBlock>
+      </div>
+
+      {/* เอกสารสำหรับดำเนินเคสต่อ */}
+      <div className="text-left mb-4">
+        <p className="text-[10px] font-medium text-muted-foreground tracking-widest uppercase mb-2">เอกสารสำหรับดำเนินการต่อ (พิมพ์/บันทึก PDF)</p>
+        <div className="grid grid-cols-2 gap-2">
+          {DOC_KINDS.map((dk) => (
+            <button
+              key={dk.key}
+              onClick={() => printDoc(dk.key)}
+              className="p-3 rounded-xl border border-border bg-card text-left hover:border-primary hover:bg-primary-soft/30 transition group"
+            >
+              <span className="w-8 h-8 rounded-lg bg-primary-soft text-primary flex items-center justify-center mb-2 group-hover:scale-105 transition">
+                {DOC_ICONS[dk.key]}
+              </span>
+              <span className="block text-xs font-medium">{dk.label}</span>
+              <span className="block text-[10px] text-muted-foreground leading-snug mt-0.5">{dk.desc}</span>
+            </button>
+          ))}
+        </div>
+        <Button onClick={printFull} variant="outline" className="w-full mt-2 rounded-xl h-10 text-xs">
+          <Printer className="w-3.5 h-3.5" /> รายงานเคสฉบับเต็ม (Case Report)
+        </Button>
+        <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">พิมพ์เอกสารก่อนกด "บันทึกเคสใหม่" — หลังจากนั้นสามารถพิมพ์ซ้ำได้จากหน้า Dashboard ของเจ้าหน้าที่</p>
+      </div>
+
       <Button onClick={() => navigate(`/track?code=${caseCode}`)} className="w-full h-12 rounded-xl bg-gradient-primary mb-2">ติดตามสถานะเคส</Button>
       <Button variant="outline" onClick={onReset} className="w-full rounded-xl">บันทึกเคสใหม่</Button>
     </div>
