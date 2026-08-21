@@ -185,6 +185,50 @@ export type Database = {
           },
         ]
       }
+      case_questions: {
+        Row: {
+          answer_audio_url: string | null
+          answer_text: string | null
+          answered_at: string | null
+          asked_by: string | null
+          case_id: string
+          created_at: string
+          id: string
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          answer_audio_url?: string | null
+          answer_text?: string | null
+          answered_at?: string | null
+          asked_by?: string | null
+          case_id: string
+          created_at?: string
+          id?: string
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          answer_audio_url?: string | null
+          answer_text?: string | null
+          answered_at?: string | null
+          asked_by?: string | null
+          case_id?: string
+          created_at?: string
+          id?: string
+          question?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_questions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_timeline: {
         Row: {
           audio_url: string | null
@@ -244,6 +288,7 @@ export type Database = {
           profile: Json | null
           referral_note: string | null
           referrals: Json | null
+          report_language: string
           reporter: Json | null
           screening: Json
           severity: string | null
@@ -251,6 +296,7 @@ export type Database = {
           signature_staff: string | null
           signature_staff_name: string | null
           signed_at: string | null
+          source: string
           special_tests: Json | null
           staff_observations: Json | null
           status: string
@@ -280,6 +326,7 @@ export type Database = {
           profile?: Json | null
           referral_note?: string | null
           referrals?: Json | null
+          report_language?: string
           reporter?: Json | null
           screening?: Json
           severity?: string | null
@@ -287,6 +334,7 @@ export type Database = {
           signature_staff?: string | null
           signature_staff_name?: string | null
           signed_at?: string | null
+          source?: string
           special_tests?: Json | null
           staff_observations?: Json | null
           status?: string
@@ -316,6 +364,7 @@ export type Database = {
           profile?: Json | null
           referral_note?: string | null
           referrals?: Json | null
+          report_language?: string
           reporter?: Json | null
           screening?: Json
           severity?: string | null
@@ -323,6 +372,7 @@ export type Database = {
           signature_staff?: string | null
           signature_staff_name?: string | null
           signed_at?: string | null
+          source?: string
           special_tests?: Json | null
           staff_observations?: Json | null
           status?: string
@@ -352,6 +402,54 @@ export type Database = {
           created_at?: string
           id?: number
           ident?: string
+        }
+        Relationships: []
+      }
+      referral_partners: {
+        Row: {
+          active: boolean
+          address: string | null
+          created_at: string
+          district: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          org_type: string
+          phone: string | null
+          province: string | null
+          services: Json
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          created_at?: string
+          district?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          org_type?: string
+          phone?: string | null
+          province?: string | null
+          services?: Json
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          created_at?: string
+          district?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          org_type?: string
+          phone?: string | null
+          province?: string | null
+          services?: Json
+          updated_at?: string
         }
         Relationships: []
       }
@@ -414,6 +512,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      answer_case_question: {
+        Args: {
+          _answer_audio_url?: string
+          _answer_text: string
+          _case_code: string
+          _question_id: string
+        }
+        Returns: undefined
+      }
       can_edit_case: {
         Args: { _case_id: string; _user_id: string }
         Returns: boolean

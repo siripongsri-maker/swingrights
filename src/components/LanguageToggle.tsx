@@ -1,34 +1,46 @@
-import { Languages } from 'lucide-react';
-import { useI18n } from '@/i18n';
+import { Languages, Check } from 'lucide-react';
+import { useI18n, LANGS } from '@/i18n';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
-/** Thai / English switcher. */
+/** 5-language switcher (ไทย / EN / မြန်မာ / ខ្មែរ / ລາວ). */
 export function LanguageToggle({ className }: { className?: string }) {
   const { lang, setLang } = useI18n();
+  const current = LANGS.find((l) => l.id === lang);
   return (
-    <div
-      className={cn(
-        'inline-flex items-center gap-0.5 rounded-full border border-border bg-card/70 backdrop-blur p-0.5',
-        className,
-      )}
-      role="group"
-      aria-label="Language / ภาษา"
-    >
-      <Languages className="w-3 h-3 mx-1.5 text-muted-foreground" aria-hidden />
-      {(['th', 'en'] as const).map((l) => (
+    <Popover>
+      <PopoverTrigger asChild>
         <button
-          key={l}
           type="button"
-          onClick={() => setLang(l)}
-          aria-pressed={lang === l}
+          aria-label="Language / ภาษา"
           className={cn(
-            'text-[11px] font-medium px-2.5 py-1 rounded-full transition-colors',
-            lang === l ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-primary',
+            'inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 backdrop-blur px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors',
+            className,
           )}
         >
-          {l === 'th' ? 'ไทย' : 'EN'}
+          <Languages className="w-3.5 h-3.5" aria-hidden />
+          {current?.short ?? lang.toUpperCase()}
         </button>
-      ))}
-    </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-40 p-1.5 z-[1200]" align="end">
+        <div role="group" aria-label="Language / ภาษา" className="grid gap-0.5">
+          {LANGS.map((l) => (
+            <button
+              key={l.id}
+              type="button"
+              onClick={() => setLang(l.id)}
+              aria-pressed={lang === l.id}
+              className={cn(
+                'flex items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors text-left',
+                lang === l.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground',
+              )}
+            >
+              {l.label}
+              {lang === l.id && <Check className="w-3.5 h-3.5" />}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

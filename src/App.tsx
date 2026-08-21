@@ -8,10 +8,12 @@ import Landing from "./pages/Landing";
 import Intake from "./pages/Intake";
 import Track from "./pages/Track";
 import Recover from "./pages/Recover";
+import SelfReport from "./pages/SelfReport";
 
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
+import AdminPartners from "./pages/AdminPartners";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { I18nProvider } from "@/i18n";
 
@@ -32,6 +34,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/intake" element={<Intake />} />
+            <Route path="/report" element={<SelfReport />} />
             <Route path="/track" element={<Track />} />
             <Route path="/recover" element={<Recover />} />
 
@@ -40,6 +43,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute allow={["admin"]}><AdminUsers /></ProtectedRoute>} />
+            <Route path="/admin/partners" element={<ProtectedRoute allow={["admin"]}><AdminPartners /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
