@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
 import { formatArea } from '@/lib/thaiGeo';
 import { stripImageMetadata } from '@/lib/exif';
-import { saveLocalCase, markLocalSubmitted } from '@/lib/localCases';
+import { saveLocalCase, deleteLocalCase } from '@/lib/localCases';
 import { cn } from '@/lib/utils';
 
 const MEDIA_FN = 'upload-case-media';
@@ -155,12 +155,19 @@ export default function SelfReport() {
       const { data: code, error } = await supabase.rpc('submit_case' as never, { _payload: payload } as never);
       if (error || !code) throw error ?? new Error('submit failed');
 
-      await markLocalSubmitted(localId, String(code));
+      await deleteLocalCase(localId);
       setCaseCode(String(code));
       setStep('done');
     } catch (e) {
       console.error('self report submit failed:', e instanceof Error ? e.message : 'error');
-      await saveLocalCase(localRef as never, { id: localId });
+      await saveLocalCase({
+        id: localId,
+        kind: 'failed',
+        state: localRef,
+        audio: audio ? [audio] : [],
+        photos: photos.map((p) => ({ blob: p.blob, name: p.name })),
+        error: e instanceof Error ? e.message : 'submit failed',
+      });
       toast.error(t('report.error'));
     } finally {
       setSubmitting(false);
