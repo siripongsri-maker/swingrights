@@ -20,6 +20,7 @@ export interface AreaValue {
 interface ComboOption {
   v: string;
   sub?: string;
+  zip?: string;
   keywords?: string[];
 }
 
@@ -84,6 +85,11 @@ function Combo({
                     <Check className={cn('me-2 h-4 w-4', value === o.v ? 'opacity-100' : 'opacity-0')} />
                     <span className="flex-1"><Hi text={o.v} q={search} /></span>
                     {o.sub && <span className="text-[11px] text-muted-foreground ms-2"><Hi text={o.sub} q={search} /></span>}
+                    {o.zip && (
+                      <span className="ms-2 shrink-0 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] leading-none text-secondary-foreground">
+                        {o.zip}
+                      </span>
+                    )}
                     {reason && (
                       <span className="ms-2 shrink-0 rounded-full border border-border px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
                         {t(`area.match.${reason}`)}
@@ -120,15 +126,26 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
   const center = tambon?.c ?? null;
 
   const provinceOptions = useMemo<ComboOption[]>(
-    () => (geo ?? []).map((p) => ({ v: p.n, sub: p.e, keywords: geoKeywords(p.n, p.e) })),
+    () =>
+      (geo ?? []).map((p) => ({
+        v: p.n,
+        sub: p.e,
+        // searchable by any postcode inside the province
+        keywords: [...geoKeywords(p.n, p.e), ...new Set(p.d.flatMap((d) => d.s.map((s) => String(s.z)).filter(Boolean)))],
+      })),
     [geo],
   );
   const districtOptions = useMemo<ComboOption[]>(
-    () => (province?.d ?? []).map((d) => ({ v: d.n, sub: d.e, keywords: geoKeywords(d.n, d.e) })),
+    () =>
+      (province?.d ?? []).map((d) => ({
+        v: d.n,
+        sub: d.e,
+        keywords: [...geoKeywords(d.n, d.e), ...new Set(d.s.map((s) => String(s.z)).filter(Boolean))],
+      })),
     [province],
   );
   const tambonOptions = useMemo<ComboOption[]>(
-    () => (district?.s ?? []).map((s) => ({ v: s.n, sub: s.e || (s.z ? String(s.z) : undefined), keywords: geoKeywords(s.n, s.e, s.z) })),
+    () => (district?.s ?? []).map((s) => ({ v: s.n, sub: s.e || undefined, zip: s.z ? String(s.z) : undefined, keywords: geoKeywords(s.n, s.e, s.z) })),
     [district],
   );
 
