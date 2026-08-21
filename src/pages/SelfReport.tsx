@@ -337,9 +337,14 @@ export default function SelfReport() {
 
         {step === 'done' && caseCode && (
           <div className="space-y-5 text-center py-4">
-            <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-              <HeartHandshake className="w-8 h-8 text-primary" />
-            </div>
+            <img
+              src={bloomImg}
+              alt=""
+              width={1024}
+              height={1024}
+              loading="lazy"
+              className="w-28 h-28 mx-auto animate-pop"
+            />
             <h1 className="font-display text-xl font-bold">{t('report.success.title')}</h1>
             <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-5">
               <p className="text-xs text-muted-foreground mb-1.5">{t('report.success.code')}</p>
