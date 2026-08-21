@@ -236,10 +236,16 @@ export default function AdminDashboard() {
           </div>
           <div className="flex items-center gap-2">
             {access.isAdmin && (
-              <Button onClick={() => navigate('/admin/users')} size="sm" variant="outline"
-                className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
-                <UserCog className="w-4 h-4" /> ผู้ใช้
-              </Button>
+              <>
+                <Button onClick={() => navigate('/admin/users')} size="sm" variant="outline"
+                  className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+                  <UserCog className="w-4 h-4" /> ผู้ใช้
+                </Button>
+                <Button onClick={() => navigate('/admin/partners')} size="sm" variant="outline"
+                  className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+                  <Building2 className="w-4 h-4" /> หน่วยงาน
+                </Button>
+              </>
             )}
             {!access.isViewer && (
               <Button onClick={() => navigate('/intake')} size="sm" className="bg-primary hover:bg-primary/90"><Plus className="w-4 h-4" /> เคสใหม่</Button>
