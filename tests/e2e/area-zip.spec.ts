@@ -26,7 +26,7 @@ test('AreaPicker searches by postcode at every level and shows zip chips', async
 
   // 1) Province level: a postcode narrows down to กรุงเทพมหานคร
   await page.getByRole('combobox').nth(0).click();
-  let input = page.locator('[cmdk-input]');
+  let input = page.locator('[cmdk-input]:visible');
   await input.fill('10200');
   const bkk = page.locator('[cmdk-item]', { hasText: 'กรุงเทพมหานคร' }).first();
   await expect(bkk).toBeVisible();
@@ -34,7 +34,7 @@ test('AreaPicker searches by postcode at every level and shows zip chips', async
 
   // 2) District level: spaced zip "10 200" still matches เขตพระนคร
   await page.getByRole('combobox').nth(1).click();
-  input = page.locator('[cmdk-input]');
+  input = page.locator('[cmdk-input]:visible');
   await input.fill('10 200');
   const phraNakhon = page.locator('[cmdk-item]', { hasText: 'เขตพระนคร' }).first();
   await expect(phraNakhon).toBeVisible();
@@ -42,7 +42,7 @@ test('AreaPicker searches by postcode at every level and shows zip chips', async
 
   // 3) Subdistrict level: dashed zip "10-200" matches, and options show zip chips
   await page.getByRole('combobox').nth(2).click();
-  input = page.locator('[cmdk-input]');
+  input = page.locator('[cmdk-input]:visible');
   await input.fill('10-200');
   const firstItem = page.locator('[cmdk-item]').first();
   await expect(firstItem).toBeVisible();
