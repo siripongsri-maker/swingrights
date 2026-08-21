@@ -338,14 +338,21 @@ export function distKm(a: [number, number], b: [number, number]): number {
   return 2 * 6371 * Math.asin(Math.sqrt(h));
 }
 
-/** Nearest province to a coordinate, measured against province centroids. */
+/**
+ * Nearest province to a coordinate, measured against every tambon center
+ * (more accurate than province centroids near borders).
+ */
 export function nearestProvince(geo: ProvinceRow[], lat: number, lng: number): { province: string; km: number } | null {
   let best: { province: string; km: number } | null = null;
+  const here: [number, number] = [lat, lng];
   for (const p of geo) {
-    const c = provinceCenter(p);
-    if (!c) continue;
-    const km = distKm([lat, lng], c);
-    if (!best || km < best.km) best = { province: p.n, km };
+    for (const d of p.d) {
+      for (const s of d.s) {
+        if (!s.c) continue;
+        const km = distKm(here, s.c);
+        if (!best || km < best.km) best = { province: p.n, km };
+      }
+    }
   }
   return best;
 }
