@@ -1329,7 +1329,7 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
     printCaseReport({
       id: s.caseId ?? '',
       case_code: caseCode ?? '',
-      status: 'new',
+      status: 'received',
       severity: s.severity,
       created_at: new Date().toISOString(),
       reporter: s.reporter,
