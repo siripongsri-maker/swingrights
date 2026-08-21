@@ -237,15 +237,15 @@ function ReporterStep({ onNext }: { onNext: () => void }) {
 
       <Label className="text-xs text-muted-foreground mb-1.5 block">{t('intake.reporter.statusLabel')}</Label>
       <div className="flex gap-1.5 mb-4">
-        {(['self', 'other'] as const).map((t) => (
+        {(['self', 'other'] as const).map((opt) => (
           <button
-            key={t}
-            onClick={() => set('reporter', { ...reporter, type: t })}
+            key={opt}
+            onClick={() => set('reporter', { ...reporter, type: opt })}
             className={`flex-1 py-2.5 rounded-lg text-sm border transition ${
-              reporter.type === t ? 'bg-primary-soft border-primary text-primary font-medium' : 'bg-muted/60 border-border text-muted-foreground'
+              reporter.type === opt ? 'bg-primary-soft border-primary text-primary font-medium' : 'bg-muted/60 border-border text-muted-foreground'
             }`}
           >
-            {t === 'self' ? '{t('intake.reporter.self')}' : '{t('intake.reporter.other')}'}
+            {opt === 'self' ? t('intake.reporter.self') : t('intake.reporter.other')}
           </button>
         ))}
       </div>
@@ -739,7 +739,7 @@ function QuestionBubble({ q, index, current }: { q: (typeof QUESTIONS)[number]; 
       </div>
       <div className="max-w-[88%] bg-card border border-border rounded-2xl rounded-tl-md px-3.5 py-2.5 shadow-card">
         <div className="flex items-center gap-1.5 mb-1">
-          <span className="text-[9px] font-medium text-primary tracking-widest">t('intake.voice.questionNumber', { n: index + 1 })</span>
+          <span className="text-[9px] font-medium text-primary tracking-widest">{t('intake.voice.questionNumber', { n: index + 1 })}</span>
           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent text-accent-foreground">{t(q.cat as any)}</span>
           <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">{q.frame}</span>
         </div>
@@ -841,16 +841,16 @@ function AssessStep({ onNext }: { onNext: () => void }) {
 
       <Card title={t('intake.assess.q4title')}>
         <div className="bg-primary-soft/50 border border-primary/20 rounded-lg p-3 space-y-2">
-          {SPECIAL_TESTS.map((t) => {
-            const done = specialTests.includes(t.id);
+          {SPECIAL_TESTS.map((test) => {
+            const done = specialTests.includes(test.id);
             return (
-              <div key={t.id} className="flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-md bg-primary text-primary-foreground text-[11px] font-medium flex items-center justify-center shrink-0">{t.short}</span>
+              <div key={test.id} className="flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-md bg-primary text-primary-foreground text-[11px] font-medium flex items-center justify-center shrink-0">{test.short}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm">{t.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{t.desc}</p>
+                  <p className="text-sm">{test.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{test.desc}</p>
                 </div>
-                <button onClick={() => toggleTest(t.id)}
+                <button onClick={() => toggleTest(test.id)}
                   className={`text-[11px] px-3 py-1.5 rounded-full text-white shrink-0 ${done ? 'bg-success' : 'bg-primary'}`}>
                   {done ? t('intake.assess.done') : t('intake.assess.markDone')}
                 </button>
