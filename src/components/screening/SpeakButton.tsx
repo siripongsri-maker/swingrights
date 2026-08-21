@@ -38,7 +38,7 @@ export function SpeakButton({ text, className, label }: { text: string; classNam
     <button
       type="button"
       onClick={toggle}
-      aria-label={label ?? t('common.listen' as never) ?? 'ฟัง'}
+      aria-label={label ?? t('common.listen' as never) ?? 'Listen'}
       className={cn(
         'shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition active:scale-95',
         speaking ? 'bg-destructive text-destructive-foreground animate-pulse' : 'bg-primary text-primary-foreground',

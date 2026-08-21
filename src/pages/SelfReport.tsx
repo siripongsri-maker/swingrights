@@ -153,7 +153,7 @@ export default function SelfReport() {
   const finishArea = (msgId: number, skip: boolean) => {
     resolveWidget(msgId);
     const hasArea = !skip && area.province;
-    push({ role: 'user', text: hasArea ? formatArea(area.province, area.district, area.subdistrict) : t('report.chat.skipped') });
+    push({ role: 'user', text: hasArea ? formatArea(area.province, area.district, area.subdistrict, lang) : t('report.chat.skipped') });
     setStage('contact');
     botSay({ text: `${t('report.contact.title')} (${t('common.optional')}) — ${t('report.contact.hint')}`, widget: 'contact' });
   };
@@ -207,7 +207,7 @@ export default function SelfReport() {
         branch: area.province || 'ไม่ระบุ',
         province: area.province, district: area.district, subdistrict: area.subdistrict,
         zip: area.zip ?? '', geo: area.geo ?? null,
-        kp: '', incidentPlace: area.province ? formatArea(area.province, area.district, area.subdistrict) : '',
+        kp: '', incidentPlace: area.province ? formatArea(area.province, area.district, area.subdistrict, lang) : '',
         initialViolationTypes: types,
       },
       answers: transcript ? [{ question: 'self_report', cat: 'self_report', frame: '', transcript }] : [],

@@ -6,6 +6,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { MapPicker } from './MapPicker';
 import { loadThaiGeo, formatArea, type ProvinceRow } from '@/lib/thaiGeo';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
 
 export interface AreaValue {
@@ -20,6 +21,7 @@ function Combo({
   label, value, options, disabled, onSelect,
 }: { label: string; value: string; options: { v: string; sub?: string }[]; disabled?: boolean; onSelect: (v: string) => void }) {
   const [open, setOpen] = useState(false);
+  const { t } = useI18n();
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -36,9 +38,9 @@ function Combo({
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[--radix-popover-trigger-width] z-[1200]" align="start">
         <Command>
-          <CommandInput placeholder={`ค้นหา${label}...`} />
+          <CommandInput placeholder={`${t('common.search')} ${label}...`} />
           <CommandList className="max-h-64">
-            <CommandEmpty>ไม่พบข้อมูล</CommandEmpty>
+            <CommandEmpty>{t('area.notfound')}</CommandEmpty>
             <CommandGroup>
               {options.map((o) => (
                 <CommandItem key={o.v} value={`${o.v} ${o.sub ?? ''}`} onSelect={() => { onSelect(o.v); setOpen(false); }}>
@@ -56,6 +58,7 @@ function Combo({
 }
 
 export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v: AreaValue) => void }) {
+  const { t, lang } = useI18n();
   const [geo, setGeo] = useState<ProvinceRow[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMap, setShowMap] = useState(!!value.geo);
@@ -63,7 +66,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
   useEffect(() => {
     loadThaiGeo()
       .then(setGeo)
-      .catch(() => toast.error('โหลดข้อมูลพื้นที่ไม่สำเร็จ'))
+      .catch(() => toast.error(t('area.loadError')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -77,32 +80,32 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
     <div className="space-y-2.5">
       {loading ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" /> กำลังโหลดรายชื่อจังหวัด/อำเภอ/ตำบล...
+          <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t('area.loading')}
         </div>
       ) : (
         <div className="grid gap-2.5">
           <Combo
-            label="จังหวัด"
+            label={t('area.province')}
             value={value.province}
             options={(geo ?? []).map((p) => ({ v: p.n, sub: p.e }))}
             onSelect={(v) => onChange({ ...value, province: v, district: '', subdistrict: '', zip: '' })}
           />
           <div className="grid grid-cols-2 gap-2.5">
             <Combo
-              label="อำเภอ/เขต"
+              label={t('area.district')}
               value={value.district}
               disabled={!province}
               options={(province?.d ?? []).map((d) => ({ v: d.n, sub: d.e }))}
               onSelect={(v) => onChange({ ...value, district: v, subdistrict: '', zip: '' })}
             />
             <Combo
-              label="ตำบล/แขวง"
+              label={t('area.subdistrict')}
               value={value.subdistrict}
               disabled={!district}
               options={(district?.s ?? []).map((s) => ({ v: s.n, sub: s.z ? String(s.z) : undefined }))}
               onSelect={(v) => {
-                const t = district?.s.find((s) => s.n === v);
-                onChange({ ...value, subdistrict: v, zip: t?.z ? String(t.z) : '' });
+                const row = district?.s.find((s) => s.n === v);
+                onChange({ ...value, subdistrict: v, zip: row?.z ? String(row.z) : '' });
               }}
             />
           </div>
@@ -112,13 +115,13 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
       {(value.province || value.zip) && (
         <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
           <MapPin className="w-3 h-3" />
-          {formatArea(value.province, value.district, value.subdistrict)} {value.zip && `· ${value.zip}`}
+          {formatArea(value.province, value.district, value.subdistrict, lang)} {value.zip && `· ${value.zip}`}
         </p>
       )}
 
       <div className="flex items-center gap-2 flex-wrap">
         <Button type="button" size="sm" variant="secondary" onClick={() => setShowMap((s) => !s)} className="text-xs">
-          <MapPin className="w-3.5 h-3.5 mr-1" /> {showMap ? 'ซ่อนแผนที่' : 'ปักหมุดพื้นที่ (ไม่บังคับ)'}
+          <MapPin className="w-3.5 h-3.5 mr-1" /> {showMap ? t('area.hideMap') : t('area.pin')}
         </Button>
         {showMap && (
           <Button
@@ -127,20 +130,20 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
             variant="outline"
             className="text-xs"
             onClick={() => {
-              if (!navigator.geolocation) return toast.error('อุปกรณ์ไม่รองรับการระบุตำแหน่ง');
+              if (!navigator.geolocation) return toast.error(t('area.geoUnsupported'));
               navigator.geolocation.getCurrentPosition(
                 (p) => onChange({ ...value, geo: { lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) } }),
-                () => toast.error('ไม่สามารถเข้าถึงตำแหน่งได้'),
+                () => toast.error(t('area.geoDenied')),
                 { enableHighAccuracy: true, timeout: 10000 },
               );
             }}
           >
-            <LocateFixed className="w-3.5 h-3.5 mr-1" /> ตำแหน่งปัจจุบัน
+            <LocateFixed className="w-3.5 h-3.5 mr-1" /> {t('area.myLocation')}
           </Button>
         )}
         {value.geo && (
           <Button type="button" size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={() => onChange({ ...value, geo: null })}>
-            <X className="w-3.5 h-3.5 mr-1" /> ล้างหมุด
+            <X className="w-3.5 h-3.5 mr-1" /> {t('area.clearPin')}
           </Button>
         )}
       </div>
@@ -149,7 +152,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
         <div className="space-y-1.5">
           <MapPicker value={value.geo ?? null} center={center} onChange={(g) => onChange({ ...value, geo: g })} />
           <p className="text-[11px] text-muted-foreground">
-            {value.geo ? `พิกัด: ${value.geo.lat}, ${value.geo.lng} (ลากหมุดเพื่อปรับ)` : 'แตะบนแผนที่เพื่อปักหมุด — ไม่บังคับ'}
+            {value.geo ? `${t('area.coordsLabel')}: ${value.geo.lat}, ${value.geo.lng} (${t('area.coordsHint')})` : t('area.tapToPin')}
           </p>
         </div>
       )}
