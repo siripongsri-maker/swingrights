@@ -34,3 +34,133 @@ export function formatArea(p?: string, d?: string, s?: string, lang: string = 't
   // other languages: official names, comma-separated, no Thai prefixes
   return [s, d, p].filter(Boolean).join(', ');
 }
+
+// ─── Bilingual (TH/EN) fuzzy search for administrative areas ────────────────
+// Normalizes Thai + Latin input, tolerates common romanization variants
+// (ph/p, kh/k, th/t, ch/c, ng/n), strips Thai admin prefixes, expands
+// well-known aliases (Khorat → Nakhon Ratchasima), and scores best matches.
+
+const TH_PREFIX = /^(จังหวัด|อำเภอ|ตำบล|เขต|แขวง|จ\.|อ\.|ต\.|เทศบาล(นคร|เมือง|ตำบล)?|องค์การบริหารส่วนตำบล|อบต\.?|ทต\.?)\s*/;
+
+/** Lowercase, strip diacritics/tone marks, strip Thai admin prefixes, collapse spaces. */
+export function normalizeGeoText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // latin combining diacritics
+    .replace(/[\u0e48-\u0e4b]/g, '') // thai tone marks
+    .replace(TH_PREFIX, '')
+    .replace(/[^\p{L}\p{N} ]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Collapse common Thai-romanization variants so "puket" ≈ "phuket", "korat" ≈ "khorat". */
+export function simplifyRoman(s: string): string {
+  return s
+    .replace(/ph/g, 'p')
+    .replace(/kh/g, 'k')
+    .replace(/th/g, 't')
+    .replace(/ch/g, 'c')
+    .replace(/sh/g, 's')
+    .replace(/ng/g, 'n')
+    .replace(/aa/g, 'a')
+    .replace(/ee/g, 'e')
+    .replace(/oo/g, 'o')
+    .replace(/uu/g, 'u');
+}
+
+// Well-known alternate spellings / place names → official English names.
+const RAW_ALIASES: Record<string, string[]> = {
+  bangkok: ['krung thep', 'krungthep mahanakhon'],
+  krungthep: ['bangkok'],
+  'krung thep': ['bangkok'],
+  khorat: ['nakhon ratchasima'],
+  korat: ['nakhon ratchasima'],
+  chiengmai: ['chiang mai'],
+  'chieng mai': ['chiang mai'],
+  pattaya: ['bang lamung', 'chon buri'],
+  pataya: ['bang lamung', 'chon buri'],
+  huahin: ['prachuap khiri khan'],
+  'hua hin': ['prachuap khiri khan'],
+  samui: ['ko samui', 'surat thani'],
+  'koh samui': ['ko samui', 'surat thani'],
+  kosamui: ['ko samui', 'surat thani'],
+  ayutthaya: ['phra nakhon si ayutthaya'],
+  ayudhya: ['phra nakhon si ayutthaya'],
+  ayothaya: ['phra nakhon si ayutthaya'],
+  udon: ['udon thani'],
+  ubon: ['ubon ratchathani'],
+  lopburi: ['lop buri'],
+  loppuri: ['lop buri'],
+  burirum: ['buri ram'],
+  prachinburi: ['prachin buri'],
+  sakaeo: ['sa kaeo'],
+  srakaew: ['sa kaeo'],
+  'sa kaeo': ['srakaew'],
+  puket: ['phuket'],
+};
+
+// Pre-normalize/simplify the alias map so lookups hit the simplified query form.
+const GEO_ALIAS_MAP = new Map<string, string[]>(
+  Object.entries(RAW_ALIASES).map(([k, vs]) => [
+    simplifyRoman(normalizeGeoText(k)),
+    vs.map((v) => simplifyRoman(normalizeGeoText(v))),
+  ]),
+);
+
+/** Build the searchable keyword set for one area row (Thai + English + zip). */
+export function geoKeywords(thai: string, eng?: string, zip?: string | number): string[] {
+  const keys = new Set<string>();
+  const nt = normalizeGeoText(thai);
+  if (nt) {
+    keys.add(nt);
+    keys.add(simplifyRoman(nt));
+  }
+  if (eng) {
+    const ne = normalizeGeoText(eng);
+    if (ne) {
+      keys.add(ne);
+      keys.add(simplifyRoman(ne));
+    }
+  }
+  if (zip) keys.add(String(zip));
+  return [...keys];
+}
+
+/** Expand a raw query into normalized + simplified + alias forms. */
+function expandGeoQueries(raw: string): string[] {
+  const n = normalizeGeoText(raw);
+  if (!n) return [];
+  const s = simplifyRoman(n);
+  const qs = new Set([n, s]);
+  GEO_ALIAS_MAP.get(s)?.forEach((a) => qs.add(a));
+  return [...qs];
+}
+
+/**
+ * cmdk filter: returns 0–1 relevance score; cmdk sorts best matches first.
+ * Exact > prefix > word-prefix > all-tokens > substring.
+ */
+export function geoSearchScore(_value: string, search: string, keywords?: string[]): number {
+  const qs = expandGeoQueries(search);
+  if (!qs.length) return 1;
+  const keys = (keywords ?? []).filter(Boolean);
+  if (!keys.length) return 0;
+  let best = 0;
+  for (const q of qs) {
+    const tokens = q.split(' ').filter(Boolean);
+    for (const k of keys) {
+      if (k === q) { best = Math.max(best, 1); continue; }
+      if (k.startsWith(q)) { best = Math.max(best, 0.9); continue; }
+      const words = k.split(' ');
+      if (words.some((w) => w.startsWith(q))) { best = Math.max(best, 0.75); continue; }
+      if (tokens.length > 1 && tokens.every((tk) => words.some((w) => w.startsWith(tk)) || k.includes(tk))) {
+        best = Math.max(best, 0.6);
+        continue;
+      }
+      if (k.includes(q)) best = Math.max(best, 0.45);
+    }
+  }
+  return best;
+}

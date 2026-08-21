@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { MapPicker } from './MapPicker';
-import { loadThaiGeo, formatArea, type ProvinceRow } from '@/lib/thaiGeo';
+import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, type ProvinceRow } from '@/lib/thaiGeo';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
@@ -17,9 +17,15 @@ export interface AreaValue {
   geo?: { lat: number; lng: number } | null;
 }
 
+interface ComboOption {
+  v: string;
+  sub?: string;
+  keywords?: string[];
+}
+
 function Combo({
   label, value, options, disabled, onSelect,
-}: { label: string; value: string; options: { v: string; sub?: string }[]; disabled?: boolean; onSelect: (v: string) => void }) {
+}: { label: string; value: string; options: ComboOption[]; disabled?: boolean; onSelect: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const { t } = useI18n();
   return (
@@ -37,16 +43,21 @@ function Combo({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[--radix-popover-trigger-width] z-[1200]" align="start">
-        <Command>
-          <CommandInput placeholder={`${t('common.search')} ${label}...`} />
+        <Command filter={geoSearchScore}>
+          <CommandInput placeholder={`${t('common.search')} ${label}... (TH/EN)`} />
           <CommandList className="max-h-64">
             <CommandEmpty>{t('area.notfound')}</CommandEmpty>
             <CommandGroup>
               {options.map((o) => (
-                <CommandItem key={o.v} value={`${o.v} ${o.sub ?? ''}`} onSelect={() => { onSelect(o.v); setOpen(false); }}>
+                <CommandItem
+                  key={o.v}
+                  value={`${o.v} ${o.sub ?? ''}`}
+                  keywords={o.keywords}
+                  onSelect={() => { onSelect(o.v); setOpen(false); }}
+                >
                   <Check className={cn('me-2 h-4 w-4', value === o.v ? 'opacity-100' : 'opacity-0')} />
                   <span className="flex-1">{o.v}</span>
-                  {o.sub && <span className="text-[11px] text-muted-foreground ml-2">{o.sub}</span>}
+                  {o.sub && <span className="text-[11px] text-muted-foreground ms-2">{o.sub}</span>}
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -76,6 +87,19 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
 
   const center = tambon?.c ?? null;
 
+  const provinceOptions = useMemo<ComboOption[]>(
+    () => (geo ?? []).map((p) => ({ v: p.n, sub: p.e, keywords: geoKeywords(p.n, p.e) })),
+    [geo],
+  );
+  const districtOptions = useMemo<ComboOption[]>(
+    () => (province?.d ?? []).map((d) => ({ v: d.n, sub: d.e, keywords: geoKeywords(d.n, d.e) })),
+    [province],
+  );
+  const tambonOptions = useMemo<ComboOption[]>(
+    () => (district?.s ?? []).map((s) => ({ v: s.n, sub: s.e || (s.z ? String(s.z) : undefined), keywords: geoKeywords(s.n, s.e, s.z) })),
+    [district],
+  );
+
   return (
     <div className="space-y-2.5">
       {loading ? (
@@ -87,7 +111,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
           <Combo
             label={t('area.province')}
             value={value.province}
-            options={(geo ?? []).map((p) => ({ v: p.n, sub: p.e }))}
+            options={provinceOptions}
             onSelect={(v) => onChange({ ...value, province: v, district: '', subdistrict: '', zip: '' })}
           />
           <div className="grid grid-cols-2 gap-2.5">
@@ -95,14 +119,14 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
               label={t('area.district')}
               value={value.district}
               disabled={!province}
-              options={(province?.d ?? []).map((d) => ({ v: d.n, sub: d.e }))}
+              options={districtOptions}
               onSelect={(v) => onChange({ ...value, district: v, subdistrict: '', zip: '' })}
             />
             <Combo
               label={t('area.subdistrict')}
               value={value.subdistrict}
               disabled={!district}
-              options={(district?.s ?? []).map((s) => ({ v: s.n, sub: s.z ? String(s.z) : undefined }))}
+              options={tambonOptions}
               onSelect={(v) => {
                 const row = district?.s.find((s) => s.n === v);
                 onChange({ ...value, subdistrict: v, zip: row?.z ? String(row.z) : '' });
