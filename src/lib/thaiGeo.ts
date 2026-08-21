@@ -25,8 +25,12 @@ export function loadThaiGeo(): Promise<ProvinceRow[]> {
 /** Rough province centroids fallback (Bangkok) for the map when no tambon coords exist. */
 export const TH_CENTER: [number, number] = [13.7563, 100.5018];
 
-export function formatArea(p?: string, d?: string, s?: string) {
-  return [s && `ต.${s}`, d && (d.startsWith('เขต') ? d : `อ.${d}`), p && (p === 'กรุงเทพมหานคร' ? p : `จ.${p}`)]
-    .filter(Boolean)
-    .join(' ');
+export function formatArea(p?: string, d?: string, s?: string, lang: string = 'th') {
+  if (lang === 'th') {
+    return [s && `ต.${s}`, d && (d.startsWith('เขต') ? d : `อ.${d}`), p && (p === 'กรุงเทพมหานคร' ? p : `จ.${p}`)]
+      .filter(Boolean)
+      .join(' ');
+  }
+  // other languages: official names, comma-separated, no Thai prefixes
+  return [s, d, p].filter(Boolean).join(', ');
 }
