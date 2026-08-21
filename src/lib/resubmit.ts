@@ -4,6 +4,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { summarizeScreening } from '@/components/screening/ScreeningTools';
 import { getLocalCase, getLocalCaseBlobs, deleteLocalCase } from '@/lib/localCases';
+import { uploadCaseMedia } from '@/lib/uploadMedia';
 
 export function buildPayloadFromState(state: any) {
   const screeningResult = summarizeScreening(state?.screening);
