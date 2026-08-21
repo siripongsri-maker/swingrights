@@ -187,7 +187,6 @@ function skeletonUnits(s: string): Unit[] {
     const ch = s[i];
     if (/[̀-่ͯ-๋]/.test(ch)) continue; // standalone combining/tone marks
     const base = ch.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-    void 0;
     for (const bc of base) {
       raw.push({ lo: i, hi: i + 1, c: /[^\p{L}\p{N} ]/u.test(bc) ? ' ' : bc });
     }
