@@ -128,13 +128,22 @@ export function geoKeywords(thai: string, eng?: string, zip?: string | number): 
   return [...keys];
 }
 
-/** Expand a raw query into normalized + simplified + alias forms. */
+/** If the query contains digits, return the digits alone ("10-110"/"10 110" → "10110") for flexible postcode matching. */
+function digitForm(q: string): string | null {
+  if (!/\d/.test(q)) return null;
+  const d = q.replace(/\D+/g, '');
+  return d && d !== q ? d : null;
+}
+
+/** Expand a raw query into normalized + simplified + alias + digit-collapsed forms. */
 function expandGeoQueries(raw: string): string[] {
   const n = normalizeGeoText(raw);
   if (!n) return [];
   const s = simplifyRoman(n);
   const qs = new Set([n, s]);
   GEO_ALIAS_MAP.get(s)?.forEach((a) => qs.add(a));
+  const df = digitForm(n);
+  if (df) qs.add(df);
   return [...qs];
 }
 
@@ -189,7 +198,10 @@ export function geoSearchReason(search: string, keywords?: string[]): GeoMatchKi
     }
     return best;
   };
-  for (const q of [raw, simplifyRoman(raw)]) {
+  const direct = [raw, simplifyRoman(raw)];
+  const df = digitForm(raw);
+  if (df) direct.push(df);
+  for (const q of direct) {
     const r = rankQ(q);
     if (r) return r;
   }
