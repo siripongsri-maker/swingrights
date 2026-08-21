@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { MapPicker } from './MapPicker';
-import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, highlightGeoText, type ProvinceRow } from '@/lib/thaiGeo';
+import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, geoSearchReason, highlightGeoText, type ProvinceRow } from '@/lib/thaiGeo';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
@@ -72,18 +72,26 @@ function Combo({
           <CommandList className="max-h-64">
             <CommandEmpty>{t('area.notfound')}</CommandEmpty>
             <CommandGroup>
-              {options.map((o) => (
-                <CommandItem
-                  key={o.v}
-                  value={`${o.v} ${o.sub ?? ''}`}
-                  keywords={o.keywords}
-                  onSelect={() => { onSelect(o.v); setOpen(false); }}
-                >
-                  <Check className={cn('me-2 h-4 w-4', value === o.v ? 'opacity-100' : 'opacity-0')} />
-                  <span className="flex-1"><Hi text={o.v} q={search} /></span>
-                  {o.sub && <span className="text-[11px] text-muted-foreground ms-2"><Hi text={o.sub} q={search} /></span>}
-                </CommandItem>
-              ))}
+              {options.map((o) => {
+                const reason = search.trim() ? geoSearchReason(search, o.keywords) : null;
+                return (
+                  <CommandItem
+                    key={o.v}
+                    value={`${o.v} ${o.sub ?? ''}`}
+                    keywords={o.keywords}
+                    onSelect={() => { onSelect(o.v); setOpen(false); }}
+                  >
+                    <Check className={cn('me-2 h-4 w-4', value === o.v ? 'opacity-100' : 'opacity-0')} />
+                    <span className="flex-1"><Hi text={o.v} q={search} /></span>
+                    {o.sub && <span className="text-[11px] text-muted-foreground ms-2"><Hi text={o.sub} q={search} /></span>}
+                    {reason && (
+                      <span className="ms-2 shrink-0 rounded-full border border-border px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
+                        {t(`area.match.${reason}`)}
+                      </span>
+                    )}
+                  </CommandItem>
+                );
+              })}
             </CommandGroup>
           </CommandList>
         </Command>

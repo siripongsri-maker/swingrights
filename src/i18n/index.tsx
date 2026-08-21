@@ -338,6 +338,12 @@ const BASE_DICT: Dict = {
   'area.district': { th: 'อำเภอ/เขต', en: 'District', my: 'ခရိုင်', km: 'ស្រុក/ខណ្ឌ', lo: 'ເມືອງ' },
   'area.subdistrict': { th: 'ตำบล/แขวง', en: 'Subdistrict', my: 'ရပ်ကွက်/ကျေးရွာ', km: 'ឃុំ/សង្កាត់', lo: 'ບ້ານ' },
   'area.notfound': { th: 'ไม่พบข้อมูล', en: 'No results found', my: 'ရလဒ် မတွေ့ပါ', km: 'រកមិនឃើញទេ', lo: 'ບໍ່ພົບຂໍ້ມູນ' },
+  'area.match.exact': { th: 'ตรงทุกตัวอักษร', en: 'Exact match', my: 'အတိအကျ ကိုက်ညီ', km: 'ត្រូវគ្នាពេញលេញ', lo: 'ກົງກັນທັງໝົດ' },
+  'area.match.prefix': { th: 'ขึ้นต้นด้วยคำค้น', en: 'Starts with search', my: 'ရှာဖွေချက်ဖြင့် စတင်', km: 'ចាប់ផ្តើមដោយពាក្យស្វែងរក', lo: 'ຂຶ້ນຕົ້ນດ້ວຍຄຳຄົ້ນຫາ' },
+  'area.match.word': { th: 'มีคำที่ขึ้นต้นตรง', en: 'Matching word', my: 'ကိုက်ညီသော စကားလုံး', km: 'ពាក្យត្រូវគ្នា', lo: 'ຄຳກົງກັນ' },
+  'area.match.partial': { th: 'มีส่วนที่ตรง', en: 'Partial match', my: 'တစ်စိတ်တစ်ဒေသ ကိုက်ညီ', km: 'ត្រូវគ្នាខ្លះ', lo: 'ກົງກັນບາງສ່ວນ' },
+  'area.match.alias': { th: 'ชื่อที่นิยมเรียก', en: 'Common nickname', my: 'အများသုံး အမည်ဝှက်', km: 'ឈ្មោះហៅក្រៅ', lo: 'ຊື່ຫຼິ້ນທີ່ນິຍົມ' },
+  'area.match.token': { th: 'ตรงทุกคำในชื่อ', en: 'All words match', my: 'စကားလုံးတိုင်း ကိုက်ညီ', km: 'ពាក្យទាំងអស់ត្រូវគ្នា', lo: 'ກົງທຸກຄຳໃນຊື່' },
   'area.loading': {
     th: 'กำลังโหลดรายชื่อจังหวัด/อำเภอ/ตำบล...', en: 'Loading province/district/subdistrict list...',
     my: 'ဒေသစာရင်း ရယူနေသည်...', km: 'កំពុងផ្ទុកបញ្ជីតំបន់...', lo: 'ກຳລັງໂຫຼດລາຍຊື່ພື້ນທີ່...',
