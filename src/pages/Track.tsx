@@ -1,117 +1,220 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Loader2, Search, MessageCircleQuestion, Send } from 'lucide-react';
+import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
+import { StatusBadge } from '@/components/screening/StatusBadge';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { StatusBadge } from '@/components/screening/StatusBadge';
-import { CaseStatus } from '@/lib/screening';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
-import { QuickExit } from '@/components/screening/QuickExit';
-import { LanguageToggle } from '@/components/LanguageToggle';
 import { useI18n } from '@/i18n';
+import { formatDateTime } from '@/lib/utils';
 
-interface Result {
-  found: boolean;
-  case?: { case_code: string; status: CaseStatus; severity: string | null; created_at: string; updated_at: string; branch?: string; risk_level?: string; referral_count?: number };
-  timeline?: { status: CaseStatus; note: string | null; created_at: string }[];
+const FN = 'track-case';
+
+interface TrackData {
+  case_code: string;
+  status: string;
+  severity: string | null;
+  area: string | null;
+  cancelled: boolean;
+  created_at: string;
+  timeline: { status: string; note: string | null; created_at: string }[];
+  questions: { id: string; question: string; created_at: string; answer: string | null; answered_at: string | null }[];
 }
 
-const STATUS_ORDER: CaseStatus[] = ['received', 'inprogress', 'completed'];
-
 export default function Track() {
-  const { t, lang } = useI18n();
-  const locale = lang === 'th' ? 'th-TH' : 'en-US';
+  const { t } = useI18n();
   const [params] = useSearchParams();
-  const navigate = useNavigate();
-  const [code, setCode] = useState(params.get('code') || '');
+  const [code, setCode] = useState((params.get('code') || '').toUpperCase());
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<Result | null>(null);
+  const [data, setData] = useState<TrackData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Record<string, { text: string; blob: Blob | null; sending: boolean }>>({});
 
-  const search = async (c: string) => {
-    if (c.length < 6) return;
+  const lookup = async (c: string) => {
+    const cc = c.trim().toUpperCase();
+    if (!cc) return;
     setLoading(true);
+    setError(null);
     try {
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-case?code=${encodeURIComponent(c)}`;
-      const r = await fetch(url, { headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` } });
-      const data = await r.json();
-      setResult(data);
+      const { data: d, error: fnErr } = await supabase.functions.invoke(FN, { body: { case_code: cc } });
+      if (fnErr) throw fnErr;
+      if ((d as { error?: string })?.error === 'not_found' || !d) {
+        setData(null);
+        setError(t('track.notfound'));
+      } else {
+        setData(d as TrackData);
+        setAnswers({});
+      }
+    } catch {
+      setData(null);
+      setError(t('track.notfound'));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { if (code) search(code); /* eslint-disable-line */ }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (params.get('code')) void lookup(params.get('code')!); }, []);
+
+  const sendAnswer = async (qid: string) => {
+    const a = answers[qid];
+    const text = (a?.text ?? '').trim();
+    const blob = a?.blob ?? null;
+    if (!text && !blob) return;
+    setAnswers((prev) => ({ ...prev, [qid]: { ...prev[qid], sending: true } }));
+    try {
+      let audioUrl: string | null = null;
+      if (blob) {
+        const ext = blob.type.includes('mp4') || blob.type.includes('m4a') ? 'm4a' : blob.type.includes('ogg') ? 'ogg' : 'webm';
+        const fd = new FormData();
+        fd.set('kind', 'audio');
+        fd.set('case_code', data!.case_code);
+        fd.set('file', blob, `answer.${ext}`);
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-case-media`, {
+          method: 'POST',
+          headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          body: fd,
+        });
+        const json = await res.json().catch(() => ({}));
+        if (res.ok && json.path) audioUrl = json.path;
+      }
+      const { error: rpcErr } = await supabase.rpc('answer_case_question' as never, {
+        _case_code: data!.case_code,
+        _question_id: qid,
+        _answer: text || null,
+        _audio_url: audioUrl,
+      } as never);
+      if (rpcErr) throw rpcErr;
+      toast.success(t('track.answer.thanks'));
+      await lookup(data!.case_code);
+    } catch {
+      toast.error(t('track.answer.error'));
+      setAnswers((prev) => ({ ...prev, [qid]: { ...prev[qid], sending: false } }));
+    }
+  };
 
   return (
-    <PhoneShell title={t('track.header')} onClose={() => navigate('/')} contained={false}>
-      <QuickExit />
-      <div className="flex justify-center pt-4"><LanguageToggle /></div>
-      <div className="px-5 pt-6 pb-4 text-center">
-        <span className="inline-block bg-primary-soft text-primary text-[10px] tracking-widest px-3 py-1 rounded-full mb-3">SWING FOUNDATION</span>
-        <h1 className="text-xl font-medium">{t('track.title')}</h1>
-        <p className="text-sm text-muted-foreground mt-1">{t('track.subtitle')}</p>
-      </div>
-      <div className="px-4 pb-4">
-        <Input
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          onKeyDown={(e) => e.key === 'Enter' && search(code)}
-          placeholder="SW-XXXX-XXXX"
-          maxLength={13}
-          className="h-12 text-center font-mono tracking-widest text-base"
-        />
-        <Button onClick={() => search(code)} disabled={loading} className="w-full mt-3 h-11 rounded-xl bg-gradient-primary">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('common.search')}
-        </Button>
-      </div>
+    <PhoneShell>
+      <div className="space-y-6">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-primary font-semibold">{t('track.header')}</p>
+            <h1 className="font-display text-2xl font-bold mt-1">{t('track.title')}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t('track.subtitle')}</p>
+          </div>
+          <LanguageToggle />
+        </div>
 
-      {result && (
-        <div className="px-4 pb-6">
-          {!result.found ? (
-            <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 text-center text-sm text-destructive">
-              {t('track.notfound')}
-            </div>
-          ) : (
-            <div className="bg-muted/40 border border-border rounded-xl p-4 animate-fade-in">
-              <div className="flex items-center justify-between mb-3">
-                <span className="font-mono text-xs bg-foreground/90 text-background px-2 py-1 rounded">{result.case!.case_code}</span>
-                <StatusBadge value={result.case!.status} />
+        <div className="flex gap-2">
+          <Input
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            placeholder="SW-XXXXXXXX"
+            className="font-mono tracking-widest"
+            maxLength={20}
+            onKeyDown={(e) => e.key === 'Enter' && void lookup(code)}
+            aria-label={t('track.title')}
+          />
+          <Button onClick={() => void lookup(code)} disabled={loading || !code.trim()}>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+          </Button>
+        </div>
+
+        {error && <p className="text-sm text-destructive text-center py-4">{error}</p>}
+
+        {data && (
+          <div className="space-y-5">
+            <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="font-mono text-sm font-semibold tracking-wider">{data.case_code}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {data.area ?? '—'} · {t('track.savedAt')} {formatDateTime(data.created_at)}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground mb-1">{t('track.area')}: {result.case!.branch || '-'}</p>
-              <p className="text-xs text-muted-foreground mb-4">{t('track.savedAt')}: {new Date(result.case!.created_at).toLocaleString(locale)}</p>
+              <StatusBadge status={data.cancelled ? 'cancelled' : data.status} />
+            </div>
+            {data.cancelled && (
+              <p className="text-xs text-center text-muted-foreground">{t('track.cancelled')}</p>
+            )}
 
+            {data.questions.length > 0 && (
               <div className="space-y-3">
-                {STATUS_ORDER.map((s, i) => {
-                  const isCancelled = result.case!.status === 'cancelled';
-                  const reached = STATUS_ORDER.indexOf(result.case!.status) >= i;
-                  const event = result.timeline?.find((t) => t.status === s);
+                <h2 className="font-display font-semibold text-sm flex items-center gap-2">
+                  <MessageCircleQuestion className="w-4 h-4 text-primary" /> {t('track.questions.title')}
+                </h2>
+                {data.questions.map((q) => {
+                  const draft = answers[q.id] ?? { text: '', blob: null, sending: false };
                   return (
-                    <div key={s} className="flex gap-3">
-                      <div className="flex flex-col items-center">
-                        <span className={`w-3 h-3 rounded-full border-2 ${reached && !isCancelled ? 'bg-primary border-primary' : 'bg-card border-border'}`} />
-                        {i < STATUS_ORDER.length - 1 && <span className={`flex-1 w-0.5 my-1 ${reached && !isCancelled ? 'bg-primary' : 'bg-border'}`} />}
-                      </div>
-                      <div className="flex-1 pb-3">
-                        <p className={`text-sm font-medium ${reached && !isCancelled ? 'text-foreground' : 'text-muted-foreground'}`}>{t(`status.${s}`)}</p>
-                        {event && (
-                          <>
-                            <p className="text-[11px] text-muted-foreground">{new Date(event.created_at).toLocaleString(locale)}</p>
-                            {event.note && <p className="text-xs text-muted-foreground mt-1 bg-card border border-border rounded-md px-2 py-1.5">{event.note}</p>}
-                          </>
-                        )}
-                      </div>
+                    <div key={q.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                      <p className="text-sm font-medium">{q.question}</p>
+                      <p className="text-[11px] text-muted-foreground">{formatDateTime(q.created_at)}</p>
+                      {q.answer || q.answered_at ? (
+                        <div className="rounded-xl bg-muted/60 p-3">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t('track.answered')}</p>
+                          <p className="text-sm">{q.answer || '—'}</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2.5">
+                          <Textarea
+                            value={draft.text}
+                            onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: { ...draft, text: e.target.value } }))}
+                            placeholder={t('track.answer.placeholder')}
+                            rows={3}
+                            maxLength={2000}
+                            className="text-sm"
+                          />
+                          <VoiceRecorder
+                            compact
+                            onChange={(blob, tx) => setAnswers((prev) => ({
+                              ...prev,
+                              [q.id]: { ...draft, blob, text: tx || prev[q.id]?.text || '' },
+                            }))}
+                          />
+                          <Button
+                            size="sm"
+                            className="w-full"
+                            disabled={draft.sending || (!draft.text.trim() && !draft.blob)}
+                            onClick={() => void sendAnswer(q.id)}
+                          >
+                            {draft.sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-3.5 h-3.5 mr-1" />{t('track.answer.send')}</>}
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
-                {result.case!.status === 'cancelled' && (
-                  <div className="bg-destructive/10 border border-destructive/30 rounded-md p-2 text-xs text-destructive">{t('track.cancelled')}</div>
-                )}
               </div>
+            )}
+
+            <div>
+              <h2 className="font-display font-semibold text-sm mb-3">Timeline</h2>
+              <ol className="relative border-l-2 border-primary/25 ml-2 space-y-4">
+                {data.timeline.map((tItem, i) => (
+                  <li key={i} className="ml-4">
+                    <span className="absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-primary border-2 border-background" />
+                    <p className="text-sm font-medium">
+                      <StatusBadge status={tItem.status} />
+                    </p>
+                    {tItem.note && <p className="text-xs text-muted-foreground mt-0.5">{tItem.note}</p>}
+                    <p className="text-[11px] text-muted-foreground">{formatDateTime(tItem.created_at)}</p>
+                  </li>
+                ))}
+              </ol>
             </div>
-          )}
+          </div>
+        )}
+
+        <div className="text-center">
+          <Link to="/" className="text-xs text-primary underline underline-offset-4">
+            ← {t('common.back')}
+          </Link>
         </div>
-      )}
+      </div>
     </PhoneShell>
   );
 }
