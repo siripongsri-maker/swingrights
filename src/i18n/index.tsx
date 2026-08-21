@@ -460,7 +460,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return e[lang] ?? e.en ?? e.th ?? key;
   }, [lang]);
 
-  return <I18nContext.Provider value={{ lang, setLang, t }}>{children}</I18nContext.Provider>;
+  return <I18nContext.Provider value={{ lang, dir, setLang, t }}>{children}</I18nContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
