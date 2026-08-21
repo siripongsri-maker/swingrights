@@ -8,6 +8,7 @@ import { PhoneShell, SwingBadge } from '@/components/screening/PhoneShell';
 import { SectionDivider } from '@/components/screening/SectionDivider';
 import { SpeakButton } from '@/components/screening/SpeakButton';
 import { ScreeningTools, summarizeScreening } from '@/components/screening/ScreeningTools';
+import { nrmPositive } from '@/lib/screeningTools';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
 import { uploadCaseMedia } from '@/lib/uploadMedia';
 import { Button } from '@/components/ui/button';
