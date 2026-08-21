@@ -6,6 +6,7 @@ import { rateLimit, tooMany } from "../_shared/guard.ts";
 const schema = z.object({ case_code: caseCode });
 
 serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsJson });
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "method not allowed" }), { status: 405, headers: corsJson });
   }
