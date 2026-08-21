@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
 import type { CaseStatus } from '@/lib/screening';
+import plantImg from '@/assets/track-plant.png';
 
 const formatDateTime = (iso: string) => {
   try {
@@ -137,10 +138,16 @@ export default function Track() {
           </Button>
         </div>
 
-        {error && <p className="text-sm text-destructive text-center py-4">{error}</p>}
+        {error && <p className="text-sm text-destructive text-center py-4 animate-fade-in">{error}</p>}
+
+        {!data && !error && !loading && (
+          <div className="py-4 text-center animate-fade-in">
+            <img src={plantImg} alt="" width={1024} height={1024} loading="lazy" className="w-28 h-28 mx-auto animate-sway" />
+          </div>
+        )}
 
         {data && (
-          <div className="space-y-5">
+          <div className="space-y-5 animate-fade-in">
             <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-between gap-3">
               <div>
                 <p className="font-mono text-sm font-semibold tracking-wider">{data.case_code}</p>
@@ -207,8 +214,8 @@ export default function Track() {
               <h2 className="font-display font-semibold text-sm mb-3">Timeline</h2>
               <ol className="relative border-l-2 border-primary/25 ml-2 space-y-4">
                 {data.timeline.map((tItem, i) => (
-                  <li key={i} className="ml-4">
-                    <span className="absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-primary border-2 border-background" />
+                  <li key={i} className="ml-4 animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+                    <span className="absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-primary border-2 border-background animate-pop" style={{ animationDelay: `${i * 80 + 150}ms` }} />
                     <p className="text-sm font-medium">
                       <StatusBadge value={toStatus(tItem.status)} />
                     </p>
