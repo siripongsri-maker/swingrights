@@ -18,8 +18,10 @@ import { useAccess, ROLE_LABEL } from '@/hooks/useAccess';
 import {
   Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin,
   Search, ChevronLeft, ChevronRight, UserCheck, UserCog, CalendarClock, BellRing, ShieldAlert, Check,
-  MessageCircleQuestion, Send, Building2, Volume2,
+  MessageCircleQuestion, Send, Building2, Volume2, ChevronDown, Printer, Scale, Share2, HeartHandshake,
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { printCaseDocument, docInputFromReport, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 20;
@@ -582,6 +584,23 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
 
   const s = c.screening || {};
 
+  const DOC_ICONS: Record<DocKind, React.ReactNode> = {
+    complaint: <Scale className="w-4 h-4" />,
+    statement: <FileText className="w-4 h-4" />,
+    referral: <Share2 className="w-4 h-4" />,
+    assistance: <HeartHandshake className="w-4 h-4" />,
+  };
+
+  // ดึง PII ผ่าน RPC (masked-by-default) ก่อนออกเอกสารทุกประเภท
+  const withPii = async (fn: (full: CaseReportData) => void) => {
+    const p = pii ?? (await (async () => {
+      const { data } = await supabase.rpc('get_case_pii' as any, { _case_id: caseId });
+      if (data) setPii(data as any);
+      return data as any;
+    })());
+    fn({ ...c, reporter: p?.reporter ?? null, victim: p?.victim ?? null, assignee_name: staffName(c.assigned_to) } as CaseReportData);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-leaf grain">
       <header className="bg-gradient-dark text-white sticky top-0 z-30 shadow-elegant">
@@ -592,17 +611,23 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
             <p className="text-[11px] text-white/60">{new Date(c.created_at).toLocaleString('th-TH')}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white"
-              onClick={async () => {
-                const p = pii ?? (await (async () => {
-                  const { data } = await supabase.rpc('get_case_pii' as any, { _case_id: caseId });
-                  if (data) setPii(data as any);
-                  return data as any;
-                })());
-                printCaseReport({ ...c, reporter: p?.reporter ?? null, victim: p?.victim ?? null, assignee_name: staffName(c.assigned_to) } as CaseReportData);
-              }}>
-              <FileText className="w-4 h-4" /> เอกสารส่งต่อ (PDF)
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+                  <FileText className="w-4 h-4" /> เอกสาร <ChevronDown className="w-3.5 h-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuItem onClick={() => void withPii((full) => printCaseReport(full))}>
+                  <Printer className="w-4 h-4" /> รายงานเคสฉบับเต็ม (PDF)
+                </DropdownMenuItem>
+                {DOC_KINDS.map((dk) => (
+                  <DropdownMenuItem key={dk.key} onClick={() => void withPii((full) => printCaseDocument(dk.key, docInputFromReport(full)))}>
+                    {DOC_ICONS[dk.key]} {dk.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <StatusBadge value={c.status} /> {c.severity && <SeverityBadge value={c.severity} />}
           </div>
         </div>

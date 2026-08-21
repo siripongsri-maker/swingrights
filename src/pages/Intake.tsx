@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, Mic, Camera, Copy, AlertTriangle, Sparkles, ArrowRight, Loader2, ShieldCheck, ClipboardList, CalendarIcon, X as XIcon, RotateCcw, Trash2, SkipForward } from 'lucide-react';
+import { Check, Mic, Camera, Copy, AlertTriangle, Sparkles, ArrowRight, Loader2, ShieldCheck, ClipboardList, CalendarIcon, X as XIcon, RotateCcw, Trash2, SkipForward, Send, Pencil, Scale, FileText, Share2, HeartHandshake, ChevronDown, Printer } from 'lucide-react';
 import QRCode from 'qrcode';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
@@ -8,6 +8,7 @@ import { PhoneShell, SwingBadge } from '@/components/screening/PhoneShell';
 import { SectionDivider } from '@/components/screening/SectionDivider';
 import { SpeakButton } from '@/components/screening/SpeakButton';
 import { ScreeningTools, summarizeScreening } from '@/components/screening/ScreeningTools';
+import { nrmPositive } from '@/lib/screeningTools';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
 import { uploadCaseMedia } from '@/lib/uploadMedia';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,8 @@ import { stripImageMetadata } from '@/lib/exif';
 import { clearDraft, readDraftMeta, loadAudioBlobs, loadPhotoBlobs, saveAudioBlobs, savePhotoBlobs } from '@/lib/draft';
 import { saveLocalCase, deleteLocalCase, listLocalCases, importLegacyDraft, currentSessionId, rotateSessionId } from '@/lib/localCases';
 import { toast } from 'sonner';
+import { printCaseDocument, docInputFromIntake, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
+import { printCaseReport, type CaseReportData } from '@/lib/caseReport';
 
 
 type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'referral' | 'signature' | 'confirmed';
@@ -420,20 +423,21 @@ function VictimStep({ onNext }: { onNext: () => void }) {
   );
 }
 
-/* ----------------- 4. VOICE Q&A ----------------- */
+/* ----------------- 4. VOICE Q&A (chat style) ----------------- */
 function VoiceStep({ onNext }: { onNext: () => void }) {
-  const { qIndex, answers, staffObs, profile, audioBlobs, consent, set, patch } = useIntake();
+  const { qIndex, answers, staffObs, profile, audioBlobs, consent, patch } = useIntake();
   const allowServerStt = consent.cb3;
   const [recording, setRecording] = useState(false);
   const [transcribing, setTranscribing] = useState(false);
   const [transcript, setTranscript] = useState(answers[qIndex]?.transcript || '');
   const [obs, setObs] = useState(staffObs[qIndex] || '');
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [showObs, setShowObs] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const recogRef = useRef<any>(null);
   const tickRef = useRef<number | null>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   const q = QUESTIONS[qIndex];
   const total = QUESTIONS.length;
@@ -442,12 +446,18 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   useEffect(() => {
     setTranscript(answers[qIndex]?.transcript || '');
     setObs(staffObs[qIndex] || '');
-    const existing = audioBlobs[qIndex];
-    setAudioUrl(existing ? URL.createObjectURL(existing) : null);
+    setShowObs(!!staffObs[qIndex]);
     setElapsed(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qIndex]);
 
   useEffect(() => () => { stopAll(); }, []);
+
+  // chat: keep the newest message in view
+  useEffect(() => {
+    const el = chatRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  }, [qIndex, transcribing, showObs]);
 
   const stopAll = () => {
     try { mediaRef.current?.state === 'recording' && mediaRef.current.stop(); } catch {}
@@ -464,7 +474,6 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || 'audio/webm' });
-        setAudioUrl(URL.createObjectURL(blob));
         const newBlobs = [...audioBlobs];
         newBlobs[qIndex] = blob;
         patch({ audioBlobs: newBlobs });
@@ -542,14 +551,19 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
     }
   };
 
-
   const toggleRec = () => (recording ? stopRec() : startRec());
 
-  const saveAndAdvance = (dir: 1 | -1) => {
+  const persistCurrent = () => {
     const newAnswers = [...answers];
     newAnswers[qIndex] = { question: q.main, cat: q.cat, frame: q.frame, transcript };
     const newObs = [...staffObs];
     newObs[qIndex] = obs;
+    return { newAnswers, newObs };
+  };
+
+  const saveAndAdvance = (dir: 1 | -1) => {
+    if (recording) { toast.info('กรุณาหยุดบันทึกเสียงก่อน'); return; }
+    const { newAnswers, newObs } = persistCurrent();
     const next = qIndex + dir;
     if (next < 0) return;
     if (next >= total) {
@@ -560,103 +574,192 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
     patch({ answers: newAnswers, staffObs: newObs, qIndex: next });
   };
 
+  const jumpTo = (i: number) => {
+    if (recording || i === qIndex) return;
+    const { newAnswers, newObs } = persistCurrent();
+    patch({ answers: newAnswers, staffObs: newObs, qIndex: i });
+  };
+
   const tag = (cls: string, text: string) => (
-    <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium ${cls}`}>{text}</span>
+    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${cls}`}>{text}</span>
   );
 
   const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
   const ss = String(elapsed % 60).padStart(2, '0');
+  const isLast = qIndex === total - 1;
 
+  // pb-14 clears the fixed QuickExit floating button above the composer
   return (
-    <div>
-      <div className="flex justify-between text-xs text-muted-foreground mb-2">
-        <span>คำถามที่ {qIndex + 1} จาก {total}</span>
-        <span>{Math.round(pct)}%</span>
+    <div className="pb-14">
+      {/* header */}
+      <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
+        <span>สนทนาคัดกรอง · คำถามที่ {qIndex + 1} จาก {total}</span>
+        <span className="tabular-nums">{Math.round(pct)}%</span>
       </div>
-      <Progress value={pct} className="h-1 mb-4" />
-
-      <div className="flex gap-1.5 flex-wrap mb-4">
+      <Progress value={pct} className="h-1 mb-2" />
+      <div className="flex gap-1.5 flex-wrap mb-3">
         {tag('bg-secondary text-secondary-foreground', profile.kp)}
         {tag('bg-primary-soft text-primary', profile.gender)}
         {tag('bg-amber-100 text-amber-800', profile.age || '-')}
         {tag('bg-emerald-100 text-emerald-800', profile.branch)}
       </div>
 
-      <div className="bg-muted/60 border border-border rounded-2xl p-3.5 mb-3 flex gap-3">
-        <div className="w-9 h-9 rounded-full bg-foreground/80 flex items-center justify-center shrink-0">
-          <ClipboardList className="w-4 h-4 text-background" />
+      {/* chat thread */}
+      <div ref={chatRef} className="bg-muted/30 border border-border rounded-2xl p-3 space-y-3 h-[42vh] min-h-[300px] overflow-y-auto mb-3">
+        <div className="flex justify-center">
+          <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-3 py-1">
+            เริ่มการสัมภาษณ์ — ตอบได้ทั้งเสียงและพิมพ์
+          </span>
         </div>
-        <div>
-          <p className="text-[11px] text-muted-foreground">เจ้าหน้าที่อ่านให้ฟัง</p>
-          <p className="text-sm leading-relaxed text-foreground">{q.main}</p>
-        </div>
-      </div>
 
-      <div className="bg-muted/40 border border-border rounded-2xl p-3.5 mb-3">
-        <span className="inline-block bg-accent text-accent-foreground text-[11px] px-2.5 py-1 rounded-full mr-2">{q.cat}</span>
-        <span className="inline-block bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full">{q.frame}</span>
-        <div className="flex items-start gap-3 mt-2">
-          <div className="flex-1">
-            <p className="text-base font-medium">{q.main}</p>
-            <p className="text-xs text-muted-foreground mt-1">{q.hint}</p>
+        {Array.from({ length: qIndex }).map((_, i) => {
+          const past = QUESTIONS[i];
+          const ans = answers[i];
+          return (
+            <div key={i} className="space-y-2.5">
+              <QuestionBubble q={past} index={i} />
+              {ans && (
+                <div className="flex justify-end">
+                  <div className="max-w-[88%] bg-gradient-primary text-primary-foreground rounded-2xl rounded-tr-md px-3.5 py-2.5 shadow-card">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{ans.transcript || '(ไม่มีคำตอบ)'}</p>
+                    {audioBlobs[i] && <HistoryAudio blob={audioBlobs[i]!} />}
+                    {staffObs[i] && (
+                      <p className="text-[11px] mt-1.5 bg-amber-100 text-amber-900 rounded-md px-2 py-1 leading-relaxed">
+                        บันทึกเจ้าหน้าที่: {staffObs[i]}
+                      </p>
+                    )}
+                    <button
+                      onClick={() => jumpTo(i)}
+                      className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-primary-foreground/70 hover:text-primary-foreground transition"
+                    >
+                      <Pencil className="w-2.5 h-2.5" /> แก้ไขคำตอบนี้
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* current question */}
+        <QuestionBubble q={q} index={qIndex} current />
+
+        {transcribing && (
+          <div className="flex justify-end">
+            <div className="bg-muted border border-border rounded-2xl rounded-tr-md px-4 py-3 flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+              <span className="text-xs text-muted-foreground">AI กำลังถอดเสียงเป็นข้อความ...</span>
+            </div>
           </div>
-          <SpeakButton text={q.main} className="w-14 h-14" />
-        </div>
-        <p className="text-[11px] text-muted-foreground mt-2">กดปุ่มลำโพงเพื่อให้อ่านคำถามให้ฟัง</p>
+        )}
       </div>
 
-      <div className="bg-muted/40 border border-border rounded-2xl p-4 text-center mb-3">
+      {/* composer */}
+      <div className="bg-card border border-border rounded-2xl p-2.5 shadow-card">
         <Textarea
           value={transcript}
           onChange={(e) => setTranscript(e.target.value)}
-          placeholder="รอการบันทึกเสียง — หรือพิมพ์คำตอบโดยตรง"
-          className="bg-card text-left text-sm mb-3 min-h-[60px]"
+          placeholder="พิมพ์คำตอบ หรือกดไมค์เพื่อพูด..."
+          className="bg-muted/40 border-0 text-sm min-h-[52px] resize-none focus-visible:ring-1"
         />
+        {audioBlobs[qIndex] && !recording && (
+          <div className="px-1 pt-1.5"><HistoryAudio blob={audioBlobs[qIndex]!} /></div>
+        )}
+        <div className="flex items-center gap-2 mt-2">
+          <button
+            onClick={toggleRec}
+            disabled={transcribing}
+            aria-label="record"
+            className={`w-11 h-11 rounded-full flex items-center justify-center transition shrink-0 disabled:opacity-50 ${
+              recording ? 'bg-destructive text-destructive-foreground animate-pulse-ring' : 'bg-primary-soft text-primary hover:scale-105'
+            }`}
+          >
+            <Mic className="w-5 h-5" />
+          </button>
+          <div className="flex-1 min-w-0">
+            {recording ? (
+              <p className="text-xs text-destructive font-medium tabular-nums">กำลังบันทึกเสียง {mm}:{ss} — กดไมค์อีกครั้งเพื่อหยุด</p>
+            ) : transcribing ? (
+              <p className="text-xs text-muted-foreground">รอผลถอดความสักครู่...</p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground truncate">
+                {allowServerStt ? 'พูดได้เลย ระบบถอดเสียงให้อัตโนมัติ' : 'ไม่ได้ยินยอมถอดความภายนอก — พิมพ์คำตอบเอง'}
+              </p>
+            )}
+          </div>
+          {qIndex > 0 && (
+            <button
+              onClick={() => saveAndAdvance(-1)}
+              className="text-[11px] text-muted-foreground underline underline-offset-2 shrink-0 px-1"
+            >
+              ย้อนกลับ
+            </button>
+          )}
+          <Button
+            onClick={() => saveAndAdvance(1)}
+            disabled={recording || transcribing}
+            className="rounded-xl bg-gradient-primary h-10 shrink-0"
+          >
+            {isLast ? 'เสร็จสิ้นการสัมภาษณ์' : 'ส่งคำตอบ'}
+            {isLast ? <ArrowRight className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+          </Button>
+        </div>
+
+        {/* staff observation (collapsible) */}
         <button
-          onClick={toggleRec}
-          disabled={transcribing}
-          className={`w-16 h-16 rounded-full mx-auto mb-2 flex items-center justify-center transition disabled:opacity-50 ${
-            recording ? 'bg-destructive animate-pulse-ring' : 'bg-pink-600 hover:scale-105'
-          }`}
-          aria-label="record"
+          onClick={() => setShowObs((v) => !v)}
+          className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-400 font-medium"
         >
-          <Mic className="w-7 h-7 text-white" />
+          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showObs ? 'rotate-180' : ''}`} />
+          บันทึกของเจ้าหน้าที่ {obs && !showObs ? '· มีบันทึกแล้ว' : ''}
         </button>
-        <p className="text-xs text-muted-foreground">
-          {recording ? `กำลังบันทึกเสียง... ${mm}:${ss}` : transcribing ? 'กำลังถอดความด้วย AI...' : 'กดปุ่มเพื่อเริ่มบันทึก'}
-        </p>
-        {transcribing && <Loader2 className="w-4 h-4 animate-spin mx-auto mt-2 text-muted-foreground" />}
-        {!allowServerStt && (
-          <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-2">
-            ไม่ได้ยินยอมให้ถอดความภายนอก — บันทึกเสียงเก็บไว้ แต่ต้องพิมพ์คำตอบเอง
-          </p>
+        {showObs && (
+          <Textarea
+            value={obs}
+            onChange={(e) => setObs(e.target.value)}
+            placeholder="ลักษณะที่สังเกต / ข้อเท็จจริงเพิ่มเติม เช่น ร่องรอยฟกช้ำ, สีหน้าหวาดกลัว..."
+            className="mt-1.5 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/40 text-sm min-h-[48px]"
+          />
         )}
-        {audioUrl && !recording && (
-          <audio src={audioUrl} controls className="w-full mt-3" />
-        )}
-      </div>
-
-
-      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-xl p-3 mb-4">
-        <p className="text-[11px] font-medium text-amber-800 dark:text-amber-300 mb-1.5 flex items-center gap-1.5">
-          <AlertTriangle className="w-3 h-3" /> บันทึกของเจ้าหน้าที่ (ลักษณะที่สังเกต / ข้อเท็จจริงเพิ่มเติม)
-        </p>
-        <Textarea
-          value={obs}
-          onChange={(e) => setObs(e.target.value)}
-          placeholder="เช่น ร่องรอยฟกช้ำ, สีหน้าหวาดกลัว..."
-          className="bg-card text-sm min-h-[48px]"
-        />
-      </div>
-
-      <div className="flex gap-2 mt-2">
-        <Button variant="outline" onClick={() => saveAndAdvance(-1)} disabled={qIndex === 0} className="rounded-lg">← ย้อนกลับ</Button>
-        <Button onClick={() => saveAndAdvance(1)} className="flex-1 rounded-lg bg-gradient-primary">
-          {qIndex === total - 1 ? 'เสร็จสิ้นการสัมภาษณ์' : 'บันทึกและไปต่อ'} <ArrowRight className="w-4 h-4" />
-        </Button>
       </div>
     </div>
   );
+}
+
+/* chat bubbles */
+function QuestionBubble({ q, index, current }: { q: (typeof QUESTIONS)[number]; index: number; current?: boolean }) {
+  return (
+    <div className={`flex gap-2.5 ${current ? 'animate-fade-in' : ''}`}>
+      <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center shrink-0 shadow-card">
+        <ClipboardList className="w-3.5 h-3.5 text-primary-foreground" />
+      </div>
+      <div className="max-w-[88%] bg-card border border-border rounded-2xl rounded-tl-md px-3.5 py-2.5 shadow-card">
+        <div className="flex items-center gap-1.5 mb-1">
+          <span className="text-[9px] font-medium text-primary tracking-widest">คำถามที่ {index + 1}</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent text-accent-foreground">{q.cat}</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">{q.frame}</span>
+        </div>
+        <p className="text-sm leading-relaxed">{q.main}</p>
+        {current && (
+          <div className="flex items-center gap-2 mt-2">
+            <SpeakButton text={q.main} />
+            <p className="text-[10px] text-muted-foreground">{q.hint}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HistoryAudio({ blob }: { blob: Blob }) {
+  const [url, setUrl] = useState('');
+  useEffect(() => {
+    const u = URL.createObjectURL(blob);
+    setUrl(u);
+    return () => URL.revokeObjectURL(u);
+  }, [blob]);
+  if (!url) return null;
+  return <audio src={url} controls className="w-full mt-2 h-8 rounded" />;
 }
 
 /* ----------------- 5. ASSESS ----------------- */
@@ -1199,8 +1302,16 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
 }
 
 /* ----------------- 9. CONFIRMED ----------------- */
+const DOC_ICONS: Record<DocKind, React.ReactNode> = {
+  complaint: <Scale className="w-4 h-4" />,
+  statement: <FileText className="w-4 h-4" />,
+  referral: <Share2 className="w-4 h-4" />,
+  assistance: <HeartHandshake className="w-4 h-4" />,
+};
+
 function ConfirmedStep({ onReset }: { onReset: () => void }) {
-  const { caseCode } = useIntake();
+  const intake = useIntake();
+  const { caseCode } = intake;
   const navigate = useNavigate();
   const [qr, setQr] = useState<string>('');
 
@@ -1211,6 +1322,35 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
       .then(setQr)
       .catch(() => setQr(''));
   }, [caseCode]);
+
+  const printDoc = (kind: DocKind) => printCaseDocument(kind, docInputFromIntake(useIntake.getState()));
+
+  const printFull = () => {
+    const s = useIntake.getState();
+    printCaseReport({
+      id: s.caseId ?? '',
+      case_code: caseCode ?? '',
+      status: 'received',
+      severity: s.severity,
+      created_at: new Date().toISOString(),
+      reporter: s.reporter,
+      victim: s.victim,
+      profile: s.profile,
+      answers: s.answers,
+      staff_observations: s.staffObs,
+      ai_result: s.aiResult,
+      screening: summarizeScreening(s.screening),
+      suicide_risk: (s.screening.q9[8] ?? 0) > 0,
+      has_violation: s.hasViolation,
+      violation_details: s.violationDetails,
+      extra_facts: s.extraFacts,
+      referrals: s.referrals,
+      referral_note: s.referralNote,
+      signature_staff: s.signatureStaff,
+      signature_staff_name: s.signatureStaffName,
+      signature_client: s.signatureClient || null,
+    } as CaseReportData);
+  };
 
   return (
     <div className="text-center">
@@ -1236,6 +1376,46 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
             <p className="text-[11px] text-muted-foreground">สแกนหรือถ่ายภาพ QR นี้เพื่อติดตามสถานะ</p>
           </div>
         )}
+      </div>
+
+      {/* สรุปเคส */}
+      <div className="text-left mb-4">
+        <p className="text-[10px] font-medium text-muted-foreground tracking-widest uppercase mb-2">สรุปเคส</p>
+        <SummaryBlock title="ผู้รับบริการ">
+          <Row k="ชื่อ" v={intake.victim.name || '-'} />
+          <Row k="กลุ่ม / เพศ" v={`${intake.profile.kp} · ${intake.profile.gender}`} />
+          <Row k="พื้นที่" v={`${intake.profile.province || intake.profile.branch}${intake.profile.incidentPlace ? ` · ${intake.profile.incidentPlace}` : ''}`} />
+        </SummaryBlock>
+        <SummaryBlock title="การประเมิน">
+          <Row k="ประเภทการละเมิด" v={(intake.violationDetails.length ? intake.violationDetails : intake.profile.initialViolationTypes).join(', ') || '-'} />
+          <Row k="ความรุนแรง" v={intake.severity ? SEV_LABEL[intake.severity] : '-'} />
+          <Row k="9Q / NRM" v={`${intake.screening.q9.reduce((a, b) => a + b, 0)} คะแนน · ${nrmPositive(intake.screening.nrm, intake.screening.nrmUnder18) ? 'NRM เข้าข่าย' : 'NRM ไม่เข้าเกณฑ์'}`} />
+          <Row k="การส่งต่อ" v={intake.referrals.join(' · ') || 'ยังไม่ได้เลือก'} />
+        </SummaryBlock>
+      </div>
+
+      {/* เอกสารสำหรับดำเนินเคสต่อ */}
+      <div className="text-left mb-4">
+        <p className="text-[10px] font-medium text-muted-foreground tracking-widest uppercase mb-2">เอกสารสำหรับดำเนินการต่อ (พิมพ์/บันทึก PDF)</p>
+        <div className="grid grid-cols-2 gap-2">
+          {DOC_KINDS.map((dk) => (
+            <button
+              key={dk.key}
+              onClick={() => printDoc(dk.key)}
+              className="p-3 rounded-xl border border-border bg-card text-left hover:border-primary hover:bg-primary-soft/30 transition group"
+            >
+              <span className="w-8 h-8 rounded-lg bg-primary-soft text-primary flex items-center justify-center mb-2 group-hover:scale-105 transition">
+                {DOC_ICONS[dk.key]}
+              </span>
+              <span className="block text-xs font-medium">{dk.label}</span>
+              <span className="block text-[10px] text-muted-foreground leading-snug mt-0.5">{dk.desc}</span>
+            </button>
+          ))}
+        </div>
+        <Button onClick={printFull} variant="outline" className="w-full mt-2 rounded-xl h-10 text-xs">
+          <Printer className="w-3.5 h-3.5" /> รายงานเคสฉบับเต็ม (Case Report)
+        </Button>
+        <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">พิมพ์เอกสารก่อนกด "บันทึกเคสใหม่" — หลังจากนั้นสามารถพิมพ์ซ้ำได้จากหน้า Dashboard ของเจ้าหน้าที่</p>
       </div>
 
       <Button onClick={() => navigate(`/track?code=${caseCode}`)} className="w-full h-12 rounded-xl bg-gradient-primary mb-2">ติดตามสถานะเคส</Button>
