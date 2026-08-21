@@ -10,11 +10,11 @@ async function reachAreaStage(page: Page) {
   await page.goto('/');
   await page.evaluate(() => localStorage.setItem('swing.lang', 'th'));
   await page.goto('/report');
-  await page.getByRole('button', { name: 'เริ่มเล่า' }).click();
+  await page.getByRole('button', { name: 'ยินยอมและเริ่มเล่า' }).click();
   const composer = page.locator('textarea[placeholder], input[placeholder]').last();
   await composer.fill('e2e highlight probe');
   await page.getByLabel('ส่ง').click();
-  await page.getByRole('button', { name: 'ด้านร่างกายและความปลอดภัย', exact: true }).click();
+  await page.getByRole('button', { name: 'ร่างกายและชีวิต', exact: true }).click();
   await page.getByRole('button', { name: 'ยืนยัน', exact: true }).click();
   await page.getByRole('button', { name: 'ข้าม', exact: true }).click();
   await expect(page.getByRole('combobox').first()).toBeVisible();
