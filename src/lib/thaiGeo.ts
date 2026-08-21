@@ -180,12 +180,16 @@ const ROMAN_DIGRAPHS: [string, string][] = [
   ['aa', 'a'], ['ee', 'e'], ['oo', 'o'], ['uu', 'u'],
 ];
 
+// Combining/above/below marks dropped by the search normalization
+// (Thai sara i/ii/…, mai han akat, thanthakhat, tone marks, latin diacritics).
+const MARK_CLASS = /[\u0300-\u036f\u0e31\u0e34-\u0e3a\u0e47-\u0e4b]/;
+
 /** Case/mark-insensitive skeleton of `s`; every unit maps back to original code-unit indices. */
 function skeletonUnits(s: string): Unit[] {
   const raw: Unit[] = [];
   for (let i = 0; i < s.length; i++) {
     const ch = s[i];
-    if (/[\u0300-\u036f\u0e48-\u0e4b]/.test(ch)) continue; // standalone combining/tone marks
+    if (MARK_CLASS.test(ch)) continue; // combining/vowel/tone marks attach to neighbours
     const base = ch.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     for (const bc of base) {
       raw.push({ lo: i, hi: i + 1, c: /[^\p{L}\p{N} ]/u.test(bc) ? ' ' : bc });
@@ -251,6 +255,12 @@ export function highlightGeoText(text: string, rawQuery: string): HiSeg[] | null
   for (const q of qs) { applyAll(base, q); applyAll(simp, q); }
 
   if (!marks.some(Boolean)) return null;
+  // Absorb combining marks sitting between/next to hits so a highlighted
+  // syllable never splits (e.g. "เชียง" stays one segment even though the
+  // search normalization drops ี).
+  for (let i = 0; i < text.length; i++) {
+    if (!marks[i] && MARK_CLASS.test(text[i]) && (marks[i - 1] || marks[i + 1])) marks[i] = true;
+  }
   const segs: HiSeg[] = [];
   let i = 0;
   while (i < text.length) {
