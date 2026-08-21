@@ -317,3 +317,51 @@ export function highlightGeoText(text: string, rawQuery: string): HiSeg[] | null
   }
   return segs;
 }
+
+// ─── Geolocation helpers ─────────────────────────────────────────────────────
+
+/** Centroid of a province = mean of its tambon centers. Returns [lat, lng] or null. */
+export function provinceCenter(p: ProvinceRow): [number, number] | null {
+  let lat = 0, lng = 0, n = 0;
+  for (const d of p.d) for (const s of d.s) {
+    if (s.c) { lat += s.c[0]; lng += s.c[1]; n++; }
+  }
+  return n ? [lat / n, lng / n] : null;
+}
+
+/** Haversine distance between two [lat, lng] points, in km. */
+export function distKm(a: [number, number], b: [number, number]): number {
+  const rad = Math.PI / 180;
+  const dLat = (b[0] - a[0]) * rad;
+  const dLng = (b[1] - a[1]) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+
+/**
+ * Nearest province to a coordinate, measured against every tambon center
+ * (more accurate than province centroids near borders). Provinces whose
+ * tambons lack coordinates — currently only Bangkok — fall back to a
+ * known city-center point (TH_CENTER) so they still participate.
+ */
+export function nearestProvince(geo: ProvinceRow[], lat: number, lng: number): { province: string; km: number } | null {
+  let best: { province: string; km: number } | null = null;
+  const here: [number, number] = [lat, lng];
+  for (const p of geo) {
+    let minKm = Infinity;
+    for (const d of p.d) {
+      for (const s of d.s) {
+        if (!s.c) continue;
+        const km = distKm(here, s.c);
+        if (km < minKm) minKm = km;
+      }
+    }
+    if (minKm === Infinity) {
+      // No tambon coords in this province — only Bangkok in the current dataset.
+      if (p.n !== 'กรุงเทพมหานคร') continue;
+      minKm = distKm(here, TH_CENTER);
+    }
+    if (!best || minKm < best.km) best = { province: p.n, km: minKm };
+  }
+  return best;
+}
