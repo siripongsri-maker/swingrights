@@ -276,13 +276,13 @@ export default function SelfReport() {
         <div
           className={cn(
             'max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm',
-            isBot ? 'bg-muted/70 text-foreground rounded-bl-md' : 'bg-primary text-primary-foreground rounded-br-md',
+            isBot ? 'bg-muted/70 text-foreground rounded-es-md' : 'bg-primary text-primary-foreground rounded-ee-md',
           )}
         >
           {m.text && (
             <div className="flex items-start gap-2">
               <p className="whitespace-pre-line flex-1">{m.text}</p>
-              {isBot && <SpeakButton text={m.text} className="w-8 h-8 [&_svg]:w-4 [&_svg]:h-4 -mr-1 -mt-1" />}
+              {isBot && <SpeakButton text={m.text} className="w-8 h-8 [&_svg]:w-4 [&_svg]:h-4 -me-1 -mt-1" />}
             </div>
           )}
           {m.audioUrl && <audio src={m.audioUrl} controls className="w-full h-9 mt-2" />}
@@ -290,7 +290,7 @@ export default function SelfReport() {
           {/* ---------- interactive widgets ---------- */}
           {m.widget === 'consent' && !m.resolved && (
             <Button size="sm" className="w-full mt-2.5 rounded-xl" onClick={() => agreeConsent(m.id)}>
-              <Check className="w-4 h-4 mr-1" /> {t('report.chat.start')}
+              <Check className="w-4 h-4 me-1" /> {t('report.chat.start')}
             </Button>
           )}
 
@@ -331,7 +331,7 @@ export default function SelfReport() {
                     <div key={i} className="relative">
                       <img src={p.url} alt="" className="w-14 h-14 rounded-lg object-cover border border-border" />
                       <button type="button" aria-label="remove" onClick={() => setPhotos((prev) => prev.filter((_, j) => j !== i))}
-                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
+                        className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
                         <X className="w-3 h-3" />
                       </button>
                     </div>
@@ -349,7 +349,7 @@ export default function SelfReport() {
               <AreaPicker value={area} onChange={setArea} />
               <div className="flex gap-2">
                 <Button size="sm" className="flex-1 rounded-xl" disabled={!area.province} onClick={() => finishArea(m.id, false)}>
-                  <MapPin className="w-3.5 h-3.5 mr-1" /> {t('report.chat.confirm')}
+                  <MapPin className="w-3.5 h-3.5 me-1" /> {t('report.chat.confirm')}
                 </Button>
                 <Button size="sm" variant="outline" className="rounded-xl" onClick={() => finishArea(m.id, true)}>
                   {t('report.chat.skip')}
@@ -363,7 +363,7 @@ export default function SelfReport() {
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('report.contact.name')} maxLength={120} className="bg-card h-9 text-sm" />
               <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t('report.contact.phone')} maxLength={120} className="bg-card h-9 text-sm" />
               <Button size="sm" className="w-full rounded-xl" disabled={submitting} onClick={() => void submit(m.id)}>
-                {submitting ? <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />{t('report.submitting')}</> : t('report.submit')}
+                {submitting ? <><Loader2 className="w-3.5 h-3.5 me-1 animate-spin" />{t('report.submitting')}</> : t('report.submit')}
               </Button>
             </div>
           )}
@@ -378,7 +378,7 @@ export default function SelfReport() {
                   size="sm" variant="ghost" className="mt-1 text-xs h-7"
                   onClick={() => { void navigator.clipboard?.writeText(caseCode); toast.success(<Check className="inline w-3.5 h-3.5" />); }}
                 >
-                  <Copy className="w-3 h-3 mr-1" /> {caseCode}
+                  <Copy className="w-3 h-3 me-1" /> {caseCode}
                 </Button>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
@@ -411,7 +411,7 @@ export default function SelfReport() {
               <span className="w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0">
                 <Leaf className="w-3.5 h-3.5" />
               </span>
-              <span className="rounded-2xl rounded-bl-md bg-muted/70 px-4 py-3 flex gap-1">
+              <span className="rounded-2xl rounded-es-md bg-muted/70 px-4 py-3 flex gap-1">
                 {[0, 1, 2].map((i) => (
                   <span key={i} className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                 ))}
@@ -441,7 +441,7 @@ export default function SelfReport() {
                 aria-label={t('report.chat.send')}
                 onClick={sendStory}
               >
-                <SendHorizonal className="w-5 h-5" />
+                <SendHorizonal className="w-5 h-5 rtl:-scale-x-100" />
               </Button>
             </div>
           </div>
@@ -450,8 +450,8 @@ export default function SelfReport() {
         {/* back link for pre-chat */}
         {stage === 'consent' && (
           <div className="border-t border-border px-4 py-2.5">
-            <Button asChild variant="ghost" size="sm" className="text-xs -ml-2">
-              <Link to="/"><ArrowLeft className="w-3.5 h-3.5 mr-1" />{t('common.back')}</Link>
+            <Button asChild variant="ghost" size="sm" className="text-xs -ms-2">
+              <Link to="/"><ArrowLeft className="w-3.5 h-3.5 me-1 rtl:-scale-x-100" />{t('common.back')}</Link>
             </Button>
           </div>
         )}

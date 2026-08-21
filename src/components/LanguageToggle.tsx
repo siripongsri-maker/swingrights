@@ -31,7 +31,7 @@ export function LanguageToggle({ className }: { className?: string }) {
               onClick={() => setLang(l.id)}
               aria-pressed={lang === l.id}
               className={cn(
-                'flex items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors text-left',
+                'flex items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors text-start',
                 lang === l.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground',
               )}
             >

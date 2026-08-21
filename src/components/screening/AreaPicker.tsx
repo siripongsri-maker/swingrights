@@ -44,7 +44,7 @@ function Combo({
             <CommandGroup>
               {options.map((o) => (
                 <CommandItem key={o.v} value={`${o.v} ${o.sub ?? ''}`} onSelect={() => { onSelect(o.v); setOpen(false); }}>
-                  <Check className={cn('mr-2 h-4 w-4', value === o.v ? 'opacity-100' : 'opacity-0')} />
+                  <Check className={cn('me-2 h-4 w-4', value === o.v ? 'opacity-100' : 'opacity-0')} />
                   <span className="flex-1">{o.v}</span>
                   {o.sub && <span className="text-[11px] text-muted-foreground ml-2">{o.sub}</span>}
                 </CommandItem>
@@ -121,7 +121,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
 
       <div className="flex items-center gap-2 flex-wrap">
         <Button type="button" size="sm" variant="secondary" onClick={() => setShowMap((s) => !s)} className="text-xs">
-          <MapPin className="w-3.5 h-3.5 mr-1" /> {showMap ? t('area.hideMap') : t('area.pin')}
+          <MapPin className="w-3.5 h-3.5 me-1" /> {showMap ? t('area.hideMap') : t('area.pin')}
         </Button>
         {showMap && (
           <Button
@@ -138,12 +138,12 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
               );
             }}
           >
-            <LocateFixed className="w-3.5 h-3.5 mr-1" /> {t('area.myLocation')}
+            <LocateFixed className="w-3.5 h-3.5 me-1" /> {t('area.myLocation')}
           </Button>
         )}
         {value.geo && (
           <Button type="button" size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={() => onChange({ ...value, geo: null })}>
-            <X className="w-3.5 h-3.5 mr-1" /> {t('area.clearPin')}
+            <X className="w-3.5 h-3.5 me-1" /> {t('area.clearPin')}
           </Button>
         )}
       </div>

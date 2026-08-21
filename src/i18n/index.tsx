@@ -5,13 +5,20 @@ export type Lang = 'th' | 'en' | 'my' | 'km' | 'lo';
 const STORAGE_KEY = 'swing.lang';
 const ALL: Lang[] = ['th', 'en', 'my', 'km', 'lo'];
 
-export const LANGS: { id: Lang; label: string; short: string }[] = [
-  { id: 'th', label: 'ไทย', short: 'ไทย' },
-  { id: 'en', label: 'English', short: 'EN' },
-  { id: 'my', label: 'မြန်မာ', short: 'MY' },
-  { id: 'km', label: 'ខ្មែរ', short: 'KH' },
-  { id: 'lo', label: 'ລາວ', short: 'LAO' },
+export type TextDir = 'ltr' | 'rtl';
+
+export const LANGS: { id: Lang; label: string; short: string; dir: TextDir }[] = [
+  { id: 'th', label: 'ไทย', short: 'ไทย', dir: 'ltr' },
+  { id: 'en', label: 'English', short: 'EN', dir: 'ltr' },
+  { id: 'my', label: 'မြန်မာ', short: 'MY', dir: 'ltr' },
+  { id: 'km', label: 'ខ្មែរ', short: 'KH', dir: 'ltr' },
+  { id: 'lo', label: 'ລາວ', short: 'LAO', dir: 'ltr' },
 ];
+
+/** Text direction of a language — used to flip the whole layout automatically. */
+export function langDir(l: Lang): TextDir {
+  return LANGS.find((x) => x.id === l)?.dir ?? 'ltr';
+}
 
 /** BCP-47 locale for SpeechRecognition / SpeechSynthesis per UI language. */
 export const SPEECH_LOCALE: Record<Lang, string> = {
@@ -419,11 +426,12 @@ export const DICT: Dict = {
 
 interface Ctx {
   lang: Lang;
+  dir: TextDir;
   setLang: (l: Lang) => void;
   t: (key: keyof typeof DICT | string) => string;
 }
 
-const I18nContext = createContext<Ctx>({ lang: 'th', setLang: () => {}, t: (k) => String(k) });
+const I18nContext = createContext<Ctx>({ lang: 'th', dir: 'ltr', setLang: () => {}, t: (k) => String(k) });
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
@@ -431,9 +439,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return ALL.includes(saved as Lang) ? (saved as Lang) : 'th';
   });
 
+  const dir = langDir(lang);
+
+  // Apply language + text direction to <html> so the whole layout flips
+  // automatically (flex rows, chat bubbles, progress bars follow dir=rtl).
   useEffect(() => {
     document.documentElement.lang = lang;
-  }, [lang]);
+    document.documentElement.dir = dir;
+  }, [lang, dir]);
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
@@ -447,7 +460,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     return e[lang] ?? e.en ?? e.th ?? key;
   }, [lang]);
 
-  return <I18nContext.Provider value={{ lang, setLang, t }}>{children}</I18nContext.Provider>;
+  return <I18nContext.Provider value={{ lang, dir, setLang, t }}>{children}</I18nContext.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

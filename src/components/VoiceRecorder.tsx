@@ -136,8 +136,8 @@ export function VoiceRecorder({ onChange, className, compact }: Props) {
           {transcript && <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{transcript}</p>}
         </div>
         {audioUrl && !recording && (
-          <Button type="button" size="sm" variant="ghost" className="ml-auto text-xs" onClick={reset}>
-            <RotateCcw className="w-3.5 h-3.5 mr-1" /> {t('common.rerecord')}
+          <Button type="button" size="sm" variant="ghost" className="ms-auto text-xs" onClick={reset}>
+            <RotateCcw className="w-3.5 h-3.5 me-1" /> {t('common.rerecord')}
           </Button>
         )}
       </div>
