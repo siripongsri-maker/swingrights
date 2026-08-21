@@ -588,8 +588,9 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   const ss = String(elapsed % 60).padStart(2, '0');
   const isLast = qIndex === total - 1;
 
+  // pb-14 clears the fixed QuickExit floating button above the composer
   return (
-    <div>
+    <div className="pb-14">
       {/* header */}
       <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
         <span>สนทนาคัดกรอง · คำถามที่ {qIndex + 1} จาก {total}</span>
