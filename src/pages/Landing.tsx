@@ -60,7 +60,7 @@ export default function Landing() {
 
         <main className="relative max-w-5xl mx-auto px-5 pt-10 sm:pt-14 pb-16">
           <div className="grid sm:grid-cols-[1.15fr_0.85fr] items-center gap-6 sm:gap-10 animate-slide-up">
-            <div className="text-center sm:text-left">
+            <div className="text-center sm:text-start">
               <span className="inline-flex items-center gap-1.5 bg-card/80 backdrop-blur border border-border text-primary text-[10px] font-medium tracking-[0.16em] px-3.5 py-1.5 rounded-full mb-5">
                 <Sparkles className="w-3 h-3" /> {t('landing.badge')}
               </span>
@@ -75,7 +75,7 @@ export default function Landing() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
                 <Link to="/report">
                   <Button size="lg" className="h-13 px-7 py-6 rounded-full bg-gradient-primary shadow-elegant hover-lift text-base w-full sm:w-auto">
-                    <HeartHandshake className="w-4 h-4" /> {t('landing.cta.report')} <ArrowRight className="w-4 h-4" />
+                    <HeartHandshake className="w-4 h-4" /> {t('landing.cta.report')} <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
                   </Button>
                 </Link>
                 <Link to="/track">
