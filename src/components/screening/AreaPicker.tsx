@@ -86,16 +86,26 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
         <div className="grid gap-2.5">
           <Combo
             label={t('area.province')}
-...
+            value={value.province}
+            options={(geo ?? []).map((p) => ({ v: p.n, sub: p.e }))}
+            onSelect={(v) => onChange({ ...value, province: v, district: '', subdistrict: '', zip: '' })}
+          />
+          <div className="grid grid-cols-2 gap-2.5">
+            <Combo
               label={t('area.district')}
-...
+              value={value.district}
+              disabled={!province}
+              options={(province?.d ?? []).map((d) => ({ v: d.n, sub: d.e }))}
+              onSelect={(v) => onChange({ ...value, district: v, subdistrict: '', zip: '' })}
+            />
+            <Combo
               label={t('area.subdistrict')}
               value={value.subdistrict}
               disabled={!district}
               options={(district?.s ?? []).map((s) => ({ v: s.n, sub: s.z ? String(s.z) : undefined }))}
               onSelect={(v) => {
-                const t = district?.s.find((s) => s.n === v);
-                onChange({ ...value, subdistrict: v, zip: t?.z ? String(t.z) : '' });
+                const row = district?.s.find((s) => s.n === v);
+                onChange({ ...value, subdistrict: v, zip: row?.z ? String(row.z) : '' });
               }}
             />
           </div>
