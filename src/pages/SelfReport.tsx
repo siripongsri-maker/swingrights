@@ -21,17 +21,15 @@ import { cn } from '@/lib/utils';
 const MEDIA_FN = 'upload-case-media';
 
 async function uploadOne(kind: 'audio' | 'photo', file: { blob: Blob; name: string; type: string }, caseId: string): Promise<string> {
-  const { data: sessionRes } = await supabase.auth.getSession();
-  const token = sessionRes.session?.access_token;
-  const base = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, '_').slice(-60);
+  const path = `cases/${caseId}/${Date.now()}-${safeName}`;
   const fd = new FormData();
   fd.set('kind', kind);
-  fd.set('case_id', caseId);
+  fd.set('path', path);
   fd.set('file', file.blob, file.name);
-  const res = await fetch(`${base}/functions/v1/${MEDIA_FN}`, {
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${MEDIA_FN}`, {
     method: 'POST',
-    headers: { apikey: key, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
     body: fd,
   });
   const json = await res.json().catch(() => ({}));

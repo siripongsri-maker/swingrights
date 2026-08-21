@@ -21,7 +21,7 @@ serve(async (req) => {
 
   const { data: c, error: qErr } = await db
     .from("cases")
-    .select("case_code,status,severity,profile,deleted_at,created_at")
+    .select("id,case_code,status,severity,profile,deleted_at,created_at")
     .eq("case_code", data.case_code)
     .maybeSingle();
 
@@ -37,8 +37,8 @@ serve(async (req) => {
 
   const { data: qs } = await db
     .from("case_questions")
-    .select("id,question,created_at,answer,answered_at")
-    .eq("case_code", data.case_code)
+    .select("id,question,created_at,answer_text,answered_at")
+    .eq("case_id", c.id)
     .order("created_at", { ascending: true });
 
   const profile = (c.profile ?? {}) as Record<string, unknown>;
@@ -57,7 +57,7 @@ serve(async (req) => {
         id: q.id,
         question: q.question,
         created_at: q.created_at,
-        answer: q.answer,
+        answer_text: q.answer_text,
         answered_at: q.answered_at,
       })),
     }),

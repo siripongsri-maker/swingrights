@@ -34,7 +34,7 @@ interface TrackData {
   cancelled: boolean;
   created_at: string;
   timeline: { status: string; note: string | null; created_at: string }[];
-  questions: { id: string; question: string; created_at: string; answer: string | null; answered_at: string | null }[];
+  questions: { id: string; question: string; created_at: string; answer_text: string | null; answered_at: string | null }[];
 }
 
 export default function Track() {
@@ -82,9 +82,10 @@ export default function Track() {
       let audioUrl: string | null = null;
       if (blob) {
         const ext = blob.type.includes('mp4') || blob.type.includes('m4a') ? 'm4a' : blob.type.includes('ogg') ? 'ogg' : 'webm';
+        const path = `cases/${data!.case_code}/${Date.now()}-answer.${ext}`;
         const fd = new FormData();
         fd.set('kind', 'audio');
-        fd.set('case_code', data!.case_code);
+        fd.set('path', path);
         fd.set('file', blob, `answer.${ext}`);
         const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-case-media`, {
           method: 'POST',
@@ -97,8 +98,8 @@ export default function Track() {
       const { error: rpcErr } = await supabase.rpc('answer_case_question' as never, {
         _case_code: data!.case_code,
         _question_id: qid,
-        _answer: text || null,
-        _audio_url: audioUrl,
+        _answer_text: text || null,
+        _answer_audio_url: audioUrl,
       } as never);
       if (rpcErr) throw rpcErr;
       toast.success(t('track.answer.thanks'));
@@ -164,10 +165,10 @@ export default function Track() {
                     <div key={q.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
                       <p className="text-sm font-medium">{q.question}</p>
                       <p className="text-[11px] text-muted-foreground">{formatDateTime(q.created_at)}</p>
-                      {q.answer || q.answered_at ? (
+                      {q.answer_text || q.answered_at ? (
                         <div className="rounded-xl bg-muted/60 p-3">
                           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t('track.answered')}</p>
-                          <p className="text-sm">{q.answer || '—'}</p>
+                          <p className="text-sm">{q.answer_text || '—'}</p>
                         </div>
                       ) : (
                         <div className="space-y-2.5">
