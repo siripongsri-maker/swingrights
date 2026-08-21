@@ -11,7 +11,18 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
-import { formatDateTime } from '@/lib/utils';
+import type { CaseStatus } from '@/lib/screening';
+
+const formatDateTime = (iso: string) => {
+  try {
+    return new Date(iso).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' });
+  } catch { return iso; }
+};
+
+const toStatus = (s: string): CaseStatus =>
+  s === 'in_progress' || s === 'inprogress' ? 'inprogress'
+    : s === 'completed' || s === 'done' ? 'completed'
+    : s === 'cancelled' ? 'cancelled' : 'received';
 
 const FN = 'track-case';
 
@@ -136,7 +147,7 @@ export default function Track() {
                   {data.area ?? '—'} · {t('track.savedAt')} {formatDateTime(data.created_at)}
                 </p>
               </div>
-              <StatusBadge status={data.cancelled ? 'cancelled' : data.status} />
+              <StatusBadge value={toStatus(data.cancelled ? 'cancelled' : data.status)} />
             </div>
             {data.cancelled && (
               <p className="text-xs text-center text-muted-foreground">{t('track.cancelled')}</p>
@@ -198,7 +209,7 @@ export default function Track() {
                   <li key={i} className="ml-4">
                     <span className="absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-primary border-2 border-background" />
                     <p className="text-sm font-medium">
-                      <StatusBadge status={tItem.status} />
+                      <StatusBadge value={toStatus(tItem.status)} />
                     </p>
                     {tItem.note && <p className="text-xs text-muted-foreground mt-0.5">{tItem.note}</p>}
                     <p className="text-[11px] text-muted-foreground">{formatDateTime(tItem.created_at)}</p>
