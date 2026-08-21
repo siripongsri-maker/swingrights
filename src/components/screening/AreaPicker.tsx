@@ -64,7 +64,11 @@ function Combo({
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[--radix-popover-trigger-width] z-[1200]" align="start">
         <Command filter={geoSearchScore}>
-          <CommandInput placeholder={`${t('common.search')} ${label}... (TH/EN)`} />
+          <CommandInput
+            placeholder={`${t('common.search')} ${label}... (TH/EN)`}
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandList className="max-h-64">
             <CommandEmpty>{t('area.notfound')}</CommandEmpty>
             <CommandGroup>
@@ -76,8 +80,8 @@ function Combo({
                   onSelect={() => { onSelect(o.v); setOpen(false); }}
                 >
                   <Check className={cn('me-2 h-4 w-4', value === o.v ? 'opacity-100' : 'opacity-0')} />
-                  <span className="flex-1">{o.v}</span>
-                  {o.sub && <span className="text-[11px] text-muted-foreground ms-2">{o.sub}</span>}
+                  <span className="flex-1"><Hi text={o.v} q={search} /></span>
+                  {o.sub && <span className="text-[11px] text-muted-foreground ms-2"><Hi text={o.sub} q={search} /></span>}
                 </CommandItem>
               ))}
             </CommandGroup>
