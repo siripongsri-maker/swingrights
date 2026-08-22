@@ -429,8 +429,8 @@ export default function SelfReport() {
                   </button>
                 ))}
               </div>
-              <Button size="sm" className="w-full rounded-xl" disabled={!types.length} onClick={() => confirmTypes(m.id)}>
-                {t('report.chat.confirm')}
+              <Button size="sm" className="w-full rounded-xl" onClick={() => confirmTypes(m.id)}>
+                {types.length ? t('report.chat.confirm') : t('report.chat.skip')}
               </Button>
             </div>
           )}
