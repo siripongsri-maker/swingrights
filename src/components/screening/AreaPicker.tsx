@@ -1,13 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronsUpDown, Languages, Loader2, LocateFixed, MapPin, Navigation, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Check, ChevronsUpDown, Info, Languages, Loader2, LocateFixed, MapPin, MapPinOff, Navigation, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { MapPicker } from './MapPicker';
 import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, geoSearchReason, highlightGeoText, nearestProvince, type ProvinceRow } from '@/lib/thaiGeo';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
+
 
 export interface AreaValue {
   province: string;
