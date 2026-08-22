@@ -138,6 +138,8 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
   const [loading, setLoading] = useState(true);
   const [showMap, setShowMap] = useState(!!value.geo);
   const [enFirst, setEnFirst] = useState(false);
+  const [geoError, setGeoError] = useState<'denied' | 'unsupported' | null>(null);
+  const [openProvince, setOpenProvince] = useState(false);
 
   useEffect(() => {
     loadThaiGeo()
@@ -148,8 +150,13 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
 
   /** Quick action: pick the province whose centroid is closest to the device's location. */
   const pickNearestProvince = () => {
-    if (!navigator.geolocation) return toast.error(t('area.geoUnsupported'));
+    if (!navigator.geolocation) {
+      setGeoError('unsupported');
+      setOpenProvince(true);
+      return;
+    }
     if (!geo?.length) return;
+    setGeoError(null);
     navigator.geolocation.getCurrentPosition(
       (p) => {
         const best = nearestProvince(geo, p.coords.latitude, p.coords.longitude);
@@ -157,10 +164,14 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
         onChange({ ...value, province: best.province, district: '', subdistrict: '', zip: '' });
         toast.success(t('area.nearMeFound', { name: best.province, km: Math.round(best.km) }));
       },
-      () => toast.error(t('area.geoDenied')),
+      () => {
+        setGeoError('denied');
+        setOpenProvince(true);
+      },
       { enableHighAccuracy: false, timeout: 10000 },
     );
   };
+
 
   const province = useMemo(() => geo?.find((p) => p.n === value.province) ?? null, [geo, value.province]);
   const district = useMemo(() => province?.d.find((d) => d.n === value.district) ?? null, [province, value.district]);
