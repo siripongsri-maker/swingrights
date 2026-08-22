@@ -509,7 +509,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      referral_directory: {
+        Row: {
+          district: string | null
+          id: string | null
+          name: string | null
+          org_type: string | null
+          phone: string | null
+          province: string | null
+          services: Json | null
+        }
+        Insert: {
+          district?: string | null
+          id?: string | null
+          name?: string | null
+          org_type?: string | null
+          phone?: string | null
+          province?: string | null
+          services?: Json | null
+        }
+        Update: {
+          district?: string | null
+          id?: string | null
+          name?: string | null
+          org_type?: string | null
+          phone?: string | null
+          province?: string | null
+          services?: Json | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       answer_case_question: {
