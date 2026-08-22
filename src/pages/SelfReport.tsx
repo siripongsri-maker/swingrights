@@ -156,9 +156,8 @@ export default function SelfReport() {
   };
 
   const confirmTypes = (msgId: number) => {
-    if (!types.length) return;
     resolveWidget(msgId);
-    push({ role: 'user', text: types.map((k) => t(`report.type.${k}`)).join(' · ') });
+    push({ role: 'user', text: types.length ? types.map((k) => t(`report.type.${k}`)).join(' · ') : t('report.chat.skipped') });
     // move into the sequential probing interview
     setStage('probe');
     setProbeIdx(0);
