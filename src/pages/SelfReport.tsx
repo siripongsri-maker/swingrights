@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Check, Copy, Leaf, Loader2, MapPin, Paperclip, SendHorizonal, X } from 'lucide-react';
+import { ArrowLeft, Building2, Check, Copy, Leaf, Loader2, MapPin, Paperclip, Phone, SendHorizonal, X } from 'lucide-react';
 import bloomImg from '@/assets/bloom.png';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
@@ -10,7 +10,6 @@ import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { AreaPicker, type AreaValue } from '@/components/screening/AreaPicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
 import { formatArea } from '@/lib/thaiGeo';
@@ -20,9 +19,9 @@ import { cn } from '@/lib/utils';
 
 const MEDIA_FN = 'upload-case-media';
 
-async function uploadOne(kind: 'audio' | 'photo', file: { blob: Blob; name: string; type: string }, caseId: string): Promise<string> {
+async function uploadOne(kind: 'audio' | 'photo', file: { blob: Blob; name: string; type: string }, folder: string): Promise<string> {
   const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, '_').slice(-60);
-  const path = `cases/${caseId}/${Date.now()}-${safeName}`;
+  const path = `cases/${folder}/${Date.now()}-${safeName}`;
   const fd = new FormData();
   fd.set('kind', kind);
   fd.set('path', path);
@@ -37,8 +36,8 @@ async function uploadOne(kind: 'audio' | 'photo', file: { blob: Blob; name: stri
   return json.path;
 }
 
-type Stage = 'consent' | 'story' | 'types' | 'photos' | 'area' | 'contact' | 'done';
-type Widget = 'consent' | 'types' | 'photos' | 'area' | 'contact' | 'success';
+type Stage = 'consent' | 'story' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'done';
+type Widget = 'consent' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'success';
 
 interface ChatMsg {
   id: number;
@@ -50,7 +49,20 @@ interface ChatMsg {
 }
 
 const TYPE_KEYS = ['body', 'labor', 'health', 'property', 'other'] as const;
-const STAGE_ORDER: Stage[] = ['consent', 'story', 'types', 'photos', 'area', 'contact'];
+// Probe: sequential follow-up questions asked one at a time after the story
+const PROBE_IDS = ['when', 'where', 'who', 'safety', 'needs'] as const;
+type ProbeId = (typeof PROBE_IDS)[number];
+const SAFETY_CHOICES = ['safe', 'unsure', 'unsafe'] as const;
+
+interface Partner {
+  id: string;
+  name: string;
+  org_type: string | null;
+  province: string | null;
+  district: string | null;
+  phone: string | null;
+  services: unknown;
+}
 
 export default function SelfReport() {
   const { lang, t } = useI18n();
@@ -75,7 +87,18 @@ export default function SelfReport() {
   const [submitting, setSubmitting] = useState(false);
   const [caseCode, setCaseCode] = useState<string | null>(null);
 
-  const stageIdx = STAGE_ORDER.indexOf(stage === 'done' ? 'contact' : stage);
+  // ---- probe state (sequential probing questions) ----
+  const [probeIdx, setProbeIdx] = useState(0);
+  const [probeAnswers, setProbeAnswers] = useState<Partial<Record<ProbeId, { text: string; blob: Blob | null }>>>({});
+  const [probeBlob, setProbeBlob] = useState<Blob | null>(null);
+  const [probeTranscript, setProbeTranscript] = useState('');
+  const [probeDraft, setProbeDraft] = useState('');
+  const [safetyRisk, setSafetyRisk] = useState(false);
+
+  // ---- referral partners ----
+  const [partners, setPartners] = useState<Partner[]>([]);
+
+  const stageIdx = STAGE_ORDER.indexOf(stage === 'done' || stage === 'partners' ? 'contact' : stage);
 
   // ---- chat helpers ----
   const push = (m: Omit<ChatMsg, 'id'>) => {
@@ -133,11 +156,54 @@ export default function SelfReport() {
   };
 
   const confirmTypes = (msgId: number) => {
-    if (!types.length) return;
     resolveWidget(msgId);
-    push({ role: 'user', text: types.map((k) => t(`report.type.${k}`)).join(' · ') });
-    setStage('photos');
-    botSay({ text: t('report.chat.photos.ask'), widget: 'photos' });
+    push({ role: 'user', text: types.length ? types.map((k) => t(`report.type.${k}`)).join(' · ') : t('report.chat.skipped') });
+    // move into the sequential probing interview
+    setStage('probe');
+    setProbeIdx(0);
+    botSay({ text: t('report.probe.intro') });
+    botSay({ text: probeQuestionText(0), widget: 'probe' }, 1100);
+  };
+
+  const probeQuestionText = (i: number) =>
+    `${t('report.probe.count', { i: i + 1, n: PROBE_IDS.length })} — ${t(`report.probe.${PROBE_IDS[i]}.q`)}`;
+
+  /** Answer (or skip) the current probe question, then ask the next one. */
+  const answerProbe = (msgId: number, answer: { text: string; blob: Blob | null } | null) => {
+    resolveWidget(msgId);
+    const qid = PROBE_IDS[probeIdx];
+    if (answer) {
+      setProbeAnswers((prev) => ({ ...prev, [qid]: answer }));
+      push({
+        role: 'user',
+        text: answer.text || undefined,
+        audioUrl: answer.blob ? URL.createObjectURL(answer.blob) : undefined,
+      });
+      if (qid === 'safety' && /ไม่ปลอดภัย|not safe|မလုံခြုံ|មិនសុវត្ថិ|ບໍ່ປອດໄພ/i.test(answer.text)) {
+        setSafetyRisk(true);
+        botSay({ text: t('report.probe.safety.alert') });
+      }
+    } else {
+      push({ role: 'user', text: t('report.chat.skipped') });
+    }
+    // reset per-question recorder state
+    setProbeBlob(null);
+    setProbeTranscript('');
+    setProbeDraft('');
+    const next = probeIdx + 1;
+    if (next < PROBE_IDS.length) {
+      setProbeIdx(next);
+      botSay({ text: probeQuestionText(next), widget: 'probe' }, answer && qid === 'safety' && safetyRisk ? 1400 : 700);
+    } else {
+      setStage('photos');
+      botSay({ text: t('report.chat.photos.ask'), widget: 'photos' }, 700);
+    }
+  };
+
+  const sendProbeAnswer = (msgId: number) => {
+    const text = probeDraft.trim() || probeTranscript.trim();
+    if (!text && !probeBlob) return;
+    answerProbe(msgId, { text, blob: probeBlob });
   };
 
   const finishPhotos = (msgId: number) => {
@@ -158,6 +224,35 @@ export default function SelfReport() {
     botSay({ text: `${t('report.contact.title')} (${t('common.optional')}) — ${t('report.contact.hint')}`, widget: 'contact' });
   };
 
+  // ---- referral partners: show where this case will be connected ----
+  const startPartners = async (msgId: number) => {
+    resolveWidget(msgId);
+    push({ role: 'user', text: name || contact ? `${name || t('report.chat.notSpecified')} · ${contact || t('report.chat.notSpecified')}` : t('report.chat.skipped') });
+    setStage('partners');
+    setTyping(true);
+    let found: Partner[] = [];
+    try {
+      const { data } = await supabase
+        .from('referral_partners')
+        .select('id,name,org_type,province,district,phone,services')
+        .eq('active', true)
+        .limit(60);
+      const all = (data ?? []) as unknown as Partner[];
+      const prov = area.province.replace(/^จังหวัด/, '');
+      const local = prov ? all.filter((p) => p.province && p.province.includes(prov)) : [];
+      const national = all.filter((p) => !p.province);
+      found = [...local, ...national.filter((n) => !local.some((l) => l.id === n.id))].slice(0, 5);
+    } catch {
+      found = [];
+    }
+    setPartners(found);
+    setTyping(false);
+    botSay({
+      text: found.length ? t('report.partners.title') : t('report.partners.none'),
+      widget: 'partners',
+    }, 200);
+  };
+
   // ---- photos ----
   const addPhotos = async (files: FileList | null) => {
     if (!files) return;
@@ -172,15 +267,26 @@ export default function SelfReport() {
   const toggleType = (k: string) =>
     setTypes((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
 
-  // ---- submit (unchanged logic) ----
+  // ---- submit (single submit_case call) ----
   const submit = async (msgId: number) => {
     if (submitting) return;
     const story = (draftText.trim() || transcript.trim());
     setSubmitting(true);
     resolveWidget(msgId);
-    push({ role: 'user', text: name || contact ? `${name || t('report.chat.notSpecified')} · ${contact || t('report.chat.notSpecified')}` : t('report.chat.skipped') });
+    push({ role: 'user', text: t('report.partners.ack') });
 
     const localId = crypto.randomUUID();
+    const probeDigest = PROBE_IDS.map((qid) => {
+      const a = probeAnswers[qid];
+      return a?.text ? `${t(`report.probe.${qid}.q`)} → ${a.text}` : null;
+    }).filter(Boolean).join('\n');
+    const answersArr = [
+      ...(transcript ? [{ question: 'self_report', cat: 'self_report', frame: '', transcript }] : []),
+      ...PROBE_IDS.filter((qid) => probeAnswers[qid]?.text).map((qid) => ({
+        question: t(`report.probe.${qid}.q`), cat: 'self_probe', frame: '', transcript: probeAnswers[qid]!.text,
+      })),
+    ];
+
     const localRef = {
       consent: { cb1: true, cb2: false, cb3: true },
       reporter: { type: 'self' as const, name, address: '', email: '', phone: contact },
@@ -191,16 +297,16 @@ export default function SelfReport() {
         kp: '', gender: '', dob: '', age: '', nationality: '', incidentPlace: '',
         initialViolationTypes: types,
       },
-      answers: transcript ? [{ question: 'self_report', cat: 'self_report', frame: '', transcript }] : [],
-      extraFacts: story,
+      answers: answersArr,
+      extraFacts: `${story}\n${probeDigest}`.trim(),
       violationDetails: types,
-      audioBlobs: audio ? [audio] : [],
+      audioBlobs: [audio, ...PROBE_IDS.map((q) => probeAnswers[q]?.blob ?? null)].filter((b): b is Blob => !!b),
       photos: photos.map((p) => ({ blob: p.blob, previewUrl: p.url, name: p.name })),
     };
 
     const basePayload = {
       consent: true, cb1: true, cb2: false, cb3: true, consent_ai: true,
-      source: 'self', report_language: lang,
+      source: 'self', language: lang,
       reporter: name || contact ? { name, contact, address: '' } : null,
       victim: { name, contact },
       profile: {
@@ -210,28 +316,36 @@ export default function SelfReport() {
         kp: '', incidentPlace: area.province ? formatArea(area.province, area.district, area.subdistrict, lang) : '',
         initialViolationTypes: types,
       },
-      answers: transcript ? [{ question: 'self_report', cat: 'self_report', frame: '', transcript }] : [],
+      answers: answersArr,
       violation_details: types,
-      extra_facts: story.slice(0, 5000),
-      referrals: [], referral_note: '',
+      extra_facts: `${story}\n${probeDigest}`.trim().slice(0, 5000),
+      referrals: partners.slice(0, 3).map((p) => ({
+        org_name: p.name, phone: p.phone ?? '', note: t('report.partners.noteAuto'),
+      })),
+      referral_note: '',
+      // flag red severity when the reporter says they are not safe
+      ...(safetyRisk ? { severity: 'red' } : {}),
     };
 
     try {
-      const { data: caseId, error: preErr } = await supabase.rpc('submit_case' as never, {
-        _payload: { ...basePayload, audio_urls: [], photo_urls: [] },
-      } as never);
-      if (preErr || !caseId) throw preErr ?? new Error('no case id');
-      const id = String(caseId);
-
+      // Upload media FIRST under a pre-generated folder, then create the case ONCE.
+      const mediaFolder = crypto.randomUUID();
       const audioUrls: string[] = [];
       if (audio) {
         const ext = audio.type.includes('mp4') || audio.type.includes('m4a') ? 'm4a' : audio.type.includes('ogg') ? 'ogg' : 'webm';
-        audioUrls.push(await uploadOne('audio', { blob: audio, name: `voice.${ext}`, type: audio.type }, id));
+        audioUrls.push(await uploadOne('audio', { blob: audio, name: `voice.${ext}`, type: audio.type }, mediaFolder));
+      }
+      for (const qid of PROBE_IDS) {
+        const b = probeAnswers[qid]?.blob;
+        if (b) {
+          const ext = b.type.includes('mp4') || b.type.includes('m4a') ? 'm4a' : b.type.includes('ogg') ? 'ogg' : 'webm';
+          audioUrls.push(await uploadOne('audio', { blob: b, name: `probe-${qid}.${ext}`, type: b.type }, mediaFolder));
+        }
       }
       const photoUrls: string[] = [];
       for (const p of photos) {
         const ext = (p.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-        photoUrls.push(await uploadOne('photo', { blob: p.blob, name: `photo.${ext}`, type: p.type }, id));
+        photoUrls.push(await uploadOne('photo', { blob: p.blob, name: `photo.${ext}`, type: p.type }, mediaFolder));
       }
 
       const { data: code, error } = await supabase.rpc('submit_case' as never, {
@@ -255,13 +369,15 @@ export default function SelfReport() {
       });
       toast.error(t('report.error'));
       // let the reporter try again
-      push({ role: 'bot', text: t('report.error'), widget: 'contact' });
+      push({ role: 'bot', text: t('report.error'), widget: 'partners' });
     } finally {
       setSubmitting(false);
     }
   };
 
   const canSendStory = !!(audio || draftText.trim() || transcript.trim());
+  const currentProbeId: ProbeId = PROBE_IDS[Math.min(probeIdx, PROBE_IDS.length - 1)];
+  const answeredProbeCount = PROBE_IDS.filter((q) => probeAnswers[q]?.text).length;
 
   // ---- render one message ----
   const renderMsg = (m: ChatMsg) => {
@@ -312,8 +428,52 @@ export default function SelfReport() {
                   </button>
                 ))}
               </div>
-              <Button size="sm" className="w-full rounded-xl" disabled={!types.length} onClick={() => confirmTypes(m.id)}>
-                {t('report.chat.confirm')}
+              <Button size="sm" className="w-full rounded-xl" onClick={() => confirmTypes(m.id)}>
+                {types.length ? t('report.chat.confirm') : t('report.chat.skip')}
+              </Button>
+            </div>
+          )}
+
+          {m.widget === 'probe' && !m.resolved && (
+            <div className="mt-2.5 space-y-2.5">
+              {/* quick choices for the safety question */}
+              {currentProbeId === 'safety' && (
+                <div className="flex flex-wrap gap-1.5">
+                  {SAFETY_CHOICES.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => answerProbe(m.id, { text: t(`report.probe.safety.${c}`), blob: probeBlob })}
+                      className={cn(
+                        'rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95',
+                        c === 'unsafe' ? 'border-destructive/50 text-destructive bg-card' : 'border-border bg-card text-muted-foreground',
+                      )}
+                    >
+                      {t(`report.probe.safety.${c}`)}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <VoiceRecorder
+                key={`probe-${m.id}-${probeIdx}`}
+                compact
+                onChange={(b, tx) => { setProbeBlob(b); setProbeTranscript(tx); }}
+              />
+              <div className="flex items-center gap-2">
+                <Input
+                  value={probeDraft}
+                  onChange={(e) => setProbeDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') sendProbeAnswer(m.id); }}
+                  placeholder={probeTranscript || t('report.chat.input.placeholder')}
+                  maxLength={2000}
+                  className="bg-card h-9 text-sm flex-1"
+                />
+                <Button size="sm" className="rounded-xl" disabled={!probeDraft.trim() && !probeTranscript.trim() && !probeBlob} onClick={() => sendProbeAnswer(m.id)} aria-label={t('report.chat.send')}>
+                  <SendHorizonal className="w-4 h-4 rtl:-scale-x-100" />
+                </Button>
+              </div>
+              <Button size="sm" variant="ghost" className="w-full text-xs text-muted-foreground" onClick={() => answerProbe(m.id, null)}>
+                {t('report.chat.skip')}
               </Button>
             </div>
           )}
@@ -362,6 +522,36 @@ export default function SelfReport() {
             <div className="mt-2.5 space-y-2">
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('report.contact.name')} maxLength={120} className="bg-card h-9 text-sm" />
               <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t('report.contact.phone')} maxLength={120} className="bg-card h-9 text-sm" />
+              <Button size="sm" className="w-full rounded-xl" disabled={submitting} onClick={() => void startPartners(m.id)}>
+                {t('report.chat.confirm')}
+              </Button>
+            </div>
+          )}
+
+          {m.widget === 'partners' && !m.resolved && (
+            <div className="mt-2.5 space-y-2">
+              {partners.length > 0 && (
+                <div className="space-y-1.5">
+                  {partners.map((p) => (
+                    <div key={p.id} className="rounded-xl border border-border bg-card px-3 py-2 text-xs space-y-0.5">
+                      <p className="font-semibold flex items-center gap-1.5">
+                        <Building2 className="w-3.5 h-3.5 text-primary shrink-0" /> {p.name}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-muted-foreground">
+                        <span>{t(`report.partners.orgType.${p.org_type ?? 'other'}`)}</span>
+                        {(p.district || p.province) && (
+                          <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{[p.district, p.province].filter(Boolean).join(' ')}</span>
+                        )}
+                        {p.phone && (
+                          <a href={`tel:${p.phone}`} className="flex items-center gap-0.5 text-primary font-medium">
+                            <Phone className="w-3 h-3" />{p.phone}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
               <Button size="sm" className="w-full rounded-xl" disabled={submitting} onClick={() => void submit(m.id)}>
                 {submitting ? <><Loader2 className="w-3.5 h-3.5 me-1 animate-spin" />{t('report.submitting')}</> : t('report.submit')}
               </Button>
@@ -380,6 +570,18 @@ export default function SelfReport() {
                 >
                   <Copy className="w-3 h-3 me-1" /> {caseCode}
                 </Button>
+              </div>
+              {/* recap: what was collected + where the case goes next */}
+              <div className="rounded-xl border border-border bg-card p-3 text-start text-[11px] space-y-1">
+                <p className="font-semibold text-xs">{t('report.success.summary')}</p>
+                {area.province && <p>📍 {formatArea(area.province, area.district, area.subdistrict, lang)}</p>}
+                <p>{types.map((k) => t(`report.type.${k}`)).join(' · ')}</p>
+                <p>💬 {t('report.success.answered', { n: answeredProbeCount })}</p>
+                {safetyRisk && <p className="text-destructive font-medium">{t('report.success.urgent')}</p>}
+                <p className="pt-1 mt-1 border-t border-border font-medium">{t('report.success.forward')}</p>
+                {partners.length ? partners.slice(0, 3).map((p) => (
+                  <p key={p.id}>→ {p.name}{p.phone ? ` (${p.phone})` : ''}</p>
+                )) : <p>→ {t('report.success.forwardNone')}</p>}
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
               <div className="grid gap-1.5">
@@ -432,7 +634,7 @@ export default function SelfReport() {
                 placeholder={transcript || t('report.chat.input.placeholder')}
                 rows={2}
                 maxLength={5000}
-                className="flex-1 resize-none rounded-2xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
               <Button
                 size="icon"
@@ -459,3 +661,5 @@ export default function SelfReport() {
     </PhoneShell>
   );
 }
+
+const STAGE_ORDER: Stage[] = ['consent', 'story', 'types', 'probe', 'photos', 'area', 'contact'];
