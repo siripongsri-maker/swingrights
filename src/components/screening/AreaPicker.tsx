@@ -46,13 +46,21 @@ function Hi({ text, q }: { text: string; q: string }) {
 }
 
 function Combo({
-  label, value, options, disabled, enFirst, onSelect,
-}: { label: string; value: string; options: ComboOption[]; disabled?: boolean; enFirst?: boolean; onSelect: (v: string) => void }) {
+  label, value, options, disabled, enFirst, autoOpen, onSelect,
+}: { label: string; value: string; options: ComboOption[]; disabled?: boolean; enFirst?: boolean; autoOpen?: boolean; onSelect: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const { t } = useI18n();
   const selected = options.find((o) => o.v === value);
   const display = value && enFirst && selected?.sub ? `${selected.sub} (${selected.v})` : value || label;
+
+  useEffect(() => {
+    if (autoOpen) {
+      setOpen(true);
+      setSearch('');
+    }
+  }, [autoOpen]);
+
   return (
     <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSearch(''); }}>
       <PopoverTrigger asChild>
