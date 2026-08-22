@@ -297,10 +297,14 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
             variant="outline"
             className="text-xs"
             onClick={() => {
-              if (!navigator.geolocation) return toast.error(t('area.geoUnsupported'));
+              if (!navigator.geolocation) {
+                setGeoError('unsupported');
+                setOpenProvince(true);
+                return;
+              }
               navigator.geolocation.getCurrentPosition(
-                (p) => onChange({ ...value, geo: { lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) } }),
-                () => toast.error(t('area.geoDenied')),
+                (p) => { setGeoError(null); onChange({ ...value, geo: { lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) } }); },
+                () => { setGeoError('denied'); setOpenProvince(true); },
                 { enableHighAccuracy: true, timeout: 10000 },
               );
             }}
