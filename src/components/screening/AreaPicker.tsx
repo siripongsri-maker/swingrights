@@ -253,7 +253,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
             options={provinceOptions}
             enFirst={enFirst}
             autoOpen={openProvince}
-            onSelect={(v) => onChange({ ...value, province: v, district: '', subdistrict: '', zip: '' })}
+            onSelect={(v) => { setGeoError(null); setOpenProvince(false); onChange({ ...value, province: v, district: '', subdistrict: '', zip: '' }); }}
           />
           <div className="grid grid-cols-2 gap-2.5">
             <Combo
