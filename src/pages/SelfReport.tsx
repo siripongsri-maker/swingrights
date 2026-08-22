@@ -1,461 +1,641 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Check, Copy, Leaf, Loader2, MapPin, Paperclip, SendHorizonal, X } from 'lucide-react';
-import bloomImg from '@/assets/bloom.png';
-import { toast } from 'sonner';
-import { PhoneShell } from '@/components/screening/PhoneShell';
-import { LanguageToggle } from '@/components/LanguageToggle';
-import { SpeakButton } from '@/components/screening/SpeakButton';
-import { VoiceRecorder } from '@/components/VoiceRecorder';
-import { AreaPicker, type AreaValue } from '@/components/screening/AreaPicker';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
+import {
+  Mic, Send, SkipForward, Leaf, Loader2, ShieldCheck,
+  ClipboardCheck, Bot, User, MessageCircleQuestion, Phone, Building2, MapPin, ExternalLink,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import LanguageToggle from '@/components/LanguageToggle';
+import VoiceRecorder from '@/components/VoiceRecorder';
+import SpeakButton from '@/components/SpeakButton';
+import AreaPicker from '@/components/screening/AreaPicker';
+import { ISSUE_KEYS } from '@/lib/caseReport';
 import { useI18n } from '@/i18n';
-import { formatArea } from '@/lib/thaiGeo';
-import { stripImageMetadata } from '@/lib/exif';
-import { saveLocalCase, deleteLocalCase } from '@/lib/localCases';
-import { cn } from '@/lib/utils';
+import type { Lang } from '@/i18n';
 
-const MEDIA_FN = 'upload-case-media';
-
-async function uploadOne(kind: 'audio' | 'photo', file: { blob: Blob; name: string; type: string }, caseId: string): Promise<string> {
-  const safeName = file.name.replace(/[^A-Za-z0-9._-]/g, '_').slice(-60);
-  const path = `cases/${caseId}/${Date.now()}-${safeName}`;
-  const fd = new FormData();
-  fd.set('kind', kind);
-  fd.set('path', path);
-  fd.set('file', file.blob, file.name);
-  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${MEDIA_FN}`, {
-    method: 'POST',
-    headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-    body: fd,
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.path) throw new Error(json.error || `upload failed (${res.status})`);
-  return json.path;
-}
-
-type Stage = 'consent' | 'story' | 'types' | 'photos' | 'area' | 'contact' | 'done';
-type Widget = 'consent' | 'types' | 'photos' | 'area' | 'contact' | 'success';
-
-interface ChatMsg {
-  id: number;
-  role: 'bot' | 'user';
-  text?: string;
+type ChatMsg = {
+  id: string;
+  from: 'bot' | 'user';
+  text: string;
   audioUrl?: string;
-  widget?: Widget;
-  resolved?: boolean;
-}
+  photos?: { url: string; path: string }[];
+  chips?: string[];
+  quick?: { label: string; value: string }[];
+  partners?: Partner[];
+  doneCta?: boolean;
+};
 
-const TYPE_KEYS = ['body', 'labor', 'health', 'property', 'other'] as const;
-const STAGE_ORDER: Stage[] = ['consent', 'story', 'types', 'photos', 'area', 'contact'];
+type Partner = {
+  id: string;
+  name: string;
+  org_type: string | null;
+  province: string | null;
+  district: string | null;
+  phone: string | null;
+  services: string[];
+};
+
+type ProbeQId = 'when' | 'where' | 'who' | 'safety' | 'needs';
+
+type Step =
+  | 'consent' | 'profile'
+  | 'story'
+  | 'probe'
+  | 'photos'
+  | 'partners'
+  | 'submit' | 'done';
+
+const ISSUE_EMOJI: Record<string, string> = {
+  violence: '🛡️', health: '🏥', housing: '🏠', wage: '💰', legal: '⚖️',
+  mental: '🧠', discrimination: '🏳️‍🌈', safety: '🚨', immigration: '🛂', other: '💬',
+};
+
+const PROBE_QUESTIONS: { id: ProbeQId; qKey: string; quick?: { labelKey: string; value: string }[] }[] = [
+  { id: 'when', qKey: 'report.probe.when.q' },
+  { id: 'where', qKey: 'report.probe.where.q' },
+  { id: 'who', qKey: 'report.probe.who.q' },
+  {
+    id: 'safety', qKey: 'report.probe.safety.q',
+    quick: [
+      { labelKey: 'report.probe.safety.safe', value: 'safe' },
+      { labelKey: 'report.probe.safety.unsure', value: 'unsure' },
+      { labelKey: 'report.probe.safety.unsafe', value: 'unsafe' },
+    ],
+  },
+  { id: 'needs', qKey: 'report.probe.needs.q' },
+];
+
+const PREVIEW_LIFE_S = 300;
 
 export default function SelfReport() {
-  const { lang, t } = useI18n();
+  const { t, lang, aiTtsUrl } = useI18n();
 
-  // ---- chat state ----
-  const [msgs, setMsgs] = useState<ChatMsg[]>([]);
-  const [typing, setTyping] = useState(false);
-  const [stage, setStage] = useState<Stage>('consent');
-  const idRef = useRef(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const bootedRef = useRef(false);
-
-  // ---- form state ----
-  const [audio, setAudio] = useState<Blob | null>(null);
-  const [transcript, setTranscript] = useState('');
-  const [draftText, setDraftText] = useState('');
-  const [area, setArea] = useState<AreaValue>({ province: '', district: '', subdistrict: '', zip: '', geo: null });
-  const [types, setTypes] = useState<string[]>([]);
-  const [name, setName] = useState('');
-  const [contact, setContact] = useState('');
-  const [photos, setPhotos] = useState<{ blob: Blob; url: string; name: string; type: string }[]>([]);
+  // ---- wizard state ----
+  const [step, setStep] = useState<Step>('consent');
   const [submitting, setSubmitting] = useState(false);
-  const [caseCode, setCaseCode] = useState<string | null>(null);
 
-  const stageIdx = STAGE_ORDER.indexOf(stage === 'done' ? 'contact' : stage);
+  // ---- collected data ----
+  const [area, setArea] = useState({ province: '', district: '', subdistrict: '' });
+  const [coords, setCoords] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
+  const [selectedIssues, setSelectedIssues] = useState<string[]>([]);
+  const [storyText, setStoryText] = useState('');
+  const [probeAnswers, setProbeAnswers] = useState<Partial<Record<ProbeQId, { text: string; audioPath: string | null }>>>({});
+  const [probeIdx, setProbeIdx] = useState(0);
+  const [safetyRisk, setSafetyRisk] = useState(false);
+  const [photos, setPhotos] = useState<{ url: string; path: string }[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [submitted, setSubmitted] = useState<{ code: string; pin: string; statusUrl: string } | null>(null);
 
-  // ---- chat helpers ----
-  const push = (m: Omit<ChatMsg, 'id'>) => {
-    const id = ++idRef.current;
-    setMsgs((prev) => [...prev, { ...m, id }]);
-    return id;
-  };
+  // ---- chat log + input ----
+  const [msgs, setMsgs] = useState<ChatMsg[]>([]);
+  const [inputText, setInputText] = useState('');
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const msgId = useRef(0);
+  // Placeholder id so media can be uploaded before the case exists
+  const [pendingId] = useState(() => crypto.randomUUID());
 
-  const resolveWidget = (id: number) =>
-    setMsgs((prev) => prev.map((m) => (m.id === id ? { ...m, resolved: true } : m)));
+  const push = useCallback((m: Omit<ChatMsg, 'id'>) => {
+    msgId.current += 1;
+    const full = { ...m, id: `m${msgId.current}` };
+    setMsgs(prev => [...prev, full]);
+    return full.id;
+  }, []);
+  const patch = useCallback((id: string, p: Partial<ChatMsg>) => {
+    setMsgs(prev => prev.map(m => m.id === id ? { ...m, ...p } : m));
+  }, []);
 
-  /** Bot message with a short "typing..." beat for a natural chat feel. */
-  const botSay = (m: Omit<ChatMsg, 'id' | 'role'>, delay = 450) => {
-    setTyping(true);
-    window.setTimeout(() => {
-      setTyping(false);
-      push({ ...m, role: 'bot' });
-    }, delay);
-  };
-
+  // boot greeting
   useEffect(() => {
-    if (bootedRef.current) return;
-    bootedRef.current = true;
-    botSay({ text: t('report.chat.greet') }, 500);
-    window.setTimeout(() => {
-      setTyping(true);
-      window.setTimeout(() => {
-        setTyping(false);
-        push({ role: 'bot', text: `${t('report.consent.title')} — ${t('report.consent.body')}`, widget: 'consent' });
-      }, 650);
-    }, 950);
+    push({ from: 'bot', text: t('report.chat.greet') });
+    setTimeout(() => {
+      push({ from: 'bot', text: `${t('report.privacy.p1')}\n\n${t('report.privacy.p2')}`, quick: [{ label: t('report.chat.start'), value: '__consent' }] });
+    }, 350);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // auto-scroll
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [msgs, typing]);
+  }, [msgs, step, probeIdx]);
 
-  // ---- stage transitions ----
-  const agreeConsent = (msgId: number) => {
-    resolveWidget(msgId);
-    push({ role: 'user', text: t('report.chat.agreed') });
-    setStage('story');
-    botSay({ text: `${t('report.story.title')} — ${t('report.story.hint')}` });
-  };
+  // ---------- helpers ----------
+  const trIssue = (k: string) => `${ISSUE_EMOJI[k] ?? ''} ${t(`issue.${k}`)}`;
 
-  const sendStory = () => {
-    const text = draftText.trim() || transcript.trim();
-    if (!audio && !text) return;
-    const audioUrl = audio ? URL.createObjectURL(audio) : undefined;
-    push({ role: 'user', text: text || undefined, audioUrl });
-    setDraftText('');
-    setStage('types');
-    botSay({ text: t('report.type.title'), widget: 'types' });
-  };
+  const currentProbe = PROBE_QUESTIONS[probeIdx];
 
-  const confirmTypes = (msgId: number) => {
-    if (!types.length) return;
-    resolveWidget(msgId);
-    push({ role: 'user', text: types.map((k) => t(`report.type.${k}`)).join(' · ') });
-    setStage('photos');
-    botSay({ text: t('report.chat.photos.ask'), widget: 'photos' });
-  };
+  const buildIssueChips = () => [...selectedIssues].sort().map(trIssue);
 
-  const finishPhotos = (msgId: number) => {
-    resolveWidget(msgId);
+  // ---------- partners (referral destination) ----------
+  const fetchPartners = useCallback(async (province: string, issues: string[]) => {
+    let q = supabase
+      .from('referral_partners')
+      .select('id,name,org_type,province,district,phone,services')
+      .eq('active', true)
+      .order('name')
+      .limit(50);
+    const { data } = await q;
+    const all = (data ?? []) as unknown as Partner[];
+    const local = all.filter(p => p.province && province && p.province.includes(province.replace('จังหวัด', '')));
+    const issueMatched = (list: Partner[]) => {
+      if (!issues.length) return list;
+      const hit = list.filter(p => p.services?.some(s => issues.includes(s)));
+      return hit.length ? hit : list;
+    };
+    let chosen = issueMatched(local).slice(0, 4);
+    // fill with nationwide hotlines if few local matches
+    if (chosen.length < 3) {
+      const national = all.filter(p => !p.province || p.province === '');
+      chosen = [...chosen, ...national.filter(n => !chosen.some(c => c.id === n.id))].slice(0, 5);
+    }
+    return chosen;
+  }, []);
+
+  // ---------- flow ----------
+  const startProfile = useCallback(() => {
+    setStep('profile');
+    push({ from: 'bot', text: t('intake.area.label') });
+  }, [push, t]);
+
+  const advanceProbe = useCallback((answers: typeof probeAnswers, startAt = 0) => {
+    // find next unanswered question from startAt
+    for (let i = startAt; i < PROBE_QUESTIONS.length; i++) {
+      if (!answers[PROBE_QUESTIONS[i].id]) {
+        setProbeIdx(i);
+        const q = PROBE_QUESTIONS[i];
+        push({
+          from: 'bot',
+          text: `${t('report.probe.count', { i: i + 1, n: PROBE_QUESTIONS.length })} — ${t(q.qKey)}`,
+          quick: q.quick?.map(x => ({ label: t(x.labelKey), value: `__probe_${q.id}_${x.value}` })),
+        });
+        return;
+      }
+    }
+    // all answered → photos
+    setStep('photos');
+    push({ from: 'bot', text: t('report.chat.photos.ask') });
+  }, [push, t]);
+
+  const goPartners = useCallback(async () => {
+    setStep('partners');
+    const found = await fetchPartners(area.province, selectedIssues);
+    setPartners(found);
     push({
-      role: 'user',
-      text: photos.length ? `${t('report.photo.add').split('(')[0].trim()} ${photos.length} ${t('report.chat.photos.unit')}` : t('report.chat.skipped'),
+      from: 'bot',
+      text: found.length ? t('report.partners.title') : t('report.partners.none'),
+      partners: found,
+      quick: [{ label: t('report.partners.ack'), value: '__submit' }],
     });
-    setStage('area');
-    botSay({ text: `${t('report.area.title')} (${t('common.optional')}) — ${t('report.area.hint')}`, widget: 'area' });
-  };
+  }, [area.province, selectedIssues, fetchPartners, push, t]);
 
-  const finishArea = (msgId: number, skip: boolean) => {
-    resolveWidget(msgId);
-    const hasArea = !skip && area.province;
-    push({ role: 'user', text: hasArea ? formatArea(area.province, area.district, area.subdistrict, lang) : t('report.chat.skipped') });
-    setStage('contact');
-    botSay({ text: `${t('report.contact.title')} (${t('common.optional')}) — ${t('report.contact.hint')}`, widget: 'contact' });
-  };
+  const handleStorySend = useCallback((text: string, audioPath: string | null) => {
+    push({ from: 'user', text: text || '🎤', audioUrl: audioPath ? 'pending' : undefined });
+    // single submit happens only at the end — just advance to probing here
+    setStep('probe');
+    push({ from: 'bot', text: t('report.probe.intro') });
+    setTimeout(() => advanceProbe({}, 0), 350);
+  }, [push, t, advanceProbe]);
 
-  // ---- photos ----
-  const addPhotos = async (files: FileList | null) => {
-    if (!files) return;
-    for (const f of Array.from(files).slice(0, 3 - photos.length)) {
-      if (!/^image\//.test(f.type)) continue;
-      const stripped = await stripImageMetadata(f);
-      const blob = new Blob([stripped.blob], { type: stripped.blob.type || f.type });
-      setPhotos((prev) => [...prev, { blob, url: URL.createObjectURL(blob), name: stripped.name, type: f.type }].slice(0, 3));
+  const handleProbeAnswer = useCallback((qid: ProbeQId, text: string, audioPath: string | null) => {
+    const label = text || t('report.chat.notSpecified');
+    push({ from: 'user', text: `❓ ${label}`, audioUrl: audioPath ? 'pending' : undefined });
+    const next = { ...probeAnswers, [qid]: { text: label, audioPath } };
+    setProbeAnswers(next);
+    if (qid === 'safety') {
+      if (text === 'unsafe' || /ไม่ปลอดภัย|not safe|မလုံခြုံ|មិនសុវត្ថិ|ບໍ່ປອດໄພ/i.test(text)) {
+        setSafetyRisk(true);
+        push({ from: 'bot', text: t('report.probe.safety.alert') });
+      }
     }
-  };
+    setTimeout(() => advanceProbe(next, probeIdx + 1), 250);
+  }, [probeAnswers, probeIdx, push, t, advanceProbe]);
 
-  const toggleType = (k: string) =>
-    setTypes((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
+  const handleProbeSkip = useCallback(() => {
+    const q = currentProbe;
+    push({ from: 'user', text: t('report.chat.skipped') });
+    const next = { ...probeAnswers, [q.id]: { text: t('report.chat.skipped'), audioPath: null } };
+    setProbeAnswers(next);
+    setTimeout(() => advanceProbe(next, probeIdx + 1), 250);
+  }, [currentProbe, probeAnswers, probeIdx, push, t, advanceProbe]);
 
-  // ---- submit (unchanged logic) ----
-  const submit = async (msgId: number) => {
-    if (submitting) return;
-    const story = (draftText.trim() || transcript.trim());
+  // ---------- submit (single) ----------
+  const doSubmit = useCallback(async () => {
+    setStep('submit');
     setSubmitting(true);
-    resolveWidget(msgId);
-    push({ role: 'user', text: name || contact ? `${name || t('report.chat.notSpecified')} · ${contact || t('report.chat.notSpecified')}` : t('report.chat.skipped') });
+    const notes = [
+      t('report.success.summary'),
+      storyText ? `• ${storyText}` : null,
+      ...PROBE_QUESTIONS.map(q => {
+        const a = probeAnswers[q.id];
+        if (!a || a.text === t('report.chat.skipped')) return null;
+        return `• ${t(q.qKey)} → ${a.text}`;
+      }),
+    ].filter(Boolean).join('\n');
 
-    const localId = crypto.randomUUID();
-    const localRef = {
-      consent: { cb1: true, cb2: false, cb3: true },
-      reporter: { type: 'self' as const, name, address: '', email: '', phone: contact },
-      victim: { name, contact },
-      profile: {
-        branch: area.province || '', province: area.province, district: area.district,
-        subdistrict: area.subdistrict, zip: area.zip ?? '', geo: area.geo ?? null,
-        kp: '', gender: '', dob: '', age: '', nationality: '', incidentPlace: '',
-        initialViolationTypes: types,
-      },
-      answers: transcript ? [{ question: 'self_report', cat: 'self_report', frame: '', transcript }] : [],
-      extraFacts: story,
-      violationDetails: types,
-      audioBlobs: audio ? [audio] : [],
-      photos: photos.map((p) => ({ blob: p.blob, previewUrl: p.url, name: p.name })),
+    const payload: Record<string, unknown> = {
+      nickname: `${t('selfreport.anonymous')} (${t(`lang.name.${lang}`)})`,
+      province: area.province, district: area.district, subdistrict: area.subdistrict,
+      lat: coords.lat, lng: coords.lng,
+      pdpa_consent: true, ai_consent: true,
+      issues: selectedIssues,
+      urgency: safetyRisk ? 'critical' : 'normal',
+      summary: storyText || selectedIssues.map(k => t(`issue.${k}`)).join(', '),
+      additional_notes: notes,
+      photo_urls: photos.map(p => p.url),
+      referrals: partners.slice(0, 3).map(p => ({ org_name: p.name, note: t('report.partners.noteAuto') })),
+      created_by: null,
     };
-
-    const basePayload = {
-      consent: true, cb1: true, cb2: false, cb3: true, consent_ai: true,
-      source: 'self', report_language: lang,
-      reporter: name || contact ? { name, contact, address: '' } : null,
-      victim: { name, contact },
-      profile: {
-        branch: area.province || 'ไม่ระบุ',
-        province: area.province, district: area.district, subdistrict: area.subdistrict,
-        zip: area.zip ?? '', geo: area.geo ?? null,
-        kp: '', incidentPlace: area.province ? formatArea(area.province, area.district, area.subdistrict, lang) : '',
-        initialViolationTypes: types,
-      },
-      answers: transcript ? [{ question: 'self_report', cat: 'self_report', frame: '', transcript }] : [],
-      violation_details: types,
-      extra_facts: story.slice(0, 5000),
-      referrals: [], referral_note: '',
-    };
-
+    const { data, error } = await supabase.rpc('submit_case', { p: payload });
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message);
+      setStep('partners');
+      return;
+    }
+    const res = data as { case_code: string; pin: string; case_id: string };
+    const statusUrl = `${window.location.origin}/track?c=${res.case_code}`;
+    setSubmitted({ code: res.case_code, pin: res.pin, statusUrl });
+    localStorage.setItem(`swing_case_${res.case_code}`, res.pin);
     try {
-      const { data: caseId, error: preErr } = await supabase.rpc('submit_case' as never, {
-        _payload: { ...basePayload, audio_urls: [], photo_urls: [] },
-      } as never);
-      if (preErr || !caseId) throw preErr ?? new Error('no case id');
-      const id = String(caseId);
+      const arr = JSON.parse(localStorage.getItem('swing_my_cases') ?? '[]') as { code: string; pin: string }[];
+      if (!arr.some(x => x.code === res.case_code)) arr.unshift({ code: res.case_code, pin: res.pin });
+      localStorage.setItem('swing_my_cases', JSON.stringify(arr.slice(0, 20)));
+    } catch { /* localStorage full/blocked */ }
+    setStep('done');
+    push({
+      from: 'bot',
+      text: `${t('selfreport.success.title')}\n\n${t('selfreport.success.code')}: ${res.case_code}\n${t('selfreport.success.pin')}: ${res.pin}`,
+      doneCta: true,
+    });
+  }, [area, coords, selectedIssues, storyText, probeAnswers, safetyRisk, photos, partners, push, t, lang]);
 
-      const audioUrls: string[] = [];
-      if (audio) {
-        const ext = audio.type.includes('mp4') || audio.type.includes('m4a') ? 'm4a' : audio.type.includes('ogg') ? 'ogg' : 'webm';
-        audioUrls.push(await uploadOne('audio', { blob: audio, name: `voice.${ext}`, type: audio.type }, id));
-      }
-      const photoUrls: string[] = [];
-      for (const p of photos) {
-        const ext = (p.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg');
-        photoUrls.push(await uploadOne('photo', { blob: p.blob, name: `photo.${ext}`, type: p.type }, id));
-      }
+  // ---------- quick-reply handler ----------
+  const handleQuick = useCallback((value: string, label: string) => {
+    if (value === '__consent') {
+      push({ from: 'user', text: label });
+      startProfile();
+      return;
+    }
+    if (value === '__submit') {
+      push({ from: 'user', text: label });
+      void doSubmit();
+      return;
+    }
+    if (value.startsWith('__probe_')) {
+      const rest = value.slice('__probe_'.length);
+      const [qid, val] = rest.split('_') as [ProbeQId, string];
+      handleProbeAnswer(qid, t(`report.probe.safety.${val}`), null);
+      return;
+    }
+    if (value.startsWith('__issue_')) {
+      const key = value.replace('__issue_', '');
+      setSelectedIssues(prev => prev.includes(key) ? prev.filter(i => i !== key) : [...prev, key]);
+      return;
+    }
+  }, [push, startProfile, doSubmit, handleProbeAnswer, t]);
 
-      const { data: code, error } = await supabase.rpc('submit_case' as never, {
-        _payload: { ...basePayload, audio_urls: audioUrls, photo_urls: photoUrls },
-      } as never);
-      if (error || !code) throw error ?? new Error('submit failed');
+  // profile "next": area issues question
+  const askIssues = useCallback(() => {
+    push({ from: 'user', text: `📍 ${[area.subdistrict, area.district, area.province].filter(Boolean).join(' • ')}` });
+    push({
+      from: 'bot',
+      text: t('selfreport.issues.label'),
+      chips: ISSUE_KEYS.map(k => `__issue_${k}`),
+      quick: selectedIssues.length ? [{ label: t('selfreport.issues.next'), value: '__issues_done' }] : undefined,
+    });
+  }, [area, selectedIssues, push, t]);
 
-      await deleteLocalCase(localId);
-      setCaseCode(String(code));
-      setStage('done');
-      botSay({ text: t('report.success.title'), widget: 'success' }, 600);
-    } catch (e) {
-      console.error('self report submit failed:', e instanceof Error ? e.message : 'error');
-      await saveLocalCase({
-        id: localId,
-        kind: 'failed',
-        state: localRef,
-        audio: audio ? [audio] : [],
-        photos: photos.map((p) => ({ blob: p.blob, name: p.name })),
-        error: e instanceof Error ? e.message : 'submit failed',
+  // when issues selection changes, refresh the "next" quick chip on last chips msg
+  const lastChipsMsgId = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastChipsMsgId.current) {
+      patch(lastChipsMsgId.current, {
+        quick: selectedIssues.length ? [{ label: t('selfreport.issues.next'), value: '__issues_done' }] : undefined,
       });
-      toast.error(t('report.error'));
-      // let the reporter try again
-      push({ role: 'bot', text: t('report.error'), widget: 'contact' });
-    } finally {
-      setSubmitting(false);
+    }
+  }, [selectedIssues, patch, t]);
+
+  const handleIssuesDone = useCallback(() => {
+    push({ from: 'user', text: buildIssueChips().join('  ') });
+    setStep('story');
+    push({ from: 'bot', text: t('selfreport.story.ask') });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedIssues, push, t]);
+
+  // ---------- media uploads ----------
+  const uploadBlob = useCallback(async (fileName: string, blob: Blob): Promise<string | null> => {
+    const fd = new FormData();
+    fd.append('kind', 'audio');
+    fd.append('path', `cases/${pendingId}/${fileName}`);
+    fd.append('file', blob, fileName);
+    try {
+      const { data, error } = await supabase.functions.invoke('upload-case-media', { body: fd });
+      if (error) throw error;
+      return (data as { url?: string }).url ?? null;
+    } catch (e) {
+      console.error(e);
+      toast.error(t('report.upload.error'));
+      return null;
+    }
+  }, [pendingId, t]);
+
+  const storyBlobRef = useRef<string | null>(null);
+  const onStoryBlob = useCallback(async (blob: Blob) => {
+    storyBlobRef.current = await uploadBlob('story.webm', blob);
+  }, [uploadBlob]);
+
+  const probeBlobCb = useMemo(() => {
+    const map = {} as Record<ProbeQId, (blob: Blob) => Promise<void>>;
+    for (const q of PROBE_QUESTIONS) {
+      map[q.id] = async (blob: Blob) => {
+        const path = await uploadBlob(`probe-${q.id}-${Date.now()}.webm`, blob);
+        if (path) setProbeAnswers(prev => ({ ...prev, [q.id]: { text: prev[q.id]?.text ?? '', audioPath: path } }));
+      };
+    }
+    return map;
+  }, [uploadBlob]);
+
+  // ---------- photos ----------
+  const onPickPhotos = async (files: FileList | null) => {
+    if (!files?.length) return;
+    const room = 3 - photos.length;
+    const list = Array.from(files).slice(0, room);
+    if (list.length < files.length) toast.info(t('report.photos.max'));
+    for (const f of list) {
+      const fd = new FormData();
+      fd.append('kind', 'photo');
+      fd.append('path', `cases/${pendingId}/${Date.now()}-${f.name.replace(/[^\w.\-ก-๙]/g, '_')}`);
+      fd.append('file', f, f.name);
+      try {
+        const { data, error } = await supabase.functions.invoke('upload-case-media', { body: fd });
+        if (error) throw error;
+        const d = data as { url: string; path: string };
+        setPhotos(prev => [...prev, { url: d.url, path: d.path }]);
+      } catch (e) { console.error(e); toast.error(t('report.upload.error')); }
     }
   };
 
-  const canSendStory = !!(audio || draftText.trim() || transcript.trim());
+  // ---------- text input send ----------
+  const onSend = () => {
+    const text = inputText.trim();
+    if (!text) return;
+    setInputText('');
+    if (step === 'story') { setStoryText(text); handleStorySend(text, storyBlobRef.current); }
+    else if (step === 'probe') handleProbeAnswer(currentProbe.id, text, probeAnswers[currentProbe.id]?.audioPath ?? null);
+  };
 
-  // ---- render one message ----
-  const renderMsg = (m: ChatMsg) => {
-    const isBot = m.role === 'bot';
-    return (
-      <div key={m.id} className={cn('flex items-end gap-2 animate-fade-in', isBot ? '' : 'flex-row-reverse')}>
-        {isBot && (
-          <span className="w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0 mb-0.5">
-            <Leaf className="w-3.5 h-3.5" />
-          </span>
-        )}
-        <div
-          className={cn(
-            'max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm',
-            isBot ? 'bg-muted/70 text-foreground rounded-es-md' : 'bg-primary text-primary-foreground rounded-ee-md',
-          )}
-        >
-          {m.text && (
-            <div className="flex items-start gap-2">
-              <p className="whitespace-pre-line flex-1">{m.text}</p>
-              {isBot && <SpeakButton text={m.text} className="w-8 h-8 [&_svg]:w-4 [&_svg]:h-4 -me-1 -mt-1" />}
+  // ---------- done screen pieces ----------
+  const trackMy = useMemo(() => {
+    try {
+      return (JSON.parse(localStorage.getItem('swing_my_cases') ?? '[]') as { code: string; pin: string }[]);
+    } catch { return []; }
+  }, [submitted]);
+
+  const answeredCount = PROBE_QUESTIONS.filter(q => {
+    const a = probeAnswers[q.id];
+    return a && a.text !== t('report.chat.skipped');
+  }).length;
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* header */}
+      <header className="border-b border-border bg-card/80 backdrop-blur sticky top-0 z-20">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+          <Leaf className="h-6 w-6 text-primary" />
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm truncate">{t('selfreport.title')}</p>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <ShieldCheck className="h-3 w-3" /> {t('selfreport.subtitle')}
+            </p>
+          </div>
+          <LanguageToggle />
+        </div>
+      </header>
+
+      {/* chat log */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+          {msgs.map(m => (
+            <div key={m.id} className={`flex gap-2 ${m.from === 'user' ? 'flex-row-reverse' : ''} animate-pop`}>
+              <div className={`shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${m.from === 'bot' ? 'bg-primary/15 text-primary' : 'bg-accent/20 text-accent-foreground'}`}>
+                {m.from === 'bot' ? <Bot className="h-4 w-4" /> : <User className="h-4 w-4" />}
+              </div>
+              <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm whitespace-pre-line leading-relaxed ${m.from === 'bot' ? 'bg-card border border-border rounded-tl-sm' : 'bg-primary text-primary-foreground rounded-tr-sm'}`}>
+                {m.text}
+                {m.audioUrl && (
+                  <div className="mt-2">
+                    {m.audioUrl === 'pending'
+                      ? <span className="text-xs opacity-70 flex items-center gap-1"><Mic className="h-3 w-3" /> {t('report.audio.saved')}</span>
+                      : <audio controls preload="none" src={m.audioUrl} className="h-9 w-full max-w-[240px]" />}
+                  </div>
+                )}
+                {m.from === 'bot' && (
+                  <div className="mt-1.5">
+                    <SpeakButton text={m.text} ttsUrl={m.partners?.length ? null : aiTtsUrl(m.text)} />
+                  </div>
+                )}
+                {/* partner cards */}
+                {m.partners && m.partners.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {m.partners.map(p => (
+                      <div key={p.id} className="rounded-xl border border-border bg-background p-3 space-y-1">
+                        <p className="font-semibold flex items-center gap-1.5">
+                          <Building2 className="h-3.5 w-3.5 text-primary" /> {p.name}
+                        </p>
+                        <div className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                          <Badge variant="secondary" className="text-[10px]">{t(`report.partners.orgType.${p.org_type ?? 'other'}`)}</Badge>
+                          {(p.district || p.province) && (
+                            <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" /> {[p.district, p.province].filter(Boolean).join(' ')}</span>
+                          )}
+                          {p.phone && (
+                            <a href={`tel:${p.phone}`} className="flex items-center gap-0.5 text-primary font-medium">
+                              <Phone className="h-3 w-3" /> {p.phone}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* done CTA: recap + link */}
+                {m.doneCta && submitted && (
+                  <div className="mt-3 space-y-2">
+                    <div className="rounded-xl border border-border bg-background p-3 text-xs space-y-1">
+                      <p className="font-semibold text-foreground">{t('report.success.summary')}</p>
+                      <p>📍 {[area.subdistrict, area.district, area.province].filter(Boolean).join(' • ') || t('report.chat.notSpecified')}</p>
+                      <p>{buildIssueChips().join('  ')}</p>
+                      <p>💬 {t('report.success.answered', { n: answeredCount })}</p>
+                      {safetyRisk && <p className="text-destructive font-medium">{t('report.success.urgent')}</p>}
+                      <p className="pt-1 border-t border-border font-medium text-foreground">{t('report.success.forward')}</p>
+                      {partners.length ? partners.map(p => (
+                        <p key={p.id}>→ {p.name}{p.phone ? ` (${p.phone})` : ''}</p>
+                      )) : <p>→ {t('report.success.forwardNone')}</p>}
+                    </div>
+                    <Link to={submitted.statusUrl.replace(window.location.origin, '')}>
+                      <Button variant="outline" size="sm" className="w-full gap-1">
+                        <MessageCircleQuestion className="h-3.5 w-3.5" /> {t('track.card.view')}
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+                {/* issue toggle chips */}
+                {m.chips && (
+                  <div className="flex flex-wrap gap-1.5 mt-2.5">
+                    {m.chips.map(c => {
+                      const key = c.replace('__issue_', '');
+                      const on = selectedIssues.includes(key);
+                      return (
+                        <button
+                          key={c}
+                          onClick={() => {
+                            lastChipsMsgId.current = m.id;
+                            handleQuick(c, key);
+                          }}
+                          className={`text-xs px-2.5 py-1.5 rounded-full border transition-all ${on ? 'bg-primary text-primary-foreground border-primary' : 'bg-background border-border hover:border-primary/50'}`}
+                        >
+                          {trIssue(key)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* quick replies */}
+                {m.quick && m.quick.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2.5">
+                    {m.quick.map(qq => (
+                      <Button key={qq.value} size="sm" variant={m.from === 'bot' ? 'default' : 'secondary'} className="rounded-full text-xs"
+                        onClick={() => {
+                          if (qq.value === '__issues_done') { handleIssuesDone(); return; }
+                          handleQuick(qq.value, qq.label);
+                        }}>
+                        {qq.label}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          {submitting && (
+            <div className="flex justify-center py-2">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
             </div>
           )}
-          {m.audioUrl && <audio src={m.audioUrl} controls className="w-full h-9 mt-2" />}
+        </div>
+      </div>
 
-          {/* ---------- interactive widgets ---------- */}
-          {m.widget === 'consent' && !m.resolved && (
-            <Button size="sm" className="w-full mt-2.5 rounded-xl" onClick={() => agreeConsent(m.id)}>
-              <Check className="w-4 h-4 me-1" /> {t('report.chat.start')}
-            </Button>
+      {/* bottom composer */}
+      <div className="border-t border-border bg-card/90 backdrop-blur sticky bottom-0">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          {step === 'consent' && (
+            <p className="text-center text-xs text-muted-foreground">{t('selfreport.noLogin')}</p>
           )}
 
-          {m.widget === 'types' && !m.resolved && (
-            <div className="mt-2.5 space-y-2.5">
-              <div className="flex flex-wrap gap-1.5">
-                {TYPE_KEYS.map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => toggleType(k)}
-                    aria-pressed={types.includes(k)}
-                    className={cn(
-                      'rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95',
-                      types.includes(k) ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card text-muted-foreground',
-                    )}
-                  >
-                    {t(`report.type.${k}`)}
-                  </button>
-                ))}
+          {step === 'profile' && (
+            <Card className="border-primary/30">
+              <CardContent className="p-4 space-y-3">
+                <AreaPicker
+                  value={area}
+                  onChange={setArea}
+                  onPin={v => setCoords(v)}
+                  initialPin={{ lat: coords.lat, lng: coords.lng }}
+                />
+                <Button className="w-full" disabled={!area.province} onClick={askIssues}>
+                  {t('selfreport.area.next')}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {step === 'story' && (
+            <div className="space-y-2">
+              <VoiceRecorder onBlob={onStoryBlob} onTranscript={txt => setInputText(txt)} />
+              <div className="flex gap-2">
+                <Input value={inputText} onChange={e => setInputText(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && onSend()}
+                  placeholder={t('report.chat.input.placeholder')} className="flex-1" />
+                <Button onClick={onSend} disabled={!inputText.trim() && !storyBlobRef.current}>
+                  <Send className="h-4 w-4" />
+                </Button>
               </div>
-              <Button size="sm" className="w-full rounded-xl" disabled={!types.length} onClick={() => confirmTypes(m.id)}>
-                {t('report.chat.confirm')}
+              <Button variant="ghost" size="sm" className="w-full text-muted-foreground"
+                onClick={() => { push({ from: 'user', text: t('report.chat.skipped') }); setStep('probe'); push({ from: 'bot', text: t('report.probe.intro') }); setTimeout(() => advanceProbe({}, 0), 350); }}>
+                <SkipForward className="h-3.5 w-3.5 me-1" /> {t('report.chat.skip')}
               </Button>
             </div>
           )}
 
-          {m.widget === 'photos' && !m.resolved && (
-            <div className="mt-2.5 space-y-2.5">
-              <label className="flex items-center gap-2 text-xs font-medium cursor-pointer rounded-xl border border-dashed border-border bg-card px-3 py-2.5">
-                <Paperclip className="w-4 h-4 text-muted-foreground" /> {t('report.photo.add')}
-                <input type="file" accept="image/*" capture="environment" multiple className="hidden"
-                  onChange={(e) => { void addPhotos(e.target.files); e.target.value = ''; }} />
-              </label>
+          {step === 'probe' && currentProbe && (
+            <div className="space-y-2">
+              <VoiceRecorder
+                key={`${currentProbe.id}-${probeIdx}`}
+                onBlob={probeBlobCb[currentProbe.id]}
+                onTranscript={txt => setInputText(txt)}
+              />
+              <div className="flex gap-2">
+                <Input value={inputText} onChange={e => setInputText(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && onSend()}
+                  placeholder={t('report.chat.input.placeholder')} className="flex-1" />
+                <Button onClick={onSend} disabled={!inputText.trim()}>
+                  <Send className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" onClick={handleProbeSkip}>
+                  <SkipForward className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {step === 'photos' && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <label className="flex-1">
+                  <input type="file" accept="image/*" multiple capture="environment" className="hidden"
+                    onChange={e => { void onPickPhotos(e.target.files); e.target.value = ''; }} />
+                  <Button variant="outline" className="w-full" asChild>
+                    <span>📷 {t('report.photos.add')} ({photos.length}/3)</span>
+                  </Button>
+                </label>
+                <Button onClick={() => { push({ from: 'user', text: photos.length ? `📷 ${photos.length} ${t('report.chat.photos.unit')}` : t('report.chat.skipped'), photos }); void goPartners(); }}>
+                  {photos.length ? t('report.chat.confirm') : t('report.chat.skip')}
+                </Button>
+              </div>
               {photos.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2">
                   {photos.map((p, i) => (
-                    <div key={i} className="relative">
-                      <img src={p.url} alt="" className="w-14 h-14 rounded-lg object-cover border border-border" />
-                      <button type="button" aria-label="remove" onClick={() => setPhotos((prev) => prev.filter((_, j) => j !== i))}
-                        className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
-                        <X className="w-3 h-3" />
-                      </button>
+                    <div key={i} className="h-14 w-14 rounded-lg bg-primary/10 border border-border flex items-center justify-center text-xs">
+                      📷 {i + 1}
                     </div>
                   ))}
                 </div>
               )}
-              <Button size="sm" className="w-full rounded-xl" onClick={() => finishPhotos(m.id)}>
-                {photos.length ? t('report.chat.confirm') : t('report.chat.skip')}
-              </Button>
             </div>
           )}
 
-          {m.widget === 'area' && !m.resolved && (
-            <div className="mt-2.5 space-y-2.5 bg-card rounded-xl p-2.5 border border-border">
-              <AreaPicker value={area} onChange={setArea} />
-              <div className="flex gap-2">
-                <Button size="sm" className="flex-1 rounded-xl" disabled={!area.province} onClick={() => finishArea(m.id, false)}>
-                  <MapPin className="w-3.5 h-3.5 me-1" /> {t('report.chat.confirm')}
-                </Button>
-                <Button size="sm" variant="outline" className="rounded-xl" onClick={() => finishArea(m.id, true)}>
-                  {t('report.chat.skip')}
-                </Button>
-              </div>
-            </div>
+          {(step === 'partners' || step === 'submit') && !submitting && (
+            <p className="text-center text-xs text-muted-foreground">{t('report.partners.ack')} ↑</p>
           )}
 
-          {m.widget === 'contact' && !m.resolved && (
-            <div className="mt-2.5 space-y-2">
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('report.contact.name')} maxLength={120} className="bg-card h-9 text-sm" />
-              <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t('report.contact.phone')} maxLength={120} className="bg-card h-9 text-sm" />
-              <Button size="sm" className="w-full rounded-xl" disabled={submitting} onClick={() => void submit(m.id)}>
-                {submitting ? <><Loader2 className="w-3.5 h-3.5 me-1 animate-spin" />{t('report.submitting')}</> : t('report.submit')}
-              </Button>
-            </div>
-          )}
-
-          {m.widget === 'success' && caseCode && (
-            <div className="mt-3 space-y-3 text-center">
-              <img src={bloomImg} alt="" width={1024} height={1024} loading="lazy" className="w-20 h-20 mx-auto animate-pop" />
-              <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3">
-                <p className="text-[11px] text-muted-foreground mb-1">{t('report.success.code')}</p>
-                <p className="font-mono text-lg font-bold tracking-widest text-primary">{caseCode}</p>
-                <Button
-                  size="sm" variant="ghost" className="mt-1 text-xs h-7"
-                  onClick={() => { void navigator.clipboard?.writeText(caseCode); toast.success(<Check className="inline w-3.5 h-3.5" />); }}
-                >
-                  <Copy className="w-3 h-3 me-1" /> {caseCode}
+          {step === 'done' && (
+            <div className="flex gap-2">
+              <Link to="/track" className="flex-1">
+                <Button variant="outline" className="w-full gap-1.5">
+                  <ClipboardCheck className="h-4 w-4" /> {t('track.title')}
+                  {trackMy.length > 0 && <Badge variant="secondary">{trackMy.length}</Badge>}
                 </Button>
-              </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
-              <div className="grid gap-1.5">
-                <Button asChild size="sm" className="rounded-xl"><Link to={`/track?code=${caseCode}`}>{t('report.success.track')}</Link></Button>
-                <Button asChild size="sm" variant="outline" className="rounded-xl"><Link to="/report" onClick={() => window.location.reload()}>{t('report.success.new')}</Link></Button>
-              </div>
+              </Link>
+              <Link to="/" className="flex-1">
+                <Button variant="ghost" className="w-full">{t('nav.home')}</Button>
+              </Link>
             </div>
           )}
         </div>
       </div>
-    );
-  };
-
-  return (
-    <PhoneShell contained={false} title={t('report.title')} onClose={() => { window.location.href = '/'; }} trailing={<LanguageToggle />}>
-      <div className="flex flex-col h-[calc(100dvh-9rem)] max-h-[46rem]">
-        {/* progress */}
-        <div className="flex gap-1.5 px-4 pt-3 pb-1" aria-hidden>
-          {STAGE_ORDER.map((s, i) => (
-            <span key={s} className={cn('h-1 flex-1 rounded-full transition-colors', i <= stageIdx ? 'bg-primary' : 'bg-muted')} />
-          ))}
-        </div>
-
-        {/* chat thread */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3.5">
-          {msgs.map(renderMsg)}
-          {typing && (
-            <div className="flex items-end gap-2 animate-fade-in">
-              <span className="w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0">
-                <Leaf className="w-3.5 h-3.5" />
-              </span>
-              <span className="rounded-2xl rounded-es-md bg-muted/70 px-4 py-3 flex gap-1">
-                {[0, 1, 2].map((i) => (
-                  <span key={i} className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                ))}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* composer — active while answering the story question */}
-        {stage === 'story' && (
-          <div className="border-t border-border bg-card/95 backdrop-blur px-3 py-3 space-y-2.5">
-            <VoiceRecorder compact onChange={(b, tx) => { setAudio(b); setTranscript(tx); }} />
-            <div className="flex items-end gap-2">
-              <textarea
-                value={draftText}
-                onChange={(e) => setDraftText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (canSendStory) sendStory(); } }}
-                placeholder={transcript || t('report.chat.input.placeholder')}
-                rows={2}
-                maxLength={5000}
-                className="flex-1 resize-none rounded-2xl border border-border bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              <Button
-                size="icon"
-                className="w-11 h-11 rounded-full shrink-0"
-                disabled={!canSendStory}
-                aria-label={t('report.chat.send')}
-                onClick={sendStory}
-              >
-                <SendHorizonal className="w-5 h-5 rtl:-scale-x-100" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* back link for pre-chat */}
-        {stage === 'consent' && (
-          <div className="border-t border-border px-4 py-2.5">
-            <Button asChild variant="ghost" size="sm" className="text-xs -ms-2">
-              <Link to="/"><ArrowLeft className="w-3.5 h-3.5 me-1 rtl:-scale-x-100" />{t('common.back')}</Link>
-            </Button>
-          </div>
-        )}
-      </div>
-    </PhoneShell>
+    </div>
   );
 }
