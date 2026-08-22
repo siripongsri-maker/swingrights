@@ -221,6 +221,26 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
         </Button>
       </div>
 
+      {geoError && (
+        <Alert variant="destructive" className="py-3">
+          <MapPinOff className="h-4 w-4" />
+          <AlertTitle className="text-xs font-semibold">{t(geoError === 'unsupported' ? 'area.geoUnsupported' : 'area.geoDenied')}</AlertTitle>
+          <AlertDescription className="text-xs mt-1">
+            {t(geoError === 'unsupported' ? 'area.geoUnsupportedHelp' : 'area.geoDeniedHelp')}
+          </AlertDescription>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            className="mt-2 text-xs h-7"
+            onClick={() => setOpenProvince(true)}
+          >
+            {t('area.trySearch')}
+          </Button>
+        </Alert>
+      )}
+
+
       {loading ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
           <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t('area.loading')}
