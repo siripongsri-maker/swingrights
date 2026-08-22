@@ -1,13 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronsUpDown, Languages, Loader2, LocateFixed, MapPin, Navigation, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Check, ChevronsUpDown, Info, Languages, Loader2, LocateFixed, MapPin, MapPinOff, Navigation, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { MapPicker } from './MapPicker';
 import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, geoSearchReason, highlightGeoText, nearestProvince, type ProvinceRow } from '@/lib/thaiGeo';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
+
 
 export interface AreaValue {
   province: string;
@@ -44,13 +46,21 @@ function Hi({ text, q }: { text: string; q: string }) {
 }
 
 function Combo({
-  label, value, options, disabled, enFirst, onSelect,
-}: { label: string; value: string; options: ComboOption[]; disabled?: boolean; enFirst?: boolean; onSelect: (v: string) => void }) {
+  label, value, options, disabled, enFirst, autoOpen, onSelect,
+}: { label: string; value: string; options: ComboOption[]; disabled?: boolean; enFirst?: boolean; autoOpen?: boolean; onSelect: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const { t } = useI18n();
   const selected = options.find((o) => o.v === value);
   const display = value && enFirst && selected?.sub ? `${selected.sub} (${selected.v})` : value || label;
+
+  useEffect(() => {
+    if (autoOpen) {
+      setOpen(true);
+      setSearch('');
+    }
+  }, [autoOpen]);
+
   return (
     <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSearch(''); }}>
       <PopoverTrigger asChild>
@@ -128,6 +138,8 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
   const [loading, setLoading] = useState(true);
   const [showMap, setShowMap] = useState(!!value.geo);
   const [enFirst, setEnFirst] = useState(false);
+  const [geoError, setGeoError] = useState<'denied' | 'unsupported' | null>(null);
+  const [openProvince, setOpenProvince] = useState(false);
 
   useEffect(() => {
     loadThaiGeo()
@@ -138,8 +150,13 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
 
   /** Quick action: pick the province whose centroid is closest to the device's location. */
   const pickNearestProvince = () => {
-    if (!navigator.geolocation) return toast.error(t('area.geoUnsupported'));
+    if (!navigator.geolocation) {
+      setGeoError('unsupported');
+      setOpenProvince(true);
+      return;
+    }
     if (!geo?.length) return;
+    setGeoError(null);
     navigator.geolocation.getCurrentPosition(
       (p) => {
         const best = nearestProvince(geo, p.coords.latitude, p.coords.longitude);
@@ -147,10 +164,14 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
         onChange({ ...value, province: best.province, district: '', subdistrict: '', zip: '' });
         toast.success(t('area.nearMeFound', { name: best.province, km: Math.round(best.km) }));
       },
-      () => toast.error(t('area.geoDenied')),
+      () => {
+        setGeoError('denied');
+        setOpenProvince(true);
+      },
       { enableHighAccuracy: false, timeout: 10000 },
     );
   };
+
 
   const province = useMemo(() => geo?.find((p) => p.n === value.province) ?? null, [geo, value.province]);
   const district = useMemo(() => province?.d.find((d) => d.n === value.district) ?? null, [province, value.district]);
@@ -200,6 +221,26 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
         </Button>
       </div>
 
+      {geoError && (
+        <Alert variant="destructive" className="py-3">
+          <MapPinOff className="h-4 w-4" />
+          <AlertTitle className="text-xs font-semibold">{t(geoError === 'unsupported' ? 'area.geoUnsupported' : 'area.geoDenied')}</AlertTitle>
+          <AlertDescription className="text-xs mt-1">
+            {t(geoError === 'unsupported' ? 'area.geoUnsupportedHelp' : 'area.geoDeniedHelp')}
+          </AlertDescription>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            className="mt-2 text-xs h-7"
+            onClick={() => setOpenProvince(true)}
+          >
+            {t('area.trySearch')}
+          </Button>
+        </Alert>
+      )}
+
+
       {loading ? (
         <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
           <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t('area.loading')}
@@ -211,7 +252,8 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
             value={value.province}
             options={provinceOptions}
             enFirst={enFirst}
-            onSelect={(v) => onChange({ ...value, province: v, district: '', subdistrict: '', zip: '' })}
+            autoOpen={openProvince}
+            onSelect={(v) => { setGeoError(null); setOpenProvince(false); onChange({ ...value, province: v, district: '', subdistrict: '', zip: '' }); }}
           />
           <div className="grid grid-cols-2 gap-2.5">
             <Combo
@@ -255,10 +297,14 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
             variant="outline"
             className="text-xs"
             onClick={() => {
-              if (!navigator.geolocation) return toast.error(t('area.geoUnsupported'));
+              if (!navigator.geolocation) {
+                setGeoError('unsupported');
+                setOpenProvince(true);
+                return;
+              }
               navigator.geolocation.getCurrentPosition(
-                (p) => onChange({ ...value, geo: { lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) } }),
-                () => toast.error(t('area.geoDenied')),
+                (p) => { setGeoError(null); onChange({ ...value, geo: { lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) } }); },
+                () => { setGeoError('denied'); setOpenProvince(true); },
                 { enableHighAccuracy: true, timeout: 10000 },
               );
             }}

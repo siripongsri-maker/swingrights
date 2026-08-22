@@ -5,6 +5,7 @@ import { test, expect, type Page } from '@playwright/test';
  *  - "จังหวัดใกล้ฉัน" picks the province closest to the device location
  *  - clear-search button inside each dropdown resets the query
  *  - EN/local name toggle swaps the primary display language
+ *  - denied geolocation shows guidance and offers manual search
  */
 
 async function reachAreaStage(page: Page) {
@@ -56,4 +57,26 @@ test('EN/local toggle swaps the primary display name', async ({ page }) => {
   await chiang.click();
   // trigger shows English first, Thai in parentheses
   await expect(page.getByRole('combobox').first()).toContainText('Chiang Mai (เชียงใหม่)');
+});
+
+test('denied geolocation shows guidance and offers manual search', async ({ page }) => {
+  await reachAreaStage(page);
+
+  // Mock geolocation to permanently deny, like a real browser block
+  await page.evaluate(() => {
+    navigator.geolocation.getCurrentPosition = (_success, error, _options) => {
+      error?.({ code: 1, message: 'User denied Geolocation' } as GeolocationPositionError);
+    };
+  });
+
+  await page.getByRole('button', { name: 'จังหวัดใกล้ฉัน' }).click();
+
+  // Guidance banner is shown
+  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText('ไม่สามารถเข้าถึงตำแหน่งได้');
+  await expect(page.getByRole('button', { name: 'กรอกพื้นที่เอง' })).toBeVisible();
+
+  // Province dropdown opens automatically for manual search
+  await expect(page.locator('[cmdk-input]')).toBeVisible();
+  await expect(page.locator('[cmdk-item]').first()).toBeVisible();
 });
