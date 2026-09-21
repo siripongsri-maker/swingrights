@@ -7,7 +7,6 @@ import { Reveal } from '@/components/Reveal';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import heroBotanical from '@/assets/hero-botanical.png';
-import { v4 as uuidv4 } from '@/lib/utils';
 
 /** Eases a number from 0 → target on mount (used for the stats card). */
 function CountUp({ to }: { to: number }) {
@@ -36,12 +35,12 @@ function getSessionId() {
   try {
     let id = sessionStorage.getItem('sw_visit_session');
     if (!id) {
-      id = uuidv4();
+      id = crypto.randomUUID();
       sessionStorage.setItem('sw_visit_session', id);
     }
     return id;
   } catch {
-    return uuidv4();
+    return crypto.randomUUID();
   }
 }
 
