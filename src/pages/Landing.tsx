@@ -51,20 +51,26 @@ export default function Landing() {
   useEffect(() => {
     let mounted = true;
     const sessionId = getSessionId();
-    // บันทึกการเข้าชมปัจจุบัน (ไม่บล็อก UI)
-    supabase.rpc('record_site_visit', { _session_id: sessionId, _path: window.location.pathname }).catch(() => {});
 
-    // ดึงสถิติจาก Edge Function
-    supabase.functions
-      .invoke('site-stats', { method: 'GET' })
-      .then(({ data, error }) => {
+    (async () => {
+      try {
+        // บันทึกการเข้าชมปัจจุบัน
+        await supabase.rpc('record_site_visit', {
+          _session_id: sessionId,
+          _path: window.location.pathname,
+        });
+
+        // ดึงสถิติจาก Edge Function
+        const { data, error } = await supabase.functions.invoke('site-stats', { method: 'GET' });
         if (!mounted || error) return;
         const s = data as SiteStats | null;
         if (s && typeof s.registered_users === 'number') {
           setStats(s);
         }
-      })
-      .catch(() => {});
+      } catch {
+        // ไม่บล็อกหน้า Landing หากสถิติไม่พร้อมใช้งานชั่วคราว
+      }
+    })();
 
     return () => {
       mounted = false;
