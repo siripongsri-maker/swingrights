@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Mic, Search, ArrowRight, Lock, Leaf, HeartHandshake, Sparkles } from 'lucide-react';
+import { ShieldCheck, Mic, Search, ArrowRight, Lock, Leaf, HeartHandshake, Sparkles, Users, Eye, MousePointerClick } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Reveal } from '@/components/Reveal';
 import { useI18n } from '@/i18n';
+import { supabase } from '@/integrations/supabase/client';
 import heroBotanical from '@/assets/hero-botanical.png';
+import { v4 as uuidv4 } from '@/lib/utils';
 
 /** Eases a number from 0 → target on mount (used for the stats card). */
 function CountUp({ to }: { to: number }) {
@@ -24,8 +26,28 @@ function CountUp({ to }: { to: number }) {
   return <>{n}</>;
 }
 
+interface SiteStats {
+  registered_users: number;
+  unique_visitors: number;
+  total_visits: number;
+}
+
+function getSessionId() {
+  try {
+    let id = sessionStorage.getItem('sw_visit_session');
+    if (!id) {
+      id = uuidv4();
+      sessionStorage.setItem('sw_visit_session', id);
+    }
+    return id;
+  } catch {
+    return uuidv4();
+  }
+}
+
 export default function Landing() {
   const { t } = useI18n();
+  const [stats, setStats] = useState<SiteStats>({ registered_users: 0, unique_visitors: 0, total_visits: 0 });
   return (
     <div className="min-h-screen bg-background">
       <div className="relative overflow-hidden bg-gradient-leaf grain">
