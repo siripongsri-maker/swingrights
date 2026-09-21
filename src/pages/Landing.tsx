@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Mic, Search, ArrowRight, Lock, Leaf, HeartHandshake, Sparkles } from 'lucide-react';
+import { ShieldCheck, Mic, Search, ArrowRight, Lock, Leaf, HeartHandshake, Sparkles, Users, Eye, MousePointerClick } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Reveal } from '@/components/Reveal';
 import { useI18n } from '@/i18n';
+import { supabase } from '@/integrations/supabase/client';
 import heroBotanical from '@/assets/hero-botanical.png';
 
 /** Eases a number from 0 → target on mount (used for the stats card). */
@@ -24,8 +25,58 @@ function CountUp({ to }: { to: number }) {
   return <>{n}</>;
 }
 
+interface SiteStats {
+  registered_users: number;
+  unique_visitors: number;
+  total_visits: number;
+}
+
+function getSessionId() {
+  try {
+    let id = sessionStorage.getItem('sw_visit_session');
+    if (!id) {
+      id = crypto.randomUUID();
+      sessionStorage.setItem('sw_visit_session', id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
+
 export default function Landing() {
   const { t } = useI18n();
+  const [stats, setStats] = useState<SiteStats>({ registered_users: 0, unique_visitors: 0, total_visits: 0 });
+
+  useEffect(() => {
+    let mounted = true;
+    const sessionId = getSessionId();
+
+    (async () => {
+      try {
+        // บันทึกการเข้าชมปัจจุบัน
+        await supabase.rpc('record_site_visit', {
+          _session_id: sessionId,
+          _path: window.location.pathname,
+        });
+
+        // ดึงสถิติจาก Edge Function
+        const { data, error } = await supabase.functions.invoke('site-stats', { method: 'GET' });
+        if (!mounted || error) return;
+        const s = data as SiteStats | null;
+        if (s && typeof s.registered_users === 'number') {
+          setStats(s);
+        }
+      } catch {
+        // ไม่บล็อกหน้า Landing หากสถิติไม่พร้อมใช้งานชั่วคราว
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="relative overflow-hidden bg-gradient-leaf grain">
@@ -125,11 +176,42 @@ export default function Landing() {
                 </p>
               </article>
 
-              <article className="rounded-[1.75rem] bg-card border border-border p-6 shadow-card hover-lift">
-                <p className="font-display text-3xl font-medium text-primary tabular-nums">
-                  <CountUp to={9} />
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">{t('landing.stat.label')}</p>
+              <article className="rounded-[1.75rem] bg-card border border-border p-5 shadow-card hover-lift">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
+                      <Users className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl font-medium text-primary tabular-nums leading-none">
+                        <CountUp to={stats.registered_users} />
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('landing.stats.registered')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
+                      <Eye className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl font-medium text-primary tabular-nums leading-none">
+                        <CountUp to={stats.unique_visitors} />
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('landing.stats.visitors')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
+                      <MousePointerClick className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl font-medium text-primary tabular-nums leading-none">
+                        <CountUp to={stats.total_visits} />
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('landing.stats.visits')}</p>
+                    </div>
+                  </div>
+                </div>
               </article>
 
               <article className="sm:col-span-2 rounded-[1.75rem] bg-accent border border-border p-6 shadow-card hover-lift">
