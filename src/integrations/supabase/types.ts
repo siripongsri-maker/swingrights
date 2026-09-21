@@ -453,6 +453,27 @@ export type Database = {
         }
         Relationships: []
       }
+      site_visits: {
+        Row: {
+          id: string
+          path: string
+          session_id: string
+          visited_at: string
+        }
+        Insert: {
+          id?: string
+          path: string
+          session_id: string
+          visited_at?: string
+        }
+        Update: {
+          id?: string
+          path?: string
+          session_id?: string
+          visited_at?: string
+        }
+        Relationships: []
+      }
       staff_profiles: {
         Row: {
           created_at: string
@@ -542,6 +563,14 @@ export type Database = {
       }
       gen_case_code: { Args: never; Returns: string }
       get_case_pii: { Args: { _case_id: string }; Returns: Json }
+      get_site_stats: {
+        Args: never
+        Returns: {
+          registered_users: number
+          total_visits: number
+          unique_visitors: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -556,6 +585,10 @@ export type Database = {
       }
       mask_name: { Args: { _name: string }; Returns: string }
       my_access: { Args: never; Returns: Json }
+      record_site_visit: {
+        Args: { _path: string; _session_id: string }
+        Returns: undefined
+      }
       submit_case: { Args: { _payload: Json }; Returns: string }
     }
     Enums: {
