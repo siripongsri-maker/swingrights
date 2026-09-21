@@ -170,11 +170,42 @@ export default function Landing() {
                 </p>
               </article>
 
-              <article className="rounded-[1.75rem] bg-card border border-border p-6 shadow-card hover-lift">
-                <p className="font-display text-3xl font-medium text-primary tabular-nums">
-                  <CountUp to={9} />
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">{t('landing.stat.label')}</p>
+              <article className="rounded-[1.75rem] bg-card border border-border p-5 shadow-card hover-lift">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
+                      <Users className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl font-medium text-primary tabular-nums leading-none">
+                        <CountUp to={stats.registered_users} />
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('landing.stats.registered')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
+                      <Eye className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl font-medium text-primary tabular-nums leading-none">
+                        <CountUp to={stats.unique_visitors} />
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('landing.stats.visitors')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
+                      <MousePointerClick className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-display text-2xl font-medium text-primary tabular-nums leading-none">
+                        <CountUp to={stats.total_visits} />
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('landing.stats.visits')}</p>
+                    </div>
+                  </div>
+                </div>
               </article>
 
               <article className="sm:col-span-2 rounded-[1.75rem] bg-accent border border-border p-6 shadow-card hover-lift">
