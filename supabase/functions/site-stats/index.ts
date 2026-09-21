@@ -16,38 +16,17 @@ serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const db = createClient(url, serviceKey, { auth: { persistSession: false } });
 
-  const { data: counts, error: countErr } = await db
-    .from("site_visits")
-    .select("session_id", { count: "exact", head: true });
-
-  const { data: sessions, error: sessionErr } = await db
-    .from("site_visits")
-    .select("session_id");
-
-  const { count: registeredUsers, error: userErr } = await db
-    .from("auth_user_counts")
-    .select("*", { count: "exact", head: true });
-
-  // fallback: query auth.users directly if view/table not present
-  let registered_users = 0;
-  if (userErr) {
-    const { data: users, error: directErr } = await db.rpc("get_registered_user_count");
-    if (!directErr && typeof users === "number") registered_users = users;
-  } else {
-    registered_users = registeredUsers ?? 0;
-  }
-
-  const unique_visitors = sessions
-    ? new Set((sessions as { session_id: string }[]).map((s) => s.session_id)).size
-    : 0;
-  const total_visits = counts?.length ?? sessions?.length ?? 0;
-
-  if (countErr && sessionErr) {
-    return new Response(JSON.stringify({ error: "stats unavailable" }), { status: 500, headers: corsJson });
-  }
+  const [{ data: visits }, { data: registered_users }] = await Promise.all([
+    db.rpc("get_site_stats") as Promise<{ data: { unique_visitors: number; total_visits: number } | null }>,
+    db.rpc("get_registered_user_count") as Promise<{ data: number | null }>,
+  ]);
 
   return new Response(
-    JSON.stringify({ registered_users, unique_visitors, total_visits }),
+    JSON.stringify({
+      registered_users: registered_users ?? 0,
+      unique_visitors: visits?.unique_visitors ?? 0,
+      total_visits: visits?.total_visits ?? 0,
+    }),
     { headers: corsJson },
   );
 });
