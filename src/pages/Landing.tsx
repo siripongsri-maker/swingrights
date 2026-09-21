@@ -47,6 +47,30 @@ function getSessionId() {
 export default function Landing() {
   const { t } = useI18n();
   const [stats, setStats] = useState<SiteStats>({ registered_users: 0, unique_visitors: 0, total_visits: 0 });
+
+  useEffect(() => {
+    let mounted = true;
+    const sessionId = getSessionId();
+    // บันทึกการเข้าชมปัจจุบัน (ไม่บล็อก UI)
+    supabase.rpc('record_site_visit', { _session_id: sessionId, _path: window.location.pathname }).catch(() => {});
+
+    // ดึงสถิติจาก Edge Function
+    supabase.functions
+      .invoke('site-stats', { method: 'GET' })
+      .then(({ data, error }) => {
+        if (!mounted || error) return;
+        const s = data as SiteStats | null;
+        if (s && typeof s.registered_users === 'number') {
+          setStats(s);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="relative overflow-hidden bg-gradient-leaf grain">
