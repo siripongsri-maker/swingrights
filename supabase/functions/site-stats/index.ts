@@ -17,15 +17,17 @@ serve(async (req) => {
   const db = createClient(url, serviceKey, { auth: { persistSession: false } });
 
   const [{ data: visits }, { data: registered_users }] = await Promise.all([
-    db.rpc("get_site_stats") as Promise<{ data: { unique_visitors: number; total_visits: number } | null }>,
+    db.rpc("get_site_stats") as Promise<{ data: { unique_visitors: number; total_visits: number }[] | null }>,
     db.rpc("get_registered_user_count") as Promise<{ data: number | null }>,
   ]);
+
+  const visitRow = visits?.[0];
 
   return new Response(
     JSON.stringify({
       registered_users: registered_users ?? 0,
-      unique_visitors: visits?.unique_visitors ?? 0,
-      total_visits: visits?.total_visits ?? 0,
+      unique_visitors: visitRow?.unique_visitors ?? 0,
+      total_visits: visitRow?.total_visits ?? 0,
     }),
     { headers: corsJson },
   );
