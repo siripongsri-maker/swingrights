@@ -563,10 +563,10 @@ export type Database = {
       }
       gen_case_code: { Args: never; Returns: string }
       get_case_pii: { Args: { _case_id: string }; Returns: Json }
+      get_registered_user_count: { Args: never; Returns: number }
       get_site_stats: {
         Args: never
         Returns: {
-          registered_users: number
           total_visits: number
           unique_visitors: number
         }[]
