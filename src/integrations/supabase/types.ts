@@ -347,6 +347,7 @@ export type Database = {
           has_violation: boolean | null
           id: string
           photo_urls: Json
+          pii_flag: boolean
           profile: Json | null
           referral_note: string | null
           referrals: Json | null
@@ -389,6 +390,7 @@ export type Database = {
           has_violation?: boolean | null
           id?: string
           photo_urls?: Json
+          pii_flag?: boolean
           profile?: Json | null
           referral_note?: string | null
           referrals?: Json | null
@@ -431,6 +433,7 @@ export type Database = {
           has_violation?: boolean | null
           id?: string
           photo_urls?: Json
+          pii_flag?: boolean
           profile?: Json | null
           referral_note?: string | null
           referrals?: Json | null
