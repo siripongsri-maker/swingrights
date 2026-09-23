@@ -18,7 +18,7 @@ import { useAccess, useRoleLabels } from '@/hooks/useAccess';
 import {
   Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin,
   Search, ChevronLeft, ChevronRight, UserCheck, UserCog, CalendarClock, BellRing, ShieldAlert, Check,
-  MessageCircleQuestion, Send, Building2, Volume2, ChevronDown, Printer, Scale, Share2, HeartHandshake,
+  MessageCircleQuestion, Send, Building2, Volume2, ChevronDown, Printer, Scale, Share2, HeartHandshake, Flag,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { printCaseDocument, docInputFromReport, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
@@ -30,7 +30,7 @@ import { CaseReferrals } from '@/components/admin/CaseReferrals';
 const PAGE_SIZE = 20;
 
 const LIST_COLS =
-  'id, case_code, status, severity, created_at, follow_up_at, assigned_to, suicide_risk, ai_reviewed, victim, profile, ai_result, first_response_at';
+  'id, case_code, status, severity, created_at, follow_up_at, assigned_to, suicide_risk, ai_reviewed, victim, profile, ai_result, first_response_at, pii_flag';
 const DETAIL_COLS = '*';
 const sel = (s: string): string => s;
 
@@ -430,6 +430,7 @@ export default function AdminDashboard() {
                         {c.severity && <SeverityBadge value={c.severity} />}
                         {c.suicide_risk && <span className="text-[10px] bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full">{t('dash.cases.suicideRiskBadge')}</span>}
                         {!c.first_response_at && <SlaBadge createdAt={c.created_at} />}
+                        {c.pii_flag && <span title={t('pii.flag.title')} aria-label={t('pii.flag.title')} className="text-warning"><Flag className="w-3.5 h-3.5" /></span>}
                         {overdue && <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">{t('dash.cases.overdueBadge')}</span>}
                         <span className="ml-auto text-[11px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
                       </div>

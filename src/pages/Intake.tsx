@@ -1259,6 +1259,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
   const sevText = intake.severity ? SEV_LABEL[intake.severity] : '-';
 
   return (
+    <>
+      {piiGuard.dialog}
     <div>
       <div className="bg-success/10 border border-success/30 rounded-xl p-3.5 mb-4 flex gap-2.5 items-start">
         <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center shrink-0">
@@ -1321,6 +1323,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         {t('intake.sig.confirmBtn')}
       </Button>
     </div>
+    </>
   );
 }
 

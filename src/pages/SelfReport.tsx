@@ -601,6 +601,8 @@ export default function SelfReport() {
   };
 
   return (
+    <>
+      {piiGuard.dialog}
     <PhoneShell contained={false} title={t('report.title')} onClose={() => { window.location.href = '/'; }} trailing={<LanguageToggle />}>
       <div className="flex flex-col h-[calc(100dvh-9rem)] max-h-[46rem]">
         {/* progress */}
@@ -631,6 +633,7 @@ export default function SelfReport() {
         {stage === 'story' && (
           <div className="border-t border-border bg-card/95 backdrop-blur px-3 py-3 space-y-2.5">
             <VoiceRecorder compact onChange={(b, tx) => { setAudio(b); setTranscript(tx); }} />
+            <PiiHint className="mt-0" />
             <div className="flex items-end gap-2">
               <textarea
                 value={draftText}
@@ -664,6 +667,7 @@ export default function SelfReport() {
         )}
       </div>
     </PhoneShell>
+    </>
   );
 }
 
