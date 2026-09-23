@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import { printCaseDocument, docInputFromIntake, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
 import { printCaseReport, type CaseReportData } from '@/lib/caseReport';
 import { useI18n } from "@/i18n";
+import { PiiHint, usePiiGuard } from "@/lib/piiGuard";
 
 
 type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'referral' | 'signature' | 'confirmed';
@@ -254,6 +255,7 @@ function ReporterStep({ onNext }: { onNext: () => void }) {
       </Field>
       <Field label={t('intake.reporter.addressLabel')}>
         <Textarea value={reporter.address} onChange={(e) => update('address', e.target.value)} placeholder={t('intake.reporter.addressPlaceholder')} />
+        <PiiHint />
       </Field>
 
       <PhotoUpload />
@@ -326,6 +328,7 @@ function VictimStep({ onNext }: { onNext: () => void }) {
       </Field>
       <Field label={t('intake.victim.contactLabel')}>
         <Textarea value={victim.contact} onChange={(e) => updateV('contact', e.target.value)} placeholder={t('intake.victim.contactPlaceholder')} />
+        <PiiHint />
       </Field>
 
       <SectionDivider>{t('intake.victim.basicInfo')}</SectionDivider>
@@ -667,6 +670,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           placeholder={t('intake.voice.composerPlaceholder')}
           className="bg-muted/40 border-0 text-sm min-h-[52px] resize-none focus-visible:ring-1"
         />
+        <PiiHint />
         {audioBlobs[qIndex] && !recording && (
           <div className="px-1 pt-1.5"><HistoryAudio blob={audioBlobs[qIndex]!} /></div>
         )}
@@ -719,12 +723,15 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           {t('intake.voice.staffObsToggle')} {obs && !showObs ? `· ${t('intake.voice.hasNote')}` : ''}
         </button>
         {showObs && (
+          <>
           <Textarea
             value={obs}
             onChange={(e) => setObs(e.target.value)}
             placeholder={t('intake.voice.obsPlaceholder')}
             className="mt-1.5 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/40 text-sm min-h-[48px]"
           />
+          <PiiHint />
+          </>
         )}
       </div>
     </div>
@@ -870,6 +877,7 @@ function AssessStep({ onNext }: { onNext: () => void }) {
 
       <Card title={t('intake.assess.q5title')}>
         <Textarea value={extraFacts} onChange={(e) => set('extraFacts', e.target.value)} placeholder={t('intake.assess.extraFactsPlaceholder')} />
+        <PiiHint />
       </Card>
 
       <Button onClick={() => {
@@ -1037,6 +1045,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
                 placeholder={t('intake.common.typeAnswerPlaceholder')}
                 className="bg-card text-sm min-h-[52px]"
               />
+              <PiiHint />
             </div>
           ))}
         </div>
@@ -1071,6 +1080,7 @@ function ReferralStep({ onNext }: { onNext: () => void }) {
         })}
       </div>
       <Textarea value={referralNote} onChange={(e) => set('referralNote', e.target.value)} placeholder={t('intake.referral.notePlaceholder')} className="mb-4 min-h-[64px]" />
+      <PiiHint />
       <Button onClick={onNext} className="w-full h-12 rounded-xl bg-gradient-primary">{t('intake.referral.nextBtn')} <ArrowRight className="w-4 h-4" /></Button>
     </div>
   );
@@ -1123,9 +1133,14 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
     if (which === 'staff') setStaffEmpty(true); else setClientEmpty(true);
   };
 
+  const piiGuard = usePiiGuard();
   const save = async () => {
     if (staffEmpty) return toast.error(t('intake.sig.errStaffSig'));
     if (!staffName.trim()) return toast.error(t('intake.sig.errStaffName'));
+    const piiResult = await piiGuard.check(
+      JSON.stringify({ a: intake.answers, o: intake.staffObs, e: intake.extraFacts, r: intake.referralNote, d: intake.violationDetails }),
+    );
+    if (piiResult === 'edit') return;
     setSaving(true);
     try {
       const draftId = crypto.randomUUID();
@@ -1190,6 +1205,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         signature_client: sigClient,
         audio_urls: audioPaths,
         photo_urls: photoPaths,
+        pii_flag: piiResult === 'send',
       };
 
       // Safety net — keep a full copy on-device BEFORE we rely on the network
@@ -1245,6 +1261,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
   const sevText = intake.severity ? SEV_LABEL[intake.severity] : '-';
 
   return (
+    <>
+      {piiGuard.dialog}
     <div>
       <div className="bg-success/10 border border-success/30 rounded-xl p-3.5 mb-4 flex gap-2.5 items-start">
         <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center shrink-0">
@@ -1307,6 +1325,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         {t('intake.sig.confirmBtn')}
       </Button>
     </div>
+    </>
   );
 }
 
