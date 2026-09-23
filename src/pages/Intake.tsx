@@ -723,6 +723,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           {t('intake.voice.staffObsToggle')} {obs && !showObs ? `· ${t('intake.voice.hasNote')}` : ''}
         </button>
         {showObs && (
+          <>
           <Textarea
             value={obs}
             onChange={(e) => setObs(e.target.value)}
@@ -730,6 +731,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
             className="mt-1.5 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/40 text-sm min-h-[48px]"
           />
           <PiiHint />
+          </>
         )}
       </div>
     </div>
