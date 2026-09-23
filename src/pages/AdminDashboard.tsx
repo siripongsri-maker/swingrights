@@ -25,6 +25,7 @@ import { printCaseDocument, docInputFromReport, DOC_KINDS, type DocKind } from '
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { CaseReferrals } from '@/components/admin/CaseReferrals';
 
 const PAGE_SIZE = 20;
 
@@ -197,12 +198,22 @@ export default function AdminDashboard() {
   const exportCSV = async () => {
     const { data, error } = await supabase
       .from('cases')
-      .select(sel('case_code, created_at, status, severity, profile, victim, has_violation, violation_details, ai_result, referrals, suicide_risk, assigned_to'))
+      .select(sel('id, case_code, created_at, status, severity, profile, victim, has_violation, violation_details, ai_result, referrals, suicide_risk, assigned_to'))
       .order('created_at', { ascending: false })
       .limit(5000);
     if (error) { toast.error(t('dash.csv.exportFailed')); return; }
     const rows = (data ?? []).filter((c: any) => branch === 'all' || c.profile?.branch === branch);
-    const headers = ['เลขเคส','วันที่','สถานะ','ความรุนแรง','พื้นที่','กลุ่ม','เพศ','อายุ','ผู้รับบริการ (ปกปิด)','พื้นที่เกิดเหตุ','มีการละเมิด','ประเภทการละเมิด','เสี่ยงทำร้ายตนเอง','ผู้รับผิดชอบ','คะแนน AI','สรุป AI','ส่งต่อ'];
+    // referral log (only rows the user may see under RLS)
+    const { data: refs } = await supabase.from('case_referrals' as never)
+      .select('case_id,partner_id,referred_at,accepted_at,outcome').limit(10000);
+    const { data: pts } = await supabase.from('referral_partners' as never).select('id,name');
+    const pName = Object.fromEntries(((pts ?? []) as any[]).map((p) => [p.id, p.name]));
+    const refByCase: Record<string, string[]> = {};
+    ((refs ?? []) as any[]).forEach((r) => {
+      const s = `${pName[r.partner_id] ?? '?'} (${t(`ref.outcome.${r.outcome}`)}; ${new Date(r.referred_at).toLocaleDateString('th-TH')}${r.accepted_at ? ` → ${new Date(r.accepted_at).toLocaleDateString('th-TH')}` : ''})`;
+      (refByCase[r.case_id] ||= []).push(s);
+    });
+    const headers = ['เลขเคส','วันที่','สถานะ','ความรุนแรง','พื้นที่','กลุ่ม','เพศ','อายุ','ผู้รับบริการ (ปกปิด)','พื้นที่เกิดเหตุ','มีการละเมิด','ประเภทการละเมิด','เสี่ยงทำร้ายตนเอง','ผู้รับผิดชอบ','คะแนน AI','สรุป AI','ส่งต่อ', t('ref.csvHeader')];
     const esc = (v: any) => { const s = v == null ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
     const lines = [headers.join(',')];
     rows.forEach((c: any) => {
@@ -213,6 +224,7 @@ export default function AdminDashboard() {
         c.has_violation ? t('dash.csv.yes') : t('dash.csv.no'), (c.violation_details || []).join(' | '),
         c.suicide_risk ? t('dash.csv.yes') : '', staffName(c.assigned_to) || '',
         c.ai_result?.riskScore ?? '', c.ai_result?.summary || '', (c.referrals || []).join(' | '),
+        (refByCase[c.id] || []).join(' | '),
       ].map(esc).join(','));
     });
     const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
@@ -513,6 +525,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   onBack: () => void; onChanged: () => void;
 }) {
   const { t } = useI18n();
+  const access = useAccess();
   const qc = useQueryClient();
   const [note, setNote] = useState('');
   const [audioSigned, setAudioSigned] = useState<Record<number, string>>({});
@@ -804,6 +817,13 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           </div>
           {c.referral_note && <p className="text-xs text-muted-foreground">{c.referral_note}</p>}
         </section>
+
+        <CaseReferrals
+          caseId={caseId}
+          province={c.profile?.province ?? null}
+          violationTypes={Array.isArray(c.violation_types) ? c.violation_types : []}
+          canEdit={access.canEdit}
+        />
 
         {partners.length > 0 && (
           <section className="bg-card border border-border rounded-xl p-5 shadow-card">

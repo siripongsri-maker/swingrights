@@ -229,6 +229,63 @@ export type Database = {
           },
         ]
       }
+      case_referrals: {
+        Row: {
+          accept_token: string | null
+          accepted_at: string | null
+          case_id: string
+          id: string
+          note: string | null
+          outcome: string
+          partner_id: string
+          referred_at: string
+          referred_by: string | null
+          responded_at: string | null
+          token_expires_at: string | null
+        }
+        Insert: {
+          accept_token?: string | null
+          accepted_at?: string | null
+          case_id: string
+          id?: string
+          note?: string | null
+          outcome?: string
+          partner_id: string
+          referred_at?: string
+          referred_by?: string | null
+          responded_at?: string | null
+          token_expires_at?: string | null
+        }
+        Update: {
+          accept_token?: string | null
+          accepted_at?: string | null
+          case_id?: string
+          id?: string
+          note?: string | null
+          outcome?: string
+          partner_id?: string
+          referred_at?: string
+          referred_by?: string | null
+          responded_at?: string | null
+          token_expires_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_referrals_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_referrals_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "referral_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_timeline: {
         Row: {
           audio_url: string | null
@@ -564,6 +621,10 @@ export type Database = {
           _window_seconds: number
         }
         Returns: boolean
+      }
+      create_case_referral: {
+        Args: { _case_id: string; _note?: string; _partner_id: string }
+        Returns: Json
       }
       dashboard_stats: {
         Args: { _branch?: string; _from?: string; _to?: string }
