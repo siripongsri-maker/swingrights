@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          month: string
+          reviewed_at: string
+          reviewed_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          month: string
+          reviewed_at?: string
+          reviewed_by?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          month?: string
+          reviewed_at?: string
+          reviewed_by?: string
+        }
+        Relationships: []
+      }
       case_access_log: {
         Row: {
           action: string
@@ -340,6 +364,8 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
+          escalation_level: string | null
+          escalation_sent_at: string | null
           extra_facts: string | null
           first_response_at: string | null
           first_response_by: string | null
@@ -383,6 +409,8 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          escalation_level?: string | null
+          escalation_sent_at?: string | null
           extra_facts?: string | null
           first_response_at?: string | null
           first_response_by?: string | null
@@ -426,6 +454,8 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          escalation_level?: string | null
+          escalation_sent_at?: string | null
           extra_facts?: string | null
           first_response_at?: string | null
           first_response_by?: string | null
@@ -608,6 +638,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      access_review: {
+        Args: { _month: string }
+        Returns: {
+          case_views: number
+          exports: number
+          last_activity: string
+          last_login: string
+          name_masked: string
+          roles: string[]
+          status: string
+          user_id: string
+        }[]
+      }
       answer_case_question: {
         Args: {
           _answer_audio_url?: string
