@@ -15,6 +15,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminPartners from "./pages/AdminPartners";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { GlobalQuickExit } from "@/components/screening/GlobalQuickExit";
 import { I18nProvider } from "@/i18n";
 
 import ResetPassword from "./pages/ResetPassword";
@@ -31,6 +32,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <GlobalQuickExit />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/intake" element={<Intake />} />

@@ -281,6 +281,7 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           extra_facts: string | null
+          first_response_at: string | null
           follow_up_at: string | null
           has_violation: boolean | null
           id: string
@@ -319,6 +320,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           extra_facts?: string | null
+          first_response_at?: string | null
           follow_up_at?: string | null
           has_violation?: boolean | null
           id?: string
@@ -357,6 +359,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           extra_facts?: string | null
+          first_response_at?: string | null
           follow_up_at?: string | null
           has_violation?: boolean | null
           id?: string

@@ -24,7 +24,6 @@ import { AreaPicker } from '@/components/screening/AreaPicker';
 import { GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, type Severity } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { QuickExit } from '@/components/screening/QuickExit';
 import { stripImageMetadata } from '@/lib/exif';
 import { clearDraft, readDraftMeta, loadAudioBlobs, loadPhotoBlobs, saveAudioBlobs, savePhotoBlobs } from '@/lib/draft';
 import { saveLocalCase, deleteLocalCase, listLocalCases, importLegacyDraft, currentSessionId, rotateSessionId } from '@/lib/localCases';
@@ -103,7 +102,6 @@ export default function Intake() {
 
   return (
     <PhoneShell onBack={step === 'consent' ? undefined : goBack} onClose={() => navigate('/')}>
-      <QuickExit />
       {draftAt && (
         <div className="mb-4 rounded-xl border border-primary/30 bg-primary-soft/50 p-3">
           <p className="text-xs font-medium text-primary mb-1">{t('intake.draft.found')}</p>
