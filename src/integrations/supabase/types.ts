@@ -282,6 +282,7 @@ export type Database = {
           deleted_by: string | null
           extra_facts: string | null
           first_response_at: string | null
+          first_response_by: string | null
           follow_up_at: string | null
           has_violation: boolean | null
           id: string
@@ -291,6 +292,7 @@ export type Database = {
           referrals: Json | null
           report_language: string
           reporter: Json | null
+          response_sla_met: boolean | null
           screening: Json
           severity: string | null
           signature_client: string | null
@@ -321,6 +323,7 @@ export type Database = {
           deleted_by?: string | null
           extra_facts?: string | null
           first_response_at?: string | null
+          first_response_by?: string | null
           follow_up_at?: string | null
           has_violation?: boolean | null
           id?: string
@@ -330,6 +333,7 @@ export type Database = {
           referrals?: Json | null
           report_language?: string
           reporter?: Json | null
+          response_sla_met?: boolean | null
           screening?: Json
           severity?: string | null
           signature_client?: string | null
@@ -360,6 +364,7 @@ export type Database = {
           deleted_by?: string | null
           extra_facts?: string | null
           first_response_at?: string | null
+          first_response_by?: string | null
           follow_up_at?: string | null
           has_violation?: boolean | null
           id?: string
@@ -369,6 +374,7 @@ export type Database = {
           referrals?: Json | null
           report_language?: string
           reporter?: Json | null
+          response_sla_met?: boolean | null
           screening?: Json
           severity?: string | null
           signature_client?: string | null
@@ -559,7 +565,10 @@ export type Database = {
         }
         Returns: boolean
       }
-      dashboard_stats: { Args: { _branch?: string }; Returns: Json }
+      dashboard_stats: {
+        Args: { _branch?: string; _from?: string; _to?: string }
+        Returns: Json
+      }
       ensure_staff_profile: {
         Args: { _display_name?: string }
         Returns: undefined
@@ -593,6 +602,7 @@ export type Database = {
         Returns: undefined
       }
       submit_case: { Args: { _payload: Json }; Returns: string }
+      verify_cron_token: { Args: { _token: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "staff" | "manager" | "caseworker" | "viewer"

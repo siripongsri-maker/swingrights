@@ -29,7 +29,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 const PAGE_SIZE = 20;
 
 const LIST_COLS =
-  'id, case_code, status, severity, created_at, follow_up_at, assigned_to, suicide_risk, ai_reviewed, victim, profile, ai_result';
+  'id, case_code, status, severity, created_at, follow_up_at, assigned_to, suicide_risk, ai_reviewed, victim, profile, ai_result, first_response_at';
 const DETAIL_COLS = '*';
 const sel = (s: string): string => s;
 
@@ -46,13 +46,26 @@ interface CaseListRow {
   victim: any;
   profile: any;
   ai_result: any;
+  first_response_at: string | null;
+}
+
+function SlaBadge({ createdAt }: { createdAt: string }) {
+  const { t } = useI18n();
+  const elapsed = (Date.now() - new Date(createdAt).getTime()) / 3_600_000;
+  const left = 24 - elapsed;
+  if (left <= 0) {
+    return <span className="text-[10px] bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full tabular-nums">{t('dash.sla.overdue', { h: Math.floor(elapsed) })}</span>;
+  }
+  const h = Math.ceil(left);
+  const cls = left < 6 ? 'bg-amber-100 text-amber-800' : 'bg-muted text-muted-foreground';
+  return <span className={`text-[10px] px-2 py-0.5 rounded-full tabular-nums ${cls}`}>{t('dash.sla.remaining', { h })}</span>;
 }
 
 interface Staff { id: string; display_name: string | null; email: string | null }
 
 interface Stats {
   total: number; open: number; suicide_risk: number; unassigned: number; overdue_follow_up: number;
-  kpi_due?: number; kpi_met?: number; awaiting_response?: number;
+  sla_total?: number; sla_met_count?: number; awaiting_response?: number;
   by_severity: Record<string, number>; by_status: Record<string, number>;
   by_branch: Record<string, number>; by_kp: Record<string, number>; by_caseworker: Record<string, number>;
 }
@@ -324,8 +337,8 @@ export default function AdminDashboard() {
                   <StatCard num={stats?.overdue_follow_up ?? 0} label={t('dash.stat.overdue')} tone="amber" />
                 </div>
                 {(() => {
-                  const due = stats?.kpi_due ?? 0;
-                  const met = stats?.kpi_met ?? 0;
+                  const due = stats?.sla_total ?? 0;
+                  const met = stats?.sla_met_count ?? 0;
                   const pct = due > 0 ? Math.round((met / due) * 100) : null;
                   const ok = pct !== null && pct >= 90;
                   return (
@@ -335,7 +348,7 @@ export default function AdminDashboard() {
                         <span className="text-xs text-muted-foreground">{t('dash.kpi.target')}</span>
                       </div>
                       <p className={`text-4xl font-display tabular-nums mt-2 ${pct === null ? 'text-muted-foreground' : ok ? 'text-primary' : 'text-destructive'}`}>
-                        {pct === null ? '—' : `${pct}%`}
+                        {pct === null ? '—' : <>{pct}% <span className="text-base text-muted-foreground">{met} / {due}</span></>}
                       </p>
                       <div className="h-2 rounded-full bg-muted mt-3 overflow-hidden">
                         <div className={`h-full ${ok ? 'bg-primary' : 'bg-destructive'}`} style={{ width: `${pct ?? 0}%` }} />
@@ -398,6 +411,7 @@ export default function AdminDashboard() {
                         <StatusBadge value={c.status} />
                         {c.severity && <SeverityBadge value={c.severity} />}
                         {c.suicide_risk && <span className="text-[10px] bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full">{t('dash.cases.suicideRiskBadge')}</span>}
+                        {!c.first_response_at && <SlaBadge createdAt={c.created_at} />}
                         {overdue && <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">{t('dash.cases.overdueBadge')}</span>}
                         <span className="ml-auto text-[11px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
                       </div>
