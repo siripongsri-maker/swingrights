@@ -1,0 +1,37 @@
+import type { Entry } from '../index';
+
+/** De-identified project summary report for donors (admin/manager only). */
+export const PROJECT_REPORT_DICT: Record<string, Entry> = {
+  'prep.button': { th: 'ส่งออกรายงานโครงการ', en: 'Export project report' },
+  'prep.back': { th: 'กลับแดชบอร์ด', en: 'Back to dashboard' },
+  'prep.from': { th: 'ตั้งแต่', en: 'From' },
+  'prep.to': { th: 'ถึง', en: 'To' },
+  'prep.branch': { th: 'พื้นที่', en: 'Site' },
+  'prep.allBranches': { th: 'ทุกพื้นที่', en: 'All sites' },
+  'prep.generate': { th: 'สร้างรายงาน', en: 'Generate report' },
+  'prep.csv': { th: 'ดาวน์โหลด CSV', en: 'Download CSV' },
+  'prep.pdf': { th: 'ดาวน์โหลด PDF (พิมพ์)', en: 'Download PDF (print)' },
+  'prep.reportLang': { th: 'ภาษารายงาน', en: 'Report language' },
+  'prep.error': { th: 'สร้างรายงานไม่สำเร็จ', en: 'Could not generate report' },
+  'prep.title': { th: 'รายงานสรุปโครงการ SWING RIGHTS', en: 'SWING RIGHTS project summary' },
+  'prep.subtitle': { th: 'โครงการ "รู้สิทธิ ปลอดภัย" · APCOM / Youth LEAD', en: '"Know Your Rights, Stay Safe" · APCOM / Youth LEAD' },
+  'prep.period': { th: 'ช่วงเวลา', en: 'Period' },
+  'prep.generatedAt': { th: 'สร้างเมื่อ', en: 'Generated' },
+  'prep.total': { th: 'เคสทั้งหมด', en: 'Total cases' },
+  'prep.sla': { th: 'ตอบกลับภายใน 24 ชม.', en: 'Responded within 24h' },
+  'prep.referrals': { th: 'การส่งต่อ', en: 'Referrals' },
+  'prep.accepted': { th: 'รับเรื่องแล้ว', en: 'accepted' },
+  'prep.emergency': { th: 'ใช้กองทุนฉุกเฉิน', en: 'Emergency fund cases' },
+  'prep.suicide': { th: 'มีความเสี่ยงฆ่าตัวตาย', en: 'Suicide risk flagged' },
+  'prep.byBranch': { th: 'ตามพื้นที่', en: 'By site' },
+  'prep.byViolation': { th: 'ตามประเภทการละเมิด', en: 'By violation type' },
+  'prep.byGroup': { th: 'ตามกลุ่มผู้รับบริการ', en: 'By client group' },
+  'prep.bySeverity': { th: 'ตามระดับความรุนแรง', en: 'By severity' },
+  'prep.none': { th: 'ไม่มีข้อมูล', en: 'No data' },
+  'prep.note': {
+    th: 'ข้อมูลไม่ระบุตัวตน แสดงเฉพาะจำนวน ตัวเลขที่ต่ำกว่า 3 แสดงเป็น "<3" เพื่อปกป้องกลุ่มเล็ก',
+    en: 'De-identified. Counts only. Numbers below 3 are shown as "<3" to protect small groups.',
+  },
+  'prep.csv.metric': { th: 'ตัวชี้วัด', en: 'Metric' },
+  'prep.csv.value': { th: 'ค่า', en: 'Value' },
+};
