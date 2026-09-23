@@ -98,7 +98,7 @@ export const TOOLS_DICT: Record<string, Entry> = {
   // ---------- NRM ----------
   'tools.nrm.title': {
     th: 'แบบคัดแยกผู้เสียหายจากการค้ามนุษย์ (NRM)',
-    en: 'National Referral Mechanism — Trafficking Victim Screening (NRM)',
+    en: 'National Referral Mechanism — Trafficking Screening (NRM)',
   },
   'tools.nrm.subtitle': {
     th: 'เข้าเกณฑ์เมื่อพบตัวบ่งชี้ครบทั้ง 3 ด้าน (หรือ 2 ด้านหากอายุต่ำกว่า 18 ปี)',
@@ -148,11 +148,11 @@ export const TOOLS_DICT: Record<string, Entry> = {
     th: 'ทำงานเกินเวลาหรือในสภาพที่เป็นอันตราย โดยปฏิเสธไม่ได้',
     en: 'Worked excessive hours or in hazardous conditions with no ability to refuse',
   },
-  'tools.nrm.under18': { th: 'ผู้เสียหายอายุต่ำกว่า 18 ปี', en: 'Victim is under 18 years old' },
+  'tools.nrm.under18': { th: 'ผู้เสียหายอายุต่ำกว่า 18 ปี', en: 'Person affected is under 18 years old' },
   'tools.nrm.resultLabel': { th: 'ผล NRM', en: 'NRM result' },
   'tools.nrm.positive': {
     th: 'เข้าข่ายผู้เสียหายจากการค้ามนุษย์ — ส่งต่อทีมสหวิชาชีพ/OSCC',
-    en: 'Meets criteria for a trafficking victim — refer to multidisciplinary team/OSCC',
+    en: 'Meets criteria for a person affected by trafficking — refer to multidisciplinary team/OSCC',
   },
   'tools.nrm.negative': { th: 'ยังไม่เข้าเกณฑ์เบื้องต้น', en: 'Does not yet meet the preliminary criteria' },
   'tools.nrm.minorNote': {
