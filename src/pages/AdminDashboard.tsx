@@ -29,7 +29,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 const PAGE_SIZE = 20;
 
 const LIST_COLS =
-  'id, case_code, status, severity, created_at, follow_up_at, assigned_to, suicide_risk, ai_reviewed, victim, profile, ai_result';
+  'id, case_code, status, severity, created_at, follow_up_at, assigned_to, suicide_risk, ai_reviewed, victim, profile, ai_result, first_response_at';
 const DETAIL_COLS = '*';
 const sel = (s: string): string => s;
 
@@ -46,6 +46,19 @@ interface CaseListRow {
   victim: any;
   profile: any;
   ai_result: any;
+  first_response_at: string | null;
+}
+
+function SlaBadge({ createdAt }: { createdAt: string }) {
+  const { t } = useI18n();
+  const elapsed = (Date.now() - new Date(createdAt).getTime()) / 3_600_000;
+  const left = 24 - elapsed;
+  if (left <= 0) {
+    return <span className="text-[10px] bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full tabular-nums">{t('dash.sla.overdue', { h: Math.floor(elapsed) })}</span>;
+  }
+  const h = Math.ceil(left);
+  const cls = left < 6 ? 'bg-amber-100 text-amber-800' : 'bg-muted text-muted-foreground';
+  return <span className={`text-[10px] px-2 py-0.5 rounded-full tabular-nums ${cls}`}>{t('dash.sla.remaining', { h })}</span>;
 }
 
 interface Staff { id: string; display_name: string | null; email: string | null }

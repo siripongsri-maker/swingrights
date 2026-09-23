@@ -26,6 +26,11 @@ export function useCaseAlerts(enabled: boolean, onAlert?: (a: CaseAlert) => void
         const a = payload.new as CaseAlert;
         const urgent = a.kind === 'suicide_risk';
         const area = a.branch || t('access.alerts.unspecifiedArea');
+        if (a.kind === 'sla_warning') {
+          toast.warning(t('dash.sla.alert', { code: a.case_code, area, hours: parseInt(a.level, 10) || 0 }), { duration: 15000 });
+          onAlert?.(a);
+          return;
+        }
         const msg = `${a.case_code} · ${area} · ${t('access.alerts.levelPrefix', { level: a.level })}`;
         if (urgent) toast.error(t('access.alerts.selfHarmRisk', { msg }), { duration: 20000 });
         else toast.warning(t('access.alerts.highRisk', { msg }), { duration: 12000 });

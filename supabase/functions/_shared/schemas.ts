@@ -69,12 +69,16 @@ export const analyzeCaseSchema = z.object({
   extraFacts: z.string().max(10000).default(""),
 });
 
-export const notifyCaseSchema = z.object({
-  case_code: caseCode,
-  branch: z.string().max(60).nullable().optional(),
-  level: z.string().max(20).nullable().optional(),
-  kind: z.enum(["high_risk", "suicide_risk"]).nullable().optional(),
-});
+export const notifyCaseSchema = z.union([
+  z.object({
+    case_code: caseCode,
+    branch: z.string().max(60).nullable().optional(),
+    level: z.string().max(20).nullable().optional(),
+    kind: z.enum(["high_risk", "suicide_risk", "sla_warning"]).nullable().optional(),
+    hours_remaining: z.number().int().min(0).max(24).nullable().optional(),
+  }),
+  z.object({ action: z.literal("sla_sweep") }),
+]);
 
 const uuid = z.string().uuid();
 const role = z.enum(["admin", "manager", "caseworker", "viewer"]);
