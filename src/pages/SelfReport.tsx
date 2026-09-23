@@ -16,6 +16,7 @@ import { formatArea } from '@/lib/thaiGeo';
 import { stripImageMetadata } from '@/lib/exif';
 import { saveLocalCase, deleteLocalCase } from '@/lib/localCases';
 import { cn } from '@/lib/utils';
+import { PiiHint, usePiiGuard } from '@/lib/piiGuard';
 
 const MEDIA_FN = 'upload-case-media';
 
@@ -268,9 +269,12 @@ export default function SelfReport() {
     setTypes((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
 
   // ---- submit (single submit_case call) ----
+  const piiGuard = usePiiGuard();
   const submit = async (msgId: number) => {
     if (submitting) return;
     const story = (draftText.trim() || transcript.trim());
+    const piiResult = await piiGuard.check(story, ...PROBE_IDS.map((qid) => probeAnswers[qid]?.text));
+    if (piiResult === 'edit') return;
     setSubmitting(true);
     resolveWidget(msgId);
     push({ role: 'user', text: t('report.partners.ack') });
@@ -319,6 +323,7 @@ export default function SelfReport() {
       answers: answersArr,
       violation_details: types,
       extra_facts: `${story}\n${probeDigest}`.trim().slice(0, 5000),
+      pii_flag: piiResult === 'send',
       referrals: partners.slice(0, 3).map((p) => ({
         org_name: p.name, phone: p.phone ?? '', note: t('report.partners.noteAuto'),
       })),

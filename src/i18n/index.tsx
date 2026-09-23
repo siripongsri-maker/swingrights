@@ -40,6 +40,7 @@ import { TOOLS_DICT } from './dict/tools';
 import { PRIVACY_DICT } from './dict/privacy';
 import { REFERRAL_DICT } from './dict/referral';
 import { PROJECT_REPORT_DICT } from './dict/projectReport';
+import { PII_DICT } from './dict/pii';
 
 const BASE_DICT: Dict = {
   // ---------- Common ----------
@@ -638,6 +639,7 @@ export const DICT: Dict = {
   ...PRIVACY_DICT,
   ...REFERRAL_DICT,
   ...PROJECT_REPORT_DICT,
+  ...PII_DICT,
 };
 
 export function I18nProvider({ children }: { children: ReactNode }) {
