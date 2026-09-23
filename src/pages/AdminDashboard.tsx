@@ -37,6 +37,7 @@ const sel = (s: string): string => s;
 interface CaseListRow {
   id: string;
   case_code: string;
+  pii_flag?: boolean;
   status: CaseStatus;
   severity: 'green' | 'yellow' | 'red' | null;
   created_at: string;
