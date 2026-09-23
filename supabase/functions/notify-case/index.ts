@@ -1,6 +1,6 @@
 // แจ้งเตือนเคส — ข้อความ de-identified เท่านั้น (case_code + สาขา + ระดับ / ชั่วโมงที่เหลือ)
 // ช่องทาง: LINE Messaging API (push) + Resend email สำรอง
-// kind: high_risk | suicide_risk | sla_warning ; action "sla_sweep" = hourly job (requires x-cron-token)
+// kind: high_risk | suicide_risk | sla_warning | unassigned ; action "sla_sweep" = hourly job (requires x-cron-token)
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { parseBody, notifyCaseSchema } from "../_shared/schemas.ts";
@@ -12,9 +12,17 @@ const corsHeaders = {
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-type Kind = "high_risk" | "suicide_risk" | "sla_warning";
+type Kind = "high_risk" | "suicide_risk" | "sla_warning" | "unassigned";
 
 function buildText(kind: Kind, code: string, branch: string, level: string, hours: number | null) {
+  if (kind === "unassigned") {
+    return [
+      level === "manager" ? "📣 แจ้งผู้จัดการ: เคสยังไม่มีผู้รับผิดชอบเกิน 12 ชม." : "📌 เคสยังไม่มีผู้รับผิดชอบเกิน 4 ชม.",
+      `รหัสเคส: ${code}`,
+      `พื้นที่: ${branch}`,
+      `ระดับ: ${level}`,
+    ].join("\n");
+  }
   if (kind === "sla_warning") {
     return [
       "⏰ ใกล้ครบ 24 ชม. ยังไม่มีการตอบกลับ",
@@ -99,7 +107,32 @@ serve(async (req) => {
         await send(buildText("sla_warning", c.case_code, branch, "", hours), `SWING SLA · ${c.case_code} · ${hours}h`);
         sent++;
       }
-      return json({ ok: true, checked: cases?.length ?? 0, sent });
+      // Escalation: unassigned > 4h → "staff" once; > 12h → "manager" once
+      const { data: unassigned, error: uErr } = await db
+        .from("cases")
+        .select("id, case_code, created_at, profile, escalation_level")
+        .is("assigned_to", null)
+        .is("deleted_at", null)
+        .lte("created_at", new Date(now - 4 * 3600_000).toISOString())
+        .or("escalation_level.is.null,escalation_level.eq.staff");
+      if (uErr) throw uErr;
+      let escalated = 0;
+      for (const c of unassigned ?? []) {
+        const age = now - new Date(c.created_at).getTime();
+        const target = age >= 12 * 3600_000 ? "manager" : "staff";
+        if (c.escalation_level === target) continue;
+        // claim atomically to avoid duplicates
+        let q = db.from("cases").update({ escalation_level: target, escalation_sent_at: new Date().toISOString() })
+          .eq("id", c.id).is("assigned_to", null);
+        q = c.escalation_level ? q.eq("escalation_level", c.escalation_level) : q.is("escalation_level", null);
+        const { data: claimed } = await q.select("id");
+        if (!claimed?.length) continue;
+        const branch = String((c.profile as Record<string, unknown> | null)?.branch ?? "ไม่ระบุ").slice(0, 60);
+        await db.from("case_alerts").insert({ case_id: c.id, case_code: c.case_code, branch, level: target, kind: "unassigned" });
+        await send(buildText("unassigned", c.case_code, branch, target, null), `SWING unassigned · ${c.case_code} · ${target}`);
+        escalated++;
+      }
+      return json({ ok: true, checked: cases?.length ?? 0, sent, escalated });
     }
 
     const kind = ((body.kind as Kind | null) ?? "high_risk");

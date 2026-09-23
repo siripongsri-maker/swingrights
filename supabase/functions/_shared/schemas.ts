@@ -74,7 +74,7 @@ export const notifyCaseSchema = z.union([
     case_code: caseCode,
     branch: z.string().max(60).nullable().optional(),
     level: z.string().max(20).nullable().optional(),
-    kind: z.enum(["high_risk", "suicide_risk", "sla_warning"]).nullable().optional(),
+    kind: z.enum(["high_risk", "suicide_risk", "sla_warning", "unassigned"]).nullable().optional(),
     hours_remaining: z.number().int().min(0).max(24).nullable().optional(),
   }),
   z.object({ action: z.literal("sla_sweep") }),
