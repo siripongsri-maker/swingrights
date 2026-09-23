@@ -348,7 +348,7 @@ export default function AdminDashboard() {
                         <span className="text-xs text-muted-foreground">{t('dash.kpi.target')}</span>
                       </div>
                       <p className={`text-4xl font-display tabular-nums mt-2 ${pct === null ? 'text-muted-foreground' : ok ? 'text-primary' : 'text-destructive'}`}>
-                        {pct === null ? '—' : `${pct}%`}
+                        {pct === null ? '—' : <>{pct}% <span className="text-base text-muted-foreground">{met} / {due}</span></>}
                       </p>
                       <div className="h-2 rounded-full bg-muted mt-3 overflow-hidden">
                         <div className={`h-full ${ok ? 'bg-primary' : 'bg-destructive'}`} style={{ width: `${pct ?? 0}%` }} />
