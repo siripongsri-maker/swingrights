@@ -279,6 +279,12 @@ export default function AdminDashboard() {
                 </Button>
               </>
             )}
+            {access.canManage && (
+              <Button onClick={() => navigate('/admin/report')} size="sm" variant="outline"
+                className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+                <FileText className="w-4 h-4" /> <span className="hidden sm:inline">{t('prep.button')}</span>
+              </Button>
+            )}
             {!access.isViewer && (
               <Button onClick={() => navigate('/intake')} size="sm" className="bg-primary hover:bg-primary/90"><Plus className="w-4 h-4" /> {t('dash.nav.newCase')}</Button>
             )}
