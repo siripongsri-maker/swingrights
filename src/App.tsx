@@ -9,6 +9,7 @@ import Intake from "./pages/Intake";
 import Track from "./pages/Track";
 import Recover from "./pages/Recover";
 import SelfReport from "./pages/SelfReport";
+import ReferralRespond from "./pages/ReferralRespond";
 
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/report" element={<SelfReport />} />
             <Route path="/track" element={<Track />} />
             <Route path="/recover" element={<Recover />} />
+            <Route path="/referral/:token" element={<ReferralRespond />} />
 
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/admin/login" element={<AdminLogin />} />
