@@ -38,6 +38,7 @@ import { ADMIN_DICT } from './dict/admin';
 import { MISC_DICT } from './dict/misc';
 import { TOOLS_DICT } from './dict/tools';
 import { PRIVACY_DICT } from './dict/privacy';
+import { REFERRAL_DICT } from './dict/referral';
 
 const BASE_DICT: Dict = {
   // ---------- Common ----------
@@ -634,6 +635,7 @@ export const DICT: Dict = {
   ...MISC_DICT,
   ...TOOLS_DICT,
   ...PRIVACY_DICT,
+  ...REFERRAL_DICT,
 };
 
 export function I18nProvider({ children }: { children: ReactNode }) {
