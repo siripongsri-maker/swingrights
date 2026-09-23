@@ -23,6 +23,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 import ProjectReport from "./pages/ProjectReport";
+import AccessReview from "./pages/AccessReview";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/admin/users" element={<ProtectedRoute allow={["admin"]}><AdminUsers /></ProtectedRoute>} />
             <Route path="/admin/partners" element={<ProtectedRoute allow={["admin"]}><AdminPartners /></ProtectedRoute>} />
             <Route path="/admin/report" element={<ProtectedRoute allow={["admin", "manager"]}><ProjectReport /></ProtectedRoute>} />
+            <Route path="/admin/access-review" element={<ProtectedRoute allow={["admin", "manager"]}><AccessReview /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
