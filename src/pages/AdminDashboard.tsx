@@ -52,6 +52,7 @@ interface Staff { id: string; display_name: string | null; email: string | null 
 
 interface Stats {
   total: number; open: number; suicide_risk: number; unassigned: number; overdue_follow_up: number;
+  kpi_due?: number; kpi_met?: number; awaiting_response?: number;
   by_severity: Record<string, number>; by_status: Record<string, number>;
   by_branch: Record<string, number>; by_kp: Record<string, number>; by_caseworker: Record<string, number>;
 }
@@ -322,6 +323,29 @@ export default function AdminDashboard() {
                   <StatCard num={stats?.unassigned ?? 0} label={t('dash.stat.unassigned')} tone="amber" />
                   <StatCard num={stats?.overdue_follow_up ?? 0} label={t('dash.stat.overdue')} tone="amber" />
                 </div>
+                {(() => {
+                  const due = stats?.kpi_due ?? 0;
+                  const met = stats?.kpi_met ?? 0;
+                  const pct = due > 0 ? Math.round((met / due) * 100) : null;
+                  const ok = pct !== null && pct >= 90;
+                  return (
+                    <div className="bg-card border border-border rounded-xl p-5 mb-6">
+                      <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                        <p className="font-medium">{t('dash.kpi.title')}</p>
+                        <span className="text-xs text-muted-foreground">{t('dash.kpi.target')}</span>
+                      </div>
+                      <p className={`text-4xl font-display tabular-nums mt-2 ${pct === null ? 'text-muted-foreground' : ok ? 'text-primary' : 'text-destructive'}`}>
+                        {pct === null ? '—' : `${pct}%`}
+                      </p>
+                      <div className="h-2 rounded-full bg-muted mt-3 overflow-hidden">
+                        <div className={`h-full ${ok ? 'bg-primary' : 'bg-destructive'}`} style={{ width: `${pct ?? 0}%` }} />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {t('dash.kpi.detail', { met, due, waiting: stats?.awaiting_response ?? 0 })}
+                      </p>
+                    </div>
+                  );
+                })()}
                 <ChartBlock title={t('dash.chart.byStatus')} data={Object.entries(stats?.by_status ?? {}).map(([k, v]) => ({ label: t(`status.${k}`), value: v }))} noDataLabel={t('dash.chart.noData')} />
                 <ChartBlock title={t('dash.chart.bySeverity')} data={Object.entries(stats?.by_severity ?? {}).map(([k, v]) => ({ label: k, value: v }))} noDataLabel={t('dash.chart.noData')} />
                 {branch === 'all' && <ChartBlock title={t('dash.chart.byBranch')} data={Object.entries(stats?.by_branch ?? {}).map(([k, v]) => ({ label: k, value: v }))} noDataLabel={t('dash.chart.noData')} />}
