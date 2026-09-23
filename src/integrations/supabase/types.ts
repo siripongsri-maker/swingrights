@@ -123,6 +123,7 @@ export type Database = {
           case_code: string | null
           case_id: string | null
           created_at: string
+          detail: string | null
           exported_by: string
           format: string
           id: string
@@ -131,6 +132,7 @@ export type Database = {
           case_code?: string | null
           case_id?: string | null
           created_at?: string
+          detail?: string | null
           exported_by?: string
           format: string
           id?: string
@@ -139,6 +141,7 @@ export type Database = {
           case_code?: string | null
           case_id?: string | null
           created_at?: string
+          detail?: string | null
           exported_by?: string
           format?: string
           id?: string
@@ -362,6 +365,7 @@ export type Database = {
           status: string
           suicide_risk: boolean
           updated_at: string
+          used_emergency_fund: boolean
           victim: Json | null
           violation_details: Json | null
           violation_types: Json | null
@@ -403,6 +407,7 @@ export type Database = {
           status?: string
           suicide_risk?: boolean
           updated_at?: string
+          used_emergency_fund?: boolean
           victim?: Json | null
           violation_details?: Json | null
           violation_types?: Json | null
@@ -444,6 +449,7 @@ export type Database = {
           status?: string
           suicide_risk?: boolean
           updated_at?: string
+          used_emergency_fund?: boolean
           victim?: Json | null
           violation_details?: Json | null
           violation_types?: Json | null
@@ -658,11 +664,16 @@ export type Database = {
       }
       mask_name: { Args: { _name: string }; Returns: string }
       my_access: { Args: never; Returns: Json }
+      project_summary: {
+        Args: { _branch?: string; _from: string; _to: string }
+        Returns: Json
+      }
       record_site_visit: {
         Args: { _path: string; _session_id: string }
         Returns: undefined
       }
       submit_case: { Args: { _payload: Json }; Returns: string }
+      suppress_small: { Args: { _n: number }; Returns: Json }
       verify_cron_token: { Args: { _token: string }; Returns: boolean }
     }
     Enums: {

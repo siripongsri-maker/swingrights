@@ -22,6 +22,7 @@ import { I18nProvider } from "@/i18n";
 import ResetPassword from "./pages/ResetPassword";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
+import ProjectReport from "./pages/ProjectReport";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute allow={["admin"]}><AdminUsers /></ProtectedRoute>} />
             <Route path="/admin/partners" element={<ProtectedRoute allow={["admin"]}><AdminPartners /></ProtectedRoute>} />
+            <Route path="/admin/report" element={<ProtectedRoute allow={["admin", "manager"]}><ProjectReport /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
