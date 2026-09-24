@@ -21,7 +21,7 @@ serve(async (req) => {
     auth: { persistSession: false },
   });
   const { data: r } = await db.from("case_referrals")
-    .select("id, case_id, partner_id, outcome, note, token_expires_at, referral_partners(name), cases(case_code, profile, violation_types, deleted_at)")
+    .select("id, case_id, partner_id, outcome, note, summary, token_expires_at, referral_partners(name), cases(case_code, profile, violation_types, severity, deleted_at)")
     .eq("accept_token", data.token).maybeSingle();
   // deno-lint-ignore no-explicit-any
   const ref = r as any;
@@ -35,6 +35,10 @@ serve(async (req) => {
       branch: ref.cases.profile?.branch ?? null,
       violation_types: Array.isArray(ref.cases.violation_types) ? ref.cases.violation_types.slice(0, 20) : [],
       note: ref.note,
+      summary: ref.summary ?? null,
+      severity: ref.cases.severity ?? null,
+      province: ref.cases.profile?.province ?? null,
+      district: ref.cases.profile?.district ?? null,
       outcome: ref.outcome,
       expires_at: ref.token_expires_at,
     });

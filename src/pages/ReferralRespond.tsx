@@ -8,7 +8,7 @@ import { useI18n } from '@/i18n';
 
 interface RefView {
   case_code: string; branch: string | null; violation_types: string[];
-  note: string | null; outcome: string; expires_at: string | null;
+  note: string | null; summary: string | null; severity: string | null; province: string | null; district: string | null; outcome: string; expires_at: string | null;
 }
 
 export default function ReferralRespond() {
@@ -58,6 +58,9 @@ export default function ReferralRespond() {
                   )) : t('ref.page.unspecified')}
                 </dd>
               </div>
+              {(data.province || data.district) && <div><dt className="text-xs text-muted-foreground">{t('ref.page.area')}</dt><dd>{[data.district, data.province].filter(Boolean).join(' · ')}</dd></div>}
+              {data.severity && <div><dt className="text-xs text-muted-foreground">{t('ref.page.severity')}</dt><dd>{t(`ref.sev.${data.severity}`)}</dd></div>}
+              {data.summary && <div><dt className="text-xs text-muted-foreground">{t('ref.page.summary')}</dt><dd className="whitespace-pre-wrap rounded-lg bg-muted/50 p-3 mt-1">{data.summary}</dd></div>}
               {data.note && <div><dt className="text-xs text-muted-foreground">{t('ref.page.note')}</dt><dd className="whitespace-pre-wrap">{data.note}</dd></div>}
               {state === 'ready' && data.expires_at && (
                 <p className="text-[11px] text-muted-foreground">{t('ref.page.expires', { date: new Date(data.expires_at).toLocaleString() })}</p>
