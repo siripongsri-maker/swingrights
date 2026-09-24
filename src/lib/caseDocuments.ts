@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 export interface DocInput {
   caseCode: string | null;
   createdAt: string;
-  reporter: { type?: string; name?: string; address?: string; email?: string; phone?: string } | null;
+  reporter: { type?: string; name?: string; address?: string; email?: string; phone?: string; contact?: string } | null;
   victim: { name?: string; contact?: string } | null;
   profile: any;
   answers: { question: string; cat?: string; transcript?: string }[];
@@ -136,13 +136,20 @@ const blankSig = (left: string, right: string) => `
     <div><div class="line"></div><div>(............................................)</div><div>${right}</div></div>
   </div>`;
 
+const callbackLine = (d: DocInput) => {
+  const parts = [d.reporter?.phone, d.reporter?.contact, d.victim?.contact, d.reporter?.email]
+    .map((v) => (v || '').trim()).filter(Boolean);
+  return [...new Set(parts)].join(' · ') || '............................................';
+};
+
 const personTable = (d: DocInput) => {
   const p = d.profile || {};
   return `<table>
     <tr><th>ชื่อ-นามสกุล</th><td>${esc(d.victim?.name)}</td></tr>
     <tr><th>กลุ่มประชากร / เพศสภาพ</th><td>${esc(p.kp)} · ${esc(p.gender)}</td></tr>
     <tr><th>อายุ / สัญชาติ</th><td>${esc(p.age || '-')} · ${esc(p.nationality)}</td></tr>
-    <tr><th>ที่อยู่ / ช่องทางติดต่อ</th><td>${esc(d.victim?.contact)}</td></tr>
+    <tr><th>ที่อยู่ที่ติดต่อได้</th><td>${esc(d.reporter?.address || '-')}</td></tr>
+    <tr><th>เบอร์โทรศัพท์ / ช่องทางติดต่อกลับ</th><td>${esc(callbackLine(d))}</td></tr>
     <tr><th>พื้นที่</th><td>ต.${esc(p.subdistrict)} อ.${esc(p.district)} จ.${esc(p.province || p.branch)}${p.incidentPlace ? ` · จุดเกิดเหตุ: ${esc(p.incidentPlace)}` : ''}</td></tr>
   </table>`;
 };
@@ -176,7 +183,7 @@ function complaintHtml(d: DocInput) {
   <div class="section"><h2>ผู้แจ้งความ</h2><table>
     <tr><th>ชื่อ-นามสกุล</th><td>${esc(d.reporter?.name || d.victim?.name)}${d.reporter?.type === 'other' ? ' (แจ้งแทนผู้เสียหาย)' : ''}</td></tr>
     <tr><th>ที่อยู่ที่ติดต่อได้</th><td>${esc(d.reporter?.address)}</td></tr>
-    <tr><th>โทรศัพท์ / อีเมล</th><td>${esc(d.reporter?.phone)} · ${esc(d.reporter?.email)}</td></tr>
+    <tr><th>เบอร์โทรศัพท์ / ช่องทางติดต่อกลับ</th><td>${esc(callbackLine(d))}</td></tr>
   </table></div>
 
   ${d.reporter?.type === 'other' ? `<div class="section"><h2>ผู้ถูกกระทำ</h2>${personTable(d)}</div>` : ''}
