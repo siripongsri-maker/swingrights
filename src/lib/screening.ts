@@ -21,6 +21,7 @@ export const VIOLATION_TYPES = [
   { id: 'labor', label: 'สิทธิ์แรงงาน' },
   { id: 'health', label: 'สิทธิ์สุขภาพ' },
   { id: 'property', label: 'สิทธิ์ในทรัพย์สิน' },
+  { id: 'mental', label: 'การละเมิดทางจิตใจ' },
 ];
 
 export const QUESTIONS = [
@@ -62,3 +63,5 @@ export function genCaseCode() {
   const rand = Math.random().toString(36).slice(2, 6).toUpperCase();
   return `SW-${yr}${mo}-${rand}`;
 }
+
+export const MENTAL_VIOLATION_LABEL = 'การละเมิดทางจิตใจ';

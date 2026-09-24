@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { useIntake } from '@/store/intake';
 import { AreaPicker } from '@/components/screening/AreaPicker';
-import { GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, type Severity } from '@/lib/screening';
+import { GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, MENTAL_VIOLATION_LABEL, type Severity } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { stripImageMetadata } from '@/lib/exif';
@@ -902,7 +902,8 @@ function HistoryAudio({ blob }: { blob: Blob }) {
 /* ----------------- 5. ASSESS ----------------- */
 function AssessStep({ onNext }: { onNext: () => void }) {
   const { t } = useI18n();
-  const { hasViolation, violationDetails, severity, specialTests, extraFacts, screening, set, patch } = useIntake();
+  const { hasViolation, violationDetails, severity, specialTests, extraFacts, screening, set, patch, profile } = useIntake();
+  const showMental = violationDetails.includes(MENTAL_VIOLATION_LABEL) || (profile?.initialViolationTypes ?? []).includes(MENTAL_VIOLATION_LABEL);
 
   const toggleDetail = (label: string) => {
     set('violationDetails', violationDetails.includes(label) ? violationDetails.filter((x) => x !== label) : [...violationDetails, label]);
@@ -995,7 +996,7 @@ function AssessStep({ onNext }: { onNext: () => void }) {
       </Card>
 
       <Card title={t('intake.assess.q41title')}>
-        <ScreeningTools value={screening} onChange={(v) => set('screening', v)} />
+        <ScreeningTools value={screening} onChange={(v) => set('screening', v)} showMental={showMental} />
       </Card>
 
 
