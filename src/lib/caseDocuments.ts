@@ -5,6 +5,7 @@ import { q9Level, nrmPositive } from '@/lib/screeningTools';
 import { AI_DISCLAIMER, logExport, type CaseReportData } from '@/lib/caseReport';
 import type { IntakeState } from '@/store/intake';
 import { toast } from 'sonner';
+import lockupAsset from '@/assets/brand/swing-rights-lockup.png.asset.json';
 
 export interface DocInput {
   caseCode: string | null;
@@ -64,34 +65,35 @@ const thaiDateTime = (iso?: string) => {
 const DOC_CSS = `
 @page { size: A4; margin: 18mm 15mm; }
 * { box-sizing: border-box; }
-body { font-family: 'Sarabun','Noto Sans Thai',-apple-system,system-ui,sans-serif; color:#1a1a1a; margin:0; padding:28px; line-height:1.65; font-size:13px; }
+body { font-family:'IBM Plex Sans Thai','Noto Sans Thai',system-ui,sans-serif; color:#161615; margin:0; padding:28px; line-height:1.65; font-size:13px; }
 .org { text-align:center; margin-bottom:4px; }
+.org img { display:block; width:112px; max-height:96px; object-fit:contain; margin:0 auto 8px; }
 .org .name { font-size:15px; font-weight:600; }
-.org .en { font-size:10px; color:#777; letter-spacing:.06em; }
-h1 { text-align:center; font-size:17px; margin:10px 0 2px; font-weight:600; }
-.docno { text-align:center; font-size:11px; color:#666; margin-bottom:16px; }
+.org .en { font-size:10px; color:#5b6168; letter-spacing:0; }
+h1 { font-family:'Bai Jamjuree','Noto Sans Thai',sans-serif; text-align:center; font-size:17px; margin:10px 0 2px; font-weight:600; }
+.docno { text-align:center; font-size:11px; color:#5b6168; margin-bottom:16px; }
 .meta { font-size:12.5px; margin-bottom:10px; }
 .meta p { margin:2px 0; }
 .section { margin:14px 0; break-inside:avoid; }
 .section h2 { font-size:13px; margin:0 0 6px; padding-bottom:3px; border-bottom:1.5px solid #1a1a1a; font-weight:600; }
 table { width:100%; border-collapse:collapse; font-size:12px; }
-th, td { border:0.5px solid #bbb; padding:5px 8px; text-align:left; vertical-align:top; }
-th { background:#f2f2f2; font-weight:600; width:30%; }
-.qa { border:0.5px solid #ccc; border-radius:4px; padding:8px 10px; margin-bottom:6px; break-inside:avoid; }
-.qa .q { color:#555; font-size:11px; margin-bottom:2px; }
+th, td { border:0.5px solid #d0e2e2; padding:5px 8px; text-align:left; vertical-align:top; }
+th { background:#e3f1f1; font-weight:600; width:30%; }
+.qa { border:0.5px solid #d0e2e2; border-radius:4px; padding:8px 10px; margin-bottom:6px; break-inside:avoid; }
+.qa .q { color:#5b6168; font-size:11px; margin-bottom:2px; }
 .qa .obs { margin-top:4px; font-size:11px; color:#7a5c00; background:#fff8e1; padding:4px 6px; border-radius:3px; }
-.box { border:0.5px solid #bbb; border-radius:4px; padding:10px 12px; }
+.box { border:0.5px solid #d0e2e2; border-radius:4px; padding:10px 12px; }
 .note { font-size:10.5px; color:#7a5c00; background:#fff8e1; border:0.5px solid #ffe08a; border-radius:4px; padding:8px 10px; }
 .warn { font-size:10.5px; color:#8a1f1f; background:#fdecec; border:0.5px solid #f5b5b5; border-radius:4px; padding:8px 10px; }
 .sig { display:flex; gap:18px; margin-top:26px; }
-.sig > div { flex:1; text-align:center; font-size:11px; color:#333; }
+.sig > div { flex:1; text-align:center; font-size:11px; color:#2a2a2e; }
 .sig .line { border-bottom:0.5px dotted #888; height:52px; margin:0 12px 6px; display:flex; align-items:flex-end; justify-content:center; }
 .sig img { max-height:48px; margin:0 auto; display:block; }
 .checks { list-style:none; padding:0; margin:6px 0; }
 .checks li { margin:3px 0; padding-left:22px; position:relative; }
 .checks li::before { content:'✓'; position:absolute; left:2px; color:#2e7d32; font-weight:700; }
 .checks li.no::before { content:'—'; color:#999; }
-.footer { margin-top:26px; font-size:9.5px; color:#888; text-align:center; border-top:0.5px solid #ddd; padding-top:8px; }
+.footer { margin-top:26px; font-size:9.5px; color:#5b6168; text-align:center; border-top:0.5px solid #d0e2e2; padding-top:8px; }
 ul.flat { margin:4px 0; padding-left:18px; }
 ul.flat li { margin:2px 0; }
 @media print { body { padding:0; } }
@@ -100,9 +102,9 @@ ul.flat li { margin:2px 0; }
 function openDoc(title: string, bodyHtml: string, d: DocInput, format: string) {
   const html = `<!doctype html><html lang="th"><head><meta charset="utf-8" />
   <title>${esc(title)} ${esc(d.caseCode || '')}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
   <style>${DOC_CSS}</style></head><body>
-  <div class="org"><div class="name">มูลนิธิสวิง (SWING Foundation)</div>
+  <div class="org"><img src="${lockupAsset.url}" alt="SWING RIGHTS" /><div class="name">มูลนิธิสวิง (SWING Foundation)</div>
   <div class="en">SERVICE WORKERS IN GROUP FOUNDATION — เอกสารลับ สำหรับหน่วยงานที่เกี่ยวข้องเท่านั้น</div></div>
   ${bodyHtml}
   <div class="footer">รหัสเคส ${esc(d.caseCode || '—')} · ออกเอกสารเมื่อ ${thaiDateTime()} · เอกสารลับตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 — ห้ามเปิดเผยโดยไม่ได้รับความยินยอม</div>
