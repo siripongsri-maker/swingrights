@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Loader2, Search, MessageCircleQuestion, Send, ShieldCheck } from 'lucide-react';
+import { Loader2, Search, MessageCircleQuestion, Send, ShieldCheck, Inbox, MessagesSquare, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
 import { StatusBadge } from '@/components/screening/StatusBadge';
@@ -36,6 +36,58 @@ interface TrackData {
   timeline: { status: string; note: string | null; created_at: string }[];
   files?: { audio: string[]; photos: string[] };
   questions: { id: string; question: string; created_at: string; answer_text: string | null; answered_at: string | null }[];
+}
+
+interface PublicStats { pending: number; in_progress: number; closed: number }
+
+function StatsChart() {
+  const { t } = useI18n();
+  const [stats, setStats] = useState<PublicStats | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const { data } = await supabase.rpc('track_public_stats' as never);
+        if (data) setStats(data as unknown as PublicStats);
+      } catch { /* chart is optional */ }
+    })();
+  }, []);
+
+  const rows = [
+    { key: 'pending' as const, label: t('track.stats.pending'), icon: Inbox, bar: 'bg-muted-foreground/40' },
+    { key: 'in_progress' as const, label: t('track.stats.inprogress'), icon: MessagesSquare, bar: 'bg-accent' },
+    { key: 'closed' as const, label: t('track.stats.closed'), icon: CheckCircle2, bar: 'bg-primary' },
+  ];
+  const max = Math.max(1, ...(stats ? rows.map((r) => stats[r.key]) : [1]));
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-card">
+      <h2 className="font-subhead text-sm font-semibold">{t('track.stats.title')}</h2>
+      <div className="space-y-2.5">
+        {rows.map((r, i) => {
+          const n = stats?.[r.key] ?? 0;
+          return (
+            <div key={r.key} className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                  <r.icon className="h-3.5 w-3.5" /> {r.label}
+                </span>
+                <span className="font-mono font-semibold tabular-nums">
+                  {stats ? n : '—'} <span className="font-normal text-muted-foreground">{t('track.stats.unit')}</span>
+                </span>
+              </div>
+              <div className="h-2.5 rounded-full bg-primary-soft overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${r.bar} transition-all duration-700 ease-out`}
+                  style={{ width: stats ? `${Math.max(4, (n / max) * 100)}%` : '4%', transitionDelay: `${i * 120}ms` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
 }
 
 export default function Track() {
@@ -112,45 +164,43 @@ export default function Track() {
   };
 
   return (
-    <PhoneShell>
-      <div className="space-y-6">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-primary font-semibold">{t('track.header')}</p>
-            <h1 className="font-display text-2xl font-bold mt-1">{t('track.title')}</h1>
-            <p className="text-sm text-muted-foreground mt-1">{t('track.subtitle')}</p>
-          </div>
-          <LanguageToggle />
-        </div>
+    <PhoneShell title={t('track.header')} trailing={<LanguageToggle />}>
+      <div className="space-y-5">
+        <header className="text-center space-y-1">
+          <h1 className="font-display text-2xl font-bold">{t('track.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('track.subtitle')}</p>
+        </header>
+
+        <StatsChart />
 
         <div className="flex gap-2">
           <Input
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             placeholder="SW-XXXXXXXX"
-            className="font-mono tracking-widest"
+            className="font-mono tracking-widest h-12 rounded-xl text-base"
             maxLength={20}
             onKeyDown={(e) => e.key === 'Enter' && void lookup(code)}
             aria-label={t('track.title')}
           />
-          <Button variant="action" onClick={() => void lookup(code)} disabled={loading || !code.trim()}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+          <Button variant="action" size="lg" className="h-12 rounded-xl px-5" onClick={() => void lookup(code)} disabled={loading || !code.trim()}>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Search className="w-4 h-4 me-1.5" />{t('track.search.button')}</>}
           </Button>
         </div>
 
-        {error && <p className="text-sm text-destructive text-center py-4 animate-fade-in">{error}</p>}
+        {error && <p className="text-sm text-destructive text-center py-3 animate-fade-in">{error}</p>}
 
         {!data && !error && !loading && (
-          <div className="py-4 text-center animate-fade-in">
-            <span className="mx-auto flex h-28 w-28 items-center justify-center rounded-[20px] border border-border bg-primary-soft text-foreground">
-              <ShieldCheck className="h-12 w-12" />
+          <div className="py-2 text-center animate-fade-in">
+            <span className="mx-auto flex h-24 w-24 items-center justify-center rounded-[20px] border border-border bg-accent-soft text-accent">
+              <ShieldCheck className="h-10 w-10" />
             </span>
           </div>
         )}
 
         {data && (
           <div className="space-y-5 animate-fade-in">
-            <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-between gap-3">
+            <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-between gap-3 shadow-card">
               <div>
                 <p className="font-mono text-sm font-semibold tracking-wider">{data.case_code}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -164,7 +214,7 @@ export default function Track() {
             )}
 
             {data.files && (data.files.audio.length > 0 || data.files.photos.length > 0) && (
-              <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+              <div className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-card">
                 <h2 className="font-subhead font-semibold text-sm">{t('track.files.title')}</h2>
                 {data.files.audio.map((u, i) => (
                   <audio key={u} controls preload="none" src={u} className="w-full" aria-label={t('track.files.clip', { n: i + 1 })} />
@@ -185,16 +235,16 @@ export default function Track() {
             {data.questions.length > 0 && (
               <div className="space-y-3">
                 <h2 className="font-subhead font-semibold text-sm flex items-center gap-2">
-                  <MessageCircleQuestion className="w-4 h-4 text-primary" /> {t('track.questions.title')}
+                  <MessageCircleQuestion className="w-4 h-4 text-accent" /> {t('track.questions.title')}
                 </h2>
                 {data.questions.map((q) => {
                   const draft = answers[q.id] ?? { text: '', blob: null, sending: false };
                   return (
-                    <div key={q.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                    <div key={q.id} className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-card">
                       <p className="text-sm font-medium">{q.question}</p>
                       <p className="text-[11px] text-muted-foreground">{formatDateTime(q.created_at)}</p>
                       {q.answer_text || q.answered_at ? (
-                        <div className="rounded-xl bg-muted/60 p-3">
+                        <div className="rounded-xl bg-primary-soft p-3">
                           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t('track.answered')}</p>
                           <p className="text-sm">{q.answer_text || '—'}</p>
                         </div>
@@ -206,7 +256,7 @@ export default function Track() {
                             placeholder={t('track.answer.placeholder')}
                             rows={3}
                             maxLength={2000}
-                            className="text-sm"
+                            className="text-sm rounded-xl"
                           />
                           <VoiceRecorder
                             compact
@@ -217,7 +267,8 @@ export default function Track() {
                           />
                           <Button
                             size="sm"
-                            className="w-full"
+                            variant="action"
+                            className="w-full rounded-xl"
                             disabled={draft.sending || (!draft.text.trim() && !draft.blob)}
                             onClick={() => void sendAnswer(q.id)}
                           >
@@ -233,10 +284,10 @@ export default function Track() {
 
             <div>
               <h2 className="font-subhead font-semibold text-sm mb-3">{t('track.timeline')}</h2>
-              <ol className="relative border-s-2 border-primary/25 ms-2 space-y-4">
+              <ol className="relative border-s-2 border-accent/30 ms-2 space-y-4">
                 {data.timeline.map((tItem, i) => (
                   <li key={i} className="ms-4 animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
-                    <span className="absolute -start-[7px] mt-1 w-3 h-3 rounded-full bg-primary border-2 border-background animate-pop" style={{ animationDelay: `${i * 80 + 150}ms` }} />
+                    <span className="absolute -start-[7px] mt-1 w-3 h-3 rounded-full bg-accent border-2 border-background animate-pop" style={{ animationDelay: `${i * 80 + 150}ms` }} />
                     <p className="text-sm font-medium">
                       <StatusBadge value={toStatus(tItem.status)} />
                     </p>
@@ -250,7 +301,7 @@ export default function Track() {
         )}
 
         <div className="text-center">
-          <Link to="/" className="text-xs text-primary underline underline-offset-4">
+          <Link to="/" className="text-xs text-accent underline underline-offset-4">
             ← {t('common.back')}
           </Link>
         </div>

@@ -805,6 +805,7 @@ export type Database = {
       }
       submit_case: { Args: { _payload: Json }; Returns: string }
       suppress_small: { Args: { _n: number }; Returns: Json }
+      track_public_stats: { Args: never; Returns: Json }
       verify_cron_token: { Args: { _token: string }; Returns: boolean }
     }
     Enums: {
