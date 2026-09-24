@@ -25,8 +25,13 @@ The form needs these narrative items:
 - evidence: photos, documents, witnesses, messages that exist
 - reported: whether it was already reported to police / court / another agency
 - help: what help the person wants from SWING or other agencies
-Mark an item covered only if the story clearly states it. Then write ONE short, warm, non-judgemental follow-up question about the most important missing item (priority order as listed).
-Rules: never ask for real names, national ID, passport, visa, work permit or immigration status; never blame; use "you"; max 25 words; simple words. If everything is covered, next_question is an empty string.`;
+Mark an item covered only if the story clearly states it.
+Then read the LATEST answer carefully and write ONE short, warm, non-judgemental follow-up question built on what the person actually said:
+- If the latest answer mentions something vague (e.g. "that night", "they", "a lot of money", "near the bar", "he hurt me"), ask them to make THAT exact point more specific (which date/time, what role, how much, what kind of place, what injury) — quote or refer to their own words.
+- If details conflict or are unclear, gently ask them to clarify that point.
+- Otherwise ask about the most important missing item (priority order as listed), connected to the current form question when given.
+- Never repeat a question listed as already asked.
+Rules: never ask for real names, national ID, passport, visa, work permit or immigration status; never blame; use "you"; max 25 words; simple words. If everything is covered and nothing is vague, next_question is an empty string.`;
 
 const schema = {
   type: "object",

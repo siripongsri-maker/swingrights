@@ -528,10 +528,23 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   };
 
   const askFollowUp = () => {
+    lastAskedLen.current = transcript.trim().length;
     setFuThinking(true);
     setFuTrigger((n) => n + 1);
     window.setTimeout(() => setFuThinking(false), 12000); // never leave the spinner stuck
   };
+
+  // Typed answers: after a short pause, AI reads the new text and asks a follow-up on it
+  const typedRef = useRef(false);
+  const lastAskedLen = useRef(0);
+  useEffect(() => {
+    if (!typedRef.current || recording || transcribing || followups.length >= 3) return;
+    const len = transcript.trim().length;
+    if (len < 15 || len - lastAskedLen.current < 12) return;
+    const h = window.setTimeout(() => { typedRef.current = false; askFollowUp(); }, 2500);
+    return () => window.clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcript, recording, transcribing, followups.length]);
 
   const startRec = async (fu?: string) => {
     baseRef.current = transcript;
@@ -755,7 +768,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       <div className="bg-card border border-border rounded-2xl p-2.5 shadow-card">
         <Textarea
           value={transcript}
-          onChange={(e) => setTranscript(e.target.value)}
+          onChange={(e) => { typedRef.current = true; setTranscript(e.target.value); }}
           placeholder={t('intake.voice.composerPlaceholder')}
           className="bg-muted/40 border-0 text-sm min-h-[52px] resize-none focus-visible:ring-1"
         />
@@ -770,7 +783,11 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         <FollowUpCoach
           className="mt-2"
           text={transcript}
-          context={answers.slice(0, qIndex).map((a) => a?.transcript).filter(Boolean).join('\n')}
+          context={[
+            answers.slice(0, qIndex).map((a) => a?.transcript).filter(Boolean).join('\n'),
+            `[Current form question] ${t(q.main as any)}`,
+            followups.length ? `[Already asked — do not repeat] ${followups.join(' | ')}` : '',
+          ].filter(Boolean).join('\n')}
           trigger={fuTrigger}
           onQuestion={(fq, done) => {
             setFuThinking(false);
