@@ -1,4 +1,3 @@
-import { useI18n } from '@/i18n';
 import unaidsImg from '@/assets/brand/unaids-new.png';
 import apcomImg from '@/assets/brand/apcom-new.png';
 import youthLeadImg from '@/assets/brand/youth-lead-new.png';
@@ -6,16 +5,9 @@ import swingImg from '@/assets/brand/swing-new.png';
 import { cn } from '@/lib/utils';
 
 export function PartnerBar({ className }: { className?: string }) {
-  const { t } = useI18n();
   return (
     <aside className={cn('rounded-[20px] border border-border bg-card p-4 shadow-card md:p-6', className)}>
-      <div className="grid grid-cols-4 items-end gap-x-3 md:gap-x-6">
-        <p className="col-span-3 mb-4 text-center text-[11px] font-semibold leading-snug text-muted-foreground md:text-[13px]">
-          {t('partners.supportedBy')}
-        </p>
-        <p className="mb-4 border-s border-border ps-3 text-center text-[11px] font-semibold leading-snug text-muted-foreground md:ps-6 md:text-[13px]">
-          {t('partners.implementedBy')}
-        </p>
+      <div className="grid grid-cols-4 items-center gap-x-3 md:gap-x-6">
         <div className="flex min-w-0 items-center justify-center">
           <img src={unaidsImg} alt="UNAIDS" className="h-7 w-full object-contain md:h-9" />
         </div>
