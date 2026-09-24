@@ -117,6 +117,10 @@ const BASE_DICT: Dict = {
     th: 'สิทธิของผู้ต้องหา', en: 'Rights of the Accused',
     my: 'တရားစွပ်စွဲခံရသူ၏ အခွင့်အရေးများ', km: 'សិទ្ធិរបស់ជនជាប់ចោទ', lo: 'ສິດຂອງຜູ້ຖືກກ່າວຫາ',
   },
+  'landing.rightsPreview.arrest': {
+    th: 'เมื่อถูกจับ', en: 'When arrested',
+    my: 'ဖမ်းဆီးခံရသောအခါ', km: 'នៅពេលត្រូវបានចាប់ខ្លួន', lo: 'ເມື່ອຖືກຈັບ',
+  },
   'landing.rightsPreview.previous': {
     th: 'หมวดก่อนหน้า', en: 'Previous category',
     my: 'ယခင်ကဏ္ဍ', km: 'ប្រភេទមុន', lo: 'ໝວດກ່ອນໜ້າ',
