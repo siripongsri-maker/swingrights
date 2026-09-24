@@ -22,7 +22,7 @@ serve(async (req) => {
 
   const { data: c, error: qErr } = await db
     .from("cases")
-    .select("id,case_code,status,severity,profile,deleted_at,created_at")
+    .select("id,case_code,status,severity,profile,deleted_at,created_at,audio_urls,photo_urls")
     .eq("case_code", data.case_code)
     .maybeSingle();
 
@@ -42,6 +42,20 @@ serve(async (req) => {
     .eq("case_id", c.id)
     .order("created_at", { ascending: true });
 
+  // Reporter file access: only this case's own files, never after cancellation, 5-minute links
+  const pathOf = (x: unknown) => (typeof x === "string" ? x : (x as { path?: string })?.path) ?? "";
+  const valid = (p: string) => /^cases\/[A-Za-z0-9-]{6,64}\/[A-Za-z0-9][A-Za-z0-9._-]{0,120}$/.test(p);
+  const sign = async (bucket: string, items: unknown[]) => {
+    const paths = (items ?? []).map(pathOf).filter(valid).slice(0, 30);
+    if (!paths.length) return [] as string[];
+    const { data: s } = await db.storage.from(bucket).createSignedUrls(paths, 300);
+    return (s ?? []).map((x: { signedUrl: string | null }) => x.signedUrl).filter(Boolean) as string[];
+  };
+  const files = c.deleted_at ? { audio: [], photos: [] } : {
+    audio: await sign("case-audio", (c.audio_urls as unknown[]) ?? []),
+    photos: await sign("case-photos", (c.photo_urls as unknown[]) ?? []),
+  };
+
   const profile = (c.profile ?? {}) as Record<string, unknown>;
   const area = [profile.district, profile.province, profile.branch].filter(Boolean).join(" · ") || null;
 
@@ -54,6 +68,7 @@ serve(async (req) => {
       cancelled: !!c.deleted_at,
       created_at: c.created_at,
       timeline: tl ?? [],
+      files,
       questions: (qs ?? []).map((q: Record<string, unknown>) => ({
         id: q.id,
         question: q.question,
