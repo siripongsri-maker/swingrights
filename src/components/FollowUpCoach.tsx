@@ -14,36 +14,62 @@ interface Props {
   /** Earlier answers in the same conversation. */
   context?: string;
   className?: string;
+  /**
+   * Immediate mode: when this number changes (e.g. right after a recording is transcribed)
+   * the check runs at once instead of waiting for typing to pause.
+   */
+  trigger?: number;
+  /** Immediate mode: receives the next follow-up question (shown in the chat by the caller). */
+  onQuestion?: (q: string, done: boolean) => void;
 }
 
 /**
- * Checks the story against the complaint record form while the person is speaking
- * and suggests one follow-up question for whatever is still missing.
+ * Checks the story against the complaint record form and suggests one follow-up
+ * question for whatever is still missing.
  */
-export function FollowUpCoach({ text, context = '', className }: Props) {
+export function FollowUpCoach({ text, context = '', className, trigger, onQuestion }: Props) {
   const { t, lang } = useI18n();
   const [covered, setCovered] = useState<Slot[]>([]);
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
   const lastSent = useRef('');
   const reqId = useRef(0);
+  const latest = useRef({ text, context });
+  latest.current = { text, context };
+  const immediate = trigger !== undefined;
 
+  const run = async (txt: string, ctx: string) => {
+    lastSent.current = `${ctx}\n${txt}`.trim();
+    const id = ++reqId.current;
+    setLoading(true);
+    const { data, error } = await supabase.functions.invoke('followup-question', { body: { text: txt, context: ctx, lang } });
+    if (id !== reqId.current) return;
+    setLoading(false);
+    if (error || data?.error) return;
+    const cov = (data.covered ?? []) as Slot[];
+    setCovered(cov);
+    setQuestion(data.next_question ?? '');
+    onQuestion?.(data.next_question ?? '', cov.length >= FOLLOWUP_SLOTS.length);
+  };
+
+  // Debounced mode (typing)
   useEffect(() => {
+    if (immediate) return;
     const full = `${context}\n${text}`.trim();
     if (full.length < 15 || Math.abs(full.length - lastSent.current.length) < 12 && lastSent.current) return;
-    const h = window.setTimeout(async () => {
-      lastSent.current = full;
-      const id = ++reqId.current;
-      setLoading(true);
-      const { data, error } = await supabase.functions.invoke('followup-question', { body: { text, context, lang } });
-      if (id !== reqId.current) return;
-      setLoading(false);
-      if (error || data?.error) return;
-      setCovered((data.covered ?? []) as Slot[]);
-      setQuestion(data.next_question ?? '');
-    }, 2500);
+    const h = window.setTimeout(() => void run(text, context), 2500);
     return () => window.clearTimeout(h);
-  }, [text, context, lang]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, context, lang, immediate]);
+
+  // Immediate mode (right after recording)
+  useEffect(() => {
+    if (!immediate || !trigger) return;
+    const { text: txt, context: ctx } = latest.current;
+    if (`${ctx}\n${txt}`.trim().length < 15) return;
+    void run(txt, ctx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trigger]);
 
   if (`${context}${text}`.trim().length < 15) return null;
   const done = covered.length >= FOLLOWUP_SLOTS.length;
@@ -66,7 +92,7 @@ export function FollowUpCoach({ text, context = '', className }: Props) {
       </div>
       {done ? (
         <p className="text-xs text-sevGreen-fg">{t('followup.complete')}</p>
-      ) : question ? (
+      ) : question && !onQuestion ? (
         <div className="flex items-start gap-2 rounded-lg bg-card border border-border p-2">
           <p className="text-sm flex-1">{question}</p>
           <SpeakButton text={question} className="shrink-0" />
