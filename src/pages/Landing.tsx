@@ -53,6 +53,7 @@ export default function Landing() {
   const showPreviousRight = () => setRightIndex((current) => (current - 1 + RIGHTS.length) % RIGHTS.length);
   const showNextRight = () => setRightIndex((current) => (current + 1) % RIGHTS.length);
   const featuredRight = RIGHTS[rightIndex];
+  const FeaturedRightIcon = featuredRight?.icon;
 
   useEffect(() => {
     let mounted = true;
@@ -192,11 +193,11 @@ export default function Landing() {
                   </div>
                 </div>
 
-                {featuredRight && (
+                {featuredRight && FeaturedRightIcon && (
                   <div className="min-h-[9.5rem]" aria-live="polite" aria-atomic="true">
                     <div className="flex items-start gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-soft font-display text-lg font-medium text-primary">
-                        {featuredRight.id}
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary shadow-sm ring-1 ring-primary/10">
+                        <FeaturedRightIcon className="h-6 w-6" strokeWidth={2} aria-hidden="true" />
                       </span>
                       <div>
                         <h3 className="font-display text-lg font-medium leading-snug mb-2">{featuredRight.title}</h3>
