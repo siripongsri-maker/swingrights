@@ -156,9 +156,16 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="mx-auto flex w-full max-w-[19rem] items-end justify-center gap-1" aria-hidden>
-              {[9, 15, 24, 38, 56, 76, 52, 32, 19, 12].map((height, index) => (
-                <span key={index} className={index === 5 ? 'w-1 rounded-full bg-highlight-soft' : 'w-1 rounded-full bg-highlight'} style={{ height }} />
+            <div className="sw-wave mx-auto flex w-full max-w-[24rem] items-end justify-center gap-1.5" aria-hidden>
+              {[22, 34, 52, 72, 96, 80, 60, 88, 104, 76, 48, 66, 92, 58, 36, 26].map((height, index) => (
+                <span
+                  key={index}
+                  className="sw-wave-bar"
+                  style={{
+                    height,
+                    animationDelay: `${index * 0.12}s, ${index * -0.45}s`,
+                  }}
+                />
               ))}
             </div>
           </div>
