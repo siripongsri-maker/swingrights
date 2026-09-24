@@ -353,6 +353,7 @@ export type Database = {
           accepted_at: string | null
           case_id: string
           id: string
+          letter: Json | null
           note: string | null
           outcome: string
           partner_id: string
@@ -367,6 +368,7 @@ export type Database = {
           accepted_at?: string | null
           case_id: string
           id?: string
+          letter?: Json | null
           note?: string | null
           outcome?: string
           partner_id: string
@@ -381,6 +383,7 @@ export type Database = {
           accepted_at?: string | null
           case_id?: string
           id?: string
+          letter?: Json | null
           note?: string | null
           outcome?: string
           partner_id?: string
@@ -859,6 +862,7 @@ export type Database = {
       create_case_referral: {
         Args: {
           _case_id: string
+          _letter?: Json
           _note?: string
           _partner_id: string
           _summary?: string
