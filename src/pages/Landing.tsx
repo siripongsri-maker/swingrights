@@ -203,13 +203,6 @@ export default function Landing() {
                 </div>
               </article>
 
-              <article className="rounded-[20px] bg-primary-deep text-primary-foreground p-6 shadow-card hover-lift">
-                <ShieldCheck className="w-5 h-5 mb-4 opacity-90" />
-                <h2 className="font-subhead text-xl font-medium mb-1.5">{t('landing.card2.title')}</h2>
-                <p className="text-sm opacity-85 leading-relaxed">
-                  {t('landing.card2.body')}
-                </p>
-              </article>
 
               <article className="rounded-[20px] bg-card border border-border p-5 shadow-card hover-lift">
                 <div className="space-y-4">
