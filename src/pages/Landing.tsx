@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Mic, Search, ArrowRight, Lock, HeartHandshake, Sparkles, Users, Eye, MousePointerClick, Scale, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Search, ArrowRight, Lock, HeartHandshake, Sparkles, Users, Eye, MousePointerClick, Scale, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Reveal } from '@/components/Reveal';
@@ -146,9 +146,6 @@ export default function Landing() {
                 </Link>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-4 justify-center sm:justify-start">
-                <Link to="/intake" className="inline-flex min-h-10 items-center gap-1.5 text-sm text-foreground underline underline-offset-4 hover:text-muted-foreground transition">
-                  <Mic className="w-4 h-4" /> {t('landing.cta.start')} ({t('nav.staff')})
-                </Link>
                 <Link to="/rights">
                   <Button size="sm" variant="secondary" className="rounded-full">
                     <Scale className="w-4 h-4" /> {t('rights.nav')}
