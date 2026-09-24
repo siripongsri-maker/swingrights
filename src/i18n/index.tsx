@@ -210,6 +210,10 @@ const BASE_DICT: Dict = {
     th: 'เคสถูกยกเลิก', en: 'This case was cancelled',
     my: 'ဤအမှုကို ပယ်ဖျက်ထားသည်', km: 'ករណីនេះត្រូវបានលុបចោល', lo: 'ເຄສນີ້ຖືກຍົກເລີກ',
   },
+  'track.files.title': { th: 'ไฟล์ที่คุณส่งมา', en: 'Files you sent' },
+  'track.files.clip': { th: 'เสียงที่ {n}', en: 'Recording {n}' },
+  'track.files.photo': { th: 'รูปที่ {n}', en: 'Photo {n}' },
+  'track.files.note': { th: 'ลิงก์ใช้ได้ 5 นาที เฉพาะผู้ที่มีรหัสเคสเท่านั้น อย่าแชร์รหัสเคสให้ผู้อื่น', en: 'Links work for 5 minutes and only with your case code. Do not share your case code.' },
   'track.questions.title': {
     th: 'คำถามเพิ่มเติมจากเจ้าหน้าที่', en: 'Follow-up questions from staff',
     my: 'ဝန်ထမ်းမှ ထပ်မံမေးခွန်းများ', km: 'សំណួរបន្ថែមពីបុគ្គលិក', lo: 'ຄຳຖາມເພີ່ມເຕີມຈາກພະນັກງານ',
