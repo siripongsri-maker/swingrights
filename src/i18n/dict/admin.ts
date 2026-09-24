@@ -29,6 +29,7 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'users.restore': { th: 'คืนสิทธิ์', en: 'Restore' },
 
   // ---------- partners.* ----------
+  'partners.orgType.agency': { th: 'หน่วยงาน', en: 'Agency' },
   'partners.orgType.hospital': { th: 'โรงพยาบาล / สุขภาพ', en: 'Hospital / health' },
   'partners.orgType.legal': { th: 'กฎหมาย / ทนาย', en: 'Legal / lawyer' },
   'partners.orgType.ngo': { th: 'องค์กรภาคประชาชน', en: 'NGO' },

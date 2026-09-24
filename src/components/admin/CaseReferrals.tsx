@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Loader2, Share2, Sparkles, ShieldCheck } from 'lucide-react';
+import { Copy, Loader2, Plus, Share2, Sparkles, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,6 +32,24 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<string | null>(null);
   const [summary, setSummary] = useState('');
+  const [newPlace, setNewPlace] = useState('');
+  const [adding, setAdding] = useState(false);
+
+  const addPlace = async () => {
+    const name = newPlace.trim().slice(0, 200);
+    if (!name) return;
+    setAdding(true);
+    const { data, error } = await supabase.from('referral_partners' as never)
+      .insert({ name, org_type: 'agency', province: province || null, services: [], active: true } as never)
+      .select('id').single();
+    setAdding(false);
+    if (error || !data) { toast.error(t('ref.addPlaceFailed')); return; }
+    await qc.invalidateQueries({ queryKey: ['ref-partners'] });
+    setPartnerId((data as { id: string }).id);
+    setShowAll(true);
+    setNewPlace('');
+    toast.success(t('ref.addPlaceDone'));
+  };
 
   // AI analysis (step 1) → de-identified summary staff can review before sending (step 2)
   useQuery({
@@ -103,7 +121,7 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
     qc.invalidateQueries({ queryKey: ['case-referrals', caseId] });
   };
 
-  const close = () => { setOpen(false); setPartnerId(null); setNote(''); setSummary(''); setLink(null); setShowAll(false); };
+  const close = () => { setOpen(false); setPartnerId(null); setNote(''); setSummary(''); setLink(null); setShowAll(false); setNewPlace(''); };
   const fmt = (d: string) => new Date(d).toLocaleString('th-TH');
   const effectiveOutcome = (r: Referral) =>
     r.outcome === 'pending' && r.token_expires_at && new Date(r.token_expires_at) < new Date() ? 'no_response' : r.outcome;
@@ -166,6 +184,19 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
                     )}
                   </button>
                 ))}
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-medium">{t('ref.addPlaceLabel')}</p>
+                <div className="flex gap-2">
+                  <input value={newPlace} onChange={(e) => setNewPlace(e.target.value)} maxLength={200}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addPlace(); } }}
+                    placeholder={t('ref.addPlacePlaceholder')}
+                    className="flex-1 h-9 rounded-md border border-border bg-background px-2 text-sm" />
+                  <Button size="sm" variant="outline" disabled={!newPlace.trim() || adding} onClick={() => void addPlace()}>
+                    {adding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} {t('ref.addPlaceBtn')}
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">{t('ref.addPlaceHint')}</p>
               </div>
               {!showAll && <button type="button" className="text-[11px] text-primary underline" onClick={() => setShowAll(true)}>{t('ref.showAll')}</button>}
               <div className="space-y-1">
