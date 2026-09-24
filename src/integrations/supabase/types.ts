@@ -112,6 +112,50 @@ export type Database = {
           },
         ]
       }
+      case_answer_revisions: {
+        Row: {
+          action: string
+          answer_index: number
+          case_id: string
+          created_at: string
+          edited_by: string
+          id: string
+          new_transcript: string | null
+          old_transcript: string | null
+          question: string | null
+        }
+        Insert: {
+          action: string
+          answer_index: number
+          case_id: string
+          created_at?: string
+          edited_by: string
+          id?: string
+          new_transcript?: string | null
+          old_transcript?: string | null
+          question?: string | null
+        }
+        Update: {
+          action?: string
+          answer_index?: number
+          case_id?: string
+          created_at?: string
+          edited_by?: string
+          id?: string
+          new_transcript?: string | null
+          old_transcript?: string | null
+          question?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_answer_revisions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_audit: {
         Row: {
           action: string
@@ -889,6 +933,15 @@ export type Database = {
           _token: string
         }
         Returns: string
+      }
+      staff_edit_answer: {
+        Args: {
+          _case_id: string
+          _index: number
+          _question: string
+          _transcript: string
+        }
+        Returns: Json
       }
       submit_case: { Args: { _payload: Json }; Returns: string }
       suppress_small: { Args: { _n: number }; Returns: Json }
