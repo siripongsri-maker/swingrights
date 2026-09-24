@@ -274,6 +274,25 @@ const BASE_DICT: Dict = {
     th: 'ส่งคำตอบไม่สำเร็จ ลองอีกครั้ง', en: 'Could not send the answer, please try again',
     my: 'အဖြေပို့မရပါ ထပ်ကြိုးစားပါ', km: 'ផ្ញើចម្លើយមិនបាន សូមព្យាយាមម្តងទៀត', lo: 'ສົ່ງຄຳຕອບບໍ່ສຳເລັດ ກະລຸນາລອງໃໝ່',
   },
+  'track.stats.title': {
+    th: 'ภาพรวมเรื่องทั้งหมด', en: 'Overall case overview',
+    my: 'အမှုများ အကျဉ်းချုပ်', km: 'ទិដ្ឋភាពទូទៅនៃករណី', lo: 'ພາບລວມເຄສທັງໝົດ',
+  },
+  'track.stats.pending': {
+    th: 'รอรับเรื่อง', en: 'Waiting', my: 'စောင့်ဆိုင်းနေ', km: 'កំពុងរង់ចាំ', lo: 'ລໍຖ້າ',
+  },
+  'track.stats.inprogress': {
+    th: 'รับ-กำลังตอบ', en: 'Received · responding', my: 'လက်ခံ၍ ဆောင်ရွက်နေ', km: 'បានទទួល · កំពុងឆ្លើយតប', lo: 'ຮັບ-ກຳລັງຕອບ',
+  },
+  'track.stats.closed': {
+    th: 'ปิดเรื่องแล้ว', en: 'Closed', my: 'ပိတ်သိမ်းပြီး', km: 'បានបិទ', lo: 'ປິດແລ້ວ',
+  },
+  'track.stats.unit': {
+    th: 'เรื่อง', en: 'cases', my: 'ခု', km: 'ករណី', lo: 'ເລື່ອງ',
+  },
+  'track.search.button': {
+    th: 'ค้นหา', en: 'Search', my: 'ရှာဖွေမည်', km: 'ស្វែងរក', lo: 'ຄົ້ນຫາ',
+  },
 
   // ---------- Status labels ----------
   'status.received': { th: 'รับเรื่อง', en: 'Received', my: 'လက်ခံရရှိ', km: 'បានទទួល', lo: 'ຮັບເລື່ອງແລ້ວ' },
