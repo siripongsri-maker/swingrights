@@ -7,6 +7,7 @@ import { Reveal } from '@/components/Reveal';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
+import { HOTLINES } from '@/data/hotlines';
 import { BrandHeader, BrandLockup } from '@/components/BrandLogo';
 import { PartnerBar } from '@/components/PartnerBar';
 
@@ -249,10 +250,21 @@ export default function Landing() {
               </article>
 
               <article className="sm:col-span-2 rounded-[20px] bg-card border border-border p-6 shadow-card hover-lift">
-                <h2 className="font-subhead text-lg font-semibold text-foreground mb-1.5">{t('landing.help.title')}</h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {t('landing.help.body')} <a href="tel:1323" className="font-medium underline underline-offset-4">1323</a> · {t('landing.help.hours')}
-                </p>
+                <h2 className="font-subhead text-lg font-semibold text-foreground mb-3">{t('landing.help.title')}</h2>
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {HOTLINES.map((h) => (
+                    <li key={h.number} className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background px-3.5 py-2.5">
+                      <span className="min-w-0 text-sm text-muted-foreground leading-snug">{t(h.labelKey)}</span>
+                      <a
+                        href={`tel:${h.number}`}
+                        className="shrink-0 font-display text-lg font-semibold tabular-nums text-primary underline-offset-4 hover:underline"
+                      >
+                        {h.number}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs text-muted-foreground">{t('landing.help.hours')}</p>
               </article>
             </section>
           </Reveal>
