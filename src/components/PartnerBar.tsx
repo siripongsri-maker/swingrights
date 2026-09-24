@@ -6,7 +6,6 @@ import swingImg from '@/assets/brand/swing-new.png';
 import { cn } from '@/lib/utils';
 
 export function PartnerBar({ className }: { className?: string }) {
-  const { t } = useI18n();
   return (
     <aside className={cn('rounded-[20px] border border-border bg-card p-4 shadow-card md:p-6', className)}>
       <div className="grid grid-cols-4 items-center gap-x-3 md:gap-x-6">
