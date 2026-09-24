@@ -259,7 +259,7 @@ export default function Landing() {
 
       <footer className="max-w-5xl mx-auto px-5 py-8 text-center text-xs text-muted-foreground">
         <PartnerBar className="mb-6 text-start" />
-        © มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) · <Link to="/recover" className="hover:text-foreground">{t('landing.footer.recover')}</Link>
+        © มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)
       </footer>
     </div>
   );
