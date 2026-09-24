@@ -131,6 +131,16 @@ export default function Landing() {
         <header className="relative max-w-5xl mx-auto px-5 pt-7 flex items-center justify-between gap-3">
           <BrandHeader />
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleWave}
+              aria-pressed={waveOn}
+              title={waveOn ? t('landing.wave.off') : t('landing.wave.on')}
+              aria-label={waveOn ? t('landing.wave.off') : t('landing.wave.on')}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/70 backdrop-blur text-muted-foreground hover:text-primary transition-colors"
+            >
+              {waveOn ? <AudioWaveform className="w-4 h-4" /> : <AudioLines className="w-4 h-4" />}
+            </button>
             <LanguageToggle />
             <Link
               to={signedIn ? '/me' : '/signin'}
