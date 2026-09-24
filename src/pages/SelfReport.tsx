@@ -568,9 +568,7 @@ export default function SelfReport() {
                 <p>💬 {t('report.success.answered', { n: answeredProbeCount })}</p>
                 {safetyRisk && <p className="text-destructive font-medium">{t('report.success.urgent')}</p>}
                 <p className="pt-1 mt-1 border-t border-border font-medium">{t('report.success.forward')}</p>
-                {partners.length ? partners.slice(0, 3).map((p) => (
-                  <p key={p.id}>→ {p.name}{p.phone ? ` (${p.phone})` : ''}</p>
-                )) : <p>→ {t('report.success.forwardNone')}</p>}
+                <p>→ {t('report.partners.title')}</p>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
               <div className="grid gap-1.5">

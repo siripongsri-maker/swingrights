@@ -149,7 +149,8 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
   }, []);
 
   /** Quick action: pick the province whose centroid is closest to the device's location. */
-  const pickNearestProvince = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _pickNearestProvince = () => {
     if (!navigator.geolocation) {
       setGeoError('unsupported');
       setOpenProvince(true);
@@ -206,9 +207,6 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
   return (
     <div className="space-y-2.5">
       <div className="flex items-center gap-2 flex-wrap">
-        <Button type="button" size="sm" variant="outline" className="text-xs" onClick={pickNearestProvince} disabled={loading}>
-          <Navigation className="w-3.5 h-3.5 me-1" /> {t('area.nearMe')}
-        </Button>
         <Button
           type="button"
           size="sm"
