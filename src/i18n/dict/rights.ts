@@ -3,8 +3,8 @@ import type { Entry } from '../index';
 /** Know Your Rights public page (/rights). USER-FACING: all 5 languages. */
 export const RIGHTS_DICT: Record<string, Entry> = {
   'rights.nav': {
-    th: 'รู้สิทธิของคุณ', en: 'Know Your Rights',
-    my: 'သင့်အခွင့်အရေးများကို သိပါစေ', km: 'ស្គាល់សិទ្ធិរបស់អ្នក', lo: 'ຮູ້ສິດຂອງທ່ານ',
+    th: 'ถ้าคุณถูกตำรวจจับ', en: 'If the police arrest you',
+    my: 'ရဲဖမ်းဆီးခဲ့လျှင်', km: 'បើអ្នកត្រូវបានប៉ូលិសចាប់ខ្លួន', lo: 'ຖ້າທ່ານຖືກຕຳຫຼວດຈັບ',
   },
   'rights.title': {
     th: 'สิทธิของผู้ต้องหา', en: 'Rights of the Accused',
