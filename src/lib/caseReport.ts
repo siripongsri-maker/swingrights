@@ -1,3 +1,4 @@
+import { PRINT_THEME_CSS, PRINT_FONTS_LINK, printCaseCodeCss } from './printTheme';
 import { supabase } from '@/integrations/supabase/client';
 import { STATUS_LABEL, SEV_LABEL, type CaseStatus } from '@/lib/screening';
 import { q9Level } from '@/lib/screeningTools';
@@ -84,8 +85,8 @@ export function printCaseReport(c: CaseReportData) {
 
   const html = `<!doctype html><html lang="th"><head><meta charset="utf-8" />
   <title>SWING Case Report ${esc(c.case_code)}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;600&display=swap" rel="stylesheet">
-  <style>${BASE_CSS}</style></head><body>
+  ${PRINT_FONTS_LINK}
+  <style>${BASE_CSS}${PRINT_THEME_CSS}${printCaseCodeCss(c.case_code)}</style></head><body>
   <img class="brand" src="${lockupImg}" alt="SWING RIGHTS" />
   <h1>มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) — รายงานเคส (เอกสารส่งต่อ)</h1>
   <div class="sub">รหัสเคส <strong>${esc(c.case_code)}</strong> · รับเรื่อง ${new Date(c.created_at).toLocaleString('th-TH')} · ออกเอกสาร ${new Date().toLocaleString('th-TH')}</div>

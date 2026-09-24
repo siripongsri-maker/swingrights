@@ -10,14 +10,12 @@ export const PRINT_THEME_CSS = `
 @page {
   size: A4; margin: 20mm 15mm 18mm;
   @top-left { content: "SWING RIGHTS · มูลนิธิเพื่อนพนักงานบริการ"; font: 600 8pt 'Bai Jamjuree','Noto Sans Thai',sans-serif; color:#CC0099; }
-  @top-right { content: string(caseCode); font: 8pt 'IBM Plex Mono',monospace; color:#5B6168; }
   @bottom-left { content: "เอกสารลับ · พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562"; font: 7.5pt 'IBM Plex Sans Thai Looped','Noto Sans Thai',sans-serif; color:#5B6168; }
   @bottom-right { content: "หน้า " counter(page) " / " counter(pages); font: 8pt 'IBM Plex Mono',monospace; color:#5B6168; }
 }
 @page :first { @top-left { content: none; } @top-right { content: none; } }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 body { color: var(--ch); font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',system-ui,sans-serif; orphans:3; widows:3; }
-.case-code-run { string-set: caseCode content(); display:none; }
 h1 { color: var(--ch); letter-spacing:0; }
 h1::after { content:""; display:block; width:56px; height:3px; background:var(--m); border-radius:2px; margin:8px auto 0; }
 .brand + h1::after { margin-left:0; }
@@ -46,3 +44,7 @@ code, .mono { font-family:'IBM Plex Mono',monospace; }
 
 export const PRINT_FONTS_LINK =
   '<link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">';
+
+/** Per-document running header showing the case code on every page after the first. */
+export const printCaseCodeCss = (code?: string | null) =>
+  `@page { @top-right { content: "${String(code || '').replace(/[^A-Za-z0-9-]/g, '')}"; font: 8pt 'IBM Plex Mono',monospace; color:#5B6168; } } @page :first { @top-right { content: none; } }`;
