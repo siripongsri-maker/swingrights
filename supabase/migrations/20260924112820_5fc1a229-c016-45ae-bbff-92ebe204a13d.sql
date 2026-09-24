@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.create_case_referral(uuid, uuid, text, text, jsonb) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.create_case_referral(uuid, uuid, text, text, jsonb) TO authenticated;
