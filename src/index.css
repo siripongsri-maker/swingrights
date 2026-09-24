@@ -90,8 +90,8 @@
     font-size: 15px;
     line-height: 1.533;
   }
-  h1 { font-family: 'IBM Plex Sans Thai Looped', 'Noto Sans Thai', sans-serif; font-weight: 600; letter-spacing: 0; }
-  h2, h3, h4, .font-display { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-spacing: 0; }
+  h1, .font-display { font-family: 'IBM Plex Sans Thai Looped', 'Noto Sans Thai', sans-serif; letter-spacing: 0; }
+  h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-spacing: 0; }
   .font-mono, code, .case-code { font-family: 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: 0.04em; }
   a, button, input, textarea, select, [tabindex]:not([tabindex="-1"]) { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background; }
   html { scroll-behavior: smooth; }
