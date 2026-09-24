@@ -22,7 +22,7 @@ export async function logExport(params: { case_id?: string | null; case_code?: s
 const BASE_CSS = `
 @page { size: A4; margin: 15mm; }
 * { box-sizing: border-box; }
-body { font-family:'IBM Plex Sans Thai','Noto Sans Thai',system-ui,sans-serif; color:#161615; margin:0; padding:24px; line-height:1.55; }
+body { font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',system-ui,sans-serif; color:#161615; margin:0; padding:24px; line-height:1.55; }
 .brand { display:block; width:128px; max-height:110px; object-fit:contain; margin:0 0 10px; }
 h1 { margin:0 0 2px; font-family:'Bai Jamjuree','Noto Sans Thai',sans-serif; font-size:20px; color:#2a2a2e; }
 .sub { color:#5b6168; font-size:11px; margin-bottom:14px; }
@@ -84,7 +84,7 @@ export function printCaseReport(c: CaseReportData) {
 
   const html = `<!doctype html><html lang="th"><head><meta charset="utf-8" />
   <title>SWING Case Report ${esc(c.case_code)}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;600&display=swap" rel="stylesheet">
   <style>${BASE_CSS}</style></head><body>
   <img class="brand" src="${lockupImg}" alt="SWING RIGHTS" />
   <h1>มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) — รายงานเคส (เอกสารส่งต่อ)</h1>
