@@ -11,7 +11,7 @@ const KINDS: Record<string, { bucket: string; maxBytes: number; mimes: RegExp }>
   audio: {
     bucket: "case-audio",
     maxBytes: 25 * 1024 * 1024,
-    mimes: /^audio\/(webm|mp4|mpeg|mp3|ogg|wav|x-wav|x-m4a|m4a|aac)$/,
+    mimes: /^audio\/(webm|mp4|mpeg|mp3|ogg|opus|wav|x-wav|x-m4a|m4a|aac)$/,
   },
   photo: {
     bucket: "case-photos",

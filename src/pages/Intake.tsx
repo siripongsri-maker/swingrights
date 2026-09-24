@@ -134,6 +134,11 @@ export default function Intake() {
 
   return (
     <PhoneShell onBack={step === 'consent' ? undefined : goBack} onClose={() => navigate('/')}>
+      {sync !== 'idle' && !intake.caseCode && (
+        <p role="status" aria-live="polite" className="mb-2 text-end text-[11px] text-muted-foreground">
+          {t(`intake.sync.${sync}`)}
+        </p>
+      )}
       {draftAt && (
         <div className="mb-4 rounded-xl border border-primary/30 bg-primary-soft/50 p-3">
           <p className="text-xs font-medium text-primary mb-1">{t('intake.draft.found')}</p>
@@ -510,10 +515,11 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       chunksRef.current = [];
-      const mr = new MediaRecorder(stream);
+      const mime = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'].find((m) => MediaRecorder.isTypeSupported?.(m));
+      const mr = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), audioBitsPerSecond: 24000 });
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       mr.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || 'audio/webm' });
+        const blob = new Blob(chunksRef.current, { type: (mr.mimeType || chunksRef.current[0]?.type || 'audio/webm').split(';')[0] });
         const newBlobs = [...audioBlobs];
         newBlobs[qIndex] = blob;
         patch({ audioBlobs: newBlobs });

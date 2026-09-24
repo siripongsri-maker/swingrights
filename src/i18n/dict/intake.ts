@@ -5,6 +5,9 @@ import type { Entry } from '../index';
  * Staff-facing: th/en required; my/km/lo fall back to en automatically.
  */
 export const INTAKE_DICT: Record<string, Entry> = {
+  'intake.sync.saving': { th: 'กำลังบันทึกเข้าระบบ…', en: 'Saving…', my: 'သိမ်းနေသည်…', km: 'កំពុងរក្សាទុក…', lo: 'ກຳລັງບັນທຶກ…' },
+  'intake.sync.saved': { th: 'บันทึกเข้าระบบแล้ว', en: 'Saved', my: 'သိမ်းပြီး', km: 'បានរក្សាទុក', lo: 'ບັນທຶກແລ້ວ' },
+  'intake.sync.offline': { th: 'เก็บไว้ในเครื่อง จะส่งเมื่อมีสัญญาณ', en: 'Kept on this device — will sync when online', my: 'ဖုန်းထဲတွင်သိမ်းထားသည်', km: 'រក្សាទុកក្នុងឧបករណ៍', lo: 'ເກັບໄວ້ໃນເຄື່ອງ' },
   'intake.toast.resumedDraft': { th: 'ทำต่อจากฉบับร่างเดิม', en: 'Resumed from the saved draft' },
   'intake.toast.startedNew': { th: 'เริ่มบันทึกใหม่', en: 'Started a new record' },
   'intake.draft.found': { th: 'พบฉบับร่างที่ยังบันทึกไม่เสร็จ', en: 'An unfinished draft was found' },
