@@ -13,6 +13,7 @@ export const DASH_DICT: Record<string, Entry> = {
   'dash.alerts.newBadge': { th: 'รายงานใหม่', en: 'New report' },
   'dash.alerts.newToast': { th: 'มีรายงานใหม่ {code} · {area}', en: 'New report {code} · {area}' },
   'dash.detail.followupLabel': { th: 'AI ถามต่อ', en: 'AI follow-up', my: 'AI ဆက်မေးခွန်း', km: 'AI សួរបន្ត', lo: 'AI ຖາມຕໍ່' },
+  'dash.detail.mainQLabel': { th: 'คำถามหลัก', en: 'Main question', my: 'အဓိကမေးခွန်း', km: 'សំណួរចម្បង', lo: 'ຄຳຖາມຫຼັກ' },
   'dash.detail.followupCount': { th: 'มีคำตอบจากคำถามที่ AI ถามต่อ {n} ข้อ (แสดงแถบสีด้านซ้าย)', en: '{n} answers to AI follow-up questions (marked with a side bar)', my: 'AI ဆက်မေးခွန်းများအတွက် အဖြေ {n} ခု (ဘေးဘားဖြင့် ပြထားသည်)', km: 'ចម្លើយ {n} ចំពោះសំណួរ AI បន្ត (មានរបារចំហៀង)', lo: '{n} ຄຳຕອບຈາກຄຳຖາມທີ່ AI ຖາມຕໍ່ (ສະແດງແຖບສີດ້ານຂ້າງ)' },
   'dash.hist.title': { th: 'ประวัติเคส', en: 'Case history' },
   'dash.hist.back': { th: 'กลับ', en: 'Back' },

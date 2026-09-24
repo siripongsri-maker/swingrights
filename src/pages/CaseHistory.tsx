@@ -138,7 +138,7 @@ export default function CaseHistory() {
             {answers.length === 0 && <p className="text-xs text-muted-foreground">{t('dash.hist.empty')}</p>}
             {answers.map((a, i) => (
               <div key={i} className={`border-b border-border/60 pb-3 last:border-none last:pb-0 ${a.cat === 'self_followup' ? 'ps-3 border-s-2 border-s-accent' : ''}`}>
-                <p className="text-[10px] uppercase tracking-wider text-primary mb-1">{a.cat === 'self_followup' ? t('dash.detail.followupLabel') : a.cat}</p>
+                <p className="text-[10px] uppercase tracking-wider text-primary mb-1">{a.cat === 'self_followup' ? t('dash.detail.followupLabel') : t('dash.detail.mainQLabel')}</p>
                 <p className="text-xs text-muted-foreground mb-1">{a.question}</p>
                 <p className="text-sm bg-muted/40 border border-border rounded-md p-2">{a.transcript || t('dash.detail.noAnswer')}</p>
               </div>
