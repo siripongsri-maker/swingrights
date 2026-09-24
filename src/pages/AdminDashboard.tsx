@@ -34,6 +34,15 @@ const LIST_COLS =
 const DETAIL_COLS = '*';
 const sel = (s: string): string => s;
 
+function referralLabel(value: unknown): string {
+  if (typeof value === 'string') return value;
+  if (!value || typeof value !== 'object') return '';
+  const referral = value as Record<string, unknown>;
+  return [referral.org_name, referral.phone, referral.note]
+    .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
+    .join(' · ');
+}
+
 interface CaseListRow {
   id: string;
   case_code: string;
@@ -826,7 +835,10 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
           <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.referrals')}</p>
           <div className="flex flex-wrap gap-1.5 mb-2">
-            {(c.referrals || []).map((r: string, i: number) => <span key={i} className="text-[11px] bg-primary-soft text-primary px-2 py-1 rounded-full">{r}</span>)}
+            {(c.referrals || []).map((r: unknown, i: number) => {
+              const label = referralLabel(r);
+              return label ? <span key={i} className="text-[11px] bg-primary-soft text-primary px-2 py-1 rounded-full">{label}</span> : null;
+            })}
             {(!c.referrals || c.referrals.length === 0) && <span className="text-xs text-muted-foreground">{t('dash.detail.none')}</span>}
           </div>
           {c.referral_note && <p className="text-xs text-muted-foreground">{c.referral_note}</p>}

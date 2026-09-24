@@ -28,8 +28,8 @@ import AccessReview from "./pages/AccessReview";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <ErrorBoundary>
-    <I18nProvider>
+  <I18nProvider>
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
@@ -58,8 +58,8 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
-    </I18nProvider>
-  </ErrorBoundary>
+    </ErrorBoundary>
+  </I18nProvider>
 );
 
 export default App;
