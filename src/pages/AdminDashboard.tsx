@@ -556,6 +556,8 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   const [note, setNote] = useState('');
   const [audioSigned, setAudioSigned] = useState<Record<number, string>>({});
   const [photoSigned, setPhotoSigned] = useState<string[]>([]);
+  const [allAudio, setAllAudio] = useState<{ url: string; label: string }[]>([]);
+  const [lightbox, setLightbox] = useState<number | null>(null);
   // PDPA: ข้อมูลระบุตัวตนอยู่คนละตาราง ต้องกดเปิดดูและระบบจะบันทึกประวัติการเข้าดูทุกครั้ง
   const [pii, setPii] = useState<{ reporter: any; victim: any } | null>(null);
   const [piiLoading, setPiiLoading] = useState(false);
@@ -635,16 +637,23 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
       // Phase 0.6 — audit every access to sensitive media, and keep links short-lived (5 นาที)
       void supabase.rpc('log_case_access' as any, { _case_id: c.id, _action: 'view_media' });
       const out: Record<number, string> = {};
-      for (const a of (c.audio_urls || [])) {
-        const { data } = await supabase.storage.from('case-audio').createSignedUrl(a.path, 300);
-        if (data?.signedUrl) out[a.qIndex] = data.signedUrl;
-      }
-      const urls: string[] = [];
-      for (const p of (c.photo_urls || [])) {
-        const { data } = await supabase.storage.from('case-photos').createSignedUrl(p.path, 300);
-        if (data?.signedUrl) urls.push(data.signedUrl);
-      }
-      if (!cancelled) { setAudioSigned(out); setPhotoSigned(urls); }
+      const list: { url: string; label: string }[] = [];
+      const norm = (x: any) => (typeof x === 'string' ? { path: x } : x) as { path: string; qIndex?: number; question?: string };
+      const signAll = async (bucket: string, items: any[]) => {
+        const paths = (items || []).map(norm).filter((x) => x?.path);
+        if (!paths.length) return [] as (string | null)[];
+        const { data } = await supabase.storage.from(bucket).createSignedUrls(paths.map((x) => x.path), 600);
+        return paths.map((_, i) => data?.[i]?.signedUrl ?? null);
+      };
+      const audioItems = (c.audio_urls || []).map(norm);
+      const aUrls = await signAll('case-audio', c.audio_urls || []);
+      audioItems.forEach((a: any, i: number) => {
+        const url = aUrls[i]; if (!url) return;
+        if (typeof a.qIndex === 'number') out[a.qIndex] = url;
+        list.push({ url, label: a.question || t('dash.media.clip', { n: i + 1 }) });
+      });
+      const urls = (await signAll('case-photos', c.photo_urls || [])).filter(Boolean) as string[];
+      if (!cancelled) { setAudioSigned(out); setPhotoSigned(urls); setAllAudio(list); }
     })();
     return () => { cancelled = true; };
   }, [c?.id]);
@@ -951,17 +960,45 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           </div>
         </section>
 
-        {photoSigned.length > 0 && (
-          <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-            <p className="text-xs font-medium text-muted-foreground mb-3">{t('dash.detail.photos', { n: photoSigned.length })}</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {photoSigned.map((url, i) => (
-                <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-lg overflow-hidden border border-border hover:opacity-90 transition">
-                  <img src={url} alt={t('dash.detail.photoAlt', { n: i + 1 })} className="w-full h-full object-cover" />
-                </a>
-              ))}
-            </div>
+        {(allAudio.length > 0 || photoSigned.length > 0) && (
+          <section className="bg-card border border-border rounded-xl p-5 shadow-card space-y-4" aria-label={t('dash.media.title')}>
+            <p className="text-sm font-medium">{t('dash.media.title')}</p>
+            {allAudio.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">{t('dash.media.audio', { n: allAudio.length })}</p>
+                {allAudio.map((a, i) => (
+                  <div key={i} className="rounded-lg border border-border p-2.5">
+                    <p className="text-[11px] text-muted-foreground mb-1 line-clamp-1">{a.label}</p>
+                    <audio src={a.url} controls preload="none" className="w-full h-9" />
+                  </div>
+                ))}
+              </div>
+            )}
+            {photoSigned.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.photos', { n: photoSigned.length })}</p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {photoSigned.map((url, i) => (
+                    <button key={i} type="button" onClick={() => setLightbox(i)} className="block aspect-square rounded-lg overflow-hidden border border-border hover:opacity-90 transition">
+                      <img src={url} loading="lazy" alt={t('dash.detail.photoAlt', { n: i + 1 })} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="text-[10px] text-muted-foreground">{t('dash.media.note')}</p>
           </section>
+        )}
+
+        {lightbox !== null && photoSigned[lightbox] && (
+          <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-foreground/80 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
+            <img src={photoSigned[lightbox]} alt={t('dash.detail.photoAlt', { n: lightbox + 1 })} className="max-h-[85vh] max-w-full rounded-xl" onClick={(e) => e.stopPropagation()} />
+            <div className="absolute bottom-6 flex gap-2" onClick={(e) => e.stopPropagation()}>
+              <Button variant="secondary" disabled={lightbox === 0} onClick={() => setLightbox(lightbox - 1)}>‹</Button>
+              <Button variant="secondary" onClick={() => setLightbox(null)}>{t('dash.media.close')}</Button>
+              <Button variant="secondary" disabled={lightbox >= photoSigned.length - 1} onClick={() => setLightbox(lightbox + 1)}>›</Button>
+            </div>
+          </div>
         )}
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
