@@ -45,10 +45,10 @@ export interface ReviewedDocumentDraft {
 export type DocKind = 'complaint' | 'statement' | 'referral' | 'assistance';
 
 export const DOC_KINDS: { key: DocKind; label: string; desc: string }[] = [
-  { key: 'complaint', label: 'แบบร่างบันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์', desc: 'สำหรับใช้ประกอบการยื่นต่อพนักงานสอบสวน' },
-  { key: 'statement', label: 'แบบร่างบันทึกการให้ข้อมูลของผู้รับบริการ', desc: 'ข้อมูลหรือคำให้การของผู้รับบริการที่เรียบเรียงแล้ว' },
-  { key: 'referral', label: 'แบบร่างหนังสือส่งต่อเพื่อรับการช่วยเหลือ', desc: 'สำหรับส่งต่อหน่วยงานพันธมิตร โรงพยาบาล หรือ พมช.' },
-  { key: 'assistance', label: 'แบบร่างบันทึกการให้ความช่วยเหลือผู้รับบริการ', desc: 'รายการความช่วยเหลือที่มูลนิธิเพื่อนพนักงานบริการดำเนินการแล้ว' },
+  { key: 'complaint', label: 'บันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์', desc: 'สำหรับใช้ประกอบการยื่นต่อพนักงานสอบสวน' },
+  { key: 'statement', label: 'บันทึกการให้ข้อมูลของผู้รับบริการ', desc: 'ข้อมูลหรือคำให้การของผู้รับบริการที่เรียบเรียงแล้ว' },
+  { key: 'referral', label: 'หนังสือส่งต่อเพื่อรับการช่วยเหลือ', desc: 'สำหรับส่งต่อหน่วยงานพันธมิตร โรงพยาบาล หรือ พมช.' },
+  { key: 'assistance', label: 'บันทึกการให้ความช่วยเหลือผู้รับบริการ', desc: 'รายการความช่วยเหลือที่มูลนิธิเพื่อนพนักงานบริการดำเนินการแล้ว' },
 ];
 
 const esc = (v: unknown) =>
@@ -176,7 +176,7 @@ function complaintHtml(d: DocInput) {
   const p = d.profile || {};
   const draft = d.documentDraft;
   return `
-  <h1>แบบร่างบันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์</h1>
+  <h1>บันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์</h1>
   <div class="docno">(เพื่อประกอบการยื่นต่อพนักงานสอบสวน — โปรดตรวจสอบรายละเอียด ณ สถานีตำรวจอีกครั้ง)</div>
 
   <div class="meta">
@@ -216,7 +216,7 @@ function complaintHtml(d: DocInput) {
     <p>${esc(draft?.actions)}</p>
   </div>
 
-  <p class="warn"><strong>หมายเหตุ:</strong> เอกสารนี้เป็น "แบบร่าง" ที่จัดทำจากบันทึกการสัมภาษณ์ของมูลนิธิเพื่อนพนักงานบริการเท่านั้น ไม่ใช่บันทึกการแจ้งความอย่างเป็นทางการ — ผู้แจ้งต้องลงลายมือชื่อต่อหน้าพนักงานสอบสวน ณ สถานีตำรวจที่มีเขตอำนาจ</p>
+  <p class="warn"><strong>หมายเหตุ:</strong> เอกสารนี้จัดทำจากบันทึกการสัมภาษณ์ของมูลนิธิเพื่อนพนักงานบริการเท่านั้น ไม่ใช่บันทึกการแจ้งความอย่างเป็นทางการ — ผู้แจ้งต้องลงลายมือชื่อต่อหน้าพนักงานสอบสวน ณ สถานีตำรวจที่มีเขตอำนาจ</p>
 
   ${blankSig('ผู้แจ้งความ', 'พนักงานสอบสวนผู้รับแจ้ง')}`;
 }
@@ -227,7 +227,7 @@ function statementHtml(d: DocInput) {
   const draft = d.documentDraft;
 
   return `
-  <h1>แบบร่างบันทึกการให้ข้อมูลของผู้รับบริการ</h1>
+  <h1>บันทึกการให้ข้อมูลของผู้รับบริการ</h1>
   <div class="docno">Statement Record — จัดทำโดยเจ้าหน้าที่มูลนิธิเพื่อนพนักงานบริการ</div>
 
   <div class="meta">
@@ -251,7 +251,7 @@ function statementHtml(d: DocInput) {
 function referralHtml(d: DocInput) {
   const draft = d.documentDraft;
   return `
-  <h1>แบบร่างหนังสือส่งต่อเพื่อรับการช่วยเหลือ</h1>
+  <h1>หนังสือส่งต่อเพื่อรับการช่วยเหลือ</h1>
   <div class="docno">Referral Record — ส่งต่อระหว่างหน่วยงาน</div>
 
   <div class="meta">
@@ -292,7 +292,7 @@ function assistanceHtml(d: DocInput) {
     `<li class="${cond ? '' : 'no'}">${label}${cond && detail ? ` — ${esc(detail)}` : ''}</li>`;
 
   return `
-  <h1>แบบร่างบันทึกการให้ความช่วยเหลือผู้รับบริการ</h1>
+  <h1>บันทึกการให้ความช่วยเหลือผู้รับบริการ</h1>
   <div class="docno">Assistance Record — มูลนิธิเพื่อนพนักงานบริการ</div>
 
   <div class="meta">
@@ -337,10 +337,10 @@ export function printCaseDocument(kind: DocKind, d: DocInput) {
     return false;
   }
   switch (kind) {
-    case 'complaint': return openDoc('แบบร่างบันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์', complaintHtml(d), d, 'doc_complaint');
-    case 'statement': return openDoc('แบบร่างบันทึกการให้ข้อมูลของผู้รับบริการ', statementHtml(d), d, 'doc_statement');
-    case 'referral': return openDoc('แบบร่างหนังสือส่งต่อเพื่อรับการช่วยเหลือ', referralHtml(d), d, 'doc_referral');
-    case 'assistance': return openDoc('แบบร่างบันทึกการให้ความช่วยเหลือผู้รับบริการ', assistanceHtml(d), d, 'doc_assistance');
+    case 'complaint': return openDoc('บันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์', complaintHtml(d), d, 'doc_complaint');
+    case 'statement': return openDoc('บันทึกการให้ข้อมูลของผู้รับบริการ', statementHtml(d), d, 'doc_statement');
+    case 'referral': return openDoc('หนังสือส่งต่อเพื่อรับการช่วยเหลือ', referralHtml(d), d, 'doc_referral');
+    case 'assistance': return openDoc('บันทึกการให้ความช่วยเหลือผู้รับบริการ', assistanceHtml(d), d, 'doc_assistance');
   }
 }
 
