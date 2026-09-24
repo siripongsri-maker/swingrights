@@ -315,6 +315,7 @@ export type Database = {
           referred_at: string
           referred_by: string | null
           responded_at: string | null
+          summary: string | null
           token_expires_at: string | null
         }
         Insert: {
@@ -328,6 +329,7 @@ export type Database = {
           referred_at?: string
           referred_by?: string | null
           responded_at?: string | null
+          summary?: string | null
           token_expires_at?: string | null
         }
         Update: {
@@ -341,6 +343,7 @@ export type Database = {
           referred_at?: string
           referred_by?: string | null
           responded_at?: string | null
+          summary?: string | null
           token_expires_at?: string | null
         }
         Relationships: [
@@ -733,7 +736,12 @@ export type Database = {
         Returns: boolean
       }
       create_case_referral: {
-        Args: { _case_id: string; _note?: string; _partner_id: string }
+        Args: {
+          _case_id: string
+          _note?: string
+          _partner_id: string
+          _summary?: string
+        }
         Returns: Json
       }
       dashboard_stats: {
