@@ -219,7 +219,13 @@ export default function SelfReport() {
 
   const confirmTypes = (msgId: number) => {
     resolveWidget(msgId);
-    push({ role: 'user', text: types.length ? types.map((k) => t(`report.type.${k}`)).join(' · ') : t('report.chat.skipped') });
+    const other = types.includes('other') && otherText.trim() ? otherText.trim() : '';
+    push({
+      role: 'user',
+      text: types.length
+        ? types.map((k) => t(`report.type.${k}`)).join(' · ') + (other ? ` — ${other}` : '')
+        : t('report.chat.skipped'),
+    });
     // move into the sequential probing interview
     setStage('probe');
     setProbeIdx(0);
@@ -517,6 +523,15 @@ export default function SelfReport() {
                   </button>
                 ))}
               </div>
+              {types.includes('other') && (
+                <Input
+                  value={otherText}
+                  onChange={(e) => setOtherText(e.target.value)}
+                  placeholder={t('report.type.otherPh')}
+                  maxLength={200}
+                  className="h-9 text-sm rounded-xl"
+                />
+              )}
               <Button size="sm" className="w-full rounded-xl" onClick={() => confirmTypes(m.id)}>
                 {types.length ? t('report.chat.confirm') : t('report.chat.skip')}
               </Button>
