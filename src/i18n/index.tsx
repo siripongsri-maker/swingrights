@@ -66,6 +66,7 @@ const BASE_DICT: Dict = {
   'common.optional': { th: 'ไม่บังคับ', en: 'Optional', my: 'မဖြည့်လည်းရ', km: 'មិនបង្ខំ', lo: 'ບໍ່ບັງຄັບ' },
   'common.record': { th: 'อัดเสียง', en: 'Record', my: 'အသံသွင်းမည်', km: 'ថតសំឡេង', lo: 'ອັດສຽງ' },
   'common.stop': { th: 'หยุดอัด', en: 'Stop', my: 'ရပ်မည်', km: 'ឈប់', lo: 'ຢຸດ' },
+  'voice.transcribing': { th: 'กำลังแปลงเสียงเป็นข้อความ…', en: 'Turning your voice into text…', my: 'အသံကို စာအဖြစ် ပြောင်းနေသည်…', km: 'កំពុងបម្លែងសំឡេងទៅជាអត្ថបទ…', lo: 'ກຳລັງປ່ຽນສຽງເປັນຂໍ້ຄວາມ…' },
   'voice.editTranscript': { th: 'ข้อความที่ได้ยิน — แก้ไขได้ถ้าจับเสียงผิดหรือพูดผิด', en: 'What we heard — edit if it is wrong', my: 'ကြားရသည့်စာ — မှားလျှင် ပြင်နိုင်သည်', km: 'អ្វីដែលយើងឮ — កែបានបើខុស', lo: 'ຂໍ້ຄວາມທີ່ໄດ້ຍິນ — ແກ້ໄຂໄດ້ຖ້າຜິດ' },
   'voice.transcriptPlaceholder': { th: 'พิมพ์หรือแก้ข้อความที่นี่', en: 'Type or correct the text here', my: 'ဤနေရာတွင် ရိုက်ပါ', km: 'វាយ ឬកែនៅទីនេះ', lo: 'ພິມ ຫຼື ແກ້ຢູ່ນີ້' },
   'voice.clearTranscript': { th: 'ลบข้อความ', en: 'Delete text', my: 'စာဖျက်မည်', km: 'លុបអត្ថបទ', lo: 'ລຶບຂໍ້ຄວາມ' },
