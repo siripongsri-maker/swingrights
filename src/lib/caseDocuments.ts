@@ -324,7 +324,6 @@ function assistanceHtml(d: DocInput) {
 /** พิมพ์เอกสารตามประเภท — คืน true เมื่อเปิดหน้าต่างพิมพ์สำเร็จ */
 export function printCaseDocument(kind: DocKind, d: DocInput) {
   if (!d.documentDraft?.reviewed_at) {
-    toast.error('ต้องตรวจและยืนยันร่างเอกสารก่อนพิมพ์');
     return false;
   }
   switch (kind) {
