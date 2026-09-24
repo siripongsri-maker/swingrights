@@ -7,10 +7,11 @@ interface Props {
   value: { lat: number; lng: number } | null;
   center?: [number, number] | null;
   onChange: (v: { lat: number; lng: number } | null) => void;
+  readOnly?: boolean;
 }
 
 /** Lightweight OpenStreetMap picker — click (or drag the pin) to drop a location. */
-export function MapPicker({ value, center, onChange }: Props) {
+export function MapPicker({ value, center, onChange, readOnly = false }: Props) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const marker = useRef<L.Marker | null>(null);
@@ -27,7 +28,9 @@ export function MapPicker({ value, center, onChange }: Props) {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap',
     }).addTo(m);
-    m.on('click', (e: L.LeafletMouseEvent) => onChangeRef.current({ lat: +e.latlng.lat.toFixed(6), lng: +e.latlng.lng.toFixed(6) }));
+    if (!readOnly) {
+      m.on('click', (e: L.LeafletMouseEvent) => onChangeRef.current({ lat: +e.latlng.lat.toFixed(6), lng: +e.latlng.lng.toFixed(6) }));
+    }
     map.current = m;
     setTimeout(() => m.invalidateSize(), 120);
     return () => { m.remove(); map.current = null; marker.current = null; };
@@ -50,16 +53,18 @@ export function MapPicker({ value, center, onChange }: Props) {
         iconSize: [18, 18],
         iconAnchor: [9, 9],
       });
-      marker.current = L.marker(pos, { icon, draggable: true }).addTo(m);
-      marker.current.on('dragend', (e) => {
-        const ll = (e.target as L.Marker).getLatLng();
-        onChangeRef.current({ lat: +ll.lat.toFixed(6), lng: +ll.lng.toFixed(6) });
-      });
+      marker.current = L.marker(pos, { icon, draggable: !readOnly }).addTo(m);
+      if (!readOnly) {
+        marker.current.on('dragend', (e) => {
+          const ll = (e.target as L.Marker).getLatLng();
+          onChangeRef.current({ lat: +ll.lat.toFixed(6), lng: +ll.lng.toFixed(6) });
+        });
+      }
     } else {
       marker.current.setLatLng(pos);
     }
     if (m.getZoom() < 12) m.setView(pos, 15);
-  }, [value, center]);
+  }, [value, center, readOnly]);
 
   return <div ref={el} className="h-56 w-full rounded-[1.25rem] overflow-hidden border border-border z-0" />;
 }

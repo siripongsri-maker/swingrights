@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { CaseReferrals } from '@/components/admin/CaseReferrals';
+import { MapPicker } from '@/components/screening/MapPicker';
 
 const PAGE_SIZE = 20;
 
@@ -559,6 +560,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   // คำถามถึงผู้รายงาน (ตอบกลับผ่านหน้า /track ด้วยรหัสเคส) + หน่วยงานรับส่งต่อรายพื้นที่
   const [newQuestion, setNewQuestion] = useState('');
   const [answerAudio, setAnswerAudio] = useState<Record<string, string>>({});
+  const [showMap, setShowMap] = useState(false);
 
 
   const revealPii = async () => {
@@ -812,9 +814,22 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
               <p className="text-xs text-muted-foreground">{c.profile?.kp} · {c.profile?.gender} · {c.profile?.age}</p>
               {pii?.victim?.contact && <p className="text-xs text-muted-foreground">{pii.victim.contact}</p>}
             </div>
-            <div><p className="text-xs text-muted-foreground mb-1">{t('dash.detail.area')}</p><p>{[c.profile?.subdistrict && `ต.${c.profile.subdistrict}`, c.profile?.district && `อ.${c.profile.district}`, c.profile?.province || c.profile?.branch].filter(Boolean).join(' ')}</p>{c.profile?.geo && <a className="text-[11px] text-primary underline" href={`https://www.openstreetmap.org/?mlat=${c.profile.geo.lat}&mlon=${c.profile.geo.lng}#map=16/${c.profile.geo.lat}/${c.profile.geo.lng}`} target="_blank" rel="noreferrer">{t('dash.detail.viewOnMap')}</a>}</div>
+            <div>
+              <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.area')}</p>
+              <p>{[c.profile?.subdistrict && `ต.${c.profile.subdistrict}`, c.profile?.district && `อ.${c.profile.district}`, c.profile?.province || c.profile?.branch].filter(Boolean).join(' ')}</p>
+              {c.profile?.geo && (
+                <Button type="button" variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setShowMap((current) => !current)}>
+                  {showMap ? t('dash.detail.hideMap') : t('dash.detail.viewOnMap')}
+                </Button>
+              )}
+            </div>
             <div><p className="text-xs text-muted-foreground mb-1">{t('dash.detail.incidentPlace')}</p><p>{c.profile?.incidentPlace || '-'}</p></div>
           </div>
+          {showMap && c.profile?.geo && (
+            <div className="mt-4" aria-label={t('dash.detail.mapLabel')}>
+              <MapPicker value={c.profile.geo} center={[c.profile.geo.lat, c.profile.geo.lng]} onChange={() => undefined} readOnly />
+            </div>
+          )}
         </section>
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
