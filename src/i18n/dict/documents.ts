@@ -1,10 +1,10 @@
 import type { Entry } from '../index';
 
 export const DOCUMENTS_DICT: Record<string, Entry> = {
-  'docs.complaint.title': { th: 'บันทึกแจ้งความ', en: 'Complaint record' },
-  'docs.statement.title': { th: 'บันทึกข้อความ', en: 'Statement record' },
-  'docs.referral.title': { th: 'บันทึกส่งตัว', en: 'Referral record' },
-  'docs.assistance.title': { th: 'บันทึกให้การช่วยเหลือ', en: 'Assistance record' },
+  'docs.complaint.title': { th: 'บันทึกแจ้งความ', en: 'Complaint record', my: 'တိုင်ကြားချက်မှတ်တမ်း', km: 'កំណត់ត្រាពាក្យបណ្តឹង', lo: 'ບັນທຶກການຮ້ອງທຸກ' },
+  'docs.statement.title': { th: 'บันทึกข้อความ', en: 'Statement record', my: 'ထွက်ဆိုချက်မှတ်တမ်း', km: 'កំណត់ត្រាសេចក្តីថ្លែងការណ៍', lo: 'ບັນທຶກຄຳໃຫ້ການ' },
+  'docs.referral.title': { th: 'บันทึกส่งตัว', en: 'Referral record', my: 'လွှဲပြောင်းမှတ်တမ်း', km: 'កំណត់ត្រាបញ្ជូនបន្ត', lo: 'ບັນທຶກການສົ່ງຕໍ່' },
+  'docs.assistance.title': { th: 'บันทึกให้การช่วยเหลือ', en: 'Assistance record', my: 'အကူအညီပေးမှုမှတ်တမ်း', km: 'កំណត់ត្រាជំនួយ', lo: 'ບັນທຶກການຊ່ວຍເຫຼືອ' },
   'docs.review.title': { th: 'ตรวจร่างเอกสารจาก AI', en: 'Review AI document draft' },
   'docs.review.description': { th: 'ตรวจสอบและแก้ไขทุกหัวข้อก่อนยืนยัน ระบบจะไม่พิมพ์ Transcript เป็นเนื้อหาหลัก', en: 'Review and edit every section before confirming. The transcript will not be printed as the main content.' },
   'docs.review.disclaimer': { th: 'AI ใช้ช่วยเรียบเรียงเท่านั้น ห้ามยืนยันหากมีข้อเท็จจริงที่ไม่ตรงกับคำให้ข้อมูล', en: 'AI only assists with drafting. Do not confirm if any fact differs from the information provided.' },

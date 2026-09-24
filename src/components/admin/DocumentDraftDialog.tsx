@@ -41,9 +41,10 @@ export function DocumentDraftDialog({ open, onOpenChange, caseId, kind, input, e
     setLoading(false);
     const message = (data as { error?: string } | null)?.error || invokeError?.message;
     if (message) { setError(message); return; }
-    const next = (data as { draft?: ReviewedDocumentDraft } | null)?.draft;
+    const response = data as { draft?: ReviewedDocumentDraft; generated_at?: string } | null;
+    const next = response?.draft;
     if (!next) { setError(t('docs.review.generateFailed')); return; }
-    setDraft(next);
+    setDraft({ ...next, generated_at: response?.generated_at || new Date().toISOString() });
   };
 
   useEffect(() => {
