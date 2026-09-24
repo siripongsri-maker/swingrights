@@ -85,6 +85,7 @@ export default function SelfReport() {
   const [draftText, setDraftText] = useState('');
   const [area, setArea] = useState<AreaValue>({ province: '', district: '', subdistrict: '', zip: '', geo: null });
   const [types, setTypes] = useState<string[]>([]);
+  const [otherText, setOtherText] = useState('');
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [photos, setPhotos] = useState<{ blob: Blob; url: string; name: string; type: string }[]>([]);
@@ -218,7 +219,13 @@ export default function SelfReport() {
 
   const confirmTypes = (msgId: number) => {
     resolveWidget(msgId);
-    push({ role: 'user', text: types.length ? types.map((k) => t(`report.type.${k}`)).join(' · ') : t('report.chat.skipped') });
+    const other = types.includes('other') && otherText.trim() ? otherText.trim() : '';
+    push({
+      role: 'user',
+      text: types.length
+        ? types.map((k) => t(`report.type.${k}`)).join(' · ') + (other ? ` — ${other}` : '')
+        : t('report.chat.skipped'),
+    });
     // move into the sequential probing interview
     setStage('probe');
     setProbeIdx(0);
@@ -381,7 +388,7 @@ export default function SelfReport() {
         initialViolationTypes: types,
       },
       answers: answersArr,
-      extraFacts: `${story}\n${probeDigest}`.trim(),
+      extraFacts: `${story}\n${probeDigest}${otherText.trim() ? `\n${t('report.type.other')}: ${otherText.trim()}` : ''}`.trim(),
       violationDetails: types,
       audioBlobs: [audio, ...PROBE_IDS.map((q) => probeAnswers[q]?.blob ?? null)].filter((b): b is Blob => !!b),
       photos: photos.map((p) => ({ blob: p.blob, previewUrl: p.url, name: p.name })),
@@ -401,7 +408,7 @@ export default function SelfReport() {
       },
       answers: answersArr,
       violation_details: types,
-      extra_facts: `${story}\n${probeDigest}`.trim().slice(0, 5000),
+      extra_facts: `${story}\n${probeDigest}${otherText.trim() ? `\n${t('report.type.other')}: ${otherText.trim()}` : ''}`.trim().slice(0, 5000),
       pii_flag: piiResult === 'send',
       referrals: partners.slice(0, 3).map((p) => ({
         org_name: p.name, phone: p.phone ?? '', note: t('report.partners.noteAuto'),
@@ -516,6 +523,15 @@ export default function SelfReport() {
                   </button>
                 ))}
               </div>
+              {types.includes('other') && (
+                <Input
+                  value={otherText}
+                  onChange={(e) => setOtherText(e.target.value)}
+                  placeholder={t('report.type.otherPh')}
+                  maxLength={200}
+                  className="h-9 text-sm rounded-xl"
+                />
+              )}
               <Button size="sm" className="w-full rounded-xl" onClick={() => confirmTypes(m.id)}>
                 {types.length ? t('report.chat.confirm') : t('report.chat.skip')}
               </Button>
