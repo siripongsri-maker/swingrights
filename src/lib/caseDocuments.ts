@@ -5,7 +5,7 @@ import { q9Level, nrmPositive } from '@/lib/screeningTools';
 import { AI_DISCLAIMER, logExport, type CaseReportData } from '@/lib/caseReport';
 import type { IntakeState } from '@/store/intake';
 import { toast } from 'sonner';
-import lockupAsset from '@/assets/brand/swing-rights-lockup.png.asset.json';
+import lockupImg from '@/assets/brand/swing-rights-lockup.png';
 
 export interface DocInput {
   caseCode: string | null;
@@ -104,7 +104,7 @@ function openDoc(title: string, bodyHtml: string, d: DocInput, format: string) {
   <title>${esc(title)} ${esc(d.caseCode || '')}</title>
   <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
   <style>${DOC_CSS}</style></head><body>
-  <div class="org"><img src="${lockupAsset.url}" alt="SWING RIGHTS" /><div class="name">มูลนิธิสวิง (SWING Foundation)</div>
+  <div class="org"><img src="${lockupImg}" alt="SWING RIGHTS" /><div class="name">มูลนิธิสวิง (SWING Foundation)</div>
   <div class="en">SERVICE WORKERS IN GROUP FOUNDATION — เอกสารลับ สำหรับหน่วยงานที่เกี่ยวข้องเท่านั้น</div></div>
   ${bodyHtml}
   <div class="footer">รหัสเคส ${esc(d.caseCode || '—')} · ออกเอกสารเมื่อ ${thaiDateTime()} · เอกสารลับตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 — ห้ามเปิดเผยโดยไม่ได้รับความยินยอม</div>

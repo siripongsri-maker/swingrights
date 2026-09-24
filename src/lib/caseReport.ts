@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { STATUS_LABEL, SEV_LABEL, type CaseStatus } from '@/lib/screening';
 import { q9Level } from '@/lib/screeningTools';
 import { toast } from 'sonner';
-import lockupAsset from '@/assets/brand/swing-rights-lockup.png.asset.json';
+import lockupImg from '@/assets/brand/swing-rights-lockup.png';
 
 const esc = (v: unknown) =>
   String(v ?? '-').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
@@ -86,7 +86,7 @@ export function printCaseReport(c: CaseReportData) {
   <title>SWING Case Report ${esc(c.case_code)}</title>
   <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
   <style>${BASE_CSS}</style></head><body>
-  <img class="brand" src="${lockupAsset.url}" alt="SWING RIGHTS" />
+  <img class="brand" src="${lockupImg}" alt="SWING RIGHTS" />
   <h1>SWING Foundation — รายงานเคส (เอกสารส่งต่อ)</h1>
   <div class="sub">รหัสเคส <strong>${esc(c.case_code)}</strong> · รับเรื่อง ${new Date(c.created_at).toLocaleString('th-TH')} · ออกเอกสาร ${new Date().toLocaleString('th-TH')}</div>
 

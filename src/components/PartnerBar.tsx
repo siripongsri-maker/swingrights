@@ -1,8 +1,8 @@
 import { useI18n } from '@/i18n';
-import unaidsAsset from '@/assets/brand/unaids-new.png.asset.json';
-import apcomAsset from '@/assets/brand/apcom-new.png.asset.json';
-import youthLeadAsset from '@/assets/brand/youth-lead-new.png.asset.json';
-import swingAsset from '@/assets/brand/swing-new.png.asset.json';
+import unaidsImg from '@/assets/brand/unaids-new.png';
+import apcomImg from '@/assets/brand/apcom-new.png';
+import youthLeadImg from '@/assets/brand/youth-lead-new.png';
+import swingImg from '@/assets/brand/swing-new.png';
 import { cn } from '@/lib/utils';
 
 export function PartnerBar({ className }: { className?: string }) {
@@ -17,16 +17,16 @@ export function PartnerBar({ className }: { className?: string }) {
           {t('partners.implementedBy')}
         </p>
         <div className="flex min-w-0 items-center justify-center">
-          <img src={unaidsAsset.url} alt="UNAIDS" className="h-7 w-full object-contain md:h-9" />
+          <img src={unaidsImg} alt="UNAIDS" className="h-7 w-full object-contain md:h-9" />
         </div>
         <div className="flex min-w-0 items-center justify-center">
-          <img src={apcomAsset.url} alt="APCOM" className="h-8 w-full object-contain md:h-10" />
+          <img src={apcomImg} alt="APCOM" className="h-8 w-full object-contain md:h-10" />
         </div>
         <div className="flex min-w-0 items-center justify-center">
-          <img src={youthLeadAsset.url} alt="Youth LEAD" className="h-7 w-full object-contain md:h-9" />
+          <img src={youthLeadImg} alt="Youth LEAD" className="h-7 w-full object-contain md:h-9" />
         </div>
         <div className="flex min-w-0 items-center justify-center border-s border-border ps-3 md:ps-6">
-          <img src={swingAsset.url} alt="SWING" className="h-8 w-full object-contain md:h-10" />
+          <img src={swingImg} alt="SWING" className="h-8 w-full object-contain md:h-10" />
         </div>
       </div>
     </aside>
