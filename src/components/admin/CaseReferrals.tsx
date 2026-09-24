@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Loader2, Plus, Share2, Sparkles, ShieldCheck } from 'lucide-react';
+import { Copy, FileText, Loader2, Plus, Share2, Sparkles, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
 
 interface Partner { id: string; name: string; province: string | null; district: string | null; services: string[] }
+type LetterKey = 'overview' | 'details' | 'impact' | 'actions';
+const LETTER_KEYS: LetterKey[] = ['overview', 'details', 'impact', 'actions'];
 interface Referral { id: string; partner_id: string; referred_at: string; accepted_at: string | null; outcome: string; note: string | null; token_expires_at: string | null }
 
 const OUTCOME_CLS: Record<string, string> = {
@@ -32,6 +34,15 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<string | null>(null);
   const [summary, setSummary] = useState('');
+  const [letter, setLetter] = useState<Record<LetterKey, string> | null>(null);
+  const [drafting, setDrafting] = useState(false);
+  const draftLetter = async () => {
+    setDrafting(true);
+    const { data, error } = await supabase.functions.invoke('draft-case-document', { body: { case_id: caseId, kind: 'referral' } });
+    setDrafting(false);
+    if (error || !data?.draft) { toast.error(t('ref.letterFailed')); return; }
+    setLetter(data.draft as Record<LetterKey, string>);
+  };
   const [newPlace, setNewPlace] = useState('');
   const [adding, setAdding] = useState(false);
 
@@ -112,7 +123,7 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
   const submit = async () => {
     if (!partnerId) return;
     setBusy(true);
-    const { data, error } = await supabase.rpc('create_case_referral' as never, { _case_id: caseId, _partner_id: partnerId, _note: note || null, _summary: scrub(summary) || null } as never);
+    const { data, error } = await supabase.rpc('create_case_referral' as never, { _case_id: caseId, _partner_id: partnerId, _note: note || null, _summary: scrub(summary) || null, _letter: letter ? Object.fromEntries(LETTER_KEYS.map((k) => [k, scrub(letter[k] ?? '')])) : null } as never);
     setBusy(false);
     if (error || !data) { toast.error(t('ref.failed')); return; }
     const token = (data as { token: string }).token;
@@ -121,7 +132,7 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
     qc.invalidateQueries({ queryKey: ['case-referrals', caseId] });
   };
 
-  const close = () => { setOpen(false); setPartnerId(null); setNote(''); setSummary(''); setLink(null); setShowAll(false); setNewPlace(''); };
+  const close = () => { setOpen(false); setPartnerId(null); setNote(''); setSummary(''); setLink(null); setShowAll(false); setNewPlace(''); setLetter(null); };
   const fmt = (d: string) => new Date(d).toLocaleString('th-TH');
   const effectiveOutcome = (r: Referral) =>
     r.outcome === 'pending' && r.token_expires_at && new Date(r.token_expires_at) < new Date() ? 'no_response' : r.outcome;
@@ -203,6 +214,23 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
                 <p className="text-xs font-medium flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-primary" /> {t('ref.summaryLabel')}</p>
                 <Textarea value={summary} onChange={(e) => setSummary(e.target.value)} maxLength={4000} className="min-h-[110px] text-sm" />
                 <p className="text-[11px] text-muted-foreground flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> {t('ref.summaryHint')}</p>
+              </div>
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-medium flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-primary" /> {t('ref.letterTitle')}</p>
+                  <Button size="sm" variant="outline" className="h-8 text-xs" disabled={drafting} onClick={() => void draftLetter()}>
+                    {drafting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} {letter ? t('ref.letterRedo') : t('ref.letterDraft')}
+                  </Button>
+                </div>
+                {drafting && <p className="text-[11px] text-muted-foreground">{t('ref.letterDrafting')}</p>}
+                {!letter && !drafting && <p className="text-[11px] text-muted-foreground">{t('ref.letterHint')}</p>}
+                {letter && LETTER_KEYS.map((k) => (
+                  <div key={k} className="space-y-1">
+                    <p className="text-[11px] text-muted-foreground">{t(`ref.letter.${k}`)}</p>
+                    <Textarea value={letter[k] ?? ''} maxLength={4000} className="min-h-[80px] text-sm"
+                      onChange={(e) => setLetter({ ...letter, [k]: e.target.value })} />
+                  </div>
+                ))}
               </div>
               <Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} placeholder={t('ref.notePlaceholder')} className="min-h-[70px] text-sm" />
             </>
