@@ -131,6 +131,9 @@
 .stagger > *:nth-child(7) { animation-delay: 0.4s; }
 .stagger > *:nth-child(8) { animation-delay: 0.46s; }
 
+/* หัวข้อรอง (h2–h4) ใช้ฟอนต์ไม่มีหัวเสมอ แม้ใส่คลาส font-display — unlayered เพื่อชนะ Tailwind utilities */
+h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-spacing: 0; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-floaty, .animate-drift, .animate-sway, .animate-pulse-ring { animation: none; }
 }
