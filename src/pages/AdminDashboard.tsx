@@ -29,6 +29,7 @@ import { CaseReferrals } from '@/components/admin/CaseReferrals';
 import { MapPicker } from '@/components/screening/MapPicker';
 import { DocumentDraftDialog } from '@/components/admin/DocumentDraftDialog';
 import { BrandMark } from '@/components/BrandLogo';
+import { CaseAnswersEditor } from '@/components/admin/CaseAnswersEditor';
 
 const PAGE_SIZE = 20;
 
@@ -893,25 +894,14 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           )}
         </section>
 
-        <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-          <p className="text-xs font-medium text-muted-foreground mb-3">{t('dash.detail.interviewLog')}</p>
-          <div className="space-y-3">
-            {(c.answers || []).some((a: any) => a.cat === 'self_followup') && (
-              <p className="text-xs bg-accent/10 text-accent border border-accent/30 rounded-md px-3 py-2">
-                {t('dash.detail.followupCount', { n: (c.answers || []).filter((a: any) => a.cat === 'self_followup').length })}
-              </p>
-            )}
-            {(c.answers || []).map((a: any, i: number) => (
-              <div key={i} className={`border-b border-border/60 pb-3 last:border-none last:pb-0 ${a.cat === 'self_followup' ? 'ps-3 border-s-2 border-s-accent' : ''}`}>
-                <p className="text-[10px] uppercase tracking-wider text-primary mb-1">{a.cat === 'self_followup' ? t('dash.detail.followupLabel') : a.cat}</p>
-                <p className="text-xs text-muted-foreground mb-1">{a.question}</p>
-                <p className="text-sm bg-muted/40 border border-border rounded-md p-2">{a.transcript || t('dash.detail.noAnswer')}</p>
-                {audioSigned[i] && <audio src={audioSigned[i]} controls className="w-full mt-2 h-9" />}
-                {c.staff_observations?.[i] && <p className="text-xs text-amber-700 dark:text-amber-300 mt-1.5">{t('dash.detail.staffNote', { note: c.staff_observations[i] })}</p>}
-              </div>
-            ))}
-          </div>
-        </section>
+        <CaseAnswersEditor
+          caseId={caseId}
+          answers={Array.isArray(c.answers) ? c.answers : []}
+          canEdit={access.canEdit}
+          audioSigned={audioSigned}
+          staffObs={c.staff_observations ?? undefined}
+          staffName={(id) => staffName(id ?? null) || t('dash.staffFallback')}
+        />
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
           <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.referrals')}</p>
