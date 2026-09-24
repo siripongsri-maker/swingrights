@@ -64,6 +64,7 @@ export interface CaseReportData {
   signature_staff_name: string | null;
   signature_client?: string | null;
   assignee_name?: string | null;
+  document_drafts?: Record<string, unknown>;
 }
 
 /** เอกสารส่งต่อรายเคส (OSCC / ตำรวจ / ทนาย) — พิมพ์เป็น PDF ผ่านเบราว์เซอร์ */
