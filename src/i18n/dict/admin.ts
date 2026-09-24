@@ -72,17 +72,17 @@ export const ADMIN_DICT: Record<string, Entry> = {
   },
 
   // ---------- access.* (roles) ----------
-  'access.role.admin': { th: 'ผู้ดูแลระบบ', en: 'Admin' },
-  'access.role.manager': { th: 'หัวหน้างาน', en: 'Manager' },
-  'access.role.caseworker': { th: 'ผู้ปฏิบัติงานเคส', en: 'Caseworker' },
-  'access.role.viewer': { th: 'ผู้ดูอย่างเดียว', en: 'Viewer' },
-  'access.role.staff': { th: 'เจ้าหน้าที่', en: 'Staff' },
+  'access.role.admin': { th: 'ผู้ดูแลระบบ', en: 'Admin', my: "စနစ်စီမံခန့်ခွဲသူ", km: "អ្នកគ្រប់គ្រងប្រព័ន្ធ", lo: "ຜູ້ດູແລລະບົບ",},
+  'access.role.manager': { th: 'หัวหน้างาน', en: 'Manager', my: "မန်နေဂျာ", km: "អ្នកគ្រប់គ្រង", lo: "ຜູ້ຈັດການ",},
+  'access.role.caseworker': { th: 'ผู้ปฏิบัติงานเคส', en: 'Caseworker', my: "အမှုကိစ္စတာဝန်ခံ ဝန်ထမ်း", km: "បុគ្គលិកទទួលបន្ទុកករណី", lo: "ພະນັກງານຮັບຜິດຊອບກໍລະນີ",},
+  'access.role.viewer': { th: 'ผู้ดูอย่างเดียว', en: 'Viewer', my: "ကြည့်ရှုသူ", km: "អ្នកមើល", lo: "ຜູ້ເບິ່ງ",},
+  'access.role.staff': { th: 'เจ้าหน้าที่', en: 'Staff', my: "ဝန်ထမ်း", km: "បុគ្គលិក", lo: "ພະນັກງານ",},
 
   // ---------- access.* (idle logout / alerts) ----------
-  'access.idle.loggedOut': { th: 'ออกจากระบบอัตโนมัติเนื่องจากไม่มีการใช้งาน', en: 'Logged out automatically due to inactivity' },
-  'access.idle.warning': { th: 'ไม่มีการใช้งาน — ระบบจะออกจากระบบใน 1 นาที', en: 'No activity — you will be logged out in 1 minute' },
-  'access.alerts.unspecifiedArea': { th: 'ไม่ระบุพื้นที่', en: 'unspecified area' },
-  'access.alerts.levelPrefix': { th: 'ระดับ {level}', en: 'level {level}' },
-  'access.alerts.selfHarmRisk': { th: '🚨 เคสเสี่ยงทำร้ายตนเอง — {msg}', en: '🚨 Self-harm risk case — {msg}' },
-  'access.alerts.highRisk': { th: '⚠️ เคสความเสี่ยงสูง — {msg}', en: '⚠️ High-risk case — {msg}' },
+  'access.idle.loggedOut': { th: 'ออกจากระบบอัตโนมัติเนื่องจากไม่มีการใช้งาน', en: 'Logged out automatically due to inactivity', my: "အသုံးပြုမှုမရှိသောကြောင့် အလိုအလျောက် အကောင့်မှ ထွက်လိုက်ပါပြီ", km: "បានចាកចេញពីគណនីដោយស្វ័យប្រវត្តិ ដោយសារគ្មានសកម្មភាព", lo: "ອອກຈາກລະບົບອັດຕະໂນມັດແລ້ວ ເນື່ອງຈາກບໍ່ມີການໃຊ້ງານ",},
+  'access.idle.warning': { th: 'ไม่มีการใช้งาน — ระบบจะออกจากระบบใน 1 นาที', en: 'No activity — you will be logged out in 1 minute', my: "အသုံးပြုမှုမရှိပါ — 1 မိနစ်အတွင်း အကောင့်မှ အလိုအလျောက် ထွက်မည်", km: "គ្មានសកម្មភាព — អ្នកនឹងត្រូវបានចាកចេញពីគណនីក្នុងរយៈពេល 1 នាទី", lo: "ບໍ່ມີການໃຊ້ງານ — ທ່ານຈະຖືກອອກຈາກລະບົບໃນອີກ 1 ນາທີ",},
+  'access.alerts.unspecifiedArea': { th: 'ไม่ระบุพื้นที่', en: 'unspecified area', my: "မသတ်မှတ်ထားသော ဧရိယာ", km: "តំបន់ដែលមិនបានបញ្ជាក់", lo: "ພື້ນທີ່ທີ່ບໍ່ໄດ້ລະບຸ",},
+  'access.alerts.levelPrefix': { th: 'ระดับ {level}', en: 'level {level}', my: "အဆင့် {level}", km: "កម្រិត {level}", lo: "ລະດັບ {level}",},
+  'access.alerts.selfHarmRisk': { th: '🚨 เคสเสี่ยงทำร้ายตนเอง — {msg}', en: '🚨 Self-harm risk case — {msg}', my: "🚨 မိမိကိုယ်ကို ထိခိုက်စေနိုင်သည့် အန္တရာယ်ရှိသော အမှုကိစ္စ — {msg}", km: "🚨 ករណីមានហានិភ័យធ្វើបាបខ្លួនឯង — {msg}", lo: "🚨 ກໍລະນີທີ່ມີຄວາມສ່ຽງຕໍ່ການທຳຮ້າຍຕົນເອງ — {msg}",},
+  'access.alerts.highRisk': { th: '⚠️ เคสความเสี่ยงสูง — {msg}', en: '⚠️ High-risk case — {msg}', my: "⚠️ အန္တရာယ်မြင့်မားသော အမှုကိစ္စ — {msg}", km: "⚠️ ករណីមានហានិភ័យខ្ពស់ — {msg}", lo: "⚠️ ກໍລະນີທີ່ມີຄວາມສ່ຽງສູງ — {msg}",},
 };

@@ -2,7 +2,7 @@ import type { Entry } from '../index';
 
 /** De-identified project summary report for donors (admin/manager only). */
 export const PROJECT_REPORT_DICT: Record<string, Entry> = {
-  'prep.button': { th: 'ส่งออกรายงานโครงการ', en: 'Export project report' },
+  'prep.button': { th: 'ส่งออกรายงานโครงการ', en: 'Export project report', my: 'စီမံကိန်းအစီရင်ခံစာ ထုတ်ယူရန်', km: 'នាំចេញរបាយការណ៍គម្រោង', lo: 'ສົ່ງອອກລາຍງານໂຄງການ' },
   'prep.back': { th: 'กลับแดชบอร์ด', en: 'Back to dashboard' },
   'prep.from': { th: 'ตั้งแต่', en: 'From' },
   'prep.to': { th: 'ถึง', en: 'To' },

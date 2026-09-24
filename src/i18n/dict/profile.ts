@@ -1,7 +1,7 @@
 import type { Entry } from '../index';
 
 export const PROFILE_DICT: Record<string, Entry> = {
-  'prof.nav': { th: 'ตั้งค่าส่วนตัว', en: 'My settings' },
+  'prof.nav': { th: 'ตั้งค่าส่วนตัว', en: 'My settings', my: 'ကျွန်ုပ်၏ ဆက်တင်များ', km: 'ការកំណត់របស់ខ្ញុំ', lo: 'ການຕັ້ງຄ່າຂອງຂ້ອຍ' },
   'prof.title': { th: 'ตั้งค่าส่วนตัว', en: 'My settings' },
   'prof.back': { th: 'กลับแดชบอร์ด', en: 'Back to dashboard' },
   'prof.info': { th: 'ข้อมูลของฉัน', en: 'My information' },
