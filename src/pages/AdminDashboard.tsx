@@ -266,14 +266,14 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-leaf grain">
-      <header className="bg-gradient-dark text-white sticky top-0 z-30 shadow-elegant">
+    <div className="min-h-screen bg-background">
+      <header className="bg-primary-deep text-primary-foreground sticky top-0 z-30 shadow-elegant">
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-white/10 rounded-2xl flex items-center justify-center"><ShieldCheck className="w-4 h-4" /></div>
+            <div className="w-10 h-10 bg-sidebar-accent rounded-xl flex items-center justify-center"><ShieldCheck className="w-5 h-5" /></div>
             <div>
               <p className="font-display font-medium">SWING Admin Dashboard</p>
-              <p className="text-[11px] text-white/60">
+              <p className="text-[11px] text-sidebar-foreground/60">
                 Voice Screening · {access.roles.map((r) => roleLabels[r]).join(', ') || t('dash.staffFallback')}
               </p>
             </div>
@@ -282,32 +282,32 @@ export default function AdminDashboard() {
             {access.isAdmin && (
               <>
                 <Button onClick={() => navigate('/admin/users')} size="sm" variant="outline"
-                  className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+                  className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
                   <UserCog className="w-4 h-4" /> {t('dash.nav.users')}
                 </Button>
                 <Button onClick={() => navigate('/admin/partners')} size="sm" variant="outline"
-                  className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+                  className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
                   <Building2 className="w-4 h-4" /> {t('dash.nav.partners')}
                 </Button>
               </>
             )}
             {access.canManage && (
               <Button onClick={() => navigate('/admin/access-review')} size="sm" variant="outline"
-                className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+                className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
                 <ShieldCheck className="w-4 h-4" /> <span className="hidden sm:inline">{t('areview.nav')}</span>
               </Button>
             )}
             {access.canManage && (
               <Button onClick={() => navigate('/admin/report')} size="sm" variant="outline"
-                className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+                className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
                 <FileText className="w-4 h-4" /> <span className="hidden sm:inline">{t('prep.button')}</span>
               </Button>
             )}
             {!access.isViewer && (
-              <Button onClick={() => navigate('/intake')} size="sm" className="bg-primary hover:bg-primary/90"><Plus className="w-4 h-4" /> {t('dash.nav.newCase')}</Button>
+              <Button onClick={() => navigate('/intake')} size="sm" variant="action"><Plus className="w-4 h-4" /> {t('dash.nav.newCase')}</Button>
             )}
-            <LanguageToggle className="bg-white/5 border-white/20 text-white/80 hover:text-white" />
-            <Button onClick={logout} size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white"><LogOut className="w-4 h-4" /></Button>
+            <LanguageToggle className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-foreground" />
+            <Button onClick={logout} size="sm" variant="outline" className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80"><LogOut className="w-4 h-4" /></Button>
 
           </div>
         </div>
@@ -503,7 +503,7 @@ export default function AdminDashboard() {
             <div className="bg-card border border-border rounded-xl p-5 mb-3">
               <p className="font-medium mb-1">{t('dash.tracker.title')}</p>
               <p className="text-sm text-muted-foreground mb-3 leading-relaxed">{t('dash.tracker.body')}</p>
-              <Button onClick={() => navigate('/track')} className="bg-gradient-primary">{t('dash.tracker.open')}</Button>
+              <Button variant="action" onClick={() => navigate('/track')}>{t('dash.tracker.open')}</Button>
             </div>
           </TabsContent>
         </Tabs>
@@ -534,7 +534,7 @@ function ChartBlock({ title, data, noDataLabel }: { title: string; data: { label
             <div key={d.label} className="flex items-center gap-3">
               <span className="text-xs w-32 truncate">{d.label}</span>
               <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-primary rounded-full transition-all duration-700" style={{ width: `${(d.value / max) * 100}%` }} />
+                <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${(d.value / max) * 100}%` }} />
               </div>
               <span className="text-xs font-medium w-6 text-right tabular-nums">{d.value}</span>
             </div>
@@ -694,18 +694,18 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-leaf grain">
-      <header className="bg-gradient-dark text-white sticky top-0 z-30 shadow-elegant">
+    <div className="min-h-screen bg-background">
+      <header className="bg-primary-deep text-primary-foreground sticky top-0 z-30 shadow-elegant">
         <div className="max-w-4xl mx-auto px-5 py-4 flex items-center gap-3">
-          <button onClick={onBack} className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition"><ArrowLeft className="w-4 h-4" /></button>
+          <button onClick={onBack} className="w-10 h-10 rounded-full bg-sidebar-accent hover:bg-sidebar-accent/80 flex items-center justify-center transition"><ArrowLeft className="w-4 h-4" /></button>
           <div>
             <p className="font-mono text-sm">{c.case_code}</p>
-            <p className="text-[11px] text-white/60">{new Date(c.created_at).toLocaleString('th-TH')}</p>
+            <p className="text-[11px] text-sidebar-foreground/60">{new Date(c.created_at).toLocaleString('th-TH')}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+                <Button size="sm" variant="outline" className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
                   <FileText className="w-4 h-4" /> {t('dash.detail.docsMenu')} <ChevronDown className="w-3.5 h-3.5" />
                 </Button>
               </DropdownMenuTrigger>
