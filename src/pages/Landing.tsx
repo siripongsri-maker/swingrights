@@ -145,13 +145,6 @@ export default function Landing() {
                   </Button>
                 </Link>
               </div>
-              <div className="mt-4 flex flex-wrap items-center gap-4 justify-center sm:justify-start">
-                <Link to="/rights">
-                  <Button size="sm" variant="secondary" className="rounded-full">
-                    <Scale className="w-4 h-4" /> {t('rights.nav')}
-                  </Button>
-                </Link>
-              </div>
             </div>
 
             <div className="mx-auto flex w-full max-w-[19rem] items-end justify-center gap-1" aria-hidden>
