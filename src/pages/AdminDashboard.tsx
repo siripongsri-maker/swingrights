@@ -515,7 +515,7 @@ export default function AdminDashboard() {
 function StatCard({ num, label, tone }: { num: number; label: string; tone: 'purple' | 'red' | 'amber' | 'default' }) {
   const cls = tone === 'purple' ? 'text-primary' : tone === 'red' ? 'text-destructive' : tone === 'amber' ? 'text-warning' : 'text-foreground';
   return (
-    <div className="bg-card border border-border rounded-[1.25rem] p-4 text-center shadow-card hover-lift animate-bloom">
+    <div className="bg-card border border-border rounded-[20px] p-4 text-center shadow-card hover-lift animate-bloom">
       <p className={`font-display text-3xl font-medium ${cls} tabular-nums`}>{num}</p>
       <p className="text-xs text-muted-foreground mt-1">{label}</p>
     </div>
@@ -526,7 +526,7 @@ function ChartBlock({ title, data, noDataLabel }: { title: string; data: { label
   const max = Math.max(...data.map((d) => d.value), 1);
   const visible = data.filter((d) => d.value > 0);
   return (
-    <div className="bg-card border border-border rounded-[1.25rem] p-5 mb-4 shadow-card animate-bloom">
+    <div className="bg-card border border-border rounded-[20px] p-5 mb-4 shadow-card animate-bloom">
       <p className="text-xs font-medium text-muted-foreground mb-3 tracking-wide">{title}</p>
       {visible.length === 0 ? <p className="text-xs text-muted-foreground">{noDataLabel}</p> : (
         <div className="space-y-2">

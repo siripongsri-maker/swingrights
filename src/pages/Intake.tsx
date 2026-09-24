@@ -424,7 +424,7 @@ function VictimStep({ onNext }: { onNext: () => void }) {
           if (profile.initialViolationTypes.length === 0) return toast.error(t('intake.victim.errViolationType'));
           onNext();
         }}
-        className="w-full h-12 rounded-xl bg-gradient-primary"
+        className="w-full h-12 rounded-xl bg-primary"
       >
         {t('intake.victim.nextBtn')} <ArrowRight className="w-4 h-4" />
       </Button>

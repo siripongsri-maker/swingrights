@@ -94,7 +94,7 @@ export default function Rights() {
                       <AccordionItem
                         key={r.id}
                         value={String(r.id)}
-                        className="rounded-[1.25rem] bg-card border border-border shadow-card overflow-hidden"
+                        className="rounded-[20px] bg-card border border-border shadow-card overflow-hidden"
                       >
                         <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-primary-soft/40 transition-colors text-start [&>svg]:shrink-0">
                           <span className="flex items-start gap-3.5">
@@ -123,7 +123,7 @@ export default function Rights() {
           })}
 
           {/* Disclaimer footer */}
-          <footer className="mt-4 rounded-[1.25rem] border border-border bg-card/70 backdrop-blur p-5">
+          <footer className="mt-4 rounded-[20px] border border-border bg-card/70 backdrop-blur p-5">
             <p className="text-sm leading-relaxed text-muted-foreground">{t('rights.disclaimer')}</p>
           </footer>
         </main>
