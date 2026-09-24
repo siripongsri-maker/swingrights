@@ -85,6 +85,7 @@ export default function SelfReport() {
   const [draftText, setDraftText] = useState('');
   const [area, setArea] = useState<AreaValue>({ province: '', district: '', subdistrict: '', zip: '', geo: null });
   const [types, setTypes] = useState<string[]>([]);
+  const [otherText, setOtherText] = useState('');
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [photos, setPhotos] = useState<{ blob: Blob; url: string; name: string; type: string }[]>([]);
