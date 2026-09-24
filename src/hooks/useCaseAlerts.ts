@@ -15,7 +15,7 @@ export interface CaseAlert {
 }
 
 /** Realtime in-app toast — de-identified: case_code + branch + level only */
-export function useCaseAlerts(enabled: boolean, onAlert?: (a: CaseAlert) => void) {
+export function useCaseAlerts(enabled: boolean, onAlert?: (a: CaseAlert) => void, onOpen?: (caseId: string) => void) {
   const { t } = useI18n();
 
   useEffect(() => {
@@ -28,6 +28,15 @@ export function useCaseAlerts(enabled: boolean, onAlert?: (a: CaseAlert) => void
         const area = a.branch || t('access.alerts.unspecifiedArea');
         if (a.kind === 'unassigned') {
           toast.warning(t('areview.alert.unassigned', { code: a.case_code, area, level: a.level }), { duration: 15000 });
+          onAlert?.(a);
+          return;
+        }
+        if (a.kind === 'new_case') {
+          try { new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=').play().catch(() => undefined); } catch { /* ignore */ }
+          toast.info(t('dash.alerts.newToast', { code: a.case_code, area }), {
+            duration: 20000,
+            action: onOpen && a.case_id ? { label: t('dash.alerts.openCase'), onClick: () => onOpen(a.case_id!) } : undefined,
+          });
           onAlert?.(a);
           return;
         }
