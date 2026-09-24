@@ -29,15 +29,28 @@ serve(async (req) => {
     const mime = (file.type || "audio/webm").split(";")[0];
     if (!ALLOWED.includes(mime)) return json({ error: `ไม่รองรับไฟล์ชนิด ${mime}` }, 400);
 
-    const upstream = new FormData();
-    upstream.append("model", "openai/gpt-4o-transcribe");
-    upstream.append("file", file, `recording.${EXT[mime] ?? "webm"}`);
-    upstream.append("language", "th");
+    const FMT: Record<string, string> = {
+      "audio/webm": "webm", "audio/mp4": "m4a", "video/mp4": "m4a", "audio/mpeg": "mp3",
+      "audio/wav": "wav", "audio/x-wav": "wav", "audio/ogg": "ogg", "audio/aac": "aac",
+    };
+    const buf = new Uint8Array(await file.arrayBuffer());
+    let bin = "";
+    for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+    const b64 = btoa(bin);
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}` },
-      body: upstream,
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": LOVABLE_API_KEY },
+      body: JSON.stringify({
+        model: "google/gemini-3.8-flash",
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: "Transcribe this recording word for word, in the language spoken (usually Thai; may be English, Burmese, Khmer or Lao). Keep every word, do not cut, summarize, translate or add anything. Add natural punctuation/spaces between sentences. Output only the transcript text. If there is no speech, output nothing." },
+            { type: "input_audio", input_audio: { data: b64, format: FMT[mime] ?? "webm" } },
+          ],
+        }],
+      }),
     });
 
     if (!res.ok) {
@@ -48,7 +61,8 @@ serve(async (req) => {
     }
 
     const data = await res.json();
-    return json({ text: data.text ?? "" }, 200);
+    const text = String(data?.choices?.[0]?.message?.content ?? "").trim();
+    return json({ text }, 200);
   } catch (e) {
     console.error("transcribe-audio error", e);
     return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);

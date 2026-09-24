@@ -11,11 +11,11 @@ interface LangCfg { voice: string; style: string }
 // Gemini TTS: natural, expressive voices. Tone/pacing steering goes in the
 // spoken text prefix (the gateway strips systemInstruction).
 const LANG: Record<string, LangCfg> = {
-  th: { voice: "Kore", style: "พูดภาษาไทยด้วยน้ำเสียงอบอุ่น เป็นกันเอง เป็นธรรมชาติเหมือนคุยกับเพื่อน จังหวะปกติ ไม่ช้า" },
-  en: { voice: "Kore", style: "Say in a warm, friendly, natural conversational tone at a normal pace" },
-  my: { voice: "Kore", style: "Say in Burmese with a warm, natural conversational tone at a normal pace" },
-  km: { voice: "Kore", style: "Say in Khmer with a warm, natural conversational tone at a normal pace" },
-  lo: { voice: "Kore", style: "Say in Lao with a warm, natural conversational tone at a normal pace" },
+  th: { voice: "Sulafat", style: "พูดภาษาไทยเหมือนผู้ให้คำปรึกษาที่กำลังรับฟังอย่างตั้งใจ น้ำเสียงนุ่ม สงบ อ่อนโยน มั่นคง ให้ความรู้สึกปลอดภัยและไม่ตัดสิน โทนเสียงต่ำลงเล็กน้อย ไม่สดใสหรือตื่นเต้น พูดชัดทุกคำ ครบทุกพยางค์ จังหวะปกติไม่ช้า เว้นจังหวะสั้นๆ ตามธรรมชาติ" },
+  en: { voice: "Sulafat", style: "Speak like a caring counselor who is listening closely: soft, calm, gentle, steady and non-judgmental, slightly lower and warmer, not bright or upbeat. Pronounce every word clearly and completely at a normal, unhurried pace with short natural pauses" },
+  my: { voice: "Sulafat", style: "Speak in Burmese like a caring counselor: soft, calm, gentle and non-judgmental, not bright or upbeat, every word clear and complete, normal pace" },
+  km: { voice: "Sulafat", style: "Speak in Khmer like a caring counselor: soft, calm, gentle and non-judgmental, not bright or upbeat, every word clear and complete, normal pace" },
+  lo: { voice: "Sulafat", style: "Speak in Lao like a caring counselor: soft, calm, gentle and non-judgmental, not bright or upbeat, every word clear and complete, normal pace" },
 };
 
 serve(async (req) => {
