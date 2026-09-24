@@ -558,6 +558,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   const { t } = useI18n();
   const access = useAccess();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [note, setNote] = useState('');
   const [audioSigned, setAudioSigned] = useState<Record<number, string>>({});
   const [photoSigned, setPhotoSigned] = useState<string[]>([]);
