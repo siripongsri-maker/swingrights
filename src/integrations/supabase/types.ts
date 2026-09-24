@@ -142,6 +142,53 @@ export type Database = {
         }
         Relationships: []
       }
+      case_drafts: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          data: Json
+          id: string
+          language: string
+          media: Json
+          source: string
+          submitted_at: string | null
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          data?: Json
+          id: string
+          language?: string
+          media?: Json
+          source?: string
+          submitted_at?: string | null
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          data?: Json
+          id?: string
+          language?: string
+          media?: Json
+          source?: string
+          submitted_at?: string | null
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_drafts_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_exports: {
         Row: {
           case_code: string | null
@@ -689,7 +736,15 @@ export type Database = {
         Args: { _display_name?: string }
         Returns: undefined
       }
+      finish_case_draft: {
+        Args: { _case_code: string; _draft_id: string; _token: string }
+        Returns: undefined
+      }
       gen_case_code: { Args: never; Returns: string }
+      get_case_draft: {
+        Args: { _draft_id: string; _token: string }
+        Returns: Json
+      }
       get_case_pii: { Args: { _case_id: string }; Returns: Json }
       get_registered_user_count: { Args: never; Returns: number }
       get_site_stats: {
@@ -720,6 +775,17 @@ export type Database = {
       record_site_visit: {
         Args: { _path: string; _session_id: string }
         Returns: undefined
+      }
+      save_case_draft: {
+        Args: {
+          _data: Json
+          _draft_id: string
+          _language?: string
+          _media: Json
+          _source?: string
+          _token: string
+        }
+        Returns: string
       }
       submit_case: { Args: { _payload: Json }; Returns: string }
       suppress_small: { Args: { _n: number }; Returns: Json }
