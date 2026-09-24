@@ -83,6 +83,9 @@ export default function SelfReport() {
   const [audio, setAudio] = useState<Blob | null>(null);
   const [transcript, setTranscript] = useState('');
   const [draftText, setDraftText] = useState('');
+  // free-text "full story" — editable before and after the AI follow-ups
+  const [fullStory, setFullStory] = useState('');
+  const [storyOpen, setStoryOpen] = useState(false);
   const [area, setArea] = useState<AreaValue>({ province: '', district: '', subdistrict: '', zip: '', geo: null });
   const [types, setTypes] = useState<string[]>([]);
   const [otherText, setOtherText] = useState('');
@@ -209,6 +212,7 @@ export default function SelfReport() {
     if (!audio && !text) return;
     const audioUrl = audio ? URL.createObjectURL(audio) : undefined;
     push({ role: 'user', text: text || undefined, audioUrl });
+    if (text) setFullStory((prev) => (prev.trim() ? prev : text));
     setDraftText('');
     setFuActive(true);
     void askFollowUp(text, t('report.story.title'), () => {
@@ -357,7 +361,7 @@ export default function SelfReport() {
   const piiGuard = usePiiGuard();
   const submit = async (msgId: number) => {
     if (submitting) return;
-    const story = (draftText.trim() || transcript.trim());
+    const story = (fullStory.trim() || draftText.trim() || transcript.trim());
     const piiResult = await piiGuard.check(story, ...PROBE_IDS.map((qid) => probeAnswers[qid]?.text));
     if (piiResult === 'edit') return;
     setSubmitting(true);
@@ -731,6 +735,36 @@ export default function SelfReport() {
             </div>
           )}
         </div>
+
+        {/* full-story free text — available before and after follow-ups, until submit */}
+        {stage !== 'consent' && stage !== 'done' && (
+          <div className="border-t border-border bg-card/95 px-3 py-2">
+            <button
+              type="button"
+              onClick={() => setStoryOpen((o) => !o)}
+              aria-expanded={storyOpen}
+              className="w-full flex items-center justify-between text-start text-sm font-semibold text-foreground py-1"
+            >
+              <span>{t('report.fullStory.title')}{fullStory.trim() ? ' ✓' : ''}</span>
+              <span className="text-xs text-primary">{storyOpen ? t('report.fullStory.close') : t('report.fullStory.open')}</span>
+            </button>
+            {storyOpen && (
+              <div className="space-y-1.5 pt-1">
+                <p className="text-xs text-muted-foreground">{t('report.fullStory.hint')}</p>
+                <textarea
+                  value={fullStory}
+                  onChange={(e) => setFullStory(e.target.value)}
+                  rows={5}
+                  maxLength={5000}
+                  placeholder={t('report.fullStory.placeholder')}
+                  className="w-full resize-y rounded-xl border border-border bg-background px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <PiiHint className="mt-0" />
+                <p className="text-[11px] text-muted-foreground text-end font-mono">{fullStory.length}/5000</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* composer — active while answering the story question */}
         {stage === 'story' && !fuActive && (
