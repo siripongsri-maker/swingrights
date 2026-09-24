@@ -6,7 +6,7 @@ import { q9Level, nrmPositive } from '@/lib/screeningTools';
 import { AI_DISCLAIMER, logExport, type CaseReportData } from '@/lib/caseReport';
 import type { IntakeState } from '@/store/intake';
 import { toast } from 'sonner';
-import lockupImg from '@/assets/brand/swing-rights-lockup.png';
+import lockupImg from '@/assets/brand/swing-main-logo-sharp.png';
 
 export interface DocInput {
   caseCode: string | null;
@@ -67,8 +67,9 @@ const DOC_CSS = `
 @page { size: A4; margin: 18mm 15mm; }
 * { box-sizing: border-box; }
 body { font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',system-ui,sans-serif; color:#161615; margin:0; padding:28px; line-height:1.65; font-size:13px; }
-.org { text-align:center; margin-bottom:4px; }
-.org img { display:block; width:112px; max-height:96px; object-fit:contain; margin:0 auto 8px; }
+.org { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:4px; }
+.org img { display:block; width:170px; object-fit:contain; margin:0; }
+.org .headtext { flex:1; min-width:0; padding-top:4px; }
 .org .name { font-size:15px; font-weight:600; }
 .org .en { font-size:10px; color:#5b6168; letter-spacing:0; }
 h1 { font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',sans-serif; text-align:center; font-size:17px; margin:10px 0 2px; font-weight:600; }
@@ -105,8 +106,8 @@ function openDoc(title: string, bodyHtml: string, d: DocInput, format: string) {
   <title>${esc(title)} ${esc(d.caseCode || '')}</title>
   ${PRINT_FONTS_LINK}
   <style>${DOC_CSS}${PRINT_THEME_CSS}${printCaseCodeCss(d.caseCode)}</style></head><body>
-  <div class="org"><img src="${lockupImg}" alt="SWING RIGHTS" /><div class="name">มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)</div>
-  <div class="en">SERVICE WORKERS IN GROUP FOUNDATION — เอกสารลับ สำหรับหน่วยงานที่เกี่ยวข้องเท่านั้น</div></div>
+  <div class="org"><div class="headtext"><div class="name">มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)</div>
+   <div class="en">SERVICE WORKERS IN GROUP FOUNDATION — เอกสารลับ สำหรับหน่วยงานที่เกี่ยวข้องเท่านั้น</div></div><img src="${lockupImg}" alt="SWING RIGHTS" /></div>
   ${bodyHtml}
   <div class="footer">รหัสเคส ${esc(d.caseCode || '—')} · ออกเอกสารเมื่อ ${thaiDateTime()} · เอกสารลับตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 — ห้ามเปิดเผยโดยไม่ได้รับความยินยอม</div>
   <script>window.onload = () => setTimeout(() => window.print(), 400);</script>
