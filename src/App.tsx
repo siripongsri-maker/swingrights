@@ -26,6 +26,7 @@ import NotFound from "./pages/NotFound";
 import ProjectReport from "./pages/ProjectReport";
 import AccessReview from "./pages/AccessReview";
 import MySettings from "./pages/MySettings";
+import CaseHistory from "./pages/CaseHistory";
 import SignIn from "./pages/SignIn";
 import MyAccount from "./pages/MyAccount";
 import Onboarding from "./pages/Onboarding";
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/admin/partners" element={<ProtectedRoute allow={["admin"]}><AdminPartners /></ProtectedRoute>} />
             <Route path="/admin/report" element={<ProtectedRoute allow={["admin", "manager"]}><ProjectReport /></ProtectedRoute>} />
             <Route path="/admin/access-review" element={<ProtectedRoute allow={["admin", "manager"]}><AccessReview /></ProtectedRoute>} />
+            <Route path="/admin/case/:id/history" element={<ProtectedRoute><CaseHistory /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
