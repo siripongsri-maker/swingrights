@@ -21,6 +21,7 @@ import { I18nProvider } from "@/i18n";
 
 import ResetPassword from "./pages/ResetPassword";
 import Privacy from "./pages/Privacy";
+import Rights from "./pages/Rights";
 import NotFound from "./pages/NotFound";
 import ProjectReport from "./pages/ProjectReport";
 import AccessReview from "./pages/AccessReview";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/referral/:token" element={<ReferralRespond />} />
 
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/rights" element={<Rights />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

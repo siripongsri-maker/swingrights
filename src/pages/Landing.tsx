@@ -97,6 +97,9 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-3">
             <LanguageToggle />
+            <Link to="/rights" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              {t('rights.nav')}
+            </Link>
             <Link to="/privacy" className="hidden sm:inline text-xs text-muted-foreground hover:text-primary transition-colors">
               {t('nav.privacy')}
             </Link>
@@ -135,9 +138,14 @@ export default function Landing() {
                   </Button>
                 </Link>
               </div>
-              <div className="mt-4">
+              <div className="mt-4 flex flex-wrap items-center gap-4 justify-center sm:justify-start">
                 <Link to="/intake" className="inline-flex items-center gap-1.5 text-sm text-primary underline underline-offset-4 hover:text-primary/80 transition">
                   <Mic className="w-4 h-4" /> {t('landing.cta.start')} ({t('nav.staff')})
+                </Link>
+                <Link to="/rights">
+                  <Button size="sm" variant="secondary" className="rounded-full">
+                    <Scale className="w-4 h-4" /> {t('rights.nav')}
+                  </Button>
                 </Link>
               </div>
             </div>
