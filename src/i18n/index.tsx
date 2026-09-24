@@ -553,6 +553,11 @@ const BASE_DICT: Dict = {
   },
   'report.chat.send': { th: 'ส่ง', en: 'Send', my: 'ပို့မည်', km: 'ផ្ញើ', lo: 'ສົ່ງ' },
   'report.chat.skip': { th: 'ข้าม', en: 'Skip', my: 'ကျော်မည်', km: 'រំលង', lo: 'ຂ້າມ' },
+  'report.fullStory.title': { th: 'เล่าเรื่องทั้งหมด', en: 'Tell the whole story', my: 'ဖြစ်ရပ်တစ်ခုလုံး ပြောပြပါ', km: 'រៀបរាប់រឿងទាំងមូល', lo: 'ເລົ່າເລື່ອງທັງໝົດ' },
+  'report.fullStory.open': { th: 'เปิดเขียน', en: 'Open', my: 'ဖွင့်ရန်', km: 'បើក', lo: 'ເປີດ' },
+  'report.fullStory.close': { th: 'ย่อ', en: 'Hide', my: 'ပိတ်ရန်', km: 'បិទ', lo: 'ຫຍໍ້' },
+  'report.fullStory.hint': { th: 'เขียนหรือแก้ไขเรื่องได้ตลอด ทั้งก่อนและหลังตอบคำถามจาก AI จนกว่าจะกดส่ง', en: 'Write or edit your story any time — before or after the AI questions — until you submit.', my: 'AI မေးခွန်းများ မတိုင်မီ သို့မဟုတ် ပြီးနောက် မပို့မချင်း အချိန်မရွေး ရေး/ပြင်နိုင်သည်။', km: 'អាចសរសេរ ឬកែរឿងបានគ្រប់ពេល មុន ឬក្រោយសំណួរ AI រហូតដល់ផ្ញើ។', lo: 'ຂຽນ ຫຼື ແກ້ໄຂເລື່ອງໄດ້ຕະຫຼອດ ທັງກ່ອນ ແລະ ຫຼັງຄຳຖາມ AI ຈົນກວ່າຈະສົ່ງ.' },
+  'report.fullStory.placeholder': { th: 'เกิดอะไรขึ้น เมื่อไร ที่ไหน ใครเกี่ยวข้อง...', en: 'What happened, when, where, who was involved...', my: 'ဘာဖြစ်ခဲ့သလဲ၊ ဘယ်အချိန်၊ ဘယ်နေရာ၊ ဘယ်သူ...', km: 'មានអ្វីកើតឡើង ពេលណា នៅឯណា អ្នកណាពាក់ព័ន្ធ...', lo: 'ເກີດຫຍັງຂຶ້ນ ເມື່ອໃດ ຢູ່ໃສ ໃຜກ່ຽວຂ້ອງ...' },
   'report.chat.confirm': { th: 'ยืนยัน', en: 'Confirm', my: 'အတည်ပြုမည်', km: 'បញ្ជាក់', lo: 'ຢືນຢັນ' },
   'report.chat.start': {
     th: 'ยินยอมและเริ่มเล่า', en: 'I agree — start',
