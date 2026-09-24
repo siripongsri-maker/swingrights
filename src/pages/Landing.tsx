@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEffect as useEff2, useState as useSt2 } from 'react';
-import { ShieldCheck, Search, ArrowRight, Lock, HeartHandshake, Sparkles, Users, Eye, MousePointerClick, Scale, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Search, ArrowRight, Lock, HeartHandshake, Sparkles, Users, Eye, MousePointerClick, Scale, ChevronLeft, ChevronRight, AudioWaveform, AudioLines } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Reveal } from '@/components/Reveal';
@@ -64,6 +64,15 @@ export default function Landing() {
   }, []);
   const [stats, setStats] = useState<SiteStats>({ registered_users: 0, unique_visitors: 0, total_visits: 0 });
   const [rightsSectionIndex, setRightsSectionIndex] = useState(0);
+  const [waveOn, setWaveOn] = useState(() => {
+    try { return localStorage.getItem('sw_wave_off') !== '1'; } catch { return true; }
+  });
+  const toggleWave = () => {
+    setWaveOn((on) => {
+      try { localStorage.setItem('sw_wave_off', on ? '1' : '0'); } catch { /* ignore */ }
+      return !on;
+    });
+  };
 
   const showPreviousRight = () => setRightsSectionIndex((current) => (current - 1 + RIGHTS_SECTIONS.length) % RIGHTS_SECTIONS.length);
   const showNextRight = () => setRightsSectionIndex((current) => (current + 1) % RIGHTS_SECTIONS.length);
@@ -107,10 +116,31 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="relative overflow-hidden bg-background">
+      {waveOn && (
+        <div className="sw-wave" aria-hidden>
+          {[30, 46, 66, 92, 122, 150, 116, 84, 138, 170, 128, 96, 158, 186, 140, 104, 74, 168, 132, 92, 60, 150, 176, 118, 82, 136, 164, 108, 72, 48, 88, 124, 154, 178, 130, 98, 142, 62, 84, 110, 146, 172, 120, 90, 56, 134, 160, 100, 70, 40].map((height, index) => (
+            <span
+              key={index}
+              className="sw-wave-bar"
+              style={{ height: `min(${height * 2.2}px, 60vh)`, animationDelay: `${index * 0.1}s, ${index * -0.33}s` }}
+            />
+          ))}
+        </div>
+      )}
+      <div className="relative overflow-hidden bg-transparent">
         <header className="relative max-w-5xl mx-auto px-5 pt-7 flex items-center justify-between gap-3">
           <BrandHeader />
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleWave}
+              aria-pressed={waveOn}
+              title={waveOn ? t('landing.wave.off') : t('landing.wave.on')}
+              aria-label={waveOn ? t('landing.wave.off') : t('landing.wave.on')}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/70 backdrop-blur text-muted-foreground hover:text-primary transition-colors"
+            >
+              {waveOn ? <AudioWaveform className="w-4 h-4" /> : <AudioLines className="w-4 h-4" />}
+            </button>
             <LanguageToggle />
             <Link
               to={signedIn ? '/me' : '/signin'}
@@ -156,18 +186,6 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="sw-wave mx-auto flex w-full max-w-[24rem] items-end justify-center gap-1.5" aria-hidden>
-              {[22, 34, 52, 72, 96, 80, 60, 88, 104, 76, 48, 66, 92, 58, 36, 26].map((height, index) => (
-                <span
-                  key={index}
-                  className="sw-wave-bar"
-                  style={{
-                    height,
-                    animationDelay: `${index * 0.12}s, ${index * -0.45}s`,
-                  }}
-                />
-              ))}
-            </div>
           </div>
 
           {/* Bento grid — revealed on scroll */}

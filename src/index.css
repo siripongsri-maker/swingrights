@@ -157,9 +157,9 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
   h2, h3 { break-after: avoid; }
 }
 
-/* Sound wave — hero: bars bounce up/down, magenta light runs across */
+/* Sound wave — faint full-page background: bars bounce, magenta light flows */
 @keyframes wave-bounce {
-  0%, 100% { transform: scaleY(0.35); }
+  0%, 100% { transform: scaleY(0.3); }
   50% { transform: scaleY(1); }
 }
 @keyframes wave-flow {
@@ -167,12 +167,21 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
   100% { background-position: 300% 0; }
 }
 .sw-wave {
-  height: 5.5rem;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0 0.5rem;
+  pointer-events: none;
+  opacity: 0.14;
 }
-@media (min-width: 640px) { .sw-wave { height: 7rem; } }
 .sw-wave-bar {
   display: block;
-  width: 4px;
+  flex: 1 1 0;
+  max-width: 14px;
   border-radius: 999px;
   transform-origin: bottom;
   background: linear-gradient(90deg,
@@ -182,9 +191,8 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
     hsl(var(--accent) / 0.25));
   background-size: 300% 100%;
   animation:
-    wave-bounce 1.6s ease-in-out infinite,
-    wave-flow 6s linear infinite;
-  will-change: transform, background-position;
+    wave-bounce 1.8s ease-in-out infinite,
+    wave-flow 7s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .sw-wave-bar { animation: none; }

@@ -220,6 +220,14 @@ const BASE_DICT: Dict = {
     th: 'นโยบายความเป็นส่วนตัว (PDPA)', en: 'Privacy policy (PDPA)',
     my: 'ကိုယ်ရေးကိုယ်တာ မူဝါဒ (PDPA)', km: 'គោលការណ៍ភាពឯកជន (PDPA)', lo: 'ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ (PDPA)',
   },
+  'landing.wave.off': {
+    th: 'ปิดแอนิเมชันพื้นหลัง', en: 'Turn off background animation',
+    my: 'နောက်ခံ animation ပိတ်ရန်', km: 'បិទចលនាផ្ទៃខាងក្រោយ', lo: 'ປິດແອນິເມຊັນພື້ນຫຼັງ',
+  },
+  'landing.wave.on': {
+    th: 'เปิดแอนิเมชันพื้นหลัง', en: 'Turn on background animation',
+    my: 'နောက်ခံ animation ဖွင့်ရန်', km: 'បើកចលនាផ្ទៃខាងក្រោយ', lo: 'ເປີດແອນິເມຊັນພື້ນຫຼັງ',
+  },
   'landing.footer.recover': {
     th: 'กู้เคสค้างในเครื่อง', en: 'Recover drafts on this device',
     my: 'ဤစက်ထဲက ကျန်အမှုများ ပြန်ယူမည်', km: 'ស្តារសេចក្តីព្រាងក្នុងឧបករណ៍នេះ', lo: 'ກູ້ສະບັບຮ່າງໃນອຸປະກອນນີ້',
