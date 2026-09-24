@@ -18,6 +18,8 @@ import AdminPartners from "./pages/AdminPartners";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GlobalQuickExit } from "@/components/screening/GlobalQuickExit";
 import { I18nProvider } from "@/i18n";
+import { HelmetProvider } from "react-helmet-async";
+import { RouteSeo } from "@/components/RouteSeo";
 
 import ResetPassword from "./pages/ResetPassword";
 import Privacy from "./pages/Privacy";
@@ -34,6 +36,7 @@ import Onboarding from "./pages/Onboarding";
 const queryClient = new QueryClient();
 
 const App = () => (
+  <HelmetProvider>
   <I18nProvider>
     <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -41,6 +44,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <RouteSeo />
           <GlobalQuickExit />
           <Routes>
             <Route path="/" element={<Landing />} />
@@ -72,6 +76,7 @@ const App = () => (
     </QueryClientProvider>
     </ErrorBoundary>
   </I18nProvider>
+  </HelmetProvider>
 );
 
 export default App;

@@ -676,6 +676,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   // pb-14 clears the fixed QuickExit floating button above the composer
   return (
     <div className="pb-14">
+      <h1 className="sr-only">{t('intake.voice.h1')}</h1>
       {/* header */}
       <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
         <span>{t('intake.voice.progress', { current: qIndex + 1, total })}</span>
@@ -1106,6 +1107,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
 
   return (
     <div className="animate-fade-in">
+      <h1 className="sr-only">{t('intake.ai.h1')}</h1>
       <div className="flex gap-2.5 items-start bg-primary-soft/50 border border-primary/20 rounded-xl p-3 mb-4">
         <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
           <Sparkles className="w-4 h-4 text-primary-foreground" />
@@ -1366,6 +1368,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
   return (
     <>
       {piiGuard.dialog}
+      <h1 className="sr-only">{t('intake.sig.h1')}</h1>
     <div>
       <div className="bg-success/10 border border-success/30 rounded-xl p-3.5 mb-4 flex gap-2.5 items-start">
         <div className="w-8 h-8 bg-success rounded-full flex items-center justify-center shrink-0">
@@ -1669,8 +1672,8 @@ function PhotoUpload() {
         <div className="grid grid-cols-3 gap-2 mt-2.5">
           {photos.map((p, i) => (
             <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
-              <img src={p.previewUrl} alt={p.name} className="w-full h-full object-cover" />
-              <button type="button" onClick={() => remove(i)}
+              <img src={p.previewUrl} alt={t('intake.photo.previewAlt', { n: i + 1 })} className="w-full h-full object-cover" />
+              <button type="button" onClick={() => remove(i)} aria-label={t('intake.photo.remove', { n: i + 1 })}
                 className="absolute top-1 right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-destructive transition">
                 <XIcon className="w-3.5 h-3.5" />
               </button>
