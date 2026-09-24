@@ -65,7 +65,7 @@ const thaiDateTime = (iso?: string) => {
 const DOC_CSS = `
 @page { size: A4; margin: 18mm 15mm; }
 * { box-sizing: border-box; }
-body { font-family:'IBM Plex Sans Thai','Noto Sans Thai',system-ui,sans-serif; color:#161615; margin:0; padding:28px; line-height:1.65; font-size:13px; }
+body { font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',system-ui,sans-serif; color:#161615; margin:0; padding:28px; line-height:1.65; font-size:13px; }
 .org { text-align:center; margin-bottom:4px; }
 .org img { display:block; width:112px; max-height:96px; object-fit:contain; margin:0 auto 8px; }
 .org .name { font-size:15px; font-weight:600; }
@@ -102,7 +102,7 @@ ul.flat li { margin:2px 0; }
 function openDoc(title: string, bodyHtml: string, d: DocInput, format: string) {
   const html = `<!doctype html><html lang="th"><head><meta charset="utf-8" />
   <title>${esc(title)} ${esc(d.caseCode || '')}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;600&display=swap" rel="stylesheet">
   <style>${DOC_CSS}</style></head><body>
   <div class="org"><img src="${lockupImg}" alt="SWING RIGHTS" /><div class="name">มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)</div>
   <div class="en">SERVICE WORKERS IN GROUP FOUNDATION — เอกสารลับ สำหรับหน่วยงานที่เกี่ยวข้องเท่านั้น</div></div>
