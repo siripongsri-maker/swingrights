@@ -14,7 +14,7 @@ export function LanguageToggle({ className }: { className?: string }) {
           type="button"
           aria-label="Language / ภาษา"
           className={cn(
-            'inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 backdrop-blur px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors',
+            'inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-primary-soft hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
             className,
           )}
         >
@@ -31,7 +31,7 @@ export function LanguageToggle({ className }: { className?: string }) {
               onClick={() => setLang(l.id)}
               aria-pressed={lang === l.id}
               className={cn(
-                'flex items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors text-start',
+                'flex min-h-10 items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                 lang === l.id ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-foreground',
               )}
             >

@@ -1,5 +1,7 @@
 import { ReactNode } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
+import { BrandHeader } from '@/components/BrandLogo';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   title?: string;
@@ -12,25 +14,31 @@ interface Props {
 
 export function PhoneShell({ title = 'voice screening', onBack, onClose, children, trailing, contained = true }: Props) {
   return (
-    <div className="min-h-screen bg-gradient-leaf grain flex items-start justify-center py-4 sm:py-8 px-3">
-      <div className="w-full max-w-md relative animate-bloom">
-        <div className="bg-gradient-primary text-foreground rounded-t-[1.75rem] px-4 py-3 flex items-center justify-between">
-          <button
+    <div className="min-h-screen bg-background flex items-start justify-center px-3 py-4 sm:py-8">
+      <div className="relative w-full max-w-md animate-slide-up">
+        <div className="flex items-center justify-between rounded-t-[20px] bg-card px-4 py-3 text-foreground border border-border border-b-0">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             onClick={onBack ?? onClose}
             aria-label="back"
-            className="w-8 h-8 rounded-full bg-white/15 text-white/80 hover:bg-white/25 flex items-center justify-center transition"
+            className="h-10 w-10 rounded-full"
           >
             {onBack ? <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" /> : <X className="w-4 h-4" />}
-          </button>
-          <span className="text-xs text-white/75 tracking-widest font-display">{title}</span>
-          <div className="w-8 h-8 flex items-center justify-center">{trailing}</div>
+          </Button>
+          <div className="flex min-w-0 flex-col items-center">
+            <BrandHeader className="[&_img]:h-7 [&_img]:w-7 [&>span]:hidden" />
+            <span className="max-w-[13rem] truncate text-xs font-semibold text-muted-foreground">{title}</span>
+          </div>
+          <div className="w-10 min-w-10 flex items-center justify-center">{trailing}</div>
         </div>
         {contained ? (
-          <div className="bg-card border border-t-0 rounded-b-[1.75rem] px-4 py-5 sm:px-5 sm:py-6 shadow-elegant animate-fade-in">
+          <div className="bg-card border border-t-0 rounded-b-[20px] px-4 py-5 sm:px-5 sm:py-6 shadow-card animate-fade-in">
             {children}
           </div>
         ) : (
-          <div className="bg-card border border-t-0 rounded-b-[1.75rem] shadow-elegant overflow-hidden animate-fade-in">{children}</div>
+          <div className="bg-card border border-t-0 rounded-b-[20px] shadow-card overflow-hidden animate-fade-in">{children}</div>
         )}
       </div>
     </div>

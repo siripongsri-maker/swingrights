@@ -110,8 +110,8 @@ export function VoiceRecorder({ onChange, className, compact }: Props) {
             onClick={start}
             aria-label={t('common.record')}
             className={cn(
-              'rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-elegant transition active:scale-95',
-              compact ? 'w-11 h-11' : 'w-14 h-14',
+              'rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow-elegant transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              compact ? 'w-12 h-12' : 'w-14 h-14',
             )}
           >
             <Mic className={compact ? 'w-5 h-5' : 'w-6 h-6'} />
@@ -122,8 +122,8 @@ export function VoiceRecorder({ onChange, className, compact }: Props) {
             onClick={stop}
             aria-label={t('common.stop')}
             className={cn(
-              'rounded-full bg-destructive text-destructive-foreground flex items-center justify-center animate-pulse transition active:scale-95',
-              compact ? 'w-11 h-11' : 'w-14 h-14',
+              'rounded-full bg-accent text-accent-foreground flex items-center justify-center animate-pulse-ring transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              compact ? 'w-12 h-12' : 'w-14 h-14',
             )}
           >
             <Square className={compact ? 'w-5 h-5' : 'w-6 h-6'} />
