@@ -6,41 +6,16 @@ import { corsHeaders, rateLimit, tooMany } from "../_shared/guard.ts";
 
 const MAX_CHARS = 1500;
 
-interface LangCfg { voice: string; instructions: string; speed: number }
+interface LangCfg { voice: string; style: string }
 
-// Per-language voice + pacing. OpenAI voices are multilingual; `instructions`
-// steer accent/language and `speed` keeps each language sounding natural.
+// Gemini TTS: natural, expressive voices. Tone/pacing steering goes in the
+// spoken text prefix (the gateway strips systemInstruction).
 const LANG: Record<string, LangCfg> = {
-  th: {
-    voice: "coral",
-    speed: 0.95,
-    instructions:
-      "Speak in Thai (ภาษาไทย) with a warm, gentle, caring voice. Natural conversational pace — not too fast, not robotic. Pronounce every syllable clearly, like a kind social worker talking to someone who needs help.",
-  },
-  en: {
-    voice: "alloy",
-    speed: 1.0,
-    instructions:
-      "Speak in clear, natural English with a warm, friendly, reassuring tone. Relaxed conversational pace, not rushed.",
-  },
-  my: {
-    voice: "sage",
-    speed: 0.9,
-    instructions:
-      "Speak in Burmese (Myanmar language, မြန်မာဘာသာ) slowly and clearly with a warm, caring tone. Pronounce every word carefully and pause naturally between phrases.",
-  },
-  km: {
-    voice: "sage",
-    speed: 0.9,
-    instructions:
-      "Speak in Khmer (Cambodian language, ភាសាខ្មែរ) slowly and clearly with a warm, caring tone. Pronounce every word carefully and pause naturally between phrases.",
-  },
-  lo: {
-    voice: "sage",
-    speed: 0.9,
-    instructions:
-      "Speak in Lao (ພາສາລາວ) slowly and clearly with a warm, caring tone. Pronounce every word carefully and pause naturally between phrases.",
-  },
+  th: { voice: "Kore", style: "พูดภาษาไทยด้วยน้ำเสียงอบอุ่น เป็นกันเอง เป็นธรรมชาติเหมือนคุยกับเพื่อน จังหวะปกติ ไม่ช้า" },
+  en: { voice: "Kore", style: "Say in a warm, friendly, natural conversational tone at a normal pace" },
+  my: { voice: "Kore", style: "Say in Burmese with a warm, natural conversational tone at a normal pace" },
+  km: { voice: "Kore", style: "Say in Khmer with a warm, natural conversational tone at a normal pace" },
+  lo: { voice: "Kore", style: "Say in Lao with a warm, natural conversational tone at a normal pace" },
 };
 
 serve(async (req) => {
@@ -71,13 +46,13 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-4o-mini-tts",
-        input: text,
-        voice: cfg.voice,
-        instructions: cfg.instructions,
-        speed: cfg.speed,
+        model: "google/gemini-3.1-flash-tts-preview",
+        contents: [{ role: "user", parts: [{ text: `${cfg.style}: ${text}` }] }],
+        generationConfig: {
+          responseModalities: ["AUDIO"],
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: cfg.voice } } },
+        },
         stream_format: "sse",
-        response_format: "pcm",
       }),
     });
 

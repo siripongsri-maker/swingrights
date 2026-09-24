@@ -19,11 +19,11 @@ const MAX_CLOUD_CHARS = 1400;
 
 /** Natural reading pace per language for the device-speech fallback. */
 const DEVICE_RATE: Record<Lang, number> = {
-  th: 0.92,
+  th: 1.0,
   en: 1.0,
-  my: 0.85,
-  km: 0.85,
-  lo: 0.85,
+  my: 0.95,
+  km: 0.95,
+  lo: 0.95,
 };
 
 export interface SpeakHandle {
