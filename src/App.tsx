@@ -28,6 +28,7 @@ import AccessReview from "./pages/AccessReview";
 import MySettings from "./pages/MySettings";
 import SignIn from "./pages/SignIn";
 import MyAccount from "./pages/MyAccount";
+import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/rights" element={<Rights />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/me" element={<MyAccount />} />
+            <Route path="/welcome" element={<Onboarding />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
