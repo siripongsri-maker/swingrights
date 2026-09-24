@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ChevronsUpDown, Leaf, Phone, Share2 } from 'lucide-react';
+import { ArrowLeft, ChevronsUpDown, Phone, Share2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useI18n } from '@/i18n';
 import { RIGHTS, RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
 import { toast } from 'sonner';
+import { BrandHeader } from '@/components/BrandLogo';
 
 /** Placeholder — SWING fills in the real hotline number. */
 const SWING_PHONE = '+6600000000';
@@ -45,14 +46,9 @@ export default function Rights() {
 
   return (
     <div className="min-h-dvh bg-background">
-      <div className="bg-gradient-leaf grain">
+      <div className="bg-background">
         <header className="max-w-5xl mx-auto px-5 pt-7 flex items-center justify-between gap-3">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-elegant">
-              <Leaf className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-display font-medium tracking-tight">{t('app.name')}</span>
-          </Link>
+          <Link to="/"><BrandHeader /></Link>
           <LanguageToggle />
         </header>
 
@@ -135,7 +131,7 @@ export default function Rights() {
 
       {/* Sticky bottom action bar (mobile) */}
       <div className="fixed bottom-0 inset-x-0 sm:hidden bg-card/90 backdrop-blur border-t border-border px-4 py-3 flex gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <Button asChild className="flex-1 h-12 rounded-full bg-gradient-primary shadow-elegant text-base">
+        <Button asChild variant="action" className="flex-1 h-12 text-base">
           <a href={`tel:${SWING_PHONE}`}>
             <Phone className="w-4 h-4" /> {t('rights.call')}
           </a>
