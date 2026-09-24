@@ -118,12 +118,16 @@ const BASE_DICT: Dict = {
     my: 'တရားစွပ်စွဲခံရသူ၏ အခွင့်အရေးများ', km: 'សិទ្ធិរបស់ជនជាប់ចោទ', lo: 'ສິດຂອງຜູ້ຖືກກ່າວຫາ',
   },
   'landing.rightsPreview.previous': {
-    th: 'สิทธิก่อนหน้า', en: 'Previous right',
-    my: 'ယခင်အခွင့်အရေး', km: 'សិទ្ធិមុន', lo: 'ສິດກ່ອນໜ້າ',
+    th: 'หมวดก่อนหน้า', en: 'Previous category',
+    my: 'ယခင်ကဏ္ဍ', km: 'ប្រភេទមុន', lo: 'ໝວດກ່ອນໜ້າ',
   },
   'landing.rightsPreview.next': {
-    th: 'สิทธิถัดไป', en: 'Next right',
-    my: 'နောက်အခွင့်အရေး', km: 'សិទ្ធិបន្ទាប់', lo: 'ສິດຕໍ່ໄປ',
+    th: 'หมวดถัดไป', en: 'Next category',
+    my: 'နောက်ကဏ္ဍ', km: 'ប្រភេទបន្ទាប់', lo: 'ໝວດຕໍ່ໄປ',
+  },
+  'landing.rightsPreview.count': {
+    th: 'รวม {count} สิทธิสำคัญในหมวดนี้', en: '{count} key rights in this category',
+    my: 'ဤကဏ္ဍတွင် အဓိကအခွင့်အရေး {count} ချက်', km: 'សិទ្ធិសំខាន់ៗ {count} ក្នុងប្រភេទនេះ', lo: 'ສິດສຳຄັນ {count} ຂໍ້ໃນໝວດນີ້',
   },
   'landing.rightsPreview.all': {
     th: 'ดูสิทธิทั้ง 15 ข้อ', en: 'View all 15 rights',

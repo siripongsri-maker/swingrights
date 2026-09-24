@@ -7,7 +7,13 @@ import { Reveal } from '@/components/Reveal';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import heroBotanical from '@/assets/hero-botanical.png';
-import { RIGHTS } from '@/data/rights';
+import { RIGHTS, RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
+
+const RIGHTS_SECTION_PREVIEW: Record<RightsSectionId, { labelKey: string; icon: typeof ShieldCheck }> = {
+  arrest: { labelKey: 'rights.section.arrest', icon: ShieldCheck },
+  investigation: { labelKey: 'rights.section.investigation', icon: Scale },
+  detention: { labelKey: 'rights.section.detention', icon: HeartHandshake },
+};
 
 /** Eases a number from 0 → target on mount (used for the stats card). */
 function CountUp({ to }: { to: number }) {
@@ -48,12 +54,14 @@ function getSessionId() {
 export default function Landing() {
   const { t } = useI18n();
   const [stats, setStats] = useState<SiteStats>({ registered_users: 0, unique_visitors: 0, total_visits: 0 });
-  const [rightIndex, setRightIndex] = useState(0);
+  const [rightsSectionIndex, setRightsSectionIndex] = useState(0);
 
-  const showPreviousRight = () => setRightIndex((current) => (current - 1 + RIGHTS.length) % RIGHTS.length);
-  const showNextRight = () => setRightIndex((current) => (current + 1) % RIGHTS.length);
-  const featuredRight = RIGHTS[rightIndex];
-  const FeaturedRightIcon = featuredRight?.icon;
+  const showPreviousRight = () => setRightsSectionIndex((current) => (current - 1 + RIGHTS_SECTIONS.length) % RIGHTS_SECTIONS.length);
+  const showNextRight = () => setRightsSectionIndex((current) => (current + 1) % RIGHTS_SECTIONS.length);
+  const featuredSection = RIGHTS_SECTIONS[rightsSectionIndex];
+  const sectionPreview = featuredSection ? RIGHTS_SECTION_PREVIEW[featuredSection] : undefined;
+  const FeaturedSectionIcon = sectionPreview?.icon;
+  const sectionRightsCount = featuredSection ? RIGHTS.filter((right) => right.section === featuredSection).length : 0;
 
   useEffect(() => {
     let mounted = true;
@@ -193,22 +201,24 @@ export default function Landing() {
                   </div>
                 </div>
 
-                {featuredRight && FeaturedRightIcon && (
+                {featuredSection && sectionPreview && FeaturedSectionIcon && (
                   <div className="min-h-[9.5rem]" aria-live="polite" aria-atomic="true">
                     <div className="flex items-start gap-3">
                       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary shadow-sm ring-1 ring-primary/10">
-                        <FeaturedRightIcon className="h-6 w-6" strokeWidth={2} aria-hidden="true" />
+                        <FeaturedSectionIcon className="h-6 w-6" strokeWidth={2} aria-hidden="true" />
                       </span>
                       <div>
-                        <h3 className="font-display text-lg font-medium leading-snug mb-2">{featuredRight.title}</h3>
-                        <p className="text-base text-muted-foreground leading-relaxed line-clamp-2">{featuredRight.body}</p>
+                        <h3 className="font-display text-lg font-medium leading-snug mb-2">{t(sectionPreview.labelKey)}</h3>
+                        <p className="text-base text-muted-foreground leading-relaxed">
+                          {t('landing.rightsPreview.count').replace('{count}', String(sectionRightsCount))}
+                        </p>
                       </div>
                     </div>
                   </div>
                 )}
 
                 <div className="flex items-center justify-between gap-4 mt-3">
-                  <span className="text-xs text-muted-foreground tabular-nums">{rightIndex + 1} / {RIGHTS.length}</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{rightsSectionIndex + 1} / {RIGHTS_SECTIONS.length}</span>
                   <Link to="/rights" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors">
                     {t('landing.rightsPreview.all')} <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
                   </Link>
