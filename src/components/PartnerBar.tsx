@@ -9,19 +9,24 @@ export function PartnerBar({ className }: { className?: string }) {
   const { t } = useI18n();
   return (
     <aside className={cn('rounded-[20px] border border-border bg-card p-4 shadow-card md:p-6', className)}>
-      <div className="flex flex-col gap-5 min-[480px]:flex-row min-[480px]:items-center min-[480px]:justify-center">
-        <div className="min-w-0">
-          <p className="mb-3 text-[13px] font-semibold text-muted-foreground">{t('partners.supportedBy')}</p>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <img src={unaidsAsset} alt="UNAIDS" className="h-7 max-w-[7rem] object-contain md:h-9" />
-            <img src={apcomAsset} alt="APCOM" className="h-8 max-w-[7rem] object-contain md:h-10" />
-            <img src={youthLeadAsset} alt="Youth LEAD" className="h-7 max-w-[7rem] object-contain md:h-9" />
-          </div>
+      <div className="grid grid-cols-4 items-end gap-x-2 md:gap-x-5">
+        <p className="col-span-3 mb-3 text-center text-[11px] font-semibold leading-snug text-muted-foreground md:text-[13px]">
+          {t('partners.supportedBy')}
+        </p>
+        <p className="mb-3 border-s border-border ps-2 text-center text-[11px] font-semibold leading-snug text-muted-foreground md:ps-5 md:text-[13px]">
+          {t('partners.implementedBy')}
+        </p>
+        <div className="flex min-w-0 items-center justify-center">
+          <img src={unaidsAsset} alt="UNAIDS" className="h-7 w-full object-contain md:h-9" />
         </div>
-        <div className="hidden h-16 w-px bg-border min-[480px]:block" aria-hidden />
-        <div className="border-t border-border pt-4 min-[480px]:border-s min-[480px]:border-t-0 min-[480px]:ps-5 min-[480px]:pt-0">
-          <p className="mb-3 text-[13px] font-semibold text-muted-foreground">{t('partners.implementedBy')}</p>
-          <img src={swingAsset} alt="SWING" className="h-8 max-w-[8rem] object-contain md:h-10" />
+        <div className="flex min-w-0 items-center justify-center">
+          <img src={apcomAsset} alt="APCOM" className="h-8 w-full object-contain md:h-10" />
+        </div>
+        <div className="flex min-w-0 items-center justify-center">
+          <img src={youthLeadAsset} alt="Youth LEAD" className="h-7 w-full object-contain md:h-9" />
+        </div>
+        <div className="flex min-w-0 items-center justify-center border-s border-border ps-2 md:ps-5">
+          <img src={swingAsset} alt="SWING" className="h-8 w-full object-contain md:h-10" />
         </div>
       </div>
     </aside>
