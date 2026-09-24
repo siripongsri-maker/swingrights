@@ -15,6 +15,7 @@ import { BrandMark } from '@/components/BrandLogo';
 import { LanguageToggle } from '@/components/LanguageToggle';
 
 const ORG_TYPE_KEYS: { v: string; key: string }[] = [
+  { v: 'agency', key: 'partners.orgType.agency' },
   { v: 'hospital', key: 'partners.orgType.hospital' },
   { v: 'legal', key: 'partners.orgType.legal' },
   { v: 'ngo', key: 'partners.orgType.ngo' },
