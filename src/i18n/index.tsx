@@ -43,6 +43,7 @@ import { PROJECT_REPORT_DICT } from './dict/projectReport';
 import { PII_DICT } from './dict/pii';
 import { ACCESS_REVIEW_DICT } from './dict/accessReview';
 import { DOCUMENTS_DICT } from './dict/documents';
+import { RIGHTS_DICT } from './dict/rights';
 
 const BASE_DICT: Dict = {
   // ---------- Common ----------
@@ -644,6 +645,7 @@ export const DICT: Dict = {
   ...PII_DICT,
   ...ACCESS_REVIEW_DICT,
   ...DOCUMENTS_DICT,
+  ...RIGHTS_DICT,
 };
 
 export function I18nProvider({ children }: { children: ReactNode }) {
