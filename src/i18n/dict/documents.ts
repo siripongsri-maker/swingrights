@@ -1,10 +1,10 @@
 import type { Entry } from '../index';
 
 export const DOCUMENTS_DICT: Record<string, Entry> = {
-  'docs.complaint.title': { th: 'บันทึกแจ้งความ', en: 'Complaint record', my: 'တိုင်ကြားချက်မှတ်တမ်း', km: 'កំណត់ត្រាពាក្យបណ្តឹង', lo: 'ບັນທຶກການຮ້ອງທຸກ' },
-  'docs.statement.title': { th: 'บันทึกข้อความ', en: 'Statement record', my: 'ထွက်ဆိုချက်မှတ်တမ်း', km: 'កំណត់ត្រាសេចក្តីថ្លែងការណ៍', lo: 'ບັນທຶກຄຳໃຫ້ການ' },
-  'docs.referral.title': { th: 'บันทึกส่งตัว', en: 'Referral record', my: 'လွှဲပြောင်းမှတ်တမ်း', km: 'កំណត់ត្រាបញ្ជូនបន្ត', lo: 'ບັນທຶກການສົ່ງຕໍ່' },
-  'docs.assistance.title': { th: 'บันทึกให้การช่วยเหลือ', en: 'Assistance record', my: 'အကူအညီပေးမှုမှတ်တမ်း', km: 'កំណត់ត្រាជំនួយ', lo: 'ບັນທຶກການຊ່ວຍເຫຼືອ' },
+  'docs.complaint.title': { th: 'แบบร่างบันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์', en: 'Draft information record for filing a complaint', my: 'တိုင်ကြားရန် အချက်အလက်မှတ်တမ်းမူကြမ်း', km: 'សេចក្តីព្រាងកំណត់ត្រាព័ត៌មានសម្រាប់ដាក់ពាក្យបណ្តឹង', lo: 'ຮ່າງບັນທຶກຂໍ້ມູນເພື່ອປະກອບການຮ້ອງທຸກ' },
+  'docs.statement.title': { th: 'แบบร่างบันทึกการให้ข้อมูลของผู้รับบริการ', en: 'Draft service-user statement record', my: 'ဝန်ဆောင်မှုလက်ခံသူ၏ ထွက်ဆိုချက်မှတ်တမ်းမူကြမ်း', km: 'សេចក្តីព្រាងកំណត់ត្រាព័ត៌មានរបស់អ្នកទទួលសេវា', lo: 'ຮ່າງບັນທຶກການໃຫ້ຂໍ້ມູນຂອງຜູ້ຮັບບໍລິການ' },
+  'docs.referral.title': { th: 'แบบร่างหนังสือส่งต่อเพื่อรับการช่วยเหลือ', en: 'Draft assistance referral letter', my: 'အကူအညီရယူရန် လွှဲပြောင်းစာမူကြမ်း', km: 'សេចក្តីព្រាងលិខិតបញ្ជូនដើម្បីទទួលជំនួយ', lo: 'ຮ່າງໜັງສືສົ່ງຕໍ່ເພື່ອຮັບການຊ່ວຍເຫຼືອ' },
+  'docs.assistance.title': { th: 'แบบร่างบันทึกการให้ความช่วยเหลือผู้รับบริการ', en: 'Draft service-user assistance record', my: 'ဝန်ဆောင်မှုလက်ခံသူအား ကူညီပေးမှုမှတ်တမ်းမူကြမ်း', km: 'សេចក្តីព្រាងកំណត់ត្រាជំនួយអ្នកទទួលសេវា', lo: 'ຮ່າງບັນທຶກການຊ່ວຍເຫຼືອຜູ້ຮັບບໍລິການ' },
   'docs.review.title': { th: 'ตรวจร่างเอกสารจาก AI', en: 'Review AI document draft' },
   'docs.review.description': { th: 'ตรวจสอบและแก้ไขทุกหัวข้อก่อนยืนยัน ระบบจะไม่พิมพ์ Transcript เป็นเนื้อหาหลัก', en: 'Review and edit every section before confirming. The transcript will not be printed as the main content.' },
   'docs.review.disclaimer': { th: 'AI ใช้ช่วยเรียบเรียงเท่านั้น ห้ามยืนยันหากมีข้อเท็จจริงที่ไม่ตรงกับคำให้ข้อมูล', en: 'AI only assists with drafting. Do not confirm if any fact differs from the information provided.' },
