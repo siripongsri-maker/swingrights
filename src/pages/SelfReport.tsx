@@ -249,8 +249,14 @@ export default function SelfReport() {
   };
 
   // ---- referral partners: matched for staff only; reporter sees next steps ----
-  const startPartners = async (msgId: number) => {
-    if (!phoneOk) { toast.error(t('report.contact.phoneInvalid')); return; }
+  const startPartners = async (msgId: number, phoneOverride?: string) => {
+    const phone = phoneOverride ?? contact;
+    const digits = phone.replace(/[^\d]/g, '');
+    if (!/^\+?[\d\s\-()]+$/.test(phone.trim()) || digits.length < 9 || digits.length > 15) {
+      toast.error(t('report.contact.phoneInvalid'));
+      return;
+    }
+    if (phoneOverride) setContact(phoneOverride);
     resolveWidget(msgId);
     push({ role: 'user', text: `${name || t('report.chat.notSpecified')} · ${contact}` });
     setStage('partners');
@@ -548,7 +554,22 @@ export default function SelfReport() {
             </div>
           )}
 
-          {m.widget === 'contact' && !m.resolved && (
+          {m.widget === 'contact' && !m.resolved && profilePhone && contact !== profilePhone && (
+            <div className="mt-2.5 space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
+              <p className="text-xs text-muted-foreground">{t('report.contact.confirmPhone')}</p>
+              <p className="font-mono text-base font-bold tracking-wide text-foreground" dir="ltr">{profilePhone}</p>
+              <div className="flex gap-2">
+                <Button size="sm" className="flex-1 rounded-xl" disabled={submitting} onClick={() => void startPartners(m.id, profilePhone)}>
+                  {t('report.contact.useThis')}
+                </Button>
+                <Button size="sm" variant="outline" className="flex-1 rounded-xl" onClick={() => { setProfilePhone(null); setContact(''); }}>
+                  {t('report.contact.changePhone')}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {m.widget === 'contact' && !m.resolved && (!profilePhone || contact === profilePhone) && (
             <div className="mt-2.5 space-y-2">
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('report.contact.name')} maxLength={120} className="bg-card h-9 text-sm" />
               <Input
