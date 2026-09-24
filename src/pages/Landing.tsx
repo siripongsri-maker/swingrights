@@ -239,7 +239,7 @@ export default function Landing() {
                 </div>
               </article>
 
-              <article className="sm:col-span-2 rounded-[20px] bg-card border border-border p-6 shadow-card hover-lift">
+              <article className="sm:col-span-3 rounded-[20px] bg-card border border-border p-6 shadow-card hover-lift">
                 <h2 className="font-subhead text-lg font-semibold text-foreground mb-3">{t('landing.help.title')}</h2>
                 <ul className="grid gap-2 sm:grid-cols-2">
                   {HOTLINES.map((h) => (
