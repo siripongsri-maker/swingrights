@@ -144,3 +144,15 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
   #project-report { position: absolute; inset: 0; margin: 0; box-shadow: none; border: 0; }
   @page { size: A4; margin: 12mm; }
 }
+
+/* Printable in-app pages (e.g. project report) — SWING RIGHTS print theme */
+@media print {
+  @page { size: A4; margin: 18mm 15mm;
+    @bottom-right { content: "หน้า " counter(page) " / " counter(pages); font: 8pt 'IBM Plex Mono', monospace; color: #5B6168; } }
+  html, body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  header, nav, .no-print, [data-quick-exit], button { display: none !important; }
+  .shadow-card, .shadow-lg, .shadow-md { box-shadow: none !important; }
+  table { break-inside: auto; } tr, section, .break-inside-avoid { break-inside: avoid; }
+  thead { display: table-header-group; }
+  h2, h3 { break-after: avoid; }
+}
