@@ -27,6 +27,7 @@ import { useI18n } from '@/i18n';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { CaseReferrals } from '@/components/admin/CaseReferrals';
 import { MapPicker } from '@/components/screening/MapPicker';
+import { DocumentDraftDialog } from '@/components/admin/DocumentDraftDialog';
 
 const PAGE_SIZE = 20;
 
@@ -561,6 +562,8 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   const [newQuestion, setNewQuestion] = useState('');
   const [answerAudio, setAnswerAudio] = useState<Record<string, string>>({});
   const [showMap, setShowMap] = useState(false);
+  const [documentKind, setDocumentKind] = useState<DocKind | null>(null);
+  const [documentInput, setDocumentInput] = useState<ReturnType<typeof docInputFromReport> | null>(null);
 
 
   const revealPii = async () => {
@@ -683,6 +686,13 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
     fn({ ...c, reporter: p?.reporter ?? null, victim: p?.victim ?? null, assignee_name: staffName(c.assigned_to) } as CaseReportData);
   };
 
+  const reviewDocument = async (kind: DocKind) => {
+    await withPii((full) => {
+      setDocumentInput(docInputFromReport(full));
+      setDocumentKind(kind);
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-leaf grain">
       <header className="bg-gradient-dark text-white sticky top-0 z-30 shadow-elegant">
@@ -704,7 +714,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
                   <Printer className="w-4 h-4" /> {t('dash.detail.fullReportPdf')}
                 </DropdownMenuItem>
                 {DOC_KINDS.map((dk) => (
-                  <DropdownMenuItem key={dk.key} onClick={() => void withPii((full) => printCaseDocument(dk.key, docInputFromReport(full)))}>
+                  <DropdownMenuItem key={dk.key} onClick={() => void reviewDocument(dk.key)}>
                     {DOC_ICONS[dk.key]} {dk.label}
                   </DropdownMenuItem>
                 ))}
@@ -716,6 +726,17 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-5 py-6 space-y-4">
+        {documentKind && documentInput && (
+          <DocumentDraftDialog
+            open
+            onOpenChange={(open) => { if (!open) { setDocumentKind(null); setDocumentInput(null); } }}
+            caseId={caseId}
+            kind={documentKind}
+            input={documentInput}
+            existing={(c.document_drafts?.[documentKind] ?? null) as any}
+            onSaved={() => qc.invalidateQueries({ queryKey: ['case', caseId] })}
+          />
+        )}
         {c.suicide_risk && (
           <section className="border-2 border-destructive rounded-xl p-4 bg-destructive/5">
             <p className="text-sm font-semibold text-destructive flex items-center gap-2">

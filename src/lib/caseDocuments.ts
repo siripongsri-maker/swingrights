@@ -27,6 +27,17 @@ export interface DocInput {
   signatureClient?: string | null;
   audioCount?: number;
   photosCount?: number;
+  documentDraft?: ReviewedDocumentDraft;
+}
+
+export interface ReviewedDocumentDraft {
+  overview: string;
+  details: string;
+  impact: string;
+  actions: string;
+  generated_at?: string;
+  reviewed_at?: string;
+  reviewed_by?: string;
 }
 
 export type DocKind = 'complaint' | 'statement' | 'referral' | 'assistance';
@@ -153,7 +164,7 @@ const violationsLine = (d: DocInput) =>
 /* ---------------- 1. บันทึกแจ้งความ ---------------- */
 function complaintHtml(d: DocInput) {
   const p = d.profile || {};
-  const facts = d.answers.filter((a) => a.transcript?.trim()).map((a) => a.transcript!.trim());
+  const draft = d.documentDraft;
   return `
   <h1>แบบร่างบันทึกการแจ้งความร้องทุกข์</h1>
   <div class="docno">(เพื่อประกอบการยื่นต่อพนักงานสอบสวน — โปรดตรวจสอบรายละเอียด ณ สถานีตำรวจอีกครั้ง)</div>
@@ -172,15 +183,15 @@ function complaintHtml(d: DocInput) {
 
   <div class="section"><h2>ข้อเท็จจริงโดยสังเขป</h2>
     <div class="box">
-      <p>เมื่อวันที่ ${thaiDate(d.createdAt)} ได้เกิดเหตุการละเมิดสิทธิขึ้นบริเวณ ${esc(p.incidentPlace || `พื้นที่ ต.${p.subdistrict || '-'} อ.${p.district || '-'} จ.${p.province || '-'}`)} โดยมีพฤติการณ์ดังนี้</p>
-      ${facts.length ? `<ul class="flat">${facts.slice(0, 8).map((f) => `<li>${esc(f)}</li>`).join('')}</ul>` : '<p>(รอบันทึกคำให้การ)</p>'}
-      ${d.extraFacts ? `<p><strong>ข้อเท็จจริงเพิ่มเติม:</strong> ${esc(d.extraFacts)}</p>` : ''}
+      <p><strong>ลำดับเหตุการณ์:</strong> ${esc(draft?.overview)}</p>
+      <p><strong>ข้อเท็จจริงสำคัญ:</strong> ${esc(draft?.details)}</p>
     </div>
   </div>
 
   <div class="section"><h2>ลักษณะความเสียหายที่พบ</h2>
     <p>${violationsLine(d)}</p>
     <p><strong>ระดับความรุนแรงที่ประเมิน:</strong> ${esc(d.severity ? SEV_LABEL[d.severity as keyof typeof SEV_LABEL] : '-')}</p>
+    <p><strong>ความเสียหายหรือผลกระทบ:</strong> ${esc(draft?.impact)}</p>
   </div>
 
   <div class="section"><h2>พยานหลักฐานประกอบ</h2>
@@ -192,7 +203,7 @@ function complaintHtml(d: DocInput) {
   </div>
 
   <div class="section"><h2>ความประสงค์</h2>
-    <p>ขอให้พนักงานสอบสวนรับไว้ดำเนินการตามกฎหมาย และประสานหน่วยคุ้มครองผู้เสียหายตาม พ.ร.บ. คุ้มครองพยานในคดีอาญา พ.ศ. 2546 (หากเข้าข่าย)</p>
+    <p>${esc(draft?.actions)}</p>
   </div>
 
   <p class="warn"><strong>หมายเหตุ:</strong> เอกสารนี้เป็น "แบบร่าง" ที่จัดทำจากบันทึกการสัมภาษณ์ของมูลนิธิฯ เท่านั้น ไม่ใช่บันทึกการแจ้งความอย่างเป็นทางการ — ผู้แจ้งต้องลงลายมือชื่อต่อหน้าพนักงานสอบสวน ณ สถานีตำรวจที่มีเขตอำนาจ</p>
@@ -203,12 +214,7 @@ function complaintHtml(d: DocInput) {
 /* ---------------- 2. บันทึกข้อความ ---------------- */
 function statementHtml(d: DocInput) {
   const p = d.profile || {};
-  const qa = d.answers.map((a, i) => `
-    <div class="qa">
-      <div class="q"><strong>ข้อ ${i + 1}</strong> (${esc(a.cat || 'ทั่วไป')}) ${esc(a.question)}</div>
-      <div>${esc(a.transcript || '(ไม่มีคำตอบ)')}</div>
-      ${d.staffObs?.[i] ? `<div class="obs">บันทึกเจ้าหน้าที่: ${esc(d.staffObs[i])}</div>` : ''}
-    </div>`).join('');
+  const draft = d.documentDraft;
 
   return `
   <h1>บันทึกการให้ข้อมูลของผู้รับบริการ</h1>
@@ -221,9 +227,10 @@ function statementHtml(d: DocInput) {
 
   <div class="section"><h2>ข้อมูลผู้ให้ข้อมูล</h2>${personTable(d)}</div>
 
-  <div class="section"><h2>คำให้ข้อมูล</h2>
-    ${qa || '<p style="color:#888">ไม่มีบันทึกการสัมภาษณ์</p>'}
-  </div>
+  <div class="section"><h2>ภูมิหลังและบริบท</h2><div class="box">${esc(draft?.overview)}</div></div>
+  <div class="section"><h2>คำให้ข้อมูลที่เรียบเรียงแล้ว</h2><div class="box">${esc(draft?.details)}</div></div>
+  <div class="section"><h2>ผลกระทบ</h2><div class="box">${esc(draft?.impact)}</div></div>
+  <div class="section"><h2>ความต้องการหรือการสนับสนุน</h2><div class="box">${esc(draft?.actions)}</div></div>
 
   <p class="note">ผู้ให้ข้อมูลยินยอมให้บันทึกเสียงและข้อความเพื่อการช่วยเหลือตามความยินยอมที่ลงนามไว้ และสามารถขอแก้ไขข้อมูลได้ตามสิทธิ PDPA</p>
 
@@ -232,6 +239,7 @@ function statementHtml(d: DocInput) {
 
 /* ---------------- 3. บันทึกส่งตัว ---------------- */
 function referralHtml(d: DocInput) {
+  const draft = d.documentDraft;
   return `
   <h1>บันทึกส่งตัวเพื่อรับการช่วยเหลือ</h1>
   <div class="docno">Referral Record — ส่งต่อระหว่างหน่วยงาน</div>
@@ -248,7 +256,10 @@ function referralHtml(d: DocInput) {
   <div class="section"><h2>ประเด็นที่ต้องช่วยเหลือ</h2>
     <p>${violationsLine(d)}</p>
     <p><strong>ระดับความรุนแรง:</strong> ${esc(d.severity ? SEV_LABEL[d.severity as keyof typeof SEV_LABEL] : '-')}</p>
-    ${d.aiResult?.summary ? `<p><strong>สรุปสถานการณ์:</strong> ${esc(d.aiResult.summary)}</p>` : ''}
+    <p><strong>สรุปสถานการณ์:</strong> ${esc(draft?.overview)}</p>
+    <p><strong>เหตุผลในการส่งต่อ:</strong> ${esc(draft?.details)}</p>
+    <p><strong>ความต้องการและผลคัดกรอง:</strong> ${esc(draft?.impact)}</p>
+    <p><strong>ข้อควรระวังและสิ่งที่ขอให้ดำเนินการ:</strong> ${esc(draft?.actions)}</p>
     ${d.referralNote ? `<p><strong>หมายเหตุการส่งต่อ:</strong> ${esc(d.referralNote)}</p>` : ''}
   </div>
 
@@ -265,6 +276,7 @@ function referralHtml(d: DocInput) {
 /* ---------------- 4. บันทึกให้การช่วยเหลือ ---------------- */
 function assistanceHtml(d: DocInput) {
   const s = d.screening || {};
+  const draft = d.documentDraft;
   const suicidal = (s.suicidalItem ?? 0) > 0;
   const did = (cond: boolean, label: string, detail?: string) =>
     `<li class="${cond ? '' : 'no'}">${label}${cond && detail ? ` — ${esc(detail)}` : ''}</li>`;
@@ -294,10 +306,11 @@ function assistanceHtml(d: DocInput) {
     </ul>
   </div>
 
-  ${d.aiResult ? `<div class="section"><h2>ผลการประเมินโดยสรุป</h2>
-    <p>${esc(d.aiResult.summary)}</p>
-    <p><strong>คำแนะนำเบื้องต้น:</strong></p>
-    <ul class="flat">${(d.aiResult.recommendations || []).map((r: string) => `<li>${esc(r)}</li>`).join('')}</ul>
+  ${draft ? `<div class="section"><h2>ผลการประเมินโดยสรุป</h2>
+    <p><strong>สถานการณ์:</strong> ${esc(draft.overview)}</p>
+    <p><strong>ผลการประเมิน:</strong> ${esc(draft.details)}</p>
+    <p><strong>การช่วยเหลือที่ดำเนินการแล้ว:</strong> ${esc(draft.impact)}</p>
+    <p><strong>แผนติดตาม:</strong> ${esc(draft.actions)}</p>
     <p class="note">${AI_DISCLAIMER}</p>
   </div>` : ''}
 
@@ -310,6 +323,9 @@ function assistanceHtml(d: DocInput) {
 
 /** พิมพ์เอกสารตามประเภท — คืน true เมื่อเปิดหน้าต่างพิมพ์สำเร็จ */
 export function printCaseDocument(kind: DocKind, d: DocInput) {
+  if (!d.documentDraft?.reviewed_at) {
+    return false;
+  }
   switch (kind) {
     case 'complaint': return openDoc('แบบร่างบันทึกการแจ้งความร้องทุกข์', complaintHtml(d), d, 'doc_complaint');
     case 'statement': return openDoc('บันทึกการให้ข้อมูลของผู้รับบริการ', statementHtml(d), d, 'doc_statement');
@@ -349,6 +365,7 @@ export function docInputFromIntake(s: IntakeState): DocInput {
     signatureClient: s.signatureClient || null,
     audioCount: s.audioBlobs.filter(Boolean).length,
     photosCount: s.photos.length,
+    documentDraft: undefined,
   };
 }
 
@@ -373,5 +390,6 @@ export function docInputFromReport(c: CaseReportData): DocInput {
     signatureStaff: c.signature_staff,
     signatureStaffName: c.signature_staff_name,
     signatureClient: c.signature_client || null,
+    documentDraft: undefined,
   };
 }

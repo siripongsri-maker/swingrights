@@ -29,6 +29,7 @@ import { clearDraft, readDraftMeta, loadAudioBlobs, loadPhotoBlobs, saveAudioBlo
 import { saveLocalCase, deleteLocalCase, listLocalCases, importLegacyDraft, currentSessionId, rotateSessionId } from '@/lib/localCases';
 import { toast } from 'sonner';
 import { printCaseDocument, docInputFromIntake, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
+import { DocumentDraftDialog } from '@/components/admin/DocumentDraftDialog';
 import { printCaseReport, type CaseReportData } from '@/lib/caseReport';
 import { useI18n } from "@/i18n";
 import { PiiHint, usePiiGuard } from "@/lib/piiGuard";
@@ -1343,6 +1344,7 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
   const { caseCode } = intake;
   const navigate = useNavigate();
   const [qr, setQr] = useState<string>('');
+  const [documentKind, setDocumentKind] = useState<DocKind | null>(null);
 
   // Phase 0.4 — QR ให้ผู้รับบริการถ่ายเก็บไว้ แทนการจดเลขอ้างอิง
   useEffect(() => {
@@ -1351,8 +1353,6 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
       .then(setQr)
       .catch(() => setQr(''));
   }, [caseCode]);
-
-  const printDoc = (kind: DocKind) => printCaseDocument(kind, docInputFromIntake(useIntake.getState()));
 
   const printFull = () => {
     const s = useIntake.getState();
@@ -1430,7 +1430,7 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
           {DOC_KINDS.map((dk) => (
             <button
               key={dk.key}
-              onClick={() => printDoc(dk.key)}
+              onClick={() => setDocumentKind(dk.key)}
               className="p-3 rounded-xl border border-border bg-card text-left hover:border-primary hover:bg-primary-soft/30 transition group"
             >
               <span className="w-8 h-8 rounded-lg bg-primary-soft text-primary flex items-center justify-center mb-2 group-hover:scale-105 transition">
@@ -1449,6 +1449,15 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
 
       <Button onClick={() => navigate(`/track?code=${caseCode}`)} className="w-full h-12 rounded-xl bg-gradient-primary mb-2">{t('intake.confirmed.trackBtn')}</Button>
       <Button variant="outline" onClick={onReset} className="w-full rounded-xl">{t('intake.confirmed.newCaseBtn')}</Button>
+      {documentKind && intake.caseId && (
+        <DocumentDraftDialog
+          open
+          onOpenChange={(open) => { if (!open) setDocumentKind(null); }}
+          caseId={intake.caseId}
+          kind={documentKind}
+          input={docInputFromIntake(useIntake.getState())}
+        />
+      )}
     </div>
   );
 }

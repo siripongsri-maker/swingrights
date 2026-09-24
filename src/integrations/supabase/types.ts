@@ -364,6 +364,7 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
+          document_drafts: Json
           escalation_level: string | null
           escalation_sent_at: string | null
           extra_facts: string | null
@@ -409,6 +410,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          document_drafts?: Json
           escalation_level?: string | null
           escalation_sent_at?: string | null
           extra_facts?: string | null
@@ -454,6 +456,7 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          document_drafts?: Json
           escalation_level?: string | null
           escalation_sent_at?: string | null
           extra_facts?: string | null
