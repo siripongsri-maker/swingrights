@@ -1,27 +1,32 @@
 import { useI18n } from '@/i18n';
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ num, title, children }: { num: number; title: string; children: React.ReactNode }) {
   return (
-    <section className="bg-card border border-border rounded-xl p-5 shadow-card space-y-2">
-      <h2 className="text-base font-semibold">{title}</h2>
-      <div className="text-sm text-muted-foreground space-y-2 leading-relaxed">{children}</div>
+    <section className="rounded-[20px] border border-border bg-card p-5 sm:p-6 shadow-card space-y-2.5">
+      <div className="flex items-center gap-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-soft font-display text-sm font-semibold text-primary tabular-nums">
+          {num}
+        </span>
+        <h2 className="font-subhead text-base sm:text-lg font-semibold text-foreground leading-snug">{title}</h2>
+      </div>
+      <div className="text-sm text-muted-foreground space-y-2 leading-relaxed ps-11">{children}</div>
     </section>
   );
 }
 
-/** Shared PDPA privacy policy body, used by the /privacy page and the landing footer. */
+/** Shared PDPA privacy policy body, used by the /privacy page. */
 export function PrivacyContent() {
   const { t } = useI18n();
 
   return (
     <div className="space-y-4">
-      <Section title={t('privacy.s1.title')}>
+      <Section num={1} title={t('privacy.s1.title').replace(/^\d+\.\s*/, '')}>
         <p>
-          {t('privacy.s1.p1')} <span className="text-foreground">dpo@swingthailand.org</span>
+          {t('privacy.s1.p1')} <span className="font-medium text-foreground">dpo@swingthailand.org</span>
         </p>
       </Section>
 
-      <Section title={t('privacy.s2.title')}>
+      <Section num={2} title={t('privacy.s2.title').replace(/^\d+\.\s*/, '')}>
         <ul className="list-disc ps-5 space-y-1">
           <li>{t('privacy.s2.li1')}</li>
           <li>{t('privacy.s2.li2')}</li>
@@ -30,21 +35,21 @@ export function PrivacyContent() {
         </ul>
       </Section>
 
-      <Section title={t('privacy.s3.title')}>
+      <Section num={3} title={t('privacy.s3.title').replace(/^\d+\.\s*/, '')}>
         <p>
           {t('privacy.s3.p1.pre')} <strong className="text-foreground">{t('privacy.s3.p1.strong')}</strong>{' '}
           {t('privacy.s3.p1.post')}
         </p>
       </Section>
 
-      <Section title={t('privacy.s4.title')}>
+      <Section num={4} title={t('privacy.s4.title').replace(/^\d+\.\s*/, '')}>
         <p>
           {t('privacy.s4.p1.pre')} <strong className="text-foreground">{t('privacy.s4.p1.strong')}</strong>{' '}
           {t('privacy.s4.p1.post')}
         </p>
       </Section>
 
-      <Section title={t('privacy.s5.title')}>
+      <Section num={5} title={t('privacy.s5.title').replace(/^\d+\.\s*/, '')}>
         <p>
           {t('privacy.s5.p1.pre')}{' '}
           <strong className="text-foreground">{t('privacy.s5.p1.strong')}</strong>{' '}
@@ -52,7 +57,7 @@ export function PrivacyContent() {
         </p>
       </Section>
 
-      <Section title={t('privacy.s6.title')}>
+      <Section num={6} title={t('privacy.s6.title').replace(/^\d+\.\s*/, '')}>
         <ul className="list-disc ps-5 space-y-1">
           <li>{t('privacy.s6.li1')}</li>
           <li>{t('privacy.s6.li2')}</li>
@@ -61,11 +66,11 @@ export function PrivacyContent() {
         </ul>
       </Section>
 
-      <Section title={t('privacy.s7.title')}>
+      <Section num={7} title={t('privacy.s7.title').replace(/^\d+\.\s*/, '')}>
         <p>{t('privacy.s7.p1')}</p>
       </Section>
 
-      <Section title={t('privacy.s8.title')}>
+      <Section num={8} title={t('privacy.s8.title').replace(/^\d+\.\s*/, '')}>
         <p>{t('privacy.s8.intro')}</p>
         <ul className="list-disc ps-5 space-y-1">
           <li>{t('privacy.s8.li1')}</li>
@@ -78,7 +83,7 @@ export function PrivacyContent() {
         <p>{t('privacy.s8.p2')}</p>
       </Section>
 
-      <Section title={t('privacy.s9.title')}>
+      <Section num={9} title={t('privacy.s9.title').replace(/^\d+\.\s*/, '')}>
         <ul className="list-disc ps-5 space-y-1">
           <li>{t('privacy.s9.li1')}</li>
           <li>{t('privacy.s9.li2')}</li>
@@ -87,7 +92,7 @@ export function PrivacyContent() {
         </ul>
       </Section>
 
-      <Section title={t('privacy.s10.title')}>
+      <Section num={10} title={t('privacy.s10.title').replace(/^\d+\.\s*/, '')}>
         <p>{t('privacy.s10.p1')}</p>
       </Section>
 

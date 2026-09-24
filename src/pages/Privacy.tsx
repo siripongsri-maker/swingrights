@@ -1,32 +1,46 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, CalendarClock } from 'lucide-react';
 import { useI18n } from '@/i18n';
 import { PartnerBar } from '@/components/PartnerBar';
 import { PrivacyContent } from '@/components/PrivacyContent';
+import { BrandHeader } from '@/components/BrandLogo';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 export default function Privacy() {
   const { t } = useI18n();
   const UPDATED = t('privacy.updatedDate');
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="bg-primary-deep text-primary-foreground">
-        <div className="max-w-3xl mx-auto px-5 py-5 flex items-center gap-3">
-          <Link to="/" className="w-10 h-10 rounded-full bg-sidebar-accent hover:bg-sidebar-accent/80 flex items-center justify-center">
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <div>
-            <h1 className="text-lg font-semibold flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> {t('privacy.title')}
-            </h1>
-            <p className="text-xs text-sidebar-foreground/70">{t('privacy.updated').replace('{date}', UPDATED)}</p>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-5 py-3">
+          <BrandHeader />
+          <div className="flex items-center gap-3">
+            <LanguageToggle />
+            <Link
+              to="/"
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 rtl:-scale-x-100" /> {t('common.back')}
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-5 py-6 space-y-4">
+      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-5 sm:py-10 space-y-6">
+        <div className="space-y-3">
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-4 py-1.5 text-xs font-semibold text-primary">
+            <ShieldCheck className="w-3.5 h-3.5" /> PDPA
+          </span>
+          <h1 className="font-display text-3xl font-bold leading-tight sm:text-4xl">{t('privacy.title')}</h1>
+          <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CalendarClock className="w-3.5 h-3.5" /> {t('privacy.updated').replace('{date}', UPDATED)}
+          </p>
+        </div>
+
         <PrivacyContent />
-        <PartnerBar />
+
+        <PartnerBar className="pt-2" />
       </main>
     </div>
   );
