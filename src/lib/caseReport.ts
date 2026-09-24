@@ -24,7 +24,7 @@ const BASE_CSS = `
 * { box-sizing: border-box; }
 body { font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',system-ui,sans-serif; color:#161615; margin:0; padding:24px; line-height:1.55; }
 .brand { display:block; width:128px; max-height:110px; object-fit:contain; margin:0 0 10px; }
-h1 { margin:0 0 2px; font-family:'Bai Jamjuree','Noto Sans Thai',sans-serif; font-size:20px; color:#2a2a2e; }
+h1 { margin:0 0 2px; font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',sans-serif; font-size:20px; color:#2a2a2e; }
 .sub { color:#5b6168; font-size:11px; margin-bottom:14px; }
 .section { margin-bottom:14px; break-inside:avoid; }
 .section h2 { font-family:'Bai Jamjuree','Noto Sans Thai',sans-serif; font-size:12px; color:#fff; background:#2a2a2e; margin:0 0 8px; padding:5px 8px; border-radius:4px; }

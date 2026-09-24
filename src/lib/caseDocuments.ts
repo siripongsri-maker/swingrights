@@ -70,7 +70,7 @@ body { font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',system-ui,sans-s
 .org img { display:block; width:112px; max-height:96px; object-fit:contain; margin:0 auto 8px; }
 .org .name { font-size:15px; font-weight:600; }
 .org .en { font-size:10px; color:#5b6168; letter-spacing:0; }
-h1 { font-family:'Bai Jamjuree','Noto Sans Thai',sans-serif; text-align:center; font-size:17px; margin:10px 0 2px; font-weight:600; }
+h1 { font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',sans-serif; text-align:center; font-size:17px; margin:10px 0 2px; font-weight:600; }
 .docno { text-align:center; font-size:11px; color:#5b6168; margin-bottom:16px; }
 .meta { font-size:12.5px; margin-bottom:10px; }
 .meta p { margin:2px 0; }
