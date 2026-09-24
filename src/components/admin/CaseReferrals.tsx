@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, Loader2, Share2 } from 'lucide-react';
+import { Copy, Loader2, Share2, Sparkles, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,6 +31,24 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<string | null>(null);
+  const [summary, setSummary] = useState('');
+
+  // AI analysis (step 1) → de-identified summary staff can review before sending (step 2)
+  useQuery({
+    queryKey: ['ref-case-summary', caseId],
+    enabled: open,
+    queryFn: async () => {
+      const { data } = await supabase.from('cases').select('ai_result, violation_details, extra_facts').eq('id', caseId).maybeSingle();
+      const ai = (data?.ai_result ?? {}) as { summary?: string; recommendations?: string[] };
+      const parts = [
+        ai.summary,
+        Array.isArray(ai.recommendations) && ai.recommendations.length ? `${t('ref.helpNeeded')}: ${ai.recommendations.slice(0, 4).join(' · ')}` : '',
+      ].filter(Boolean).join('\n\n');
+      const draft = scrub(parts || String(data?.extra_facts ?? ''));
+      setSummary((cur) => cur || draft);
+      return draft;
+    },
+  });
 
   const { data: partners = [] } = useQuery({
     queryKey: ['ref-partners'],
@@ -76,7 +94,7 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
   const submit = async () => {
     if (!partnerId) return;
     setBusy(true);
-    const { data, error } = await supabase.rpc('create_case_referral' as never, { _case_id: caseId, _partner_id: partnerId, _note: note || null } as never);
+    const { data, error } = await supabase.rpc('create_case_referral' as never, { _case_id: caseId, _partner_id: partnerId, _note: note || null, _summary: scrub(summary) || null } as never);
     setBusy(false);
     if (error || !data) { toast.error(t('ref.failed')); return; }
     const token = (data as { token: string }).token;
@@ -85,7 +103,7 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
     qc.invalidateQueries({ queryKey: ['case-referrals', caseId] });
   };
 
-  const close = () => { setOpen(false); setPartnerId(null); setNote(''); setLink(null); setShowAll(false); };
+  const close = () => { setOpen(false); setPartnerId(null); setNote(''); setSummary(''); setLink(null); setShowAll(false); };
   const fmt = (d: string) => new Date(d).toLocaleString('th-TH');
   const effectiveOutcome = (r: Referral) =>
     r.outcome === 'pending' && r.token_expires_at && new Date(r.token_expires_at) < new Date() ? 'no_response' : r.outcome;
@@ -150,6 +168,11 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
                 ))}
               </div>
               {!showAll && <button type="button" className="text-[11px] text-primary underline" onClick={() => setShowAll(true)}>{t('ref.showAll')}</button>}
+              <div className="space-y-1">
+                <p className="text-xs font-medium flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-primary" /> {t('ref.summaryLabel')}</p>
+                <Textarea value={summary} onChange={(e) => setSummary(e.target.value)} maxLength={4000} className="min-h-[110px] text-sm" />
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> {t('ref.summaryHint')}</p>
+              </div>
               <Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} placeholder={t('ref.notePlaceholder')} className="min-h-[70px] text-sm" />
             </>
           )}
@@ -161,4 +184,12 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
       </Dialog>
     </section>
   );
+}
+
+/** Remove phone / ID numbers and emails before anything leaves the case. */
+function scrub(s: string) {
+  return s
+    .replace(/\+?\d[\d\s-]{7,}\d/g, '[•••]')
+    .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[•••]')
+    .trim();
 }
