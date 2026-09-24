@@ -57,10 +57,10 @@ export const TOOLS_DICT: Record<string, Entry> = {
   'tools.q9.scale.often': { th: 'เป็นบ่อย (>7 วัน)', en: 'Often (>7 days)' },
   'tools.q9.scale.everyDay': { th: 'เป็นทุกวัน', en: 'Nearly every day' },
   'tools.q9.totalLabel': { th: 'คะแนนรวม 9Q', en: '9Q total score' },
-  'tools.level.none': { th: 'ไม่มีอาการซึมเศร้า', en: 'No depression' },
-  'tools.level.mild': { th: 'ซึมเศร้าระดับน้อย', en: 'Mild depression' },
-  'tools.level.moderate': { th: 'ซึมเศร้าระดับปานกลาง', en: 'Moderate depression' },
-  'tools.level.severe': { th: 'ซึมเศร้าระดับรุนแรง', en: 'Severe depression' },
+  'tools.level.none': { th: 'ไม่มีอาการซึมเศร้า', en: 'No depression', my: 'စိတ်ကျရောဂါလက္ခဏာ မရှိ', km: 'មិនមានរោគសញ្ញាធ្លាក់ទឹកចិត្ត', lo: 'ບໍ່ມີອາການຊຶມເສົ້າ' },
+  'tools.level.mild': { th: 'ซึมเศร้าระดับน้อย', en: 'Mild depression', my: 'စိတ်ကျရောဂါ အနည်းငယ်', km: 'ធ្លាក់ទឹកចិត្តកម្រិតស្រាល', lo: 'ຊຶມເສົ້າລະດັບເບົາ' },
+  'tools.level.moderate': { th: 'ซึมเศร้าระดับปานกลาง', en: 'Moderate depression', my: 'စိတ်ကျရောဂါ အလယ်အလတ်', km: 'ធ្លាក់ទឹកចិត្តកម្រិតមធ្យម', lo: 'ຊຶມເສົ້າລະດັບປານກາງ' },
+  'tools.level.severe': { th: 'ซึมเศร้าระดับรุนแรง', en: 'Severe depression', my: 'စိတ်ကျရောဂါ ပြင်းထန်', km: 'ធ្លាក់ទឹកចិត្តកម្រិតធ្ងន់ធ្ងរ', lo: 'ຊຶມເສົ້າລະດັບຮຸນແຮງ' },
 
   // ---------- Escalation ----------
   'tools.escalation.title': {
