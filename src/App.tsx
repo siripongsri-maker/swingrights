@@ -50,6 +50,10 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/intake" element={<Intake />} />
             <Route path="/report" element={<SelfReport />} />
+            <Route path="/report/en" element={<SelfReport />} />
+            <Route path="/report/my" element={<SelfReport />} />
+            <Route path="/report/km" element={<SelfReport />} />
+            <Route path="/report/lo" element={<SelfReport />} />
             <Route path="/track" element={<Track />} />
             <Route path="/recover" element={<Recover />} />
             <Route path="/referral/:token" element={<ReferralRespond />} />

@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
+import { useI18n, type Lang } from "@/i18n";
 
 const BASE = "https://swingrights.app";
 
@@ -15,11 +16,24 @@ const PAGES: Record<string, Meta> = {
   "/intake": { title: "รับเรื่องโดยเจ้าหน้าที่ — SWING Foundation", description: "แบบฟอร์มรับเรื่องสำหรับเจ้าหน้าที่มูลนิธิเพื่อนพนักงานบริการ บันทึกเสียง ประเมิน และส่งต่อความช่วยเหลือ", noindex: true },
 };
 
+const REPORT_META: Record<Lang, Meta> = {
+  th: PAGES["/report"],
+  en: { title: "Report a rights violation — SWING RIGHTS", description: "Report a rights violation confidentially by typing or speaking. No account is required, and support is available from SWING Foundation." },
+  my: { title: "အခွင့်အရေးချိုးဖောက်မှုကို တိုင်ကြားရန် — SWING RIGHTS", description: "မြန်မာဘာသာဖြင့် စာရိုက်၍ဖြစ်စေ အသံဖြင့်ဖြစ်စေ လျှို့ဝှက်စွာ တိုင်ကြားနိုင်ပါသည်။ အကောင့်ဖွင့်ရန် မလိုအပ်ပါ။" },
+  km: { title: "រាយការណ៍ការរំលោភសិទ្ធិ — SWING RIGHTS", description: "រាយការណ៍ការរំលោភសិទ្ធិជាភាសាខ្មែរ ដោយវាយអត្ថបទ ឬនិយាយដោយសម្ងាត់។ មិនចាំបាច់ចុះឈ្មោះទេ។" },
+  lo: { title: "ລາຍງານການລະເມີດສິດ — SWING RIGHTS", description: "ລາຍງານການລະເມີດສິດເປັນພາສາລາວ ດ້ວຍການພິມ ຫຼື ເວົ້າຢ່າງເປັນຄວາມລັບ ໂດຍບໍ່ຕ້ອງລົງທະບຽນ." },
+};
+
+const REPORT_PATH: Record<Lang, string> = { th: "/report", en: "/report/en", my: "/report/my", km: "/report/km", lo: "/report/lo" };
+
 const FALLBACK: Meta = { title: "SWING RIGHTS", description: "พื้นที่ปลอดภัยสำหรับแจ้งเหตุ รู้สิทธิ และติดตามความช่วยเหลือจาก SWING", noindex: true };
 
 export function RouteSeo() {
   const { pathname } = useLocation();
-  const meta = PAGES[pathname] ?? FALLBACK;
+  const { lang } = useI18n();
+  const isReport = /^\/report(?:\/(?:en|my|km|lo))?\/?$/.test(pathname);
+  const routeLang = (pathname.match(/^\/report\/(en|my|km|lo)\/?$/)?.[1] as Lang | undefined) ?? (pathname === '/report' ? 'th' : lang);
+  const meta = isReport ? REPORT_META[routeLang] : (PAGES[pathname] ?? FALLBACK);
   const url = `${BASE}${pathname}`;
   return (
     <Helmet>
@@ -31,6 +45,10 @@ export function RouteSeo() {
       <meta property="og:url" content={url} />
       <meta name="twitter:title" content={meta.title} />
       <meta name="twitter:description" content={meta.description} />
+      {isReport && (Object.entries(REPORT_PATH) as [Lang, string][]).map(([code, path]) => (
+        <link key={code} rel="alternate" hrefLang={code} href={`${BASE}${path}`} />
+      ))}
+      {isReport && <link rel="alternate" hrefLang="x-default" href={`${BASE}/report`} />}
       {meta.noindex && <meta name="robots" content="noindex" />}
     </Helmet>
   );

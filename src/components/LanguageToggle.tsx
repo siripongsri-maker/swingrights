@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Languages, Check } from 'lucide-react';
 import { useI18n, LANGS } from '@/i18n';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -7,7 +8,15 @@ import { cn } from '@/lib/utils';
 /** 5-language switcher (ไทย / EN / မြန်မာ / ខ្មែរ / ລາວ). */
 export const LanguageToggle = forwardRef<HTMLButtonElement, { className?: string }>(function LanguageToggle({ className }, ref) {
   const { lang, setLang } = useI18n();
+  const location = useLocation();
+  const navigate = useNavigate();
   const current = LANGS.find((l) => l.id === lang);
+  const chooseLanguage = (next: typeof lang) => {
+    setLang(next);
+    if (/^\/report(?:\/(?:en|my|km|lo))?\/?$/.test(location.pathname)) {
+      navigate(next === 'th' ? '/report' : `/report/${next}`, { replace: true });
+    }
+  };
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -30,7 +39,7 @@ export const LanguageToggle = forwardRef<HTMLButtonElement, { className?: string
             <button
               key={l.id}
               type="button"
-              onClick={() => setLang(l.id)}
+              onClick={() => chooseLanguage(l.id)}
               aria-pressed={lang === l.id}
               className={cn(
                 'flex min-h-10 items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',

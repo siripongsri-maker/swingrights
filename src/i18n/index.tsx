@@ -793,6 +793,8 @@ export const DICT: Dict = {
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
+    const routeLang = typeof window !== 'undefined' ? window.location.pathname.match(/^\/report\/(en|my|km|lo)\/?$/)?.[1] : null;
+    if (routeLang && ALL.includes(routeLang as Lang)) return routeLang as Lang;
     const saved = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
     return ALL.includes(saved as Lang) ? (saved as Lang) : 'th';
   });
