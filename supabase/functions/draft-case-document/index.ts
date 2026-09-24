@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
     incident_place: clean(profile.incidentPlace), violation_types: profile.initialViolationTypes ?? [],
   };
   const guide = FIELD_GUIDANCE[parsed.data.kind];
-  const prompt = `จัดทำร่างเอกสารภาษาไทยชนิด ${parsed.data.kind} สำหรับเจ้าหน้าที่มูลนิธิสวิง
+  const prompt = `จัดทำร่างเอกสารภาษาไทยชนิด ${parsed.data.kind} สำหรับเจ้าหน้าที่มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)
 
 ข้อบังคับ:
 - ใช้เฉพาะข้อเท็จจริงในข้อมูล ห้ามคาดเดา เติมชื่อ บุคคล สถานที่ วันเวลา ความผิด หรือการดำเนินการที่ไม่มีในข้อมูล

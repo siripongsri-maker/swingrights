@@ -87,7 +87,7 @@ export function printCaseReport(c: CaseReportData) {
   <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
   <style>${BASE_CSS}</style></head><body>
   <img class="brand" src="${lockupImg}" alt="SWING RIGHTS" />
-  <h1>SWING Foundation — รายงานเคส (เอกสารส่งต่อ)</h1>
+  <h1>มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) — รายงานเคส (เอกสารส่งต่อ)</h1>
   <div class="sub">รหัสเคส <strong>${esc(c.case_code)}</strong> · รับเรื่อง ${new Date(c.created_at).toLocaleString('th-TH')} · ออกเอกสาร ${new Date().toLocaleString('th-TH')}</div>
 
   <div class="section"><h2>ข้อมูลเคส</h2><table>
@@ -139,7 +139,7 @@ export function printCaseReport(c: CaseReportData) {
     <div>${c.signature_client ? `<img src="${c.signature_client}" alt="" />` : '<div style="height:60px"></div>'}<div>ผู้รับบริการ / ผู้แจ้ง</div></div>
   </div></div>
 
-  <div class="footer">SWING Foundation · เอกสารลับ สำหรับการส่งต่อหน่วยงานที่เกี่ยวข้องเท่านั้น · การเปิดเผยต่อบุคคลภายนอกต้องได้รับความยินยอมตาม PDPA</div>
+  <div class="footer">มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) · เอกสารลับ สำหรับการส่งต่อหน่วยงานที่เกี่ยวข้องเท่านั้น · การเปิดเผยต่อบุคคลภายนอกต้องได้รับความยินยอมตาม PDPA</div>
   <script>window.onload = () => setTimeout(() => window.print(), 400);</script>
   </body></html>`;
 

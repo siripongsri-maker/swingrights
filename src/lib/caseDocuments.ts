@@ -44,10 +44,10 @@ export interface ReviewedDocumentDraft {
 export type DocKind = 'complaint' | 'statement' | 'referral' | 'assistance';
 
 export const DOC_KINDS: { key: DocKind; label: string; desc: string }[] = [
-  { key: 'complaint', label: 'บันทึกแจ้งความ', desc: 'แบบร่างคำร้องทุกข์สำหรับยื่นต่อพนักงานสอบสวน' },
-  { key: 'statement', label: 'บันทึกข้อความ', desc: 'บันทึกการให้ข้อมูล/คำให้การของผู้รับบริการ' },
-  { key: 'referral', label: 'บันทึกส่งตัว', desc: 'หนังสือส่งต่อหน่วยงานพันธมิตร / โรงพยาบาล / พมช.' },
-  { key: 'assistance', label: 'บันทึกให้การช่วยเหลือ', desc: 'รายการความช่วยเหลือที่มูลนิธิดำเนินการแล้ว' },
+  { key: 'complaint', label: 'แบบร่างบันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์', desc: 'สำหรับใช้ประกอบการยื่นต่อพนักงานสอบสวน' },
+  { key: 'statement', label: 'แบบร่างบันทึกการให้ข้อมูลของผู้รับบริการ', desc: 'ข้อมูลหรือคำให้การของผู้รับบริการที่เรียบเรียงแล้ว' },
+  { key: 'referral', label: 'แบบร่างหนังสือส่งต่อเพื่อรับการช่วยเหลือ', desc: 'สำหรับส่งต่อหน่วยงานพันธมิตร โรงพยาบาล หรือ พมช.' },
+  { key: 'assistance', label: 'แบบร่างบันทึกการให้ความช่วยเหลือผู้รับบริการ', desc: 'รายการความช่วยเหลือที่มูลนิธิเพื่อนพนักงานบริการดำเนินการแล้ว' },
 ];
 
 const esc = (v: unknown) =>
@@ -104,7 +104,7 @@ function openDoc(title: string, bodyHtml: string, d: DocInput, format: string) {
   <title>${esc(title)} ${esc(d.caseCode || '')}</title>
   <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
   <style>${DOC_CSS}</style></head><body>
-  <div class="org"><img src="${lockupImg}" alt="SWING RIGHTS" /><div class="name">มูลนิธิสวิง (SWING Foundation)</div>
+  <div class="org"><img src="${lockupImg}" alt="SWING RIGHTS" /><div class="name">มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)</div>
   <div class="en">SERVICE WORKERS IN GROUP FOUNDATION — เอกสารลับ สำหรับหน่วยงานที่เกี่ยวข้องเท่านั้น</div></div>
   ${bodyHtml}
   <div class="footer">รหัสเคส ${esc(d.caseCode || '—')} · ออกเอกสารเมื่อ ${thaiDateTime()} · เอกสารลับตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 — ห้ามเปิดเผยโดยไม่ได้รับความยินยอม</div>
@@ -175,7 +175,7 @@ function complaintHtml(d: DocInput) {
   const p = d.profile || {};
   const draft = d.documentDraft;
   return `
-  <h1>แบบร่างบันทึกการแจ้งความร้องทุกข์</h1>
+  <h1>แบบร่างบันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์</h1>
   <div class="docno">(เพื่อประกอบการยื่นต่อพนักงานสอบสวน — โปรดตรวจสอบรายละเอียด ณ สถานีตำรวจอีกครั้ง)</div>
 
   <div class="meta">
@@ -205,7 +205,7 @@ function complaintHtml(d: DocInput) {
 
   <div class="section"><h2>พยานหลักฐานประกอบ</h2>
     <ul class="flat">
-      <li>บันทึกเสียงการสัมภาษณ์ ${d.audioCount ?? 0} ไฟล์ (เก็บที่มูลนิธิสวิง)</li>
+      <li>บันทึกเสียงการสัมภาษณ์ ${d.audioCount ?? 0} ไฟล์ (เก็บที่มูลนิธิเพื่อนพนักงานบริการ)</li>
       <li>ภาพถ่ายประกอบ ${d.photosCount ?? 0} ภาพ</li>
       <li>บันทึกการให้ข้อมูลของผู้รับบริการ (แนบท้าย)</li>
     </ul>
@@ -215,7 +215,7 @@ function complaintHtml(d: DocInput) {
     <p>${esc(draft?.actions)}</p>
   </div>
 
-  <p class="warn"><strong>หมายเหตุ:</strong> เอกสารนี้เป็น "แบบร่าง" ที่จัดทำจากบันทึกการสัมภาษณ์ของมูลนิธิฯ เท่านั้น ไม่ใช่บันทึกการแจ้งความอย่างเป็นทางการ — ผู้แจ้งต้องลงลายมือชื่อต่อหน้าพนักงานสอบสวน ณ สถานีตำรวจที่มีเขตอำนาจ</p>
+  <p class="warn"><strong>หมายเหตุ:</strong> เอกสารนี้เป็น "แบบร่าง" ที่จัดทำจากบันทึกการสัมภาษณ์ของมูลนิธิเพื่อนพนักงานบริการเท่านั้น ไม่ใช่บันทึกการแจ้งความอย่างเป็นทางการ — ผู้แจ้งต้องลงลายมือชื่อต่อหน้าพนักงานสอบสวน ณ สถานีตำรวจที่มีเขตอำนาจ</p>
 
   ${blankSig('ผู้แจ้งความ', 'พนักงานสอบสวนผู้รับแจ้ง')}`;
 }
@@ -226,12 +226,12 @@ function statementHtml(d: DocInput) {
   const draft = d.documentDraft;
 
   return `
-  <h1>บันทึกการให้ข้อมูลของผู้รับบริการ</h1>
-  <div class="docno">Statement Record — จัดทำโดยเจ้าหน้าที่มูลนิธิสวิง</div>
+  <h1>แบบร่างบันทึกการให้ข้อมูลของผู้รับบริการ</h1>
+  <div class="docno">Statement Record — จัดทำโดยเจ้าหน้าที่มูลนิธิเพื่อนพนักงานบริการ</div>
 
   <div class="meta">
     <p><strong>วัน-เวลาที่บันทึก:</strong> ${thaiDateTime(d.createdAt)} &nbsp;&nbsp; <strong>สถานที่:</strong> พื้นที่บริการ ${esc(p.province || p.branch)}</p>
-    <p><strong>ผู้บันทึก:</strong> ${esc(d.signatureStaffName || 'เจ้าหน้าที่มูลนิธิสวิง')}</p>
+    <p><strong>ผู้บันทึก:</strong> ${esc(d.signatureStaffName || 'เจ้าหน้าที่มูลนิธิเพื่อนพนักงานบริการ')}</p>
   </div>
 
   <div class="section"><h2>ข้อมูลผู้ให้ข้อมูล</h2>${personTable(d)}</div>
@@ -250,11 +250,11 @@ function statementHtml(d: DocInput) {
 function referralHtml(d: DocInput) {
   const draft = d.documentDraft;
   return `
-  <h1>บันทึกส่งตัวเพื่อรับการช่วยเหลือ</h1>
+  <h1>แบบร่างหนังสือส่งต่อเพื่อรับการช่วยเหลือ</h1>
   <div class="docno">Referral Record — ส่งต่อระหว่างหน่วยงาน</div>
 
   <div class="meta">
-    <p><strong>วันที่ส่งต่อ:</strong> ${thaiDate()} &nbsp;&nbsp; <strong>จาก:</strong> มูลนิธิสวิง (เจ้าหน้าที่: ${esc(d.signatureStaffName || '-')})</p>
+    <p><strong>วันที่ส่งต่อ:</strong> ${thaiDate()} &nbsp;&nbsp; <strong>จาก:</strong> มูลนิธิเพื่อนพนักงานบริการ (เจ้าหน้าที่: ${esc(d.signatureStaffName || '-')})</p>
     <p><strong>ส่งต่อไปยัง:</strong> ${esc(d.referrals.join(' · ') || '—')}</p>
   </div>
 
@@ -275,7 +275,7 @@ function referralHtml(d: DocInput) {
   ${d.aiResult ? `<p class="note">${AI_DISCLAIMER}</p>` : ''}
 
   <div class="section"><h2>การติดต่อกลับ</h2>
-    <p>หากต้องการข้อมูลเพิ่มเติม กรุณาติดต่อมูลนิธิสวิง พร้อมแจ้งรหัสเคส <strong>${esc(d.caseCode || '—')}</strong> (ข้อมูลระบุตัวตนจะเปิดเผยเฉพาะเมื่อได้รับความยินยอมจากผู้รับบริการ)</p>
+    <p>หากต้องการข้อมูลเพิ่มเติม กรุณาติดต่อมูลนิธิเพื่อนพนักงานบริการ พร้อมแจ้งรหัสเคส <strong>${esc(d.caseCode || '—')}</strong> (ข้อมูลระบุตัวตนจะเปิดเผยเฉพาะเมื่อได้รับความยินยอมจากผู้รับบริการ)</p>
   </div>
 
   ${sigBlock(d, 'ผู้รับบริการ (ยินยอมให้ส่งต่อ)', 'ผู้ส่งต่อ (เจ้าหน้าที่)')}
@@ -291,8 +291,8 @@ function assistanceHtml(d: DocInput) {
     `<li class="${cond ? '' : 'no'}">${label}${cond && detail ? ` — ${esc(detail)}` : ''}</li>`;
 
   return `
-  <h1>บันทึกการให้ความช่วยเหลือผู้รับบริการ</h1>
-  <div class="docno">Assistance Record — มูลนิธิสวิง</div>
+  <h1>แบบร่างบันทึกการให้ความช่วยเหลือผู้รับบริการ</h1>
+  <div class="docno">Assistance Record — มูลนิธิเพื่อนพนักงานบริการ</div>
 
   <div class="meta">
     <p><strong>วันที่ให้ความช่วยเหลือ:</strong> ${thaiDate(d.createdAt)} &nbsp;&nbsp; <strong>พื้นที่:</strong> ${esc(d.profile?.province || d.profile?.branch)}</p>
@@ -336,10 +336,10 @@ export function printCaseDocument(kind: DocKind, d: DocInput) {
     return false;
   }
   switch (kind) {
-    case 'complaint': return openDoc('แบบร่างบันทึกการแจ้งความร้องทุกข์', complaintHtml(d), d, 'doc_complaint');
-    case 'statement': return openDoc('บันทึกการให้ข้อมูลของผู้รับบริการ', statementHtml(d), d, 'doc_statement');
-    case 'referral': return openDoc('บันทึกส่งตัว', referralHtml(d), d, 'doc_referral');
-    case 'assistance': return openDoc('บันทึกการให้ความช่วยเหลือ', assistanceHtml(d), d, 'doc_assistance');
+    case 'complaint': return openDoc('แบบร่างบันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์', complaintHtml(d), d, 'doc_complaint');
+    case 'statement': return openDoc('แบบร่างบันทึกการให้ข้อมูลของผู้รับบริการ', statementHtml(d), d, 'doc_statement');
+    case 'referral': return openDoc('แบบร่างหนังสือส่งต่อเพื่อรับการช่วยเหลือ', referralHtml(d), d, 'doc_referral');
+    case 'assistance': return openDoc('แบบร่างบันทึกการให้ความช่วยเหลือผู้รับบริการ', assistanceHtml(d), d, 'doc_assistance');
   }
 }
 
