@@ -101,6 +101,40 @@ export default function SelfReport() {
   const [probeDraft, setProbeDraft] = useState('');
   const [safetyRisk, setSafetyRisk] = useState(false);
 
+  // ---- live AI follow-up: reads each answer and asks about what was actually said ----
+  const MAX_FU = 2;
+  const fuCountRef = useRef(0);
+  const fuRef = useRef<{ q: string; after: () => void } | null>(null);
+  const [fuActive, setFuActive] = useState(false);
+  const [followups, setFollowups] = useState<{ q: string; text: string }[]>([]);
+  const heardRef = useRef<string[]>([]);
+  const askFollowUp = async (latest: string, question: string, after: () => void, fresh: boolean) => {
+    if (fresh) fuCountRef.current = 0;
+    const done = () => { fuRef.current = null; setFuActive(false); fuCountRef.current = 0; after(); };
+    if (!latest.trim() || fuCountRef.current >= MAX_FU) return done();
+    heardRef.current.push(`Q: ${question}\nA: ${latest}`);
+    setTyping(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('followup-question', {
+        body: {
+          text: heardRef.current.join('\n\n').slice(-7500),
+          context: `Current question: ${question}\nLATEST answer (build the follow-up on this): ${latest}`.slice(0, 5900),
+          lang,
+        },
+      });
+      setTyping(false);
+      const q = !error && data?.next_question ? String(data.next_question).trim() : '';
+      if (q && data.next_slot !== 'none') {
+        fuCountRef.current += 1;
+        fuRef.current = { q, after };
+        setFuActive(true);
+        push({ role: 'bot', text: q, widget: 'probe' });
+        return;
+      }
+    } catch { setTyping(false); }
+    done();
+  };
+
   // ---- referral partners ----
   const [partners, setPartners] = useState<Partner[]>([]);
 
@@ -175,8 +209,11 @@ export default function SelfReport() {
     const audioUrl = audio ? URL.createObjectURL(audio) : undefined;
     push({ role: 'user', text: text || undefined, audioUrl });
     setDraftText('');
-    setStage('types');
-    botSay({ text: t('report.type.title'), widget: 'types' });
+    setFuActive(true);
+    void askFollowUp(text, t('report.story.title'), () => {
+      setStage('types');
+      botSay({ text: t('report.type.title'), widget: 'types' });
+    }, true);
   };
 
   const confirmTypes = (msgId: number) => {
@@ -195,6 +232,16 @@ export default function SelfReport() {
   /** Answer (or skip) the current probe question, then ask the next one. */
   const answerProbe = (msgId: number, answer: { text: string; blob: Blob | null } | null) => {
     resolveWidget(msgId);
+    if (fuRef.current) {
+      const { q, after } = fuRef.current;
+      fuRef.current = null;
+      setProbeBlob(null); setProbeTranscript(''); setProbeDraft('');
+      if (!answer) { push({ role: 'user', text: t('report.chat.skipped') }); setFuActive(false); fuCountRef.current = 0; after(); return; }
+      push({ role: 'user', text: answer.text || undefined, audioUrl: answer.blob ? URL.createObjectURL(answer.blob) : undefined });
+      if (answer.text) setFollowups((prev) => [...prev, { q, text: answer.text }]);
+      void askFollowUp(answer.text, q, after, false);
+      return;
+    }
     const qid = PROBE_IDS[probeIdx];
     if (answer) {
       setProbeAnswers((prev) => ({ ...prev, [qid]: answer }));
@@ -215,13 +262,17 @@ export default function SelfReport() {
     setProbeTranscript('');
     setProbeDraft('');
     const next = probeIdx + 1;
-    if (next < PROBE_IDS.length) {
-      setProbeIdx(next);
-      botSay({ text: probeQuestionText(next), widget: 'probe' }, answer && qid === 'safety' && safetyRisk ? 1400 : 700);
-    } else {
-      setStage('photos');
-      botSay({ text: t('report.chat.photos.ask'), widget: 'photos' }, 700);
-    }
+    const advance = () => {
+      if (next < PROBE_IDS.length) {
+        setProbeIdx(next);
+        botSay({ text: probeQuestionText(next), widget: 'probe' }, answer && qid === 'safety' && safetyRisk ? 1400 : 700);
+      } else {
+        setStage('photos');
+        botSay({ text: t('report.chat.photos.ask'), widget: 'photos' }, 700);
+      }
+    };
+    if (answer?.text && qid !== 'safety') void askFollowUp(answer.text, t(`report.probe.${qid}.q`), advance, true);
+    else advance();
   };
 
   const sendProbeAnswer = (msgId: number) => {
@@ -310,12 +361,13 @@ export default function SelfReport() {
     const probeDigest = PROBE_IDS.map((qid) => {
       const a = probeAnswers[qid];
       return a?.text ? `${t(`report.probe.${qid}.q`)} → ${a.text}` : null;
-    }).filter(Boolean).join('\n');
+    }).concat(followups.map((f) => `${f.q} → ${f.text}`)).filter(Boolean).join('\n');
     const answersArr = [
       ...(transcript ? [{ question: 'self_report', cat: 'self_report', frame: '', transcript }] : []),
       ...PROBE_IDS.filter((qid) => probeAnswers[qid]?.text).map((qid) => ({
         question: t(`report.probe.${qid}.q`), cat: 'self_probe', frame: '', transcript: probeAnswers[qid]!.text,
       })),
+      ...followups.map((f) => ({ question: f.q, cat: 'self_followup', frame: '', transcript: f.text })),
     ];
 
     const localRef = {
@@ -473,7 +525,7 @@ export default function SelfReport() {
           {m.widget === 'probe' && !m.resolved && (
             <div className="mt-2.5 space-y-2.5">
               {/* quick choices for the safety question */}
-              {currentProbeId === 'safety' && (
+              {currentProbeId === 'safety' && !fuActive && (
                 <div className="flex flex-wrap gap-1.5">
                   {SAFETY_CHOICES.map((c) => (
                     <button
@@ -665,7 +717,7 @@ export default function SelfReport() {
         </div>
 
         {/* composer — active while answering the story question */}
-        {stage === 'story' && (
+        {stage === 'story' && !fuActive && (
           <div className="border-t border-border bg-card/95 backdrop-blur px-3 py-3 space-y-2.5">
             <VoiceRecorder compact followUp onChange={(b, tx) => { setAudio(b); setTranscript(tx); }} />
             <PiiHint className="mt-0" />
