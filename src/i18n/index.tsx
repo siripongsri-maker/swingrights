@@ -66,6 +66,7 @@ const BASE_DICT: Dict = {
   'common.optional': { th: 'ไม่บังคับ', en: 'Optional', my: 'မဖြည့်လည်းရ', km: 'មិនបង្ខំ', lo: 'ບໍ່ບັງຄັບ' },
   'common.record': { th: 'อัดเสียง', en: 'Record', my: 'အသံသွင်းမည်', km: 'ថតសំឡេង', lo: 'ອັດສຽງ' },
   'common.stop': { th: 'หยุดอัด', en: 'Stop', my: 'ရပ်မည်', km: 'ឈប់', lo: 'ຢຸດ' },
+  'voice.transcribing': { th: 'กำลังแปลงเสียงเป็นข้อความ…', en: 'Turning your voice into text…', my: 'အသံကို စာအဖြစ် ပြောင်းနေသည်…', km: 'កំពុងបម្លែងសំឡេងទៅជាអត្ថបទ…', lo: 'ກຳລັງປ່ຽນສຽງເປັນຂໍ້ຄວາມ…' },
   'voice.editTranscript': { th: 'ข้อความที่ได้ยิน — แก้ไขได้ถ้าจับเสียงผิดหรือพูดผิด', en: 'What we heard — edit if it is wrong', my: 'ကြားရသည့်စာ — မှားလျှင် ပြင်နိုင်သည်', km: 'អ្វីដែលយើងឮ — កែបានបើខុស', lo: 'ຂໍ້ຄວາມທີ່ໄດ້ຍິນ — ແກ້ໄຂໄດ້ຖ້າຜິດ' },
   'voice.transcriptPlaceholder': { th: 'พิมพ์หรือแก้ข้อความที่นี่', en: 'Type or correct the text here', my: 'ဤနေရာတွင် ရိုက်ပါ', km: 'វាយ ឬកែនៅទីនេះ', lo: 'ພິມ ຫຼື ແກ້ຢູ່ນີ້' },
   'voice.clearTranscript': { th: 'ลบข้อความ', en: 'Delete text', my: 'စာဖျက်မည်', km: 'លុបអត្ថបទ', lo: 'ລຶບຂໍ້ຄວາມ' },
@@ -94,7 +95,7 @@ const BASE_DICT: Dict = {
   },
 
   // ---------- Landing ----------
-  'landing.badge': { th: 'RIGHTS & VIOLATION TOOL', en: 'RIGHTS & VIOLATION TOOL' },
+  'landing.badge': { th: 'RIGHTS & VIOLATION TOOL', en: 'RIGHTS & VIOLATION TOOL', my: 'အခွင့်အရေးနှင့် အခွင့်အရေးချိုးဖောက်မှုဆိုင်ရာ ကိရိယာ', km: 'ឧបករណ៍សម្រាប់សិទ្ធិ និងការរំលោភសិទ្ធិ', lo: 'ເຄື່ອງມືດ້ານສິດ ແລະ ການລະເມີດສິດ' },
   'landing.title1': {
     th: 'พื้นที่ปลอดภัย', en: 'A safe space',
     my: 'လုံခြုံစိတ်ချရသော နေရာ', km: 'ទីតាំងដែលមានសុវត្ថិភាព', lo: 'ພື້ນທີ່ທີ່ປອດໄພ',
@@ -256,10 +257,10 @@ const BASE_DICT: Dict = {
     th: 'เคสถูกยกเลิก', en: 'This case was cancelled',
     my: 'ဤအမှုကို ပယ်ဖျက်ထားသည်', km: 'ករណីនេះត្រូវបានលុបចោល', lo: 'ເຄສນີ້ຖືກຍົກເລີກ',
   },
-  'track.files.title': { th: 'ไฟล์ที่คุณส่งมา', en: 'Files you sent' },
-  'track.files.clip': { th: 'เสียงที่ {n}', en: 'Recording {n}' },
-  'track.files.photo': { th: 'รูปที่ {n}', en: 'Photo {n}' },
-  'track.files.note': { th: 'ลิงก์ใช้ได้ 5 นาที เฉพาะผู้ที่มีรหัสเคสเท่านั้น อย่าแชร์รหัสเคสให้ผู้อื่น', en: 'Links work for 5 minutes and only with your case code. Do not share your case code.' },
+  'track.files.title': { th: 'ไฟล์ที่คุณส่งมา', en: 'Files you sent', my: 'သင်ပေးပို့ထားသော ဖိုင်များ', km: 'ឯកសារដែលអ្នកបានផ្ញើ', lo: 'ໄຟລ໌ທີ່ທ່ານສົ່ງມາ' },
+  'track.files.clip': { th: 'เสียงที่ {n}', en: 'Recording {n}', my: 'အသံဖိုင် {n}', km: 'សំឡេងថតទី {n}', lo: 'ສຽງບັນທຶກທີ {n}' },
+  'track.files.photo': { th: 'รูปที่ {n}', en: 'Photo {n}', my: 'ဓာတ်ပုံ {n}', km: 'រូបថតទី {n}', lo: 'ຮູບທີ {n}' },
+  'track.files.note': { th: 'ลิงก์ใช้ได้ 5 นาที เฉพาะผู้ที่มีรหัสเคสเท่านั้น อย่าแชร์รหัสเคสให้ผู้อื่น', en: 'Links work for 5 minutes and only with your case code. Do not share your case code.', my: 'လင့်ခ်များကို 5 မိနစ်အတွင်းသာ အသုံးပြုနိုင်ပြီး သင့်အမှုကုဒ်ရှိသူများသာ ဖွင့်နိုင်ပါသည်။ သင့်အမှုကုဒ်ကို အခြားသူများအား မမျှဝေပါနှင့်။', km: 'តំណភ្ជាប់អាចប្រើបានរយៈពេល 5 នាទី ហើយមានតែអ្នកដែលមានលេខកូដករណីរបស់អ្នកប៉ុណ្ណោះដែលអាចបើកបាន។ កុំចែករំលែកលេខកូដករណីរបស់អ្នកជាមួយអ្នកដទៃ។', lo: 'ລິ້ງໃຊ້ໄດ້ພາຍໃນ 5 ນາທີ ແລະ ເປີດໄດ້ສະເພາະຜູ້ທີ່ມີລະຫັດກໍລະນີຂອງທ່ານເທົ່ານັ້ນ. ຢ່າແບ່ງປັນລະຫັດກໍລະນີຂອງທ່ານໃຫ້ຜູ້ອື່ນ.' },
   'track.questions.title': {
     th: 'คำถามเพิ่มเติมจากเจ้าหน้าที่', en: 'Follow-up questions from staff',
     my: 'ဝန်ထမ်းမှ ထပ်မံမေးခွန်းများ', km: 'សំណួរបន្ថែមពីបុគ្គលិក', lo: 'ຄຳຖາມເພີ່ມເຕີມຈາກພະນັກງານ',

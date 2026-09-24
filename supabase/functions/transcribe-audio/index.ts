@@ -26,6 +26,16 @@ serve(async (req) => {
     if (file.size === 0) return json({ error: "ไฟล์เสียงว่างเปล่า กรุณาอัดใหม่" }, 400);
     if (file.size > MAX_BYTES) return json({ error: "ไฟล์เสียงใหญ่เกินไป (เกิน 20MB)" }, 413);
 
+    const LANG_HINT: Record<string, string> = {
+      th: "The speaker most likely speaks Thai. Write Thai in Thai script.",
+      en: "The speaker most likely speaks English.",
+      my: "The speaker most likely speaks Burmese (Myanmar). Write Burmese in Myanmar script (e.g. မြန်မာ), never Thai script.",
+      km: "The speaker most likely speaks Khmer. Write Khmer in Khmer script (e.g. ខ្មែរ), never Thai script.",
+      lo: "The speaker most likely speaks Lao. Write Lao in Lao script (e.g. ລາວ ຂ້ອຍ), never Thai script — Lao and Thai sound similar but Lao must be written in Lao letters.",
+    };
+    const langRaw = form.get("lang");
+    const hint = typeof langRaw === "string" && LANG_HINT[langRaw] ? LANG_HINT[langRaw] + " " : "";
+
     const mime = (file.type || "audio/webm").split(";")[0];
     if (!ALLOWED.includes(mime)) return json({ error: `ไม่รองรับไฟล์ชนิด ${mime}` }, 400);
 
@@ -46,7 +56,7 @@ serve(async (req) => {
         messages: [{
           role: "user",
           content: [
-            { type: "text", text: "Transcribe this recording word for word, in the language spoken (usually Thai; may be English, Burmese, Khmer or Lao). Keep every word, do not cut, summarize, translate or add anything. Add natural punctuation/spaces between sentences. Output only the transcript text. If there is no speech, output nothing." },
+            { type: "text", text: hint + "Transcribe this recording word for word, in the language actually spoken (Thai, English, Burmese, Khmer or Lao), using that language's own script. Keep every word, do not cut, summarize, translate or add anything. Add natural punctuation/spaces between sentences. Output only the transcript text. If there is no speech, output nothing." },
             { type: "input_audio", input_audio: { data: b64, format: FMT[mime] ?? "webm" } },
           ],
         }],

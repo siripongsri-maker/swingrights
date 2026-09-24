@@ -5,6 +5,7 @@ import { FollowUpCoach } from '@/components/FollowUpCoach';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useI18n, SPEECH_LOCALE } from '@/i18n';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Props {
   /** Called whenever a recording is produced or cleared. */
@@ -27,6 +28,9 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
   const [elapsed, setElapsed] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [transcript, setTranscript] = useState('');
+  const [transcribing, setTranscribing] = useState(false);
+  const transcriptRef = useRef('');
+  useEffect(() => { transcriptRef.current = transcript; }, [transcript]);
 
   const mediaRef = useRef<MediaRecorder | null>(null);
   const recogRef = useRef<any>(null);
@@ -96,7 +100,29 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
     if (mediaRef.current && mediaRef.current.state !== 'inactive') mediaRef.current.stop();
     setRecording(false);
     // blob lands in onstop; give it a tick then emit
-    window.setTimeout(() => onChange(blobRef.current, transcript), 60);
+    window.setTimeout(() => {
+      onChange(blobRef.current, transcriptRef.current);
+      // Browser speech recognition is missing on iPhone and often for
+      // Burmese/Khmer/Lao — fall back to server transcription in the UI language.
+      const blob = blobRef.current;
+      if (!transcriptRef.current.trim() && blob && blob.size > 2048) void serverTranscribe(blob);
+    }, 300);
+  };
+
+  const serverTranscribe = async (blob: Blob) => {
+    setTranscribing(true);
+    try {
+      const mime = (blob.type || 'audio/webm').split(';')[0];
+      const ext = mime.includes('mp4') ? 'mp4' : mime.includes('ogg') ? 'ogg' : mime.includes('wav') ? 'wav' : 'webm';
+      const form = new FormData();
+      form.append('file', new File([blob], `recording.${ext}`, { type: mime }));
+      form.append('lang', lang);
+      const { data, error } = await supabase.functions.invoke('transcribe-audio', { body: form });
+      if (error || data?.error) throw error || new Error(data.error);
+      const text = String(data?.text || '').trim();
+      if (text && !transcriptRef.current.trim()) { setTranscript(text); onChange(blobRef.current, text); }
+    } catch { /* recording is kept; user can type instead */ }
+    finally { setTranscribing(false); }
   };
 
   const reset = () => {
@@ -142,6 +168,7 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
           <p className="text-xs font-medium">
             {recording ? `${t('common.recording')} ${mm}:${ss}` : audioUrl ? t('common.listen') : t('common.record')}
           </p>
+          {transcribing && <p className="text-[11px] text-muted-foreground mt-0.5">{t('voice.transcribing')}</p>}
           {recording && transcript && <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{transcript}</p>}
         </div>
         {audioUrl && !recording && (

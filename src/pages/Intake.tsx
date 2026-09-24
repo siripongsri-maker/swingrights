@@ -470,7 +470,7 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
 /* ----------------- 4. VOICE Q&A (chat style) ----------------- */
 function VoiceStep({ onNext }: { onNext: () => void }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { qIndex, answers, staffObs, profile, audioBlobs, consent, patch } = useIntake();
   const allowServerStt = consent.cb3;
   const [recording, setRecording] = useState(false);
@@ -617,6 +617,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       const mime = (blob.type || 'audio/webm').split(';')[0];
       const ext = mime.includes('mp4') ? 'mp4' : mime.includes('mpeg') ? 'mp3' : mime.includes('wav') ? 'wav' : mime.includes('ogg') ? 'ogg' : 'webm';
       form.append('file', new File([blob], `recording.${ext}`, { type: mime }));
+      form.append('lang', lang);
       const { data, error } = await supabase.functions.invoke('transcribe-audio', { body: form });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
