@@ -45,10 +45,12 @@ function StatsChart() {
   const [stats, setStats] = useState<PublicStats | null>(null);
 
   useEffect(() => {
-    supabase
-      .rpc('track_public_stats' as never)
-      .then(({ data }) => { if (data) setStats(data as unknown as PublicStats); })
-      .catch(() => undefined);
+    void (async () => {
+      try {
+        const { data } = await supabase.rpc('track_public_stats' as never);
+        if (data) setStats(data as unknown as PublicStats);
+      } catch { /* chart is optional */ }
+    })();
   }, []);
 
   const rows = [
