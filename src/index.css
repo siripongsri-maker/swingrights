@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* SWING RIGHTS design system. All colors are semantic HSL tokens. */
+/* SWING RIGHTS design system — magenta, charcoal and aqua. */
 
 @layer base {
   :root {
-    --background: 207 36% 95%;
+    --background: 180 43% 96%;
     --foreground: 60 2% 8%;
     --card: 0 0% 100%;
     --card-foreground: 60 2% 8%;
@@ -14,18 +14,18 @@
     --popover-foreground: 60 2% 8%;
     --primary: 240 5% 17%;
     --primary-foreground: 0 0% 100%;
-    --primary-soft: 220 14% 91%;
+    --primary-soft: 180 17% 91%;
     --primary-deep: 240 6% 7%;
     --primary-glow: 240 5% 24%;
-    --accent: 359 80% 44%;
+    --accent: 315 100% 40%;
     --accent-foreground: 0 0% 100%;
-    --accent-soft: 357 75% 94%;
-    --accent-deep: 358 80% 35%;
-    --highlight: 0 0% 86%;
-    --highlight-soft: 0 34% 85%;
-    --secondary: 208 28% 91%;
+    --accent-soft: 318 72% 93%;
+    --accent-deep: 315 100% 32%;
+    --highlight: 0 1% 83%;
+    --highlight-soft: 313 62% 80%;
+    --secondary: 180 33% 92%;
     --secondary-foreground: 60 2% 8%;
-    --muted: 208 28% 91%;
+    --muted: 180 33% 92%;
     --muted-foreground: 212 7% 38%;
     --destructive: 357 80% 39%;
     --destructive-foreground: 0 0% 100%;
@@ -41,52 +41,54 @@
     --sev-yellow-fg: 36 79% 30%;
     --sev-red-bg: 357 75% 94%;
     --sev-red-fg: 357 80% 39%;
-    --border: 210 19% 85%;
-    --input: 210 19% 85%;
-    --ring: 359 80% 44%;
+    --border: 180 24% 85%;
+    --input: 180 24% 85%;
+    --ring: 315 100% 40%;
     --radius: 1.25rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-deep)));
-    --gradient-soft: linear-gradient(180deg, hsl(var(--card)), hsl(var(--background)));
-    --gradient-dark: linear-gradient(135deg, hsl(var(--primary-deep)), hsl(var(--primary)));
+    --gradient-primary: linear-gradient(hsl(var(--primary)), hsl(var(--primary)));
+    --gradient-soft: linear-gradient(hsl(var(--card)), hsl(var(--card)));
+    --gradient-dark: linear-gradient(hsl(var(--primary-deep)), hsl(var(--primary-deep)));
     --gradient-leaf: linear-gradient(hsl(var(--background)), hsl(var(--background)));
-    --shadow-card: 0 1px 2px hsl(60 2% 8% / 0.04), 0 6px 20px -14px hsl(60 2% 8% / 0.22);
+    --shadow-card: 0 1px 2px hsl(60 2% 8% / 0.04), 0 6px 20px -14px hsl(60 2% 8% / 0.20);
     --shadow-elegant: 0 12px 36px -16px hsl(60 2% 8% / 0.35);
     --sidebar-background: 240 6% 7%;
     --sidebar-foreground: 220 13% 95%;
-    --sidebar-primary: 359 80% 44%;
+    --sidebar-primary: 315 100% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 213 10% 22%;
-    --sidebar-accent-foreground: 220 14% 91%;
+    --sidebar-accent-foreground: 180 17% 91%;
     --sidebar-border: 213 10% 22%;
-    --sidebar-ring: 359 80% 44%;
+    --sidebar-ring: 315 100% 40%;
   }
 
   .dark {
-    --background: 216 14% 7%; --foreground: 220 13% 95%;
-    --card: 214 12% 12%; --card-foreground: 220 13% 95%;
-    --popover: 214 12% 12%; --popover-foreground: 220 13% 95%;
-    --primary: 220 14% 91%; --primary-foreground: 216 14% 7%;
-    --primary-soft: 213 10% 22%; --primary-deep: 0 0% 100%; --primary-glow: 220 14% 80%;
-    --accent: 358 84% 64%; --accent-foreground: 216 14% 7%;
-    --accent-soft: 358 49% 16%; --accent-deep: 358 87% 76%;
-    --highlight: 213 10% 22%; --highlight-soft: 357 36% 26%;
-    --secondary: 210 17% 5%; --secondary-foreground: 220 13% 95%;
-    --muted: 210 17% 5%; --muted-foreground: 210 9% 69%;
-    --destructive: 358 87% 76%; --destructive-foreground: 216 14% 7%;
+    --background: 180 21% 7%; --foreground: 180 24% 96%;
+    --card: 180 16% 12%; --card-foreground: 180 24% 96%;
+    --popover: 180 16% 12%; --popover-foreground: 180 24% 96%;
+    --primary: 180 17% 91%; --primary-foreground: 180 21% 7%;
+    --primary-soft: 180 13% 21%; --primary-deep: 0 0% 100%; --primary-glow: 180 17% 91%;
+    --accent: 315 81% 68%; --accent-foreground: 180 21% 7%;
+    --accent-soft: 317 61% 15%; --accent-deep: 314 82% 78%;
+    --highlight: 180 13% 21%; --highlight-soft: 312 36% 26%;
+    --secondary: 180 23% 5%; --secondary-foreground: 180 24% 96%;
+    --muted: 180 23% 5%; --muted-foreground: 180 9% 68%;
+    --destructive: 358 87% 76%; --destructive-foreground: 180 21% 7%;
     --success: 148 47% 66%; --warning: 40 82% 67%;
     --sev-green-bg: 151 41% 15%; --sev-green-fg: 148 47% 66%;
     --sev-yellow-bg: 42 57% 19%; --sev-yellow-fg: 40 82% 67%;
     --sev-red-bg: 358 49% 16%; --sev-red-fg: 358 87% 76%;
-    --border: 213 12% 19%; --input: 213 12% 19%; --ring: 358 84% 64%;
+    --border: 180 16% 18%; --input: 180 16% 18%; --ring: 315 81% 68%;
   }
 }
 
 @layer base {
   * { @apply border-border; }
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground font-sans antialiased;
     font-feature-settings: "ss01", "cv01";
+    font-size: 15px;
+    line-height: 1.533;
   }
   h1, h2, h3, .font-display { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-spacing: 0; }
   .font-mono, code, .case-code { font-family: 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: 0.04em; }
@@ -101,7 +103,7 @@
   .animate-fade-in { animation: fadeIn 0.35s ease both; }
   .animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
   .hover-lift { @apply transition-all duration-300; }
-  .hover-lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-elegant); }
+  .hover-lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-elegant); }
 }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -111,7 +113,6 @@
 .animate-pulse-ring { animation: pulseRing 1.3s ease-in-out infinite; }
 .animate-floaty { animation: floaty 6s ease-in-out infinite; }
 
-/* Botanical Calm — playful motion set */
 @keyframes pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
 @keyframes drift { 0%,100% { transform: translate(0,0) rotate(0deg); } 33% { transform: translate(12px,-14px) rotate(8deg); } 66% { transform: translate(-8px,-6px) rotate(-6deg); } }
 @keyframes sway { 0%,100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
