@@ -1,4 +1,3 @@
-import { useI18n } from '@/i18n';
 import unaidsImg from '@/assets/brand/unaids-new.png';
 import apcomImg from '@/assets/brand/apcom-new.png';
 import youthLeadImg from '@/assets/brand/youth-lead-new.png';
