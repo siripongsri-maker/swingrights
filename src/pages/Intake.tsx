@@ -617,6 +617,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       const mime = (blob.type || 'audio/webm').split(';')[0];
       const ext = mime.includes('mp4') ? 'mp4' : mime.includes('mpeg') ? 'mp3' : mime.includes('wav') ? 'wav' : mime.includes('ogg') ? 'ogg' : 'webm';
       form.append('file', new File([blob], `recording.${ext}`, { type: mime }));
+      form.append('lang', lang);
       const { data, error } = await supabase.functions.invoke('transcribe-audio', { body: form });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
