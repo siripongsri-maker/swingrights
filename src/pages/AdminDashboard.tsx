@@ -18,7 +18,7 @@ import { useAccess, useRoleLabels } from '@/hooks/useAccess';
 import {
   Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin,
   Search, ChevronLeft, ChevronRight, UserCheck, UserCog, CalendarClock, BellRing, ShieldAlert, Check,
-  MessageCircleQuestion, Send, Building2, Volume2, ChevronDown, Printer, Scale, Share2, HeartHandshake, Flag,
+  MessageCircleQuestion, Send, Building2, Volume2, ChevronDown, Printer, Scale, Share2, HeartHandshake, Flag, History,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { printCaseDocument, docInputFromReport, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
@@ -739,6 +739,9 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
             <p className="text-[11px] text-sidebar-foreground/60">{new Date(c.created_at).toLocaleString('th-TH')}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <Button size="sm" variant="outline" className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80" onClick={() => navigate(`/admin/case/${caseId}/history`)}>
+              <History className="w-4 h-4" /> {t('dash.detail.openHistory')}
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="outline" className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
