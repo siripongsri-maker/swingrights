@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from '@/integrations/supabase/client';
 import { useAccess } from '@/hooks/useAccess';
 import { useI18n } from '@/i18n';
+import { BrandMark } from '@/components/BrandLogo';
 import { LanguageToggle } from '@/components/LanguageToggle';
 
 const ORG_TYPE_KEYS: { v: string; key: string }[] = [
@@ -119,6 +120,7 @@ export default function AdminPartners() {
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
+            <BrandMark className="mb-1 h-7 w-7" />
             <h1 className="font-display font-semibold">{t('partners.header.title')}</h1>
             <p className="text-[11px] text-sidebar-foreground/60">{t('partners.header.subtitle')}</p>
           </div>

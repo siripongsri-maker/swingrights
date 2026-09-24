@@ -28,6 +28,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { CaseReferrals } from '@/components/admin/CaseReferrals';
 import { MapPicker } from '@/components/screening/MapPicker';
 import { DocumentDraftDialog } from '@/components/admin/DocumentDraftDialog';
+import { BrandMark } from '@/components/BrandLogo';
 
 const PAGE_SIZE = 20;
 
@@ -270,7 +271,7 @@ export default function AdminDashboard() {
       <header className="bg-primary-deep text-primary-foreground sticky top-0 z-30 shadow-elegant">
         <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 bg-sidebar-accent rounded-xl flex items-center justify-center"><ShieldCheck className="w-5 h-5" /></div>
+            <BrandMark className="h-10 w-10" />
             <div>
               <p className="font-display font-medium">SWING Admin Dashboard</p>
               <p className="text-[11px] text-sidebar-foreground/60">

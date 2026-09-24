@@ -9,6 +9,7 @@ import { useRoleLabels, ASSIGNABLE_ROLES, type AppRole } from '@/hooks/useAccess
 import { ArrowLeft, Loader2, UserPlus, KeyRound, Ban, RotateCcw, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
+import { BrandMark } from '@/components/BrandLogo';
 import { LanguageToggle } from '@/components/LanguageToggle';
 
 interface StaffUser {
@@ -81,7 +82,7 @@ export default function AdminUsers() {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
+            <BrandMark className="h-9 w-9" />
             <div>
               <p className="font-medium">{t('users.header.title')}</p>
               <p className="text-[11px] text-sidebar-foreground/60">{t('users.header.subtitle')}</p>
