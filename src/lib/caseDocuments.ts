@@ -1,3 +1,4 @@
+import { PRINT_THEME_CSS, PRINT_FONTS_LINK, printCaseCodeCss } from './printTheme';
 // เอกสารนำส่งดำเนินเคส — บันทึกแจ้งความ / บันทึกข้อความ / บันทึกส่งตัว / บันทึกให้การช่วยเหลือ
 // พิมพ์เป็น PDF ผ่านหน้าต่างพิมพ์ของเบราว์เซอร์ และบันทึก log การ export ทุกครั้ง
 import { SEV_LABEL } from '@/lib/screening';
@@ -102,8 +103,8 @@ ul.flat li { margin:2px 0; }
 function openDoc(title: string, bodyHtml: string, d: DocInput, format: string) {
   const html = `<!doctype html><html lang="th"><head><meta charset="utf-8" />
   <title>${esc(title)} ${esc(d.caseCode || '')}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai+Looped:wght@400;600&display=swap" rel="stylesheet">
-  <style>${DOC_CSS}</style></head><body>
+  ${PRINT_FONTS_LINK}
+  <style>${DOC_CSS}${PRINT_THEME_CSS}${printCaseCodeCss(d.caseCode)}</style></head><body>
   <div class="org"><img src="${lockupImg}" alt="SWING RIGHTS" /><div class="name">มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)</div>
   <div class="en">SERVICE WORKERS IN GROUP FOUNDATION — เอกสารลับ สำหรับหน่วยงานที่เกี่ยวข้องเท่านั้น</div></div>
   ${bodyHtml}
