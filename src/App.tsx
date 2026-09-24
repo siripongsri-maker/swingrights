@@ -26,6 +26,7 @@ import NotFound from "./pages/NotFound";
 import ProjectReport from "./pages/ProjectReport";
 import AccessReview from "./pages/AccessReview";
 import MySettings from "./pages/MySettings";
+import CaseHistory from "./pages/CaseHistory";
 import SignIn from "./pages/SignIn";
 import MyAccount from "./pages/MyAccount";
 import Onboarding from "./pages/Onboarding";
