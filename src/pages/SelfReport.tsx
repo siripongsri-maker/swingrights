@@ -388,7 +388,7 @@ export default function SelfReport() {
         initialViolationTypes: types,
       },
       answers: answersArr,
-      extraFacts: `${story}\n${probeDigest}`.trim(),
+      extraFacts: `${story}\n${probeDigest}${otherText.trim() ? `\n${t('report.type.other')}: ${otherText.trim()}` : ''}`.trim(),
       violationDetails: types,
       audioBlobs: [audio, ...PROBE_IDS.map((q) => probeAnswers[q]?.blob ?? null)].filter((b): b is Blob => !!b),
       photos: photos.map((p) => ({ blob: p.blob, previewUrl: p.url, name: p.name })),
@@ -408,7 +408,7 @@ export default function SelfReport() {
       },
       answers: answersArr,
       violation_details: types,
-      extra_facts: `${story}\n${probeDigest}`.trim().slice(0, 5000),
+      extra_facts: `${story}\n${probeDigest}${otherText.trim() ? `\n${t('report.type.other')}: ${otherText.trim()}` : ''}`.trim().slice(0, 5000),
       pii_flag: piiResult === 'send',
       referrals: partners.slice(0, 3).map((p) => ({
         org_name: p.name, phone: p.phone ?? '', note: t('report.partners.noteAuto'),
