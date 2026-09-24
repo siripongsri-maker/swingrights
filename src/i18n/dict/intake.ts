@@ -254,4 +254,9 @@ export const INTAKE_DICT: Record<string, Entry> = {
   'screening.sevFull.green': { th: 'เขียว (ไม่เร่งด่วน)', en: 'Green (not urgent)' },
   'screening.sevFull.yellow': { th: 'เหลือง (ติดตามใกล้ชิด)', en: 'Yellow (monitor closely)' },
   'screening.sevFull.red': { th: 'แดง (ฉุกเฉิน)', en: 'Red (emergency)' },
+  'intake.voice.h1': { th: 'ขั้นตอนเล่าเรื่องด้วยเสียง', en: 'Voice interview step' },
+  'intake.ai.h1': { th: 'ผลวิเคราะห์เบื้องต้นด้วย AI', en: 'AI preliminary analysis' },
+  'intake.sig.h1': { th: 'สรุปและลงนามรับรอง', en: 'Summary and signatures' },
+  'intake.photo.previewAlt': { th: 'รูปประกอบที่แนบ {n}', en: 'Attached photo {n}' },
+  'intake.photo.remove': { th: 'ลบรูปภาพ {n}', en: 'Remove photo {n}' },
 };
