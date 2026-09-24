@@ -1,16 +1,18 @@
+import { forwardRef } from 'react';
 import { Languages, Check } from 'lucide-react';
 import { useI18n, LANGS } from '@/i18n';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
 /** 5-language switcher (ไทย / EN / မြန်မာ / ខ្មែរ / ລາວ). */
-export function LanguageToggle({ className }: { className?: string }) {
+export const LanguageToggle = forwardRef<HTMLButtonElement, { className?: string }>(function LanguageToggle({ className }, ref) {
   const { lang, setLang } = useI18n();
   const current = LANGS.find((l) => l.id === lang);
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
+          ref={ref}
           type="button"
           aria-label="Language / ภาษา"
           className={cn(
@@ -43,4 +45,4 @@ export function LanguageToggle({ className }: { className?: string }) {
       </PopoverContent>
     </Popover>
   );
-}
+});

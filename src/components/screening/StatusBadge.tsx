@@ -3,7 +3,7 @@ import { useI18n } from '@/i18n';
 
 const map: Record<CaseStatus, string> = {
   received: 'bg-primary-soft text-primary',
-  inprogress: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+  inprogress: 'bg-primary-soft text-primary',
   completed: 'bg-sevGreen-bg text-sevGreen-fg',
   cancelled: 'bg-sevRed-bg text-sevRed-fg',
 };
