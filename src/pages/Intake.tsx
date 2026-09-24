@@ -484,6 +484,12 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   const recogRef = useRef<any>(null);
   const tickRef = useRef<number | null>(null);
   const chatRef = useRef<HTMLDivElement>(null);
+  // AI follow-ups asked right after each recording (answered inline, no going back)
+  const [followups, setFollowups] = useState<string[]>([]);
+  const [fuTrigger, setFuTrigger] = useState(0);
+  const [fuThinking, setFuThinking] = useState(false);
+  const baseRef = useRef('');
+  const activeFuRef = useRef<string | null>(null);
 
   const q = QUESTIONS[qIndex];
   const total = QUESTIONS.length;
@@ -494,6 +500,8 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
     setObs(staffObs[qIndex] || '');
     setShowObs(!!staffObs[qIndex]);
     setElapsed(0);
+    setFollowups([]);
+    setFuThinking(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qIndex]);
 
@@ -503,7 +511,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   useEffect(() => {
     const el = chatRef.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-  }, [qIndex, transcribing, showObs]);
+  }, [qIndex, transcribing, showObs, followups.length, fuThinking]);
 
   const stopAll = () => {
     try { mediaRef.current?.state === 'recording' && mediaRef.current.stop(); } catch {}
@@ -512,7 +520,21 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
     if (tickRef.current) { window.clearInterval(tickRef.current); tickRef.current = null; }
   };
 
-  const startRec = async () => {
+  const joinAnswer = (base: string, add: string) => {
+    const a = add.trim();
+    if (!a) return base;
+    const fu = activeFuRef.current;
+    return [base.trim(), fu ? `(${fu}) ${a}` : a].filter(Boolean).join('\n');
+  };
+
+  const askFollowUp = () => {
+    setFuThinking(true);
+    setFuTrigger((n) => n + 1);
+  };
+
+  const startRec = async (fu?: string) => {
+    baseRef.current = transcript;
+    activeFuRef.current = fu ?? null;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       chunksRef.current = [];
@@ -541,7 +563,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         rec.lang = 'th-TH';
         rec.continuous = true;
         rec.interimResults = true;
-        let finalTxt = transcript ? transcript + ' ' : '';
+        let finalTxt = '';
         rec.onresult = (ev: any) => {
           let interim = '';
           for (let i = ev.resultIndex; i < ev.results.length; i++) {
@@ -549,7 +571,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
             if (r.isFinal) finalTxt += r[0].transcript + ' ';
             else interim += r[0].transcript;
           }
-          setTranscript((finalTxt + interim).trim());
+          setTranscript(joinAnswer(baseRef.current, finalTxt + interim));
         };
         rec.onerror = (e: any) => console.warn('Speech recognition error:', e?.error);
         try { rec.start(); recogRef.current = rec; } catch {}
@@ -567,13 +589,14 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
     if (tickRef.current) { window.clearInterval(tickRef.current); tickRef.current = null; }
     if (!allowServerStt) {
       toast.info(t('intake.voice.noConsentRecorded'));
+      window.setTimeout(askFollowUp, 600); // use the live on-device text
     }
   };
 
   // Hybrid STT: server-side transcription produces the authoritative transcript
   // (works on iPhone/Safari where the Web Speech API is unavailable).
   const serverTranscribe = async (blob: Blob) => {
-    if (!allowServerStt || blob.size < 2048) return;
+    if (!allowServerStt || blob.size < 2048) { if (allowServerStt) askFollowUp(); return; }
     setTranscribing(true);
     try {
       const form = new FormData();
@@ -585,7 +608,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       if (data?.error) throw new Error(data.error);
       const text = (data?.text || '').trim();
       if (text) {
-        setTranscript(text);
+        setTranscript(joinAnswer(baseRef.current, text));
         toast.success(t('intake.voice.transcribeSuccess'));
       } else {
         toast.info(t('intake.voice.noSpeechFound'));
@@ -595,10 +618,11 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       toast.error(t('intake.voice.transcribeError'));
     } finally {
       setTranscribing(false);
+      askFollowUp();
     }
   };
 
-  const toggleRec = () => (recording ? stopRec() : startRec());
+  const toggleRec = () => (recording ? stopRec() : startRec(followups.length ? followups[followups.length - 1] : undefined));
 
   const persistCurrent = () => {
     const newAnswers = [...answers];
@@ -691,6 +715,31 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         {/* current question */}
         <QuestionBubble q={q} index={qIndex} current />
 
+        {followups.map((fq, i) => (
+          <div key={i} className="flex gap-2.5 animate-fade-in">
+            <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center shrink-0 shadow-card">
+              <Sparkles className="w-3.5 h-3.5 text-accent-foreground" />
+            </div>
+            <div className="max-w-[88%] bg-card border border-accent/40 rounded-[20px] rounded-tl-lg px-3.5 py-2.5 shadow-card">
+              <span className="text-[9px] font-medium text-accent tracking-widest">{t('followup.aiAsks')}</span>
+              <p className="text-[17px] leading-[26px]">{fq}</p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <SpeakButton text={fq} />
+                {i === followups.length - 1 && !recording && !transcribing && (
+                  <Button size="sm" variant="outline" className="h-8 text-xs rounded-full" onClick={() => void startRec(fq)}>
+                    <Mic className="w-3.5 h-3.5 me-1" /> {t('followup.answerVoice')}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+        {fuThinking && !transcribing && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground ps-10">
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" /> {t('followup.thinking')}
+          </div>
+        )}
+
         {transcribing && (
           <div className="flex justify-end">
             <div className="bg-muted border border-border rounded-2xl rounded-tr-md px-4 py-3 flex items-center gap-2">
@@ -721,6 +770,12 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           className="mt-2"
           text={transcript}
           context={answers.slice(0, qIndex).map((a) => a?.transcript).filter(Boolean).join('\n')}
+          trigger={fuTrigger}
+          onQuestion={(fq, done) => {
+            setFuThinking(false);
+            if (done || !fq) return;
+            setFollowups((prev) => (prev.includes(fq) || prev.length >= 3 ? prev : [...prev, fq]));
+          }}
         />
         {audioBlobs[qIndex] && !recording && (
           <div className="px-1 pt-1.5"><HistoryAudio blob={audioBlobs[qIndex]!} /></div>
