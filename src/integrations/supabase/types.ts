@@ -542,6 +542,83 @@ export type Database = {
         }
         Relationships: []
       }
+      client_cases: {
+        Row: {
+          case_id: string
+          linked_at: string
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          linked_at?: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string
+          linked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_cases_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_profiles: {
+        Row: {
+          address: string | null
+          birthdate: string | null
+          created_at: string
+          emergency_name: string | null
+          emergency_phone: string | null
+          emergency_relation: string | null
+          first_name: string | null
+          gender: string | null
+          id: string
+          last_name: string | null
+          lat: number | null
+          lng: number | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          birthdate?: string | null
+          created_at?: string
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          emergency_relation?: string | null
+          first_name?: string | null
+          gender?: string | null
+          id: string
+          last_name?: string | null
+          lat?: number | null
+          lng?: number | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          birthdate?: string | null
+          created_at?: string
+          emergency_name?: string | null
+          emergency_phone?: string | null
+          emergency_relation?: string | null
+          first_name?: string | null
+          gender?: string | null
+          id?: string
+          last_name?: string | null
+          lat?: number | null
+          lng?: number | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rate_limits: {
         Row: {
           bucket: string
@@ -778,12 +855,22 @@ export type Database = {
         Returns: boolean
       }
       is_active_staff: { Args: { _user_id: string }; Returns: boolean }
+      link_my_cases: { Args: { _codes: string[] }; Returns: number }
       log_case_access: {
         Args: { _action: string; _case_id: string; _detail?: string }
         Returns: undefined
       }
       mask_name: { Args: { _name: string }; Returns: string }
       my_access: { Args: never; Returns: Json }
+      my_cases: {
+        Args: never
+        Returns: {
+          case_code: string
+          created_at: string
+          status: string
+          updated_at: string
+        }[]
+      }
       project_summary: {
         Args: { _branch?: string; _from: string; _to: string }
         Returns: Json

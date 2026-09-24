@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useEffect as useEff2, useState as useSt2 } from 'react';
 import { ShieldCheck, Search, ArrowRight, Lock, HeartHandshake, Sparkles, Users, Eye, MousePointerClick, Scale, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -55,6 +56,12 @@ function getSessionId() {
 
 export default function Landing() {
   const { t } = useI18n();
+  const [signedIn, setSignedIn] = useSt2(false);
+  useEff2(() => {
+    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSignedIn(!!s));
+    return () => sub.subscription.unsubscribe();
+  }, []);
   const [stats, setStats] = useState<SiteStats>({ registered_users: 0, unique_visitors: 0, total_visits: 0 });
   const [rightsSectionIndex, setRightsSectionIndex] = useState(0);
 
@@ -107,6 +114,12 @@ export default function Landing() {
             <LanguageToggle />
             <Link to="/rights" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               {t('rights.nav')}
+            </Link>
+            <Link
+              to={signedIn ? '/me' : '/signin'}
+              className="text-xs font-semibold text-accent hover:underline min-h-11 inline-flex items-center"
+            >
+              {signedIn ? t('cl.nav.account') : t('cl.nav.signin')}
             </Link>
             <Link
               to="/admin/login"
