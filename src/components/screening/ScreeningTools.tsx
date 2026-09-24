@@ -35,7 +35,7 @@ export function summarizeScreening(d: ScreeningDraft): ScreeningResult {
   };
 }
 
-export function ScreeningTools({ value, onChange }: { value: ScreeningDraft; onChange: (v: ScreeningDraft) => void }) {
+export function ScreeningTools({ value, onChange, showMental = true }: { value: ScreeningDraft; onChange: (v: ScreeningDraft) => void; showMental?: boolean }) {
   const { t } = useI18n();
   const q9Total = value.q9.reduce((a, b) => a + b, 0);
   const lvl = q9Level(q9Total);
@@ -52,6 +52,7 @@ export function ScreeningTools({ value, onChange }: { value: ScreeningDraft; onC
 
   return (
     <div className="space-y-4">
+      {showMental ? (<>
       {/* 2Q */}
       <div className="bg-card border border-border rounded-2xl p-4">
         <p className="text-sm font-medium mb-1">{t('tools.q2.title')}</p>
@@ -124,6 +125,9 @@ export function ScreeningTools({ value, onChange }: { value: ScreeningDraft; onC
         </div>
       )}
 
+      </>) : (
+        <p className="text-xs text-muted-foreground bg-muted rounded-lg px-3 py-2">{t('intake.assess.mentalHint')}</p>
+      )}
       {/* NRM */}
       <div className="bg-card border border-border rounded-2xl p-4">
         <p className="text-sm font-medium mb-1">{t('tools.nrm.title')}</p>

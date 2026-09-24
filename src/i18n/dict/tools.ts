@@ -6,7 +6,7 @@ import type { Entry } from '../index';
  */
 export const TOOLS_DICT: Record<string, Entry> = {
   // ---------- 2Q ----------
-  'tools.q2.title': { th: 'แบบคัดกรองโรคซึมเศร้า 2 คำถาม (2Q)', en: 'Depression Screening — 2 Questions (2Q)' },
+  'tools.q2.title': { th: 'แบบคัดกรองโรคซึมเศร้า 2 คำถาม (2Q / PHQ-2)', en: 'Depression Screening — 2 Questions (2Q / PHQ-2)' },
   'tools.q2.subtitle': {
     th: 'กรมสุขภาพจิต · ตอบ "มี" ข้อใดข้อหนึ่ง ให้ทำ 9Q ต่อ',
     en: 'Dept. of Mental Health · If "yes" to either item, proceed to 9Q',
@@ -26,7 +26,7 @@ export const TOOLS_DICT: Record<string, Entry> = {
   },
 
   // ---------- 9Q ----------
-  'tools.q9.title': { th: 'แบบประเมินโรคซึมเศร้า 9 คำถาม (9Q)', en: 'Depression Assessment — 9 Questions (9Q)' },
+  'tools.q9.title': { th: 'แบบประเมินโรคซึมเศร้า 9 คำถาม (9Q / PHQ-9)', en: 'Depression Assessment — 9 Questions (9Q / PHQ-9)' },
   'tools.q9.subtitle': {
     th: 'ใน 2 สัปดาห์ที่ผ่านมา รวมวันนี้ ท่านมีอาการเหล่านี้บ่อยแค่ไหน',
     en: 'Over the past 2 weeks, including today, how often have you been bothered by the following?',
