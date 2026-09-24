@@ -119,7 +119,7 @@ export default function AdminDashboard() {
     qc.invalidateQueries({ queryKey: ['alerts'] });
     qc.invalidateQueries({ queryKey: ['cases'] });
     qc.invalidateQueries({ queryKey: ['stats'] });
-  });
+  }, (id) => setSelectedId(id));
 
   const staffQ = useQuery({
     queryKey: ['staff'],
@@ -328,6 +328,7 @@ export default function AdminDashboard() {
               {alertsQ.data?.map((a) => (
                 <div key={a.id} className="flex items-center gap-2 text-xs bg-card border border-border rounded-lg px-3 py-2">
                   {a.kind === 'suicide_risk' && <ShieldAlert className="w-3.5 h-3.5 text-destructive shrink-0" />}
+                  {a.kind === 'new_case' && <span className="text-[10px] font-medium bg-accent text-accent-foreground px-2 py-0.5 rounded-full shrink-0">{t('dash.alerts.newBadge')}</span>}
                   <span className="font-mono">{a.case_code}</span>
                   <span className="text-muted-foreground">· {a.branch || t('dash.alerts.unspecified')} · {t('dash.alerts.level', { level: a.level })}</span>
                   <span className="text-muted-foreground ml-auto hidden sm:inline">{new Date(a.created_at).toLocaleString('th-TH')}</span>
@@ -891,9 +892,14 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
           <p className="text-xs font-medium text-muted-foreground mb-3">{t('dash.detail.interviewLog')}</p>
           <div className="space-y-3">
+            {(c.answers || []).some((a: any) => a.cat === 'self_followup') && (
+              <p className="text-xs bg-accent/10 text-accent border border-accent/30 rounded-md px-3 py-2">
+                {t('dash.detail.followupCount', { n: (c.answers || []).filter((a: any) => a.cat === 'self_followup').length })}
+              </p>
+            )}
             {(c.answers || []).map((a: any, i: number) => (
-              <div key={i} className="border-b border-border/60 pb-3 last:border-none last:pb-0">
-                <p className="text-[10px] uppercase tracking-wider text-primary mb-1">{a.cat}</p>
+              <div key={i} className={`border-b border-border/60 pb-3 last:border-none last:pb-0 ${a.cat === 'self_followup' ? 'ps-3 border-s-2 border-s-accent' : ''}`}>
+                <p className="text-[10px] uppercase tracking-wider text-primary mb-1">{a.cat === 'self_followup' ? t('dash.detail.followupLabel') : a.cat}</p>
                 <p className="text-xs text-muted-foreground mb-1">{a.question}</p>
                 <p className="text-sm bg-muted/40 border border-border rounded-md p-2">{a.transcript || t('dash.detail.noAnswer')}</p>
                 {audioSigned[i] && <audio src={audioSigned[i]} controls className="w-full mt-2 h-9" />}
