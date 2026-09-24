@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.case_id_for_file(text, text) FROM authenticated;
