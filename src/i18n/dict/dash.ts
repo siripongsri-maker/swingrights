@@ -118,6 +118,11 @@ export const DASH_DICT: Record<string, Entry> = {
   'dash.detail.photoAlt': { th: 'รูปประกอบ {n}', en: 'Photo {n}' },
   'dash.detail.updateStatus': { th: 'อัปเดตสถานะ', en: 'Update status' },
   'dash.detail.notePlaceholder': { th: 'หมายเหตุการอัปเดต (ไม่บังคับ)', en: 'Update note (optional)' },
+  'dash.detail.replyPlaceholder': { th: 'ข้อความถึงผู้แจ้ง เช่น เจ้าหน้าที่รับเรื่องแล้ว จะติดต่อกลับภายในวันนี้', en: 'Message to the reporter, e.g. We received your report and will call you today' },
+  'dash.detail.replyHint': { th: 'ผู้แจ้งจะเห็นข้อความนี้ในหน้า “ติดตามสถานะ” — ห้ามใส่ชื่อจริงหรือเลขบัตร', en: 'The reporter sees this on the “Track status” page — do not include real names or ID numbers' },
+  'dash.detail.sendReply': { th: 'ส่งข้อความถึงผู้แจ้ง', en: 'Send to reporter' },
+  'dash.detail.replySent': { th: 'ส่งข้อความแล้ว ผู้แจ้งจะเห็นในหน้าติดตามสถานะ', en: 'Sent — the reporter will see it on the tracking page' },
+
   'dash.detail.statusUpdateFailed': { th: 'อัปเดตไม่สำเร็จ', en: 'Update failed' },
   'dash.detail.statusUpdateSuccess': { th: 'อัปเดตสถานะแล้ว', en: 'Status updated' },
   'dash.detail.staffSignature': { th: 'ลายเซ็นเจ้าหน้าที่ — {name}', en: 'Staff signature — {name}' },

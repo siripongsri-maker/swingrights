@@ -598,6 +598,16 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
     },
   });
 
+  const [saving, setSaving] = useState(false);
+  const { data: timeline = [] } = useQuery({
+    queryKey: ['case-timeline', caseId],
+    queryFn: async () => {
+      const { data } = await supabase.from('case_timeline').select('status,note,created_at').eq('case_id', caseId).order('created_at', { ascending: false });
+      return (data ?? []) as { status: string; note: string | null; created_at: string }[];
+    },
+  });
+
+
   const { data: partners = [] } = useQuery({
     queryKey: ['case-partners', c?.profile?.province ?? null],
     enabled: !!c,
@@ -667,13 +677,24 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   };
 
   const updateStatus = async (status: CaseStatus) => {
-    const { error } = await supabase.from('cases').update({ status } as never).eq('id', caseId);
-    if (error) { toast.error(t('dash.detail.statusUpdateFailed')); return; }
-    await supabase.from('case_timeline').insert({ case_id: caseId, status, note: note || null } as never);
-    toast.success(t('dash.detail.statusUpdateSuccess'));
-    qc.invalidateQueries({ queryKey: ['case', caseId] });
-    onChanged();
+    const msg = note.trim().slice(0, 1000);
+    if (status === c?.status && !msg) return;
+    setSaving(true);
+    try {
+      if (status !== c?.status) {
+        const { error } = await supabase.from('cases').update({ status } as never).eq('id', caseId);
+        if (error) { toast.error(t('dash.detail.statusUpdateFailed')); return; }
+      }
+      const { error: tErr } = await supabase.from('case_timeline').insert({ case_id: caseId, status, note: msg || null } as never);
+      if (tErr) { toast.error(t('dash.detail.saveFailed')); return; }
+      setNote('');
+      toast.success(status !== c?.status ? t('dash.detail.statusUpdateSuccess') : t('dash.detail.replySent'));
+      qc.invalidateQueries({ queryKey: ['case', caseId] });
+      qc.invalidateQueries({ queryKey: ['case-timeline', caseId] });
+      onChanged();
+    } finally { setSaving(false); }
   };
+
 
   if (isLoading || !c) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
@@ -1005,14 +1026,34 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           <p className="text-xs font-medium text-muted-foreground mb-3">{t('dash.detail.updateStatus')}</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
             {(['received', 'inprogress', 'completed', 'cancelled'] as CaseStatus[]).map((st) => (
-              <button key={st} onClick={() => updateStatus(st)}
-                className={`text-xs py-2 rounded-lg border transition ${c.status === st ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary'}`}>
+              <button key={st} disabled={saving} onClick={() => void updateStatus(st)}
+                className={`text-xs py-2 rounded-lg border transition disabled:opacity-60 ${c.status === st ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary'}`}>
                 {t(`status.${st}`)}
               </button>
             ))}
           </div>
-          <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('dash.detail.notePlaceholder')} className="min-h-[60px]" />
+          <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('dash.detail.replyPlaceholder')} className="min-h-[70px]" maxLength={1000} />
+          <p className="text-[11px] text-muted-foreground mt-1">{t('dash.detail.replyHint')}</p>
+          <div className="flex justify-end mt-2">
+            <Button size="sm" disabled={!note.trim() || saving} onClick={() => void updateStatus(c.status as CaseStatus)}>
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {t('dash.detail.sendReply')}
+            </Button>
+          </div>
+          {timeline.length > 0 && (
+            <ol className="mt-4 space-y-2 border-t border-border pt-3">
+              {timeline.map((it, i) => (
+                <li key={i} className="text-xs flex gap-2">
+                  <StatusBadge value={it.status as CaseStatus} />
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground font-mono text-[10px]">{new Date(it.created_at).toLocaleString('th-TH')}</p>
+                    {it.note && <p className="break-words">{it.note}</p>}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
         </section>
+
 
         {c.signature_staff && (
           <section className="bg-card border border-border rounded-xl p-5 shadow-card">
