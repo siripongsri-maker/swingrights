@@ -22,8 +22,12 @@ export default function SignIn() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { if (s) navigate('/me', { replace: true }); });
-    supabase.auth.getSession().then(({ data }) => { if (data.session) navigate('/me', { replace: true }); });
+    const go = async (userId: string) => {
+      const { data: row } = await supabase.from('client_profiles' as never).select('first_name').eq('id', userId).maybeSingle();
+      navigate((row as { first_name?: string } | null)?.first_name ? '/me' : '/welcome', { replace: true });
+    };
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => { if (s) setTimeout(() => go(s.user.id), 0); });
+    supabase.auth.getSession().then(({ data }) => { if (data.session) go(data.session.user.id); });
     return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
@@ -42,7 +46,7 @@ export default function SignIn() {
         const { error } = await supabase.auth.signInWithPassword({ email: p.data.email, password: p.data.password });
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.auth.signUp({ email: p.data.email, password: p.data.password, options: { emailRedirectTo: window.location.origin + '/me' } });
+        const { data, error } = await supabase.auth.signUp({ email: p.data.email, password: p.data.password, options: { emailRedirectTo: window.location.origin + '/signin' } });
         if (error) throw error;
         if (!data.session) toast.success(t('cl.signin.checkEmail'), { duration: 8000 });
       }
