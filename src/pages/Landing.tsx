@@ -7,10 +7,10 @@ import { Reveal } from '@/components/Reveal';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import heroBotanical from '@/assets/hero-botanical.png';
-import { RIGHTS, RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
+import { RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
 
 const RIGHTS_SECTION_PREVIEW: Record<RightsSectionId, { labelKey: string; icon: typeof ShieldCheck }> = {
-  arrest: { labelKey: 'rights.section.arrest', icon: ShieldCheck },
+  arrest: { labelKey: 'landing.rightsPreview.arrest', icon: ShieldCheck },
   investigation: { labelKey: 'rights.section.investigation', icon: Scale },
   detention: { labelKey: 'rights.section.detention', icon: HeartHandshake },
 };
