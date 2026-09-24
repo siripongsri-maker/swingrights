@@ -258,7 +258,7 @@ export default function SelfReport() {
     }
     if (phoneOverride) setContact(phoneOverride);
     resolveWidget(msgId);
-    push({ role: 'user', text: `${name || t('report.chat.notSpecified')} · ${contact}` });
+    push({ role: 'user', text: `${name || t('report.chat.notSpecified')} · ${phone}` });
     setStage('partners');
     setTyping(true);
     let found: Partner[] = [];
