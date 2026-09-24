@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEffect as useEff2, useState as useSt2 } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { ShieldCheck, Search, ArrowRight, Lock, HeartHandshake, Sparkles, Users, Eye, MousePointerClick, Scale, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';

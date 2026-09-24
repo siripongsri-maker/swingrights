@@ -39,10 +39,10 @@ export default function SignIn() {
     setBusy(true);
     try {
       if (mode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword(p.data);
+        const { error } = await supabase.auth.signInWithPassword({ email: p.data.email, password: p.data.password });
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.auth.signUp({ ...p.data, options: { emailRedirectTo: window.location.origin + '/me' } });
+        const { data, error } = await supabase.auth.signUp({ email: p.data.email, password: p.data.password, options: { emailRedirectTo: window.location.origin + '/me' } });
         if (error) throw error;
         if (!data.session) toast.success(t('cl.signin.checkEmail'), { duration: 8000 });
       }
