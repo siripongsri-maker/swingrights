@@ -189,7 +189,7 @@ export default function Landing() {
                       <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[20px] bg-primary-soft text-foreground sm:h-24 sm:w-24">
                         <FeaturedSectionIcon className="h-10 w-10 sm:h-12 sm:w-12" strokeWidth={2} aria-hidden="true" />
                       </span>
-                      <h2 className="font-display text-2xl font-semibold leading-snug sm:text-3xl">{t(sectionPreview.labelKey)}</h2>
+                      <h2 className="font-subhead text-2xl font-semibold leading-snug sm:text-3xl">{t(sectionPreview.labelKey)}</h2>
                     </div>
                   </div>
                 )}
@@ -204,7 +204,7 @@ export default function Landing() {
 
               <article className="rounded-[20px] bg-primary-deep text-primary-foreground p-6 shadow-card hover-lift">
                 <ShieldCheck className="w-5 h-5 mb-4 opacity-90" />
-                <h2 className="font-display text-xl font-medium mb-1.5">{t('landing.card2.title')}</h2>
+                <h2 className="font-subhead text-xl font-medium mb-1.5">{t('landing.card2.title')}</h2>
                 <p className="text-sm opacity-85 leading-relaxed">
                   {t('landing.card2.body')}
                 </p>
@@ -249,7 +249,7 @@ export default function Landing() {
               </article>
 
               <article className="sm:col-span-2 rounded-[20px] bg-card border border-border p-6 shadow-card hover-lift">
-                <h2 className="font-display text-lg font-semibold text-foreground mb-1.5">{t('landing.help.title')}</h2>
+                <h2 className="font-subhead text-lg font-semibold text-foreground mb-1.5">{t('landing.help.title')}</h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {t('landing.help.body')} <a href="tel:1323" className="font-medium underline underline-offset-4">1323</a> · {t('landing.help.hours')}
                 </p>

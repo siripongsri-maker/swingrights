@@ -78,7 +78,7 @@ export default function Rights() {
             const items = RIGHTS.filter((r) => r.section === section);
             return (
               <section key={section} className="mb-10">
-                <h2 className="font-display text-xl font-medium mb-4 flex items-center gap-2.5">
+                <h2 className="font-subhead text-xl font-medium mb-4 flex items-center gap-2.5">
                   <span className="w-1.5 h-6 rounded-full bg-primary/70" aria-hidden />
                   {t(SECTION_LABEL_KEYS[section])}
                 </h2>
