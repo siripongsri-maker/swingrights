@@ -40,8 +40,8 @@ async function uploadOne(kind: 'audio' | 'photo', file: { blob: Blob; name: stri
   return json.path;
 }
 
-type Stage = 'consent' | 'story' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'done';
-type Widget = 'consent' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'success';
+type Stage = 'consent' | 'about' | 'story' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'done';
+type Widget = 'consent' | 'about' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'success';
 
 interface ChatMsg {
   id: number;
@@ -96,6 +96,10 @@ export default function SelfReport() {
   const [caseCode, setCaseCode] = useState<string | null>(null);
   const [signedIn, setSignedIn] = useState(false);
   const [profilePhone, setProfilePhone] = useState<string | null>(null);
+  // ---- basic profile questions (nationality / gender / age — all optional) ----
+  const [nationality, setNationality] = useState('');
+  const [gender, setGender] = useState('');
+  const [age, setAge] = useState('');
 
   // ---- probe state (sequential probing questions) ----
   const [probeIdx, setProbeIdx] = useState(0);
@@ -186,12 +190,17 @@ export default function SelfReport() {
       setSignedIn(true);
       const { data: prof } = await supabase
         .from('client_profiles')
-        .select('first_name,last_name,phone')
+        .select('first_name,last_name,phone,gender,birthdate')
         .eq('id', uid)
         .maybeSingle();
       if (prof?.phone) setProfilePhone(prof.phone);
       const fullName = [prof?.first_name, prof?.last_name].filter(Boolean).join(' ').trim();
       if (fullName) setName((prev) => prev || fullName);
+      if (prof?.gender) setGender((prev) => prev || String(prof.gender));
+      if (prof?.birthdate) {
+        const years = Math.floor((Date.now() - new Date(prof.birthdate).getTime()) / (365.25 * 24 * 3600 * 1000));
+        if (years > 0 && years < 120) setAge((prev) => prev || String(years));
+      }
     })();
   }, []);
 
@@ -203,6 +212,17 @@ export default function SelfReport() {
   const agreeConsent = (msgId: number) => {
     resolveWidget(msgId);
     push({ role: 'user', text: t('report.chat.agreed') });
+    setStage('about');
+    botSay({ text: `${t('report.about.title')} — ${t('report.about.hint')}`, widget: 'about' });
+  };
+
+  const finishAbout = (msgId: number) => {
+    resolveWidget(msgId);
+    const parts: string[] = [];
+    if (nationality.trim()) parts.push(`${t('report.about.nationality')}: ${nationality.trim()}`);
+    if (gender) parts.push(`${t('report.about.gender')}: ${t(`report.about.gender.${gender}`)}`);
+    if (age.trim()) parts.push(`${t('report.about.age')}: ${age.trim()}`);
+    push({ role: 'user', text: parts.length ? parts.join(' · ') : t('report.chat.skipped') });
     setStage('story');
     botSay({ text: `${t('report.story.title')} — ${t('report.story.hint')}` });
   };
@@ -388,7 +408,7 @@ export default function SelfReport() {
       profile: {
         branch: area.province || '', province: area.province, district: area.district,
         subdistrict: area.subdistrict, zip: area.zip ?? '', geo: area.geo ?? null,
-        kp: '', gender: '', dob: '', age: '', nationality: '', incidentPlace: '',
+        kp: '', gender, dob: '', age: age.trim(), nationality: nationality.trim(), incidentPlace: '',
         initialViolationTypes: types,
       },
       answers: answersArr,
@@ -407,7 +427,8 @@ export default function SelfReport() {
         branch: area.province || 'ไม่ระบุ',
         province: area.province, district: area.district, subdistrict: area.subdistrict,
         zip: area.zip ?? '', geo: area.geo ?? null,
-        kp: '', incidentPlace: area.province ? formatArea(area.province, area.district, area.subdistrict, lang) : '',
+        kp: '', gender, age: age.trim(), nationality: nationality.trim(),
+        incidentPlace: area.province ? formatArea(area.province, area.district, area.subdistrict, lang) : '',
         initialViolationTypes: types,
       },
       answers: answersArr,
@@ -507,6 +528,41 @@ export default function SelfReport() {
             <Button size="sm" className="w-full mt-2.5 rounded-xl" onClick={() => agreeConsent(m.id)}>
               <Check className="w-4 h-4 me-1" /> {t('report.chat.start')}
             </Button>
+          )}
+
+          {m.widget === 'about' && !m.resolved && (
+            <div className="mt-2.5 space-y-2.5">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{t('report.about.nationality')}</p>
+                <Input value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder={t('report.about.nationalityPh')} maxLength={60} className="bg-card h-9 text-sm" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{t('report.about.gender')}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(['male', 'female', 'diverse', 'unspecified'] as const).map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setGender((prev) => (prev === g ? '' : g))}
+                      aria-pressed={gender === g}
+                      className={cn(
+                        'rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95',
+                        gender === g ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card text-muted-foreground',
+                      )}
+                    >
+                      {t(`report.about.gender.${g}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{t('report.about.age')}</p>
+                <Input value={age} onChange={(e) => setAge(e.target.value.replace(/[^\d]/g, '').slice(0, 3))} placeholder={t('report.about.agePh')} inputMode="numeric" className="bg-card h-9 text-sm w-28" />
+              </div>
+              <Button size="sm" className="w-full rounded-xl" onClick={() => finishAbout(m.id)}>
+                {nationality.trim() || gender || age.trim() ? t('report.chat.confirm') : t('report.chat.skip')}
+              </Button>
+            </div>
           )}
 
           {m.widget === 'types' && !m.resolved && (
@@ -808,4 +864,4 @@ export default function SelfReport() {
   );
 }
 
-const STAGE_ORDER: Stage[] = ['consent', 'story', 'types', 'probe', 'photos', 'area', 'contact'];
+const STAGE_ORDER: Stage[] = ['consent', 'about', 'story', 'types', 'probe', 'photos', 'area', 'contact'];
