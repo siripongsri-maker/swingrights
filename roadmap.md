@@ -7,4 +7,4 @@
 - [x] Add public Know Your Rights page and landing-page rights preview carousel
 - [x] Apply the uploaded SWING RIGHTS design system across all screens without changing behavior
 - [x] Translate the full /admin case-management workflow into Burmese, Khmer, and Lao
-- [ ] Show de-identified nationality, gender, age, and 2Q/9Q/PHQ scores on referral links in five languages
+- [x] Show de-identified nationality, gender, age, and 2Q/9Q/PHQ scores on referral links in five languages
