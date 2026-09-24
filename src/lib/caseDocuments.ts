@@ -68,7 +68,7 @@ const DOC_CSS = `
 * { box-sizing: border-box; }
 body { font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',system-ui,sans-serif; color:#161615; margin:0; padding:28px; line-height:1.65; font-size:13px; }
 .org { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:4px; }
-.org img { display:block; width:170px; object-fit:contain; margin:0; }
+.org img { display:block; width:210px; object-fit:contain; margin:0; }
 .org .headtext { flex:1; min-width:0; padding-top:4px; }
 .org .name { font-size:15px; font-weight:600; }
 .org .en { font-size:10px; color:#5b6168; letter-spacing:0; }

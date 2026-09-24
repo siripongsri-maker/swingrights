@@ -24,7 +24,7 @@ const BASE_CSS = `
 @page { size: A4; margin: 15mm; }
 * { box-sizing: border-box; }
 body { font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',system-ui,sans-serif; color:#161615; margin:0; padding:24px; line-height:1.55; }
-.brand { display:block; float:right; width:190px; object-fit:contain; margin:0 0 8px 14px; }
+.brand { display:block; float:right; width:230px; object-fit:contain; margin:0 0 8px 14px; }
 h1 { margin:0 0 2px; font-family:'IBM Plex Sans Thai Looped','Noto Sans Thai',sans-serif; font-size:20px; color:#2a2a2e; }
 .sub { color:#5b6168; font-size:11px; margin-bottom:14px; }
 .section { margin-bottom:14px; break-inside:avoid; }
