@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { useI18n } from '@/i18n';
+import { Button } from '@/components/ui/button';
 
 interface Props { children: ReactNode }
 interface State { hasError: boolean }
@@ -13,12 +14,13 @@ function ErrorFallback() {
         <p className="text-xs text-muted-foreground leading-relaxed mb-4">
           {t('guard.errorBody')}
         </p>
-        <button
+        <Button
+          variant="action"
           onClick={() => window.location.reload()}
-          className="w-full h-11 rounded-xl bg-gradient-primary text-primary-foreground text-sm"
+          className="w-full text-sm"
         >
           {t('guard.reload')}
-        </button>
+        </Button>
       </div>
     </div>
   );
