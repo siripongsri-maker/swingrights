@@ -112,9 +112,6 @@ export default function Landing() {
           <BrandHeader />
           <div className="flex items-center gap-3">
             <LanguageToggle />
-            <Link to="/rights" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-              {t('rights.nav')}
-            </Link>
             <Link
               to={signedIn ? '/me' : '/signin'}
               className="text-xs font-semibold text-accent hover:underline min-h-11 inline-flex items-center"
