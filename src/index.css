@@ -197,3 +197,10 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
 @media (prefers-reduced-motion: reduce) {
   .sw-wave-bar { animation: none; }
 }
+
+/* phones: fewer, thicker wave bars so the background reads like desktop */
+@media (max-width: 639px) {
+  .sw-wave { gap: 0.4rem; padding: 0 0.4rem; opacity: 0.18; }
+  .sw-wave-bar { max-width: 22px; }
+  .sw-wave-bar:nth-child(even) { display: none; }
+}
