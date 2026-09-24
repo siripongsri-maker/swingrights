@@ -40,10 +40,12 @@ export function VoiceRecorder({ onChange, className, compact }: Props) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       chunksRef.current = [];
-      const mr = new MediaRecorder(stream);
+      const mime = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'].find((m) => MediaRecorder.isTypeSupported?.(m));
+      // Small voice format: Opus ~24 kbps (≈180 KB/min), AAC fallback on older iPhones
+      const mr = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), audioBitsPerSecond: 24000 });
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       mr.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || 'audio/webm' });
+        const blob = new Blob(chunksRef.current, { type: (mr.mimeType || chunksRef.current[0]?.type || 'audio/webm').split(';')[0] });
         blobRef.current = blob;
         setAudioUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(blob); });
         stream.getTracks().forEach((tr) => tr.stop());

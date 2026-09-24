@@ -39,7 +39,14 @@ type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'ref
 
 
 export default function Intake() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const [sync, setSync] = useState<'idle' | 'saving' | 'saved' | 'offline'>('idle');
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    const on = () => setRetry((n) => n + 1);
+    window.addEventListener('online', on);
+    return () => window.removeEventListener('online', on);
+  }, []);
   const navigate = useNavigate();
   const intake = useIntake();
   const [step, setStep] = useState<Step>('consent');
@@ -98,7 +105,7 @@ export default function Intake() {
     }, 3000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [intake.answers, intake.audioBlobs, intake.photos, intake.staffObs, intake.extraFacts, intake.caseCode]);
+  }, [intake.answers, intake.audioBlobs, intake.photos, intake.staffObs, intake.extraFacts, intake.caseCode, retry]);
 
   const resumeDraft = async () => {
     const [audio, photos] = await Promise.all([loadAudioBlobs(), loadPhotoBlobs()]);
