@@ -1,17 +1,17 @@
 import type { Entry } from '../index';
 
 export const DOCUMENTS_DICT: Record<string, Entry> = {
-  'docs.complaint.title': { th: 'แบบร่างบันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์', en: 'Draft information record for filing a complaint', my: 'တိုင်ကြားရန် အချက်အလက်မှတ်တမ်းမူကြမ်း', km: 'សេចក្តីព្រាងកំណត់ត្រាព័ត៌មានសម្រាប់ដាក់ពាក្យបណ្តឹង', lo: 'ຮ່າງບັນທຶກຂໍ້ມູນເພື່ອປະກອບການຮ້ອງທຸກ' },
-  'docs.statement.title': { th: 'แบบร่างบันทึกการให้ข้อมูลของผู้รับบริการ', en: 'Draft service-user statement record', my: 'ဝန်ဆောင်မှုလက်ခံသူ၏ ထွက်ဆိုချက်မှတ်တမ်းမူကြမ်း', km: 'សេចក្តីព្រាងកំណត់ត្រាព័ត៌មានរបស់អ្នកទទួលសេវា', lo: 'ຮ່າງບັນທຶກການໃຫ້ຂໍ້ມູນຂອງຜູ້ຮັບບໍລິການ' },
-  'docs.referral.title': { th: 'แบบร่างหนังสือส่งต่อเพื่อรับการช่วยเหลือ', en: 'Draft assistance referral letter', my: 'အကူအညီရယူရန် လွှဲပြောင်းစာမူကြမ်း', km: 'សេចក្តីព្រាងលិខិតបញ្ជូនដើម្បីទទួលជំនួយ', lo: 'ຮ່າງໜັງສືສົ່ງຕໍ່ເພື່ອຮັບການຊ່ວຍເຫຼືອ' },
-  'docs.assistance.title': { th: 'แบบร่างบันทึกการให้ความช่วยเหลือผู้รับบริการ', en: 'Draft service-user assistance record', my: 'ဝန်ဆောင်မှုလက်ခံသူအား ကူညီပေးမှုမှတ်တမ်းမူကြမ်း', km: 'សេចក្តីព្រាងកំណត់ត្រាជំនួយអ្នកទទួលសេវា', lo: 'ຮ່າງບັນທຶກການຊ່ວຍເຫຼືອຜູ້ຮັບບໍລິການ' },
+  'docs.complaint.title': { th: 'บันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์', en: 'information record for filing a complaint', my: 'တိုင်ကြားရန် အချက်အလက်မှတ်တမ်းမူကြမ်း', km: 'សេចក្តីព្រាងកំណត់ត្រាព័ត៌មានសម្រាប់ដាក់ពាក្យបណ្តឹង', lo: 'ຮ່າງບັນທຶກຂໍ້ມູນເພື່ອປະກອບການຮ້ອງທຸກ' },
+  'docs.statement.title': { th: 'บันทึกการให้ข้อมูลของผู้รับบริการ', en: 'service-user statement record', my: 'ဝန်ဆောင်မှုလက်ခံသူ၏ ထွက်ဆိုချက်မှတ်တမ်းမူကြမ်း', km: 'សេចក្តីព្រាងកំណត់ត្រាព័ត៌មានរបស់អ្នកទទួលសេវា', lo: 'ຮ່າງບັນທຶກການໃຫ້ຂໍ້ມູນຂອງຜູ້ຮັບບໍລິການ' },
+  'docs.referral.title': { th: 'หนังสือส่งต่อเพื่อรับการช่วยเหลือ', en: 'assistance referral letter', my: 'အကူအညီရယူရန် လွှဲပြောင်းစာမူကြမ်း', km: 'សេចក្តីព្រាងលិខិតបញ្ជូនដើម្បីទទួលជំនួយ', lo: 'ຮ່າງໜັງສືສົ່ງຕໍ່ເພື່ອຮັບການຊ່ວຍເຫຼືອ' },
+  'docs.assistance.title': { th: 'บันทึกการให้ความช่วยเหลือผู้รับบริการ', en: 'service-user assistance record', my: 'ဝန်ဆောင်မှုလက်ခံသူအား ကူညီပေးမှုမှတ်တမ်းမူကြမ်း', km: 'សេចក្តីព្រាងកំណត់ត្រាជំនួយអ្នកទទួលសេវា', lo: 'ຮ່າງບັນທຶກການຊ່ວຍເຫຼືອຜູ້ຮັບບໍລິການ' },
   'docs.review.title': { th: 'ตรวจร่างเอกสารจาก AI', en: 'Review AI document draft' },
   'docs.review.description': { th: 'ตรวจสอบและแก้ไขทุกหัวข้อก่อนยืนยัน ระบบจะไม่พิมพ์ Transcript เป็นเนื้อหาหลัก', en: 'Review and edit every section before confirming. The transcript will not be printed as the main content.' },
   'docs.review.disclaimer': { th: 'AI ใช้ช่วยเรียบเรียงเท่านั้น ห้ามยืนยันหากมีข้อเท็จจริงที่ไม่ตรงกับคำให้ข้อมูล', en: 'AI only assists with drafting. Do not confirm if any fact differs from the information provided.' },
   'docs.review.generating': { th: 'กำลังเรียบเรียงข้อมูลตามแบบฟอร์ม…', en: 'Drafting content for this form…' },
   'docs.review.generateFailed': { th: 'สร้างร่างเอกสารไม่สำเร็จ', en: 'Could not create the document draft' },
   'docs.review.saveFailed': { th: 'บันทึกร่างที่ตรวจแล้วไม่สำเร็จ', en: 'Could not save the reviewed draft' },
-  'docs.review.saved': { th: 'ยืนยันร่างและเปิดหน้าพิมพ์แล้ว', en: 'Draft confirmed and print view opened' },
+  'docs.review.saved': { th: 'ยืนยันร่างและเปิดหน้าพิมพ์แล้ว', en: 'confirmed and print view opened' },
   'docs.review.regenerate': { th: 'สร้างร่างใหม่', en: 'Create new draft' },
   'docs.review.confirmPrint': { th: 'ยืนยันและพิมพ์', en: 'Confirm and print' },
   'docs.review.cancel': { th: 'ยกเลิก', en: 'Cancel' },
