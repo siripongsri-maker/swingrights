@@ -74,20 +74,20 @@ export default function AdminUsers() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="bg-gradient-dark text-white">
+      <header className="bg-primary-deep text-primary-foreground">
         <div className="max-w-5xl mx-auto px-5 py-4 flex items-center gap-3">
           <Button size="sm" variant="outline" onClick={() => navigate('/admin')}
-            className="bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white">
+            className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80">
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5" />
             <div>
               <p className="font-medium">{t('users.header.title')}</p>
-              <p className="text-[11px] text-white/60">{t('users.header.subtitle')}</p>
+              <p className="text-[11px] text-sidebar-foreground/60">{t('users.header.subtitle')}</p>
             </div>
           </div>
-          <LanguageToggle className="ml-auto bg-white/5 border-white/20 text-white/80 hover:text-white" />
+          <LanguageToggle className="ml-auto border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-foreground" />
         </div>
       </header>
 

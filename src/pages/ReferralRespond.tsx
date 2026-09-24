@@ -36,7 +36,7 @@ export default function ReferralRespond() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-leaf grain px-4 py-8">
+    <div className="min-h-screen bg-background px-4 py-8">
       <div className="max-w-md mx-auto">
         <div className="flex justify-end mb-4"><LanguageToggle /></div>
         <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
@@ -68,7 +68,7 @@ export default function ReferralRespond() {
           {state === 'ready' && (
             <div className="grid grid-cols-2 gap-3">
               <Button variant="outline" disabled={busy} onClick={() => void respond('decline')}><X className="w-4 h-4" /> {t('ref.page.decline')}</Button>
-              <Button disabled={busy} onClick={() => void respond('accept')}>{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} {t('ref.page.accept')}</Button>
+               <Button variant="action" disabled={busy} onClick={() => void respond('accept')}>{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} {t('ref.page.accept')}</Button>
             </div>
           )}
           {state === 'accepted' && <p className="text-sm text-primary">{t('ref.page.accepted')}</p>}

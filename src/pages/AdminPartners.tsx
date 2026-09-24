@@ -112,20 +112,20 @@ export default function AdminPartners() {
   const typeLabel = (v: string) => ORG_TYPES.find((o) => o.v === v)?.label ?? v;
 
   return (
-    <div className="min-h-screen bg-gradient-leaf grain">
-      <header className="bg-gradient-dark text-white sticky top-0 z-30 shadow-elegant">
+    <div className="min-h-screen bg-background">
+      <header className="bg-primary-deep text-primary-foreground sticky top-0 z-30 shadow-elegant">
         <div className="max-w-4xl mx-auto px-5 py-4 flex items-center gap-3">
-          <Link to="/admin" className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition">
+          <Link to="/admin" className="w-10 h-10 rounded-full bg-sidebar-accent hover:bg-sidebar-accent/80 flex items-center justify-center transition">
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
             <h1 className="font-display font-semibold">{t('partners.header.title')}</h1>
-            <p className="text-[11px] text-white/60">{t('partners.header.subtitle')}</p>
+            <p className="text-[11px] text-sidebar-foreground/60">{t('partners.header.subtitle')}</p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
-            <LanguageToggle className="ml-auto bg-white/5 border-white/20 text-white/80 hover:text-white" />
+            <LanguageToggle className="ml-auto border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-foreground" />
             <DialogTrigger asChild>
-              <Button size="sm"><Plus className="w-4 h-4 mr-1" /> {t('partners.add')}</Button>
+              <Button size="sm" variant="action"><Plus className="w-4 h-4 mr-1" /> {t('partners.add')}</Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{t('partners.add.title')}</DialogTitle></DialogHeader>

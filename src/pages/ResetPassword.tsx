@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
+import { BrandMark } from '@/components/BrandLogo';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -36,12 +37,10 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-soft flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-elegant p-6">
         <div className="text-center mb-5">
-          <div className="w-12 h-12 rounded-xl bg-gradient-primary mx-auto flex items-center justify-center shadow-elegant mb-3">
-            <KeyRound className="w-6 h-6 text-primary-foreground" />
-          </div>
+          <BrandMark className="mx-auto mb-3 h-12 w-12" />
           <h1 className="text-xl font-medium">{t('reset.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('reset.subtitle')}</p>
         </div>
@@ -60,7 +59,7 @@ export default function ResetPassword() {
               <Label className="text-xs text-muted-foreground mb-1.5 block">{t('reset.confirmPassword')}</Label>
               <Input value={pw2} onChange={(e) => setPw2(e.target.value)} type="password" autoComplete="new-password" />
             </div>
-            <Button onClick={submit} disabled={saving} className="w-full h-11 rounded-xl bg-gradient-primary">
+            <Button variant="action" onClick={submit} disabled={saving} className="w-full">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('reset.save')}
             </Button>
           </>

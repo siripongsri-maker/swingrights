@@ -58,7 +58,7 @@ export default function AccessReview() {
   const inactive = (r: Row) => !r.last_activity || Date.now() - new Date(r.last_activity).getTime() > 30 * DAY;
 
   return (
-    <div className="min-h-screen bg-gradient-leaf">
+    <div className="min-h-screen bg-background">
       <main className="max-w-5xl mx-auto px-4 py-6 space-y-4">
         <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
           <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" /> {t('areview.back')}
@@ -76,12 +76,12 @@ export default function AccessReview() {
             <span className="text-muted-foreground">{t('areview.month')}</span>
             <Input type="month" value={month} max={thisMonth()} onChange={(e) => e.target.value && setMonth(e.target.value)} />
           </label>
-          <Button onClick={markReviewed} disabled={saving || rowsQ.isLoading}>
+           <Button variant="action" onClick={markReviewed} disabled={saving || rowsQ.isLoading}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} {t('areview.markReviewed')}
           </Button>
         </div>
 
-        <div className="bg-card border border-border rounded-xl shadow-card overflow-x-auto">
+        <div className="bg-card border border-border rounded-[20px] shadow-card overflow-x-auto">
           {rowsQ.isLoading ? (
             <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
           ) : rowsQ.error ? (

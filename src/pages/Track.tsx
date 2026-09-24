@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Loader2, Search, MessageCircleQuestion, Send } from 'lucide-react';
+import { Loader2, Search, MessageCircleQuestion, Send, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
 import { StatusBadge } from '@/components/screening/StatusBadge';
@@ -12,7 +12,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
 import type { CaseStatus } from '@/lib/screening';
-import plantImg from '@/assets/track-plant.png';
 
 const formatDateTime = (iso: string) => {
   try {
@@ -133,7 +132,7 @@ export default function Track() {
             onKeyDown={(e) => e.key === 'Enter' && void lookup(code)}
             aria-label={t('track.title')}
           />
-          <Button onClick={() => void lookup(code)} disabled={loading || !code.trim()}>
+          <Button variant="action" onClick={() => void lookup(code)} disabled={loading || !code.trim()}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
           </Button>
         </div>
@@ -142,7 +141,9 @@ export default function Track() {
 
         {!data && !error && !loading && (
           <div className="py-4 text-center animate-fade-in">
-            <img src={plantImg} alt="" width={1024} height={1024} loading="lazy" className="w-28 h-28 mx-auto animate-sway" />
+            <span className="mx-auto flex h-28 w-28 items-center justify-center rounded-[20px] border border-border bg-primary-soft text-foreground">
+              <ShieldCheck className="h-12 w-12" />
+            </span>
           </div>
         )}
 
