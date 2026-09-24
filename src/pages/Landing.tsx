@@ -334,7 +334,7 @@ export default function Landing() {
         © มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) · <Link to="/privacy" className="hover:text-foreground">{t('landing.footer')}</Link>
       </footer>
 
-      <nav className="sm:hidden relative z-10 shrink-0 border-t border-border bg-card/95 backdrop-blur grid grid-cols-4 pb-[env(safe-area-inset-bottom)]" aria-label={t('home.menu')}>
+      <nav className="sw-bottom-nav sm:hidden relative z-10 shrink-0 border-t border-border bg-card/95 backdrop-blur grid grid-cols-4 pb-[env(safe-area-inset-bottom)]" aria-label={t('home.menu')}>
         {([['home', Home], ['rights', Scale], ['help', Phone], ['more', MoreHorizontal]] as const).map(([k, Icon]) => (
           <button key={k} type="button" onClick={() => setTab(k)} aria-current={tab === k ? 'page' : undefined}
             className={cn('flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors', tab === k ? 'text-primary' : 'text-muted-foreground')}>

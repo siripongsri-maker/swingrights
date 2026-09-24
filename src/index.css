@@ -204,3 +204,6 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
   .sw-wave-bar { max-width: 22px; }
   .sw-wave-bar:nth-child(even) { display: none; }
 }
+@media (max-width: 639px) {
+  body:has(.sw-bottom-nav) .sw-quick-exit { bottom: calc(5rem + env(safe-area-inset-bottom)); }
+}
