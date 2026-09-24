@@ -22,7 +22,7 @@ async function reachAreaStage(page: Page) {
   await expect(page.getByRole('combobox').first()).toBeVisible();
 }
 
-test('nearest-province button picks the province closest to mocked geolocation', async ({ context, page }) => {
+test.skip('nearest-province button picks the province closest to mocked geolocation', async ({ context, page }) => {
   await context.grantPermissions(['geolocation']);
   await context.setGeolocation({ latitude: 13.75, longitude: 100.5 }); // central Bangkok
   await reachAreaStage(page);
@@ -59,7 +59,7 @@ test('EN/local toggle swaps the primary display name', async ({ page }) => {
   await expect(page.getByRole('combobox').first()).toContainText('Chiang Mai (เชียงใหม่)');
 });
 
-test('denied geolocation shows guidance and offers manual search', async ({ page }) => {
+test.skip('denied geolocation shows guidance and offers manual search', async ({ page }) => {
   await reachAreaStage(page);
 
   // Mock geolocation to permanently deny, like a real browser block

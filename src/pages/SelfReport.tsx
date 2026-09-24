@@ -223,13 +223,14 @@ export default function SelfReport() {
     const hasArea = !skip && area.province;
     push({ role: 'user', text: hasArea ? formatArea(area.province, area.district, area.subdistrict, lang) : t('report.chat.skipped') });
     setStage('contact');
-    botSay({ text: `${t('report.contact.title')} (${t('common.optional')}) — ${t('report.contact.hint')}`, widget: 'contact' });
+    botSay({ text: `${t('report.contact.title')} — ${t('report.contact.hint')}`, widget: 'contact' });
   };
 
-  // ---- referral partners: show where this case will be connected ----
+  // ---- referral partners: matched for staff only; reporter sees next steps ----
   const startPartners = async (msgId: number) => {
+    if (!phoneOk) { toast.error(t('report.contact.phoneInvalid')); return; }
     resolveWidget(msgId);
-    push({ role: 'user', text: name || contact ? `${name || t('report.chat.notSpecified')} · ${contact || t('report.chat.notSpecified')}` : t('report.chat.skipped') });
+    push({ role: 'user', text: `${name || t('report.chat.notSpecified')} · ${contact}` });
     setStage('partners');
     setTyping(true);
     let found: Partner[] = [];
@@ -249,10 +250,7 @@ export default function SelfReport() {
     }
     setPartners(found);
     setTyping(false);
-    botSay({
-      text: found.length ? t('report.partners.title') : t('report.partners.none'),
-      widget: 'partners',
-    }, 200);
+    botSay({ text: t('report.partners.title'), widget: 'partners' }, 200);
   };
 
   // ---- photos ----
@@ -382,6 +380,8 @@ export default function SelfReport() {
   };
 
   const canSendStory = !!(audio || draftText.trim() || transcript.trim());
+  const phoneDigits = contact.replace(/[^\d]/g, '');
+  const phoneOk = /^\+?[\d\s\-()]+$/.test(contact.trim()) && phoneDigits.length >= 9 && phoneDigits.length <= 15;
   const currentProbeId: ProbeId = PROBE_IDS[Math.min(probeIdx, PROBE_IDS.length - 1)];
   const answeredProbeCount = PROBE_IDS.filter((q) => probeAnswers[q]?.text).length;
 
@@ -527,8 +527,13 @@ export default function SelfReport() {
           {m.widget === 'contact' && !m.resolved && (
             <div className="mt-2.5 space-y-2">
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('report.contact.name')} maxLength={120} className="bg-card h-9 text-sm" />
-              <Input value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t('report.contact.phone')} maxLength={120} className="bg-card h-9 text-sm" />
-              <Button size="sm" className="w-full rounded-xl" disabled={submitting} onClick={() => void startPartners(m.id)}>
+              <Input
+                value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t('report.contact.phone')}
+                type="tel" inputMode="tel" autoComplete="tel" required aria-required="true" aria-invalid={!!contact && !phoneOk}
+                maxLength={20} className="bg-card h-9 text-sm"
+              />
+              {contact && !phoneOk && <p className="text-[11px] text-destructive">{t('report.contact.phoneInvalid')}</p>}
+              <Button size="sm" className="w-full rounded-xl" disabled={submitting || !phoneOk} onClick={() => void startPartners(m.id)}>
                 {t('report.chat.confirm')}
               </Button>
             </div>
@@ -536,28 +541,6 @@ export default function SelfReport() {
 
           {m.widget === 'partners' && !m.resolved && (
             <div className="mt-2.5 space-y-2">
-              {partners.length > 0 && (
-                <div className="space-y-1.5">
-                  {partners.map((p) => (
-                    <div key={p.id} className="rounded-xl border border-border bg-card px-3 py-2 text-xs space-y-0.5">
-                      <p className="font-semibold flex items-center gap-1.5">
-                        <Building2 className="w-3.5 h-3.5 text-primary shrink-0" /> {p.name}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-muted-foreground">
-                        <span>{t(`report.partners.orgType.${p.org_type ?? 'other'}`)}</span>
-                        {(p.district || p.province) && (
-                          <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{[p.district, p.province].filter(Boolean).join(' ')}</span>
-                        )}
-                        {p.phone && (
-                          <a href={`tel:${p.phone}`} className="flex items-center gap-0.5 text-primary font-medium">
-                            <Phone className="w-3 h-3" />{p.phone}
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
               <Button size="sm" className="w-full rounded-xl" disabled={submitting} onClick={() => void submit(m.id)}>
                 {submitting ? <><Loader2 className="w-3.5 h-3.5 me-1 animate-spin" />{t('report.submitting')}</> : t('report.submit')}
               </Button>
@@ -585,9 +568,7 @@ export default function SelfReport() {
                 <p>💬 {t('report.success.answered', { n: answeredProbeCount })}</p>
                 {safetyRisk && <p className="text-destructive font-medium">{t('report.success.urgent')}</p>}
                 <p className="pt-1 mt-1 border-t border-border font-medium">{t('report.success.forward')}</p>
-                {partners.length ? partners.slice(0, 3).map((p) => (
-                  <p key={p.id}>→ {p.name}{p.phone ? ` (${p.phone})` : ''}</p>
-                )) : <p>→ {t('report.success.forwardNone')}</p>}
+                <p>→ {t('report.partners.title')}</p>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
               <div className="grid gap-1.5">
