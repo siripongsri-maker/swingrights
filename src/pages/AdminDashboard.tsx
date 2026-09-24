@@ -292,6 +292,10 @@ export default function AdminDashboard() {
                 </Button>
               </>
             )}
+            <Button onClick={() => navigate('/admin/settings')} size="sm" variant="outline"
+              className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
+              <UserCheck className="w-4 h-4" /> <span className="hidden sm:inline">{t('prof.nav')}</span>
+            </Button>
             {access.canManage && (
               <Button onClick={() => navigate('/admin/access-review')} size="sm" variant="outline"
                 className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
