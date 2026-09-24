@@ -37,7 +37,7 @@ export const PRIVACY_DICT: Record<string, Entry> = {
   'privacy.s5.title': { th: '5. การใช้ AI', en: '5. Use of AI' },
   'privacy.s5.p1.pre': { th: 'ระบบใช้ AI ช่วยถอดเสียงและสรุปความเสี่ยงเบื้องต้น ข้อมูลจะถูก', en: 'The system uses AI to assist with transcription and preliminary risk summarisation. Data is' },
   'privacy.s5.p1.strong': { th: 'ลบข้อมูลระบุตัวตนออกก่อนส่งประมวลผลทุกครั้ง', en: 'de-identified before every processing request' },
-  'privacy.s5.p1.post': { th: 'ไม่มีการนำข้อมูลไปฝึกโมเดล และผลลัพธ์ของ AI เป็นเพียงข้อเสนอแนะ — การตัดสินใจทั้งหมดทำโดยเจ้าหน้าที่', en: 'No data is used to train models, and AI output is only a suggestion — all decisions are made by staff.' },
+  'privacy.s5.p1.post': { th: 'การประมวลผลด้วย AI กระทำภายในหน่วยงานเท่านั้น ข้อมูลจะไม่ถูกนำออกนอกหน่วยงาน ไม่ถูกนำไปฝึกสอนโมเดล และไม่ถูกใช้เพื่อการอื่นใดนอกเหนือจากวัตถุประสงค์ที่แจ้งไว้ตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 ผลลัพธ์ของ AI เป็นเพียงข้อเสนอแนะ — การตัดสินใจทั้งหมดทำโดยเจ้าหน้าที่', en: 'AI processing is performed within the organisation only. Data never leaves the organisation, is never used to train models, and is never used for any purpose beyond those stated under the PDPA (Personal Data Protection Act B.E. 2562). AI output is only a suggestion — all decisions are made by staff.' },
 
   'privacy.s6.title': { th: '6. ผู้ที่เข้าถึงข้อมูลได้', en: '6. Who Can Access the Data' },
   'privacy.s6.li1': { th: 'ผู้ดูแลระบบ / หัวหน้างาน: เข้าถึงเคสทั้งหมดเท่าที่จำเป็นต่อการกำกับดูแล', en: 'Administrators / supervisors: access all cases as necessary for oversight' },
