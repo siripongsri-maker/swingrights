@@ -5,7 +5,7 @@
 import { corsHeaders, rateLimit, tooMany, scrubText } from "../_shared/guard.ts";
 import { parseBody, z } from "../_shared/schemas.ts";
 
-const SLOTS = ["what", "when", "where", "who", "harm", "evidence", "reported", "help"] as const;
+const SLOTS = ["what", "when", "where", "who", "harm", "evidence", "reported", "help", "nrm"] as const;
 
 const bodySchema = z.object({
   text: z.string().max(8000),
@@ -31,16 +31,25 @@ Then read the LATEST answer carefully and write ONE short, warm, non-judgemental
 - If details conflict or are unclear, gently ask them to clarify that point.
 - Otherwise ask about the most important missing item (priority order as listed), connected to the current form question when given.
 - Never repeat a question listed as already asked.
-Rules: never ask for real names, national ID, passport, visa, work permit or immigration status; never blame; use "you"; max 25 words; simple words. If everything is covered and nothing is vague, next_question is an empty string.`;
+TRAFFICKING CHECK (NRM form แบบ คก.1 — Thai National Referral Mechanism screening):
+If the story suggests possible human trafficking or forced labour/services (e.g. recruited by an agent/broker or online with false promises, moved/transported, debt for travel or fees, documents or phone taken, not free to leave, locked in, watched/tracked, threats (incl. threat to call police), forced to see clients or do work not agreed, no pay/withheld pay, no days off, excessive hours, moved between venues, controlled housing, drugs used to control, tattoos/branding by exploiter, under 18), set trafficking_suspected=true and, when the core facts are already clear, use next_slot="nrm" and ask ONE question from the NRM indicators below that is NOT yet answered, choosing the one most relevant to what the person said and phrasing it around their own situation (not as a checklist):
+- Recruitment & travel: how they were recruited (online/agent/other); who paid travel and whether they owe a debt and how much; whether destination or job matched what was promised; whether they were held somewhere waiting to be passed on; food/water or contact with family restricted during travel.
+- Control: someone controlling/watching/tracking them; free to leave or refuse; phone or personal documents taken or held by someone else (ask only "was it taken / who holds it", never the document number or immigration status); threatened (incl. with arrest/police); debt used to bind them.
+- Work conditions: forced to do work/services not agreed; work differs from agreement; pay withheld or cut; excessive hours, no days off; unfair contract or contract not in their language; employer decides housing, travel and work; moved between venues; crowded/unsanitary or no housing.
+- Harm & health: injuries not treated; drugs used to make them work; marks/tattoos of ownership.
+- Children (if person may be under 18): travelling without parent/guardian, cannot contact parents, working in unsuitable/dangerous places.
+Ask gently and trauma-informed; stop NRM questions if the person seems distressed or says they do not want to answer.
+Rules: never ask for real names, national ID, passport, visa, work permit or immigration status; never blame; use "you"; max 30 words; simple words. If everything is covered and nothing is vague, next_question is an empty string.`;
 
 const schema = {
   type: "object",
   additionalProperties: false,
-  required: ["covered", "next_slot", "next_question"],
+  required: ["covered", "next_slot", "next_question", "trafficking_suspected"],
   properties: {
     covered: { type: "array", items: { type: "string", enum: [...SLOTS] } },
     next_slot: { type: "string", enum: [...SLOTS, "none"] },
     next_question: { type: "string" },
+    trafficking_suspected: { type: "boolean" },
   },
 };
 
@@ -106,6 +115,7 @@ Deno.serve(async (req) => {
       covered: Array.isArray(parsed.covered) ? parsed.covered : [],
       next_slot: parsed.next_slot ?? "none",
       next_question: String(parsed.next_question ?? "").slice(0, 300),
+      trafficking_suspected: parsed.trafficking_suspected === true,
     });
   } catch (e) {
     console.error("followup error", e instanceof Error ? e.message : "unknown");
