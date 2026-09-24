@@ -710,11 +710,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      can_access_case_file: {
+        Args: { _bucket: string; _name: string; _user_id: string }
+        Returns: boolean
+      }
       can_edit_case: {
         Args: { _case_id: string; _user_id: string }
         Returns: boolean
       }
       can_manage: { Args: { _user_id: string }; Returns: boolean }
+      case_id_for_file: {
+        Args: { _bucket: string; _name: string }
+        Returns: string
+      }
       check_rate_limit: {
         Args: {
           _bucket: string

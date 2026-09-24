@@ -34,6 +34,7 @@ interface TrackData {
   cancelled: boolean;
   created_at: string;
   timeline: { status: string; note: string | null; created_at: string }[];
+  files?: { audio: string[]; photos: string[] };
   questions: { id: string; question: string; created_at: string; answer_text: string | null; answered_at: string | null }[];
 }
 
@@ -160,6 +161,25 @@ export default function Track() {
             </div>
             {data.cancelled && (
               <p className="text-xs text-center text-muted-foreground">{t('track.cancelled')}</p>
+            )}
+
+            {data.files && (data.files.audio.length > 0 || data.files.photos.length > 0) && (
+              <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                <h2 className="font-display font-semibold text-sm">{t('track.files.title')}</h2>
+                {data.files.audio.map((u, i) => (
+                  <audio key={u} controls preload="none" src={u} className="w-full" aria-label={t('track.files.clip', { n: i + 1 })} />
+                ))}
+                {data.files.photos.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {data.files.photos.map((u, i) => (
+                      <a key={u} href={u} target="_blank" rel="noreferrer noopener">
+                        <img src={u} alt={t('track.files.photo', { n: i + 1 })} className="aspect-square w-full object-cover rounded-xl" loading="lazy" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">{t('track.files.note')}</p>
+              </div>
             )}
 
             {data.questions.length > 0 && (
