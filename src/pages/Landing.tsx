@@ -126,7 +126,7 @@ export default function Landing() {
               <span className="inline-flex items-center gap-1.5 bg-card border border-border text-foreground text-[10px] font-semibold px-3.5 py-1.5 rounded-full mb-5">
                 <Sparkles className="w-3 h-3" /> {t('landing.badge')}
               </span>
-              <h1 className="font-display text-4xl sm:text-[3.25rem] font-medium leading-[1.1] text-balance mb-4">
+              <h1 className="font-display text-4xl sm:text-[2.75rem] font-bold leading-[1.1] text-balance mb-4">
                 {t('landing.title1')}<br />
                  <span>{t('landing.title2')}</span>
               </h1>
@@ -202,7 +202,7 @@ export default function Landing() {
                 </div>
               </article>
 
-              <article className="rounded-[20px] bg-primary text-primary-foreground p-6 shadow-card hover-lift">
+              <article className="rounded-[20px] bg-primary-deep text-primary-foreground p-6 shadow-card hover-lift">
                 <ShieldCheck className="w-5 h-5 mb-4 opacity-90" />
                 <h2 className="font-display text-xl font-medium mb-1.5">{t('landing.card2.title')}</h2>
                 <p className="text-sm opacity-85 leading-relaxed">

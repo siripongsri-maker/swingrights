@@ -1,5 +1,5 @@
-import markImg from '@/assets/brand/sr-mark.png';
-import lockupImg from '@/assets/brand/sr-logo.png';
+import markImg from '@/assets/brand/swing-rights-mark.png';
+import lockupImg from '@/assets/brand/swing-rights-lockup.png';
 import { cn } from '@/lib/utils';
 
 export function BrandMark({ className }: { className?: string }) {
@@ -9,8 +9,8 @@ export function BrandMark({ className }: { className?: string }) {
 export function BrandWordmark({ className }: { className?: string }) {
   return (
     <span className={cn('font-display text-sm font-semibold text-foreground sm:text-base', className)}>
-      <span className="font-semibold">SWING</span>{' '}
-      <span className="relative font-bold after:absolute after:inset-x-0 after:-bottom-1 after:h-[3px] after:rounded-full after:bg-accent">RIGHTS</span>
+      <span className="font-bold">SWING</span>{' '}
+      <span className="relative font-medium after:absolute after:inset-x-0 after:-bottom-1 after:h-[3px] after:rounded-full after:bg-accent">RIGHTS</span>
     </span>
   );
 }

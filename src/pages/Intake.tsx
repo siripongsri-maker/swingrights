@@ -1079,10 +1079,10 @@ function AIStep({ onNext }: { onNext: () => void }) {
   const fillCls = r.riskLevel === 'low' ? 'bg-success' : r.riskLevel === 'medium' ? 'bg-warning' : 'bg-destructive';
   const tagCls: Record<string, string> = {
     physical: 'bg-destructive/10 text-destructive',
-    sexual: 'bg-pink-100 text-pink-800',
-    psychological: 'bg-amber-100 text-amber-800',
-    economic: 'bg-blue-100 text-blue-800',
-    legal: 'bg-emerald-100 text-emerald-800',
+    sexual: 'bg-accent-soft text-accent-deep',
+    psychological: 'bg-sevYellow-bg text-sevYellow-fg',
+    economic: 'bg-primary-soft text-primary',
+    legal: 'bg-sevGreen-bg text-sevGreen-fg',
     discrimination: 'bg-primary-soft text-primary',
   };
 

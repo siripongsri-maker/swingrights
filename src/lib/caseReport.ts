@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { STATUS_LABEL, SEV_LABEL, type CaseStatus } from '@/lib/screening';
 import { q9Level } from '@/lib/screeningTools';
 import { toast } from 'sonner';
+import lockupImg from '@/assets/brand/swing-rights-lockup.png';
 
 const esc = (v: unknown) =>
   String(v ?? '-').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
@@ -21,22 +22,23 @@ export async function logExport(params: { case_id?: string | null; case_code?: s
 const BASE_CSS = `
 @page { size: A4; margin: 15mm; }
 * { box-sizing: border-box; }
-body { font-family: 'Sarabun','Noto Sans Thai',-apple-system,system-ui,sans-serif; color:#111; margin:0; padding:24px; line-height:1.55; }
-h1 { margin:0 0 2px; font-size:20px; color:#5b2bca; }
-.sub { color:#666; font-size:11px; margin-bottom:14px; }
+body { font-family:'IBM Plex Sans Thai','Noto Sans Thai',system-ui,sans-serif; color:#161615; margin:0; padding:24px; line-height:1.55; }
+.brand { display:block; width:128px; max-height:110px; object-fit:contain; margin:0 0 10px; }
+h1 { margin:0 0 2px; font-family:'Bai Jamjuree','Noto Sans Thai',sans-serif; font-size:20px; color:#2a2a2e; }
+.sub { color:#5b6168; font-size:11px; margin-bottom:14px; }
 .section { margin-bottom:14px; break-inside:avoid; }
-.section h2 { font-size:12px; color:#fff; background:#5b2bca; margin:0 0 8px; padding:4px 8px; border-radius:4px; }
+.section h2 { font-family:'Bai Jamjuree','Noto Sans Thai',sans-serif; font-size:12px; color:#fff; background:#2a2a2e; margin:0 0 8px; padding:5px 8px; border-radius:4px; }
 table { width:100%; border-collapse:collapse; font-size:11px; }
-th, td { border:1px solid #ddd; padding:5px 7px; text-align:left; vertical-align:top; }
-th { background:#f7f3ff; color:#5b2bca; font-weight:600; width:26%; }
-.qa { border:1px solid #eee; border-radius:6px; padding:8px; margin-bottom:6px; font-size:11px; break-inside:avoid; }
-.qa .q { color:#666; }
+th, td { border:1px solid #d0e2e2; padding:5px 7px; text-align:left; vertical-align:top; }
+th { background:#e3f1f1; color:#2a2a2e; font-weight:600; width:26%; }
+.qa { border:1px solid #d0e2e2; border-radius:6px; padding:8px; margin-bottom:6px; font-size:11px; break-inside:avoid; }
+.qa .q { color:#5b6168; }
 .qa .a { margin-top:3px; }
 .note { font-size:10px; color:#7a5c00; background:#fff8e1; border:1px solid #ffe08a; border-radius:6px; padding:8px; }
 .sig { display:flex; gap:24px; margin-top:8px; }
-.sig div { flex:1; text-align:center; font-size:10px; color:#666; }
+.sig div { flex:1; text-align:center; font-size:10px; color:#5b6168; }
 .sig img { max-height:60px; display:block; margin:0 auto 4px; }
-.footer { margin-top:20px; font-size:9.5px; color:#888; text-align:center; border-top:1px solid #eee; padding-top:8px; }
+.footer { margin-top:20px; font-size:9.5px; color:#5b6168; text-align:center; border-top:1px solid #d0e2e2; padding-top:8px; }
 @media print { body { padding:0; } }
 `;
 
@@ -82,8 +84,9 @@ export function printCaseReport(c: CaseReportData) {
 
   const html = `<!doctype html><html lang="th"><head><meta charset="utf-8" />
   <title>SWING Case Report ${esc(c.case_code)}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
   <style>${BASE_CSS}</style></head><body>
+  <img class="brand" src="${lockupImg}" alt="SWING RIGHTS" />
   <h1>SWING Foundation — รายงานเคส (เอกสารส่งต่อ)</h1>
   <div class="sub">รหัสเคส <strong>${esc(c.case_code)}</strong> · รับเรื่อง ${new Date(c.created_at).toLocaleString('th-TH')} · ออกเอกสาร ${new Date().toLocaleString('th-TH')}</div>
 
