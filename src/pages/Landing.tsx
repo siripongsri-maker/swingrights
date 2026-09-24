@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Mic, Search, ArrowRight, Lock, Leaf, HeartHandshake, Sparkles, Users, Eye, MousePointerClick, Scale, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Mic, Search, ArrowRight, Lock, HeartHandshake, Sparkles, Users, Eye, MousePointerClick, Scale, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Reveal } from '@/components/Reveal';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
-import heroBotanical from '@/assets/hero-botanical.png';
 import { RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
+import { BrandHeader, BrandLockup } from '@/components/BrandLogo';
+import { PartnerBar } from '@/components/PartnerBar';
 
 const RIGHTS_SECTION_PREVIEW: Record<RightsSectionId, { labelKey: string; icon: typeof ShieldCheck }> = {
   arrest: { labelKey: 'landing.rightsPreview.arrest', icon: ShieldCheck },
@@ -98,22 +99,9 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="relative overflow-hidden bg-gradient-leaf grain">
-        <div className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-primary/10 blur-3xl animate-floaty" />
-        <div className="pointer-events-none absolute top-40 -left-20 w-72 h-72 rounded-full bg-primary-soft/60 blur-3xl animate-floaty" style={{ animationDelay: '1.5s' }} />
-
-        {/* Drifting leaves — ambient botanical motion */}
-        <Leaf className="pointer-events-none absolute top-28 left-[7%] w-5 h-5 text-primary/25 animate-drift" aria-hidden />
-        <Leaf className="pointer-events-none absolute top-[52%] right-[5%] w-4 h-4 text-primary/20 animate-drift" style={{ animationDelay: '2.2s' }} aria-hidden />
-        <Leaf className="pointer-events-none absolute bottom-40 left-[14%] w-6 h-6 text-primary/15 animate-drift" style={{ animationDelay: '4.4s' }} aria-hidden />
-
+      <div className="relative overflow-hidden bg-background">
         <header className="relative max-w-5xl mx-auto px-5 pt-7 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-elegant">
-              <Leaf className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-display font-medium tracking-tight">{t('app.name')}</span>
-          </div>
+          <BrandHeader />
           <div className="flex items-center gap-3">
             <LanguageToggle />
             <Link to="/rights" className="text-xs text-muted-foreground hover:text-primary transition-colors">
@@ -134,12 +122,13 @@ export default function Landing() {
         <main className="relative max-w-5xl mx-auto px-5 pt-10 sm:pt-14 pb-16">
           <div className="grid sm:grid-cols-[1.15fr_0.85fr] items-center gap-6 sm:gap-10 animate-slide-up">
             <div className="text-center sm:text-start">
-              <span className="inline-flex items-center gap-1.5 bg-card/80 backdrop-blur border border-border text-primary text-[10px] font-medium tracking-[0.16em] px-3.5 py-1.5 rounded-full mb-5">
+              <BrandLockup className="mx-auto mb-7 sm:mx-0" />
+              <span className="inline-flex items-center gap-1.5 bg-card border border-border text-foreground text-[10px] font-semibold px-3.5 py-1.5 rounded-full mb-5">
                 <Sparkles className="w-3 h-3" /> {t('landing.badge')}
               </span>
               <h1 className="font-display text-4xl sm:text-[3.25rem] font-medium leading-[1.1] text-balance mb-4">
                 {t('landing.title1')}<br />
-                <span className="text-primary">{t('landing.title2')}</span>
+                 <span>{t('landing.title2')}</span>
               </h1>
               <p className="text-base text-muted-foreground max-w-lg mx-auto sm:mx-0 mb-8 text-balance leading-relaxed">
                 {t('landing.subtitle')}
@@ -147,18 +136,18 @@ export default function Landing() {
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center sm:justify-start">
                 <Link to="/report">
-                  <Button size="lg" className="h-13 px-7 py-6 rounded-full bg-gradient-primary shadow-elegant hover-lift text-base w-full sm:w-auto">
+                  <Button size="lg" variant="action" className="px-7 shadow-elegant text-base w-full sm:w-auto">
                     <HeartHandshake className="w-4 h-4" /> {t('landing.cta.report')} <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
                   </Button>
                 </Link>
                 <Link to="/track">
-                  <Button size="lg" variant="outline" className="h-13 px-7 py-6 rounded-full bg-card/70 backdrop-blur hover-lift text-base w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="px-7 bg-card text-base w-full sm:w-auto">
                     <Search className="w-4 h-4" /> {t('landing.cta.track')}
                   </Button>
                 </Link>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-4 justify-center sm:justify-start">
-                <Link to="/intake" className="inline-flex items-center gap-1.5 text-sm text-primary underline underline-offset-4 hover:text-primary/80 transition">
+                <Link to="/intake" className="inline-flex min-h-10 items-center gap-1.5 text-sm text-foreground underline underline-offset-4 hover:text-muted-foreground transition">
                   <Mic className="w-4 h-4" /> {t('landing.cta.start')} ({t('nav.staff')})
                 </Link>
                 <Link to="/rights">
@@ -169,22 +158,17 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="relative mx-auto w-52 sm:w-full max-w-[19rem]">
-              <div className="absolute inset-6 rounded-full bg-primary-soft/50 blur-2xl" aria-hidden />
-              <img
-                src={heroBotanical}
-                alt="ภาพประกอบมือประคองต้นกล้า — การดูแลและเยียวยา"
-                width={1024}
-                height={1024}
-                className="relative w-full animate-floaty drop-shadow-xl"
-              />
+            <div className="mx-auto flex w-full max-w-[19rem] items-end justify-center gap-1" aria-hidden>
+              {[9, 15, 24, 38, 56, 76, 52, 32, 19, 12].map((height, index) => (
+                <span key={index} className={index === 5 ? 'w-1 rounded-full bg-highlight-soft' : 'w-1 rounded-full bg-highlight'} style={{ height }} />
+              ))}
             </div>
           </div>
 
           {/* Bento grid — revealed on scroll */}
           <Reveal>
             <section className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-14 stagger">
-              <article className="sm:col-span-2 relative overflow-hidden rounded-[1.75rem] bg-card border border-border p-6 shadow-card" aria-roledescription="carousel" aria-label={t('landing.rightsPreview.title')}>
+              <article className="sm:col-span-2 relative overflow-hidden rounded-[20px] bg-card border border-border p-6 shadow-card" aria-roledescription="carousel" aria-label={t('landing.rightsPreview.title')}>
                 <div className="flex items-start justify-between gap-4 mb-5">
                   <div>
                     <p className="text-xs font-medium text-primary mb-1">{t('rights.nav')}</p>
@@ -202,7 +186,7 @@ export default function Landing() {
                 {featuredSection && sectionPreview && FeaturedSectionIcon && (
                   <div className="min-h-[9.5rem]" aria-live="polite" aria-atomic="true">
                     <div className="flex items-center gap-5">
-                      <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.5rem] bg-primary-soft text-primary shadow-sm ring-1 ring-primary/10 sm:h-24 sm:w-24">
+                      <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[20px] bg-primary-soft text-foreground sm:h-24 sm:w-24">
                         <FeaturedSectionIcon className="h-10 w-10 sm:h-12 sm:w-12" strokeWidth={2} aria-hidden="true" />
                       </span>
                       <h2 className="font-display text-2xl font-semibold leading-snug sm:text-3xl">{t(sectionPreview.labelKey)}</h2>
@@ -212,13 +196,13 @@ export default function Landing() {
 
                 <div className="flex items-center justify-between gap-4 mt-3">
                   <span className="text-xs text-muted-foreground tabular-nums">{rightsSectionIndex + 1} / {RIGHTS_SECTIONS.length}</span>
-                  <Link to="/rights" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                   <Link to="/rights" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-foreground hover:text-muted-foreground transition-colors">
                     {t('landing.rightsPreview.all')} <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
                   </Link>
                 </div>
               </article>
 
-              <article className="rounded-[1.75rem] bg-primary text-primary-foreground p-6 shadow-elegant hover-lift">
+              <article className="rounded-[20px] bg-primary text-primary-foreground p-6 shadow-card hover-lift">
                 <ShieldCheck className="w-5 h-5 mb-4 opacity-90" />
                 <h2 className="font-display text-xl font-medium mb-1.5">{t('landing.card2.title')}</h2>
                 <p className="text-sm opacity-85 leading-relaxed">
@@ -226,7 +210,7 @@ export default function Landing() {
                 </p>
               </article>
 
-              <article className="rounded-[1.75rem] bg-card border border-border p-5 shadow-card hover-lift">
+              <article className="rounded-[20px] bg-card border border-border p-5 shadow-card hover-lift">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
@@ -264,9 +248,9 @@ export default function Landing() {
                 </div>
               </article>
 
-              <article className="sm:col-span-2 rounded-[1.75rem] bg-accent border border-border p-6 shadow-card hover-lift">
-                <h2 className="font-display text-lg font-medium text-accent-foreground mb-1.5">{t('landing.help.title')}</h2>
-                <p className="text-sm text-accent-foreground/80 leading-relaxed">
+              <article className="sm:col-span-2 rounded-[20px] bg-card border border-border p-6 shadow-card hover-lift">
+                <h2 className="font-display text-lg font-semibold text-foreground mb-1.5">{t('landing.help.title')}</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">
                   {t('landing.help.body')} <a href="tel:1323" className="font-medium underline underline-offset-4">1323</a> · {t('landing.help.hours')}
                 </p>
               </article>
@@ -276,7 +260,8 @@ export default function Landing() {
       </div>
 
       <footer className="max-w-5xl mx-auto px-5 py-8 text-center text-xs text-muted-foreground">
-        © SWING Foundation · <Link to="/privacy" className="hover:text-primary">{t('landing.footer')}</Link> · <Link to="/recover" className="hover:text-primary">กู้เคสค้างในเครื่อง</Link>
+        <PartnerBar className="mb-6 text-start" />
+        © SWING Foundation · <Link to="/privacy" className="hover:text-foreground">{t('landing.footer')}</Link> · <Link to="/recover" className="hover:text-foreground">{t('landing.footer.recover')}</Link>
       </footer>
     </div>
   );

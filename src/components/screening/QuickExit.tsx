@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { LogOut } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { clearDraft } from '@/lib/draft';
 import { clearAllLocalCases } from '@/lib/localCases';
 import { useI18n } from '@/i18n';
@@ -37,14 +38,14 @@ export function QuickExit({ wipeDraft = true }: { wipeDraft?: boolean }) {
   }, [wipeDraft]);
 
   return (
-    <button
+    <Button
       type="button"
       onClick={() => void escape(wipeDraft)}
       aria-label={t('guard.quickExitAria')}
-      className="fixed bottom-4 end-4 z-50 flex items-center gap-1.5 rounded-full bg-destructive px-4 py-2.5 text-xs font-medium text-destructive-foreground shadow-elegant transition hover:opacity-90 active:scale-95"
+      className="fixed bottom-4 end-4 z-50 h-12 rounded-full border border-accent/20 bg-accent-soft px-4 text-sm text-accent-deep shadow-elegant hover:bg-accent-soft/80 active:scale-95"
     >
-      <LogOut className="h-4 w-4" />
+      <X className="h-4 w-4" />
       {t('guard.quickExit')}
-    </button>
+    </Button>
   );
 }

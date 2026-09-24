@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Building2, Check, Copy, Leaf, Loader2, MapPin, Paperclip, Phone, SendHorizonal, X } from 'lucide-react';
-import bloomImg from '@/assets/bloom.png';
+import { ArrowLeft, Building2, Check, Copy, Loader2, MapPin, Paperclip, Phone, SendHorizonal, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -17,6 +16,8 @@ import { stripImageMetadata } from '@/lib/exif';
 import { saveLocalCase, deleteLocalCase } from '@/lib/localCases';
 import { cn } from '@/lib/utils';
 import { PiiHint, usePiiGuard } from '@/lib/piiGuard';
+import { BrandMark } from '@/components/BrandLogo';
+import { PartnerBar } from '@/components/PartnerBar';
 
 const MEDIA_FN = 'upload-case-media';
 
@@ -391,13 +392,13 @@ export default function SelfReport() {
       <div key={m.id} className={cn('flex items-end gap-2 animate-fade-in', isBot ? '' : 'flex-row-reverse')}>
         {isBot && (
           <span className="w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0 mb-0.5">
-            <Leaf className="w-3.5 h-3.5" />
+            <BrandMark className="h-5 w-5" />
           </span>
         )}
         <div
           className={cn(
             'max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm',
-            isBot ? 'bg-muted/70 text-foreground rounded-es-md' : 'bg-primary text-primary-foreground rounded-ee-md',
+            isBot ? 'bg-card border border-border text-foreground rounded-es-lg' : 'bg-primary-soft text-foreground rounded-ee-lg',
           )}
         >
           {m.text && (
@@ -565,7 +566,7 @@ export default function SelfReport() {
 
           {m.widget === 'success' && caseCode && (
             <div className="mt-3 space-y-3 text-center">
-              <img src={bloomImg} alt="" width={1024} height={1024} loading="lazy" className="w-20 h-20 mx-auto animate-pop" />
+              <BrandMark className="mx-auto h-20 w-20" />
               <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3">
                 <p className="text-[11px] text-muted-foreground mb-1">{t('report.success.code')}</p>
                 <p className="font-mono text-lg font-bold tracking-widest text-primary">{caseCode}</p>
@@ -593,6 +594,7 @@ export default function SelfReport() {
                 <Button asChild size="sm" className="rounded-xl"><Link to={`/track?code=${caseCode}`}>{t('report.success.track')}</Link></Button>
                 <Button asChild size="sm" variant="outline" className="rounded-xl"><Link to="/report" onClick={() => window.location.reload()}>{t('report.success.new')}</Link></Button>
               </div>
+              <PartnerBar className="mt-4 text-start" />
             </div>
           )}
         </div>
@@ -618,7 +620,7 @@ export default function SelfReport() {
           {typing && (
             <div className="flex items-end gap-2 animate-fade-in">
               <span className="w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0">
-                <Leaf className="w-3.5 h-3.5" />
+                <BrandMark className="h-5 w-5" />
               </span>
               <span className="rounded-2xl rounded-es-md bg-muted/70 px-4 py-3 flex gap-1">
                 {[0, 1, 2].map((i) => (

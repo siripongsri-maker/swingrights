@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useI18n } from '@/i18n';
+import { PartnerBar } from '@/components/PartnerBar';
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -17,16 +18,16 @@ export default function Privacy() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <header className="bg-gradient-dark text-white">
+      <header className="bg-primary-deep text-primary-foreground">
         <div className="max-w-3xl mx-auto px-5 py-5 flex items-center gap-3">
-          <Link to="/" className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center">
+          <Link to="/" className="w-10 h-10 rounded-full bg-sidebar-accent hover:bg-sidebar-accent/80 flex items-center justify-center">
             <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
             <h1 className="text-lg font-semibold flex items-center gap-2">
               <ShieldCheck className="w-4 h-4" /> {t('privacy.title')}
             </h1>
-            <p className="text-xs text-white/70">{t('privacy.updated').replace('{date}', UPDATED)}</p>
+            <p className="text-xs text-sidebar-foreground/70">{t('privacy.updated').replace('{date}', UPDATED)}</p>
           </div>
         </div>
       </header>
@@ -111,6 +112,7 @@ export default function Privacy() {
         <p className="text-xs text-muted-foreground text-center pb-6">
           {t('privacy.footer')}
         </p>
+        <PartnerBar />
       </main>
     </div>
   );

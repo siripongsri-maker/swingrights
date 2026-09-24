@@ -70,7 +70,7 @@ export default function Recover() {
       </div>
 
       <div className="px-4 flex gap-2 pb-4">
-        <Button onClick={sendAll} disabled={!items.length || !!busy} className="flex-1 h-10 rounded-xl bg-gradient-primary text-xs">
+        <Button variant="action" onClick={sendAll} disabled={!items.length || !!busy} className="flex-1 h-10 text-xs">
           <UploadCloud className="w-4 h-4" /> {t('recover.sendAll')}
         </Button>
         <Button onClick={downloadLocalCasesJson} variant="outline" disabled={!items.length} className="h-10 rounded-xl text-xs">
@@ -110,7 +110,7 @@ export default function Recover() {
             </p>
             {it.error && <p className="text-[11px] text-destructive mt-1 break-words">{t('recover.errorPrefix', { msg: t(it.error) })}</p>}
             <div className="flex gap-2 mt-3">
-              <Button onClick={() => sendOne(it.id)} disabled={!!busy} className="flex-1 h-9 rounded-lg bg-gradient-primary text-xs">
+              <Button variant="action" onClick={() => sendOne(it.id)} disabled={!!busy} className="flex-1 h-10 text-xs">
                 {busy === it.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><UploadCloud className="w-3.5 h-3.5" /> {t('recover.sendToSystem')}</>}
               </Button>
               <Button onClick={() => remove(it.id)} variant="outline" disabled={!!busy} className="h-9 rounded-lg text-xs">

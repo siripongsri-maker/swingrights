@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { useI18n } from '@/i18n';
+import { BrandMark } from '@/components/BrandLogo';
 
 export default function AdminLogin() {
   const { t } = useI18n();
@@ -74,13 +75,11 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-soft flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-elegant p-6">
         <div className="flex justify-end mb-2"><LanguageToggle /></div>
         <div className="text-center mb-5">
-          <div className="w-12 h-12 rounded-xl bg-gradient-primary mx-auto flex items-center justify-center shadow-elegant mb-3">
-            <ShieldCheck className="w-6 h-6 text-primary-foreground" />
-          </div>
+          <BrandMark className="mx-auto mb-3 h-12 w-12" />
           <h1 className="text-xl font-medium">{t('login.title')}</h1>
           <p className="text-sm text-muted-foreground">SWING Foundation Admin</p>
         </div>
@@ -91,7 +90,7 @@ export default function AdminLogin() {
               <Label className="text-xs text-muted-foreground mb-1.5 block">{t('login.otp')}</Label>
               <Input value={otp} onChange={(e) => setOtp(e.target.value)} inputMode="numeric" maxLength={6} autoFocus />
             </div>
-            <Button onClick={verifyOtp} disabled={loading} className="w-full h-11 rounded-xl bg-gradient-primary">
+            <Button variant="action" onClick={verifyOtp} disabled={loading} className="w-full">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('login.verify')}
             </Button>
           </>
@@ -107,7 +106,7 @@ export default function AdminLogin() {
                 onKeyDown={(e) => { if (e.key === 'Enter') void signIn(); }} />
             </div>
 
-            <Button onClick={signIn} disabled={loading} className="w-full h-11 rounded-xl bg-gradient-primary">
+            <Button variant="action" onClick={signIn} disabled={loading} className="w-full">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : t('login.submit')}
             </Button>
             <button onClick={forgot} disabled={loading} className="w-full mt-2 text-xs text-muted-foreground hover:text-primary">

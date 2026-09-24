@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
 import { PROJECT_REPORT_DICT } from '@/i18n/dict/projectReport';
 import { BRANCHES } from '@/lib/screening';
+import { BrandLockup } from '@/components/BrandLogo';
+import { PartnerBar } from '@/components/PartnerBar';
 
 type Count = number | string;
 type Summary = {
@@ -120,7 +122,7 @@ export default function ProjectReport() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-leaf">
+    <div className="min-h-screen bg-background">
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-4">
         <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
           <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" /> {t('prep.back')}
@@ -167,6 +169,7 @@ export default function ProjectReport() {
 
             <article id="project-report" lang={rl} className="bg-card border border-border rounded-xl p-6 shadow-card space-y-4">
               <header className="border-b border-border pb-3">
+                <BrandLockup className="mb-4 w-40" />
                 <h1 className="font-display text-xl font-medium">{r('prep.title')}</h1>
                 <p className="text-xs text-muted-foreground">{r('prep.subtitle')}</p>
                 <p className="text-xs mt-1">
@@ -187,6 +190,7 @@ export default function ProjectReport() {
                 <Breakdown title={r('prep.bySeverity')} m={data.cases_by_severity} />
               </section>
               <p className="text-[11px] text-muted-foreground border-t border-border pt-2">{r('prep.note')}</p>
+              <PartnerBar className="shadow-none" />
             </article>
           </>
         )}

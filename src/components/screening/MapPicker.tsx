@@ -66,5 +66,5 @@ export function MapPicker({ value, center, onChange, readOnly = false }: Props) 
     if (m.getZoom() < 12) m.setView(pos, 15);
   }, [value, center, readOnly]);
 
-  return <div ref={el} className="h-56 w-full rounded-[1.25rem] overflow-hidden border border-border z-0" />;
+  return <div ref={el} className="h-56 w-full rounded-[20px] overflow-hidden border border-border z-0" />;
 }

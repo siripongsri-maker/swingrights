@@ -111,7 +111,7 @@ export default function Intake() {
             {t('intake.draft.savedAt', { date: new Date(draftAt).toLocaleString('th-TH') })}
           </p>
           <div className="flex gap-2">
-            <Button onClick={resumeDraft} className="flex-1 h-9 rounded-lg bg-gradient-primary text-xs">
+            <Button variant="action" onClick={resumeDraft} className="flex-1 h-10 text-xs">
               <RotateCcw className="w-3.5 h-3.5" /> {t('intake.draft.resume')}
             </Button>
             <Button onClick={discardDraft} variant="outline" className="flex-1 h-9 rounded-lg text-xs">
@@ -213,10 +213,10 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
       ))}
 
 
-      <Button onClick={onNext} disabled={!ready} className="w-full mt-3 h-12 rounded-xl bg-gradient-primary shadow-elegant">
+      <Button variant="action" onClick={onNext} disabled={!ready} className="w-full mt-3 shadow-elegant">
         <Check className="w-4 h-4" /> {t('intake.consent.start')}
       </Button>
-      <Link to="/privacy" target="_blank" className="block text-center text-xs text-primary mt-3 underline underline-offset-4">
+      <Link to="/privacy" target="_blank" className="block text-center text-xs text-foreground mt-3 underline underline-offset-4">
         {t('intake.consent.privacyLink')}
       </Link>
       <Link to="/" className="block text-center text-xs text-muted-foreground mt-2 underline-offset-4 hover:underline">
@@ -276,7 +276,8 @@ function ReporterStep({ onNext }: { onNext: () => void }) {
           if (!reporter.name.trim()) return toast.error(t('intake.reporter.errName'));
           onNext();
         }}
-        className="w-full mt-4 h-12 rounded-xl bg-gradient-primary"
+         variant="action"
+         className="w-full mt-4"
       >
         ถัดไป <ArrowRight className="w-4 h-4" />
       </Button>
@@ -423,7 +424,7 @@ function VictimStep({ onNext }: { onNext: () => void }) {
           if (profile.initialViolationTypes.length === 0) return toast.error(t('intake.victim.errViolationType'));
           onNext();
         }}
-        className="w-full h-12 rounded-xl bg-gradient-primary"
+        className="w-full h-12 rounded-xl bg-primary"
       >
         {t('intake.victim.nextBtn')} <ArrowRight className="w-4 h-4" />
       </Button>
@@ -609,8 +610,8 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       <div className="flex gap-1.5 flex-wrap mb-3">
         {tag('bg-secondary text-secondary-foreground', profile.kp)}
         {tag('bg-primary-soft text-primary', profile.gender)}
-        {tag('bg-amber-100 text-amber-800', profile.age || '-')}
-        {tag('bg-emerald-100 text-emerald-800', profile.branch)}
+        {tag('bg-sevYellow-bg text-sevYellow-fg', profile.age || '-')}
+        {tag('bg-sevGreen-bg text-sevGreen-fg', profile.branch)}
       </div>
 
       {/* chat thread */}
@@ -629,17 +630,17 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
               <QuestionBubble q={past} index={i} />
               {ans && (
                 <div className="flex justify-end">
-                  <div className="max-w-[88%] bg-gradient-primary text-primary-foreground rounded-2xl rounded-tr-md px-3.5 py-2.5 shadow-card">
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{ans.transcript || t('intake.voice.noAnswer')}</p>
+                  <div className="max-w-[88%] bg-primary-soft text-foreground rounded-[20px] rounded-tr-lg px-3.5 py-2.5 shadow-card">
+                    <p className="text-[17px] leading-[26px] whitespace-pre-wrap">{ans.transcript || t('intake.voice.noAnswer')}</p>
                     {audioBlobs[i] && <HistoryAudio blob={audioBlobs[i]!} />}
                     {staffObs[i] && (
-                      <p className="text-[11px] mt-1.5 bg-amber-100 text-amber-900 rounded-md px-2 py-1 leading-relaxed">
+                      <p className="text-[11px] mt-1.5 bg-sevYellow-bg text-sevYellow-fg rounded-md px-2 py-1 leading-relaxed">
                         {t('intake.voice.staffNotePrefix', { note: staffObs[i] })}
                       </p>
                     )}
                     <button
                       onClick={() => jumpTo(i)}
-                      className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-primary-foreground/70 hover:text-primary-foreground transition"
+                       className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition"
                     >
                       <Pencil className="w-2.5 h-2.5" /> {t('intake.voice.editAnswer')}
                     </button>
@@ -681,7 +682,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
             disabled={transcribing}
             aria-label={t('intake.voice.recordAria')}
             className={`w-11 h-11 rounded-full flex items-center justify-center transition shrink-0 disabled:opacity-50 ${
-              recording ? 'bg-destructive text-destructive-foreground animate-pulse-ring' : 'bg-primary-soft text-primary hover:scale-105'
+              recording ? 'bg-accent text-accent-foreground animate-pulse-ring' : 'bg-accent text-accent-foreground hover:bg-accent-deep'
             }`}
           >
             <Mic className="w-5 h-5" />
@@ -708,7 +709,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           <Button
             onClick={() => saveAndAdvance(1)}
             disabled={recording || transcribing}
-            className="rounded-xl bg-gradient-primary h-10 shrink-0"
+            className="h-10 shrink-0"
           >
             {isLast ? t('intake.voice.finishInterview') : t('intake.voice.sendAnswer')}
             {isLast ? <ArrowRight className="w-4 h-4" /> : <Send className="w-4 h-4" />}
@@ -718,7 +719,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         {/* staff observation (collapsible) */}
         <button
           onClick={() => setShowObs((v) => !v)}
-          className="mt-2 flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-400 font-medium"
+          className="mt-2 flex items-center gap-1.5 text-[11px] text-warning font-medium"
         >
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showObs ? 'rotate-180' : ''}`} />
           {t('intake.voice.staffObsToggle')} {obs && !showObs ? `· ${t('intake.voice.hasNote')}` : ''}
@@ -729,7 +730,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
             value={obs}
             onChange={(e) => setObs(e.target.value)}
             placeholder={t('intake.voice.obsPlaceholder')}
-            className="mt-1.5 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/40 text-sm min-h-[48px]"
+            className="mt-1.5 bg-sevYellow-bg border-warning/30 text-sm min-h-[48px]"
           />
           <PiiHint />
           </>
@@ -744,16 +745,16 @@ function QuestionBubble({ q, index, current }: { q: (typeof QUESTIONS)[number]; 
   const { t } = useI18n();
   return (
     <div className={`flex gap-2.5 ${current ? 'animate-fade-in' : ''}`}>
-      <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center shrink-0 shadow-card">
+      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0 shadow-card">
         <ClipboardList className="w-3.5 h-3.5 text-primary-foreground" />
       </div>
-      <div className="max-w-[88%] bg-card border border-border rounded-2xl rounded-tl-md px-3.5 py-2.5 shadow-card">
+      <div className="max-w-[88%] bg-card border border-border rounded-[20px] rounded-tl-lg px-3.5 py-2.5 shadow-card">
         <div className="flex items-center gap-1.5 mb-1">
           <span className="text-[9px] font-medium text-primary tracking-widest">{t('intake.voice.questionNumber', { n: index + 1 })}</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent text-accent-foreground">{t(q.cat as any)}</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800">{q.frame}</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary-soft text-foreground">{t(q.cat as any)}</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sevYellow-bg text-sevYellow-fg">{q.frame}</span>
         </div>
-        <p className="text-sm leading-relaxed">{t(q.main as any)}</p>
+        <p className="text-[17px] leading-[26px]">{t(q.main as any)}</p>
         {current && (
           <div className="flex items-center gap-2 mt-2">
             <SpeakButton text={t(q.main as any)} />
@@ -862,7 +863,7 @@ function AssessStep({ onNext }: { onNext: () => void }) {
                   <p className="text-[11px] text-muted-foreground">{test.desc}</p>
                 </div>
                 <button onClick={() => toggleTest(test.id)}
-                  className={`text-[11px] px-3 py-1.5 rounded-full text-white shrink-0 ${done ? 'bg-success' : 'bg-primary'}`}>
+                  className={`text-[11px] px-3 py-1.5 rounded-full shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${done ? 'bg-success text-success-foreground' : 'bg-primary text-primary-foreground'}`}>
                   {done ? t('intake.assess.done') : t('intake.assess.markDone')}
                 </button>
               </div>
@@ -885,7 +886,7 @@ function AssessStep({ onNext }: { onNext: () => void }) {
         if (hasViolation === null) return toast.error(t('intake.assess.errQ1'));
         if (!severity) return toast.error(t('intake.assess.errSeverity'));
         onNext();
-      }} className="w-full mt-4 h-12 rounded-xl bg-gradient-primary">
+      }} variant="action" className="w-full mt-4">
         <Sparkles className="w-4 h-4" /> {t('intake.assess.analyzeBtn')}
       </Button>
     </div>
@@ -957,7 +958,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
           {/* Phase 0.11 — AI ต้องไม่บล็อกการรับเคส: ข้ามได้และให้เจ้าหน้าที่ประเมินเอง */}
           <Button
             onClick={() => { intake.set('aiResult', null); onNext(); }}
-            className="bg-gradient-primary rounded-xl"
+            variant="action"
           >
             <SkipForward className="w-4 h-4" /> {t('intake.ai.skip')}
           </Button>
@@ -983,7 +984,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
   return (
     <div className="animate-fade-in">
       <div className="flex gap-2.5 items-start bg-primary-soft/50 border border-primary/20 rounded-xl p-3 mb-4">
-        <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
           <Sparkles className="w-4 h-4 text-primary-foreground" />
         </div>
         <div>
@@ -1052,7 +1053,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
         </div>
       )}
 
-      <Button onClick={onNext} className="w-full h-12 rounded-xl bg-gradient-primary">
+       <Button variant="action" onClick={onNext} className="w-full">
         {t('intake.ai.nextBtn')} <ArrowRight className="w-4 h-4" />
       </Button>
     </div>
@@ -1082,7 +1083,7 @@ function ReferralStep({ onNext }: { onNext: () => void }) {
       </div>
       <Textarea value={referralNote} onChange={(e) => set('referralNote', e.target.value)} placeholder={t('intake.referral.notePlaceholder')} className="mb-4 min-h-[64px]" />
       <PiiHint />
-      <Button onClick={onNext} className="w-full h-12 rounded-xl bg-gradient-primary">{t('intake.referral.nextBtn')} <ArrowRight className="w-4 h-4" /></Button>
+       <Button variant="action" onClick={onNext} className="w-full">{t('intake.referral.nextBtn')} <ArrowRight className="w-4 h-4" /></Button>
     </div>
   );
 }
@@ -1321,7 +1322,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         <button onClick={() => clear('client')} className="text-[11px] text-muted-foreground underline mt-1">{t('intake.sig.clearSig')}</button>
       </div>
 
-      <Button onClick={save} disabled={saving} className="w-full h-12 rounded-xl bg-gradient-primary">
+      <Button variant="action" onClick={save} disabled={saving} className="w-full">
         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
         {t('intake.sig.confirmBtn')}
       </Button>
@@ -1389,9 +1390,9 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
       <h1 className="text-lg font-medium">{t('intake.confirmed.title')}</h1>
       <p className="text-sm text-muted-foreground mb-5">{t('intake.confirmed.subtitle')}</p>
 
-      <div className="bg-gradient-dark rounded-xl p-4 mb-4">
+      <div className="bg-primary-deep text-primary-foreground rounded-xl p-4 mb-4">
         <p className="text-[11px] text-primary-glow tracking-wider mb-1.5">{t('intake.confirmed.caseCodeLabel')}</p>
-        <p className="text-3xl font-medium text-white tracking-widest font-mono">{caseCode}</p>
+        <p className="text-3xl font-medium text-primary-foreground tracking-widest font-mono">{caseCode}</p>
         <button
           onClick={() => { navigator.clipboard.writeText(caseCode || ''); toast.success(t('intake.confirmed.copied')); }}
           className="inline-flex items-center gap-1.5 text-[11px] text-primary-glow bg-primary/20 border border-primary/40 rounded-full px-3 py-1 mt-2"
@@ -1401,7 +1402,7 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
         <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">{t('intake.confirmed.keepCodeHint')}</p>
         {qr && (
           <div className="mt-3 flex flex-col items-center gap-1.5">
-            <img src={qr} alt={t('intake.confirmed.qrAlt', { code: caseCode || '' })} className="w-32 h-32 rounded-lg bg-white p-1.5" />
+            <img src={qr} alt={t('intake.confirmed.qrAlt', { code: caseCode || '' })} className="w-32 h-32 rounded-lg bg-card p-1.5" />
             <p className="text-[11px] text-muted-foreground">{t('intake.confirmed.qrHint')}</p>
           </div>
         )}
@@ -1447,7 +1448,7 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
         <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">{t('intake.confirmed.printHint')}</p>
       </div>
 
-      <Button onClick={() => navigate(`/track?code=${caseCode}`)} className="w-full h-12 rounded-xl bg-gradient-primary mb-2">{t('intake.confirmed.trackBtn')}</Button>
+      <Button variant="action" onClick={() => navigate(`/track?code=${caseCode}`)} className="w-full mb-2">{t('intake.confirmed.trackBtn')}</Button>
       <Button variant="outline" onClick={onReset} className="w-full rounded-xl">{t('intake.confirmed.newCaseBtn')}</Button>
       {documentKind && intake.caseId && (
         <DocumentDraftDialog
@@ -1569,7 +1570,7 @@ function PhotoUpload() {
             <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
               <img src={p.previewUrl} alt={p.name} className="w-full h-full object-cover" />
               <button type="button" onClick={() => remove(i)}
-                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-destructive transition">
+                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-destructive transition">
                 <XIcon className="w-3.5 h-3.5" />
               </button>
             </div>
