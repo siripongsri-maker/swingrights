@@ -27,7 +27,7 @@ export const REFERRAL_DICT: Record<string, Entry> = {
   'ref.csvHeader': { th: 'การส่งต่อหน่วยงาน', en: 'Referrals' },
   // public page
   'ref.page.title': { th: 'คำขอรับส่งต่อเคส', en: 'Case referral request' },
-  'ref.page.from': { th: 'จากมูลนิธิ SWING', en: 'From SWING Foundation' },
+  'ref.page.from': { th: 'จากมูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)', en: 'From SWING Foundation' },
   'ref.page.caseCode': { th: 'รหัสเคส', en: 'Case code' },
   'ref.page.branch': { th: 'พื้นที่', en: 'Area' },
   'ref.page.category': { th: 'ประเภทการละเมิด', en: 'Violation category' },

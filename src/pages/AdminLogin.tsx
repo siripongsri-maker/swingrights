@@ -81,7 +81,7 @@ export default function AdminLogin() {
         <div className="text-center mb-5">
           <BrandMark className="mx-auto mb-3 h-12 w-12" />
           <h1 className="text-xl font-medium">{t('login.title')}</h1>
-          <p className="text-sm text-muted-foreground">SWING Foundation Admin</p>
+          <p className="text-sm text-muted-foreground">มูลนิธิเพื่อนพนักงานบริการ · Admin</p>
         </div>
 
         {mfaFactorId ? (

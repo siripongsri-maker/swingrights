@@ -6,7 +6,7 @@ import type { Entry } from '../index';
  */
 export const PRIVACY_DICT: Record<string, Entry> = {
   'privacy.title': { th: 'นโยบายความเป็นส่วนตัว (PDPA)', en: 'Privacy Policy (PDPA)' },
-  'privacy.updated': { th: 'มูลนิธิ SWING · ปรับปรุงล่าสุด {date}', en: 'SWING Foundation · Last updated {date}' },
+  'privacy.updated': { th: 'มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) · ปรับปรุงล่าสุด {date}', en: 'SWING Foundation · Last updated {date}' },
   'privacy.updatedDate': { th: '5 สิงหาคม 2569', en: '5 August 2026' },
 
   'privacy.s1.title': { th: '1. ผู้ควบคุมข้อมูลส่วนบุคคล', en: '1. Data Controller' },
@@ -77,7 +77,7 @@ export const PRIVACY_DICT: Record<string, Entry> = {
   },
 
   'privacy.footer': {
-    th: 'เอกสารนี้จัดทำโดยมูลนิธิ SWING เพื่ออธิบายแนวปฏิบัติของระบบ · ไม่ใช่การรับรองหรือตรวจสอบโดยบุคคลที่สาม',
+    th: 'เอกสารนี้จัดทำโดยมูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) เพื่ออธิบายแนวปฏิบัติของระบบ · ไม่ใช่การรับรองหรือตรวจสอบโดยบุคคลที่สาม',
     en: 'This document is prepared by the SWING Foundation to describe the system\u2019s practices · it is not a certification or third-party audit.',
   },
 };
