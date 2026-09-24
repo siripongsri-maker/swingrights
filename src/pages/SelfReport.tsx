@@ -91,6 +91,7 @@ export default function SelfReport() {
   const [submitting, setSubmitting] = useState(false);
   const [caseCode, setCaseCode] = useState<string | null>(null);
   const [signedIn, setSignedIn] = useState(false);
+  const [profilePhone, setProfilePhone] = useState<string | null>(null);
 
   // ---- probe state (sequential probing questions) ----
   const [probeIdx, setProbeIdx] = useState(0);
@@ -136,6 +137,24 @@ export default function SelfReport() {
       }, 650);
     }, 950);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Registered client: prefill name/phone from profile; phone is confirmed later at the contact stage.
+  useEffect(() => {
+    void (async () => {
+      const { data } = await supabase.auth.getSession();
+      const uid = data.session?.user.id;
+      if (!uid) return;
+      setSignedIn(true);
+      const { data: prof } = await supabase
+        .from('client_profiles')
+        .select('first_name,last_name,phone')
+        .eq('id', uid)
+        .maybeSingle();
+      if (prof?.phone) setProfilePhone(prof.phone);
+      const fullName = [prof?.first_name, prof?.last_name].filter(Boolean).join(' ').trim();
+      if (fullName) setName((prev) => prev || fullName);
+    })();
   }, []);
 
   useEffect(() => {
