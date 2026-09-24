@@ -43,6 +43,7 @@ import { PROJECT_REPORT_DICT } from './dict/projectReport';
 import { PII_DICT } from './dict/pii';
 import { ACCESS_REVIEW_DICT } from './dict/accessReview';
 import { PROFILE_DICT } from './dict/profile';
+import { CLIENT_DICT } from './dict/client';
 import { DOCUMENTS_DICT } from './dict/documents';
 import { RIGHTS_DICT } from './dict/rights';
 
@@ -735,6 +736,7 @@ export const DICT: Dict = {
   ...PII_DICT,
   ...ACCESS_REVIEW_DICT,
   ...PROFILE_DICT,
+  ...CLIENT_DICT,
   ...DOCUMENTS_DICT,
   ...RIGHTS_DICT,
 };

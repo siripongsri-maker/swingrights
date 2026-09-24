@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { rememberReportCode } from '@/lib/myReports';
+import { supabase as sbAuth } from '@/integrations/supabase/client';
 import { ArrowLeft, Building2, Check, Copy, Loader2, MapPin, Paperclip, Phone, SendHorizonal, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
@@ -88,6 +90,7 @@ export default function SelfReport() {
   const [photos, setPhotos] = useState<{ blob: Blob; url: string; name: string; type: string }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [caseCode, setCaseCode] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
 
   // ---- probe state (sequential probing questions) ----
   const [probeIdx, setProbeIdx] = useState(0);
@@ -358,6 +361,8 @@ export default function SelfReport() {
       if (error || !code) throw error ?? new Error('submit failed');
 
       await deleteLocalCase(localId);
+      rememberReportCode(String(code));
+      void sbAuth.auth.getSession().then(({ data }) => { setSignedIn(!!data.session); if (data.session) void sbAuth.rpc('link_my_cases' as never, { _codes: [String(code)] } as never); });
       setCaseCode(String(code));
       setStage('done');
       botSay({ text: t('report.success.title'), widget: 'success' }, 600);
@@ -570,6 +575,13 @@ export default function SelfReport() {
                 <p className="pt-1 mt-1 border-t border-border font-medium">{t('report.success.forward')}</p>
                 <p>→ {t('report.partners.title')}</p>
               </div>
+              {!signedIn && (
+                <div className="rounded-xl border-2 border-accent/40 bg-accent/5 p-3 text-start space-y-2">
+                  <p className="font-semibold text-sm">{t('cl.prompt.title')}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{t('cl.prompt.body')}</p>
+                  <Button asChild size="sm" variant="action" className="w-full rounded-xl"><Link to="/signin">{t('cl.prompt.cta')}</Link></Button>
+                </div>
+              )}
               <p className="text-[11px] text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
               <div className="grid gap-1.5">
                 <Button asChild size="sm" className="rounded-xl"><Link to={`/track?code=${caseCode}`}>{t('report.success.track')}</Link></Button>
