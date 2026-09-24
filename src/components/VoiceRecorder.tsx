@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import { Mic, Square, RotateCcw } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { Mic, Square, RotateCcw, Trash2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { FollowUpCoach } from '@/components/FollowUpCoach';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useI18n, SPEECH_LOCALE } from '@/i18n';
@@ -9,13 +11,17 @@ interface Props {
   onChange: (blob: Blob | null, transcript: string) => void;
   className?: string;
   compact?: boolean;
+  /** Show live follow-up questions based on the complaint form. */
+  followUp?: boolean;
+  /** Earlier answers, used by the follow-up check. */
+  followUpContext?: string;
 }
 
 /**
  * Reusable voice recorder: MediaRecorder capture + live transcript via
  * Web Speech API (where supported), in the current UI language.
  */
-export function VoiceRecorder({ onChange, className, compact }: Props) {
+export function VoiceRecorder({ onChange, className, compact, followUp, followUpContext }: Props) {
   const { lang, t } = useI18n();
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -27,6 +33,7 @@ export function VoiceRecorder({ onChange, className, compact }: Props) {
   const chunksRef = useRef<Blob[]>([]);
   const tickRef = useRef<number>(0);
   const blobRef = useRef<Blob | null>(null);
+  const tid = useId();
 
   useEffect(() => () => {
     try { recogRef.current?.stop(); } catch { /* noop */ }
@@ -135,7 +142,7 @@ export function VoiceRecorder({ onChange, className, compact }: Props) {
           <p className="text-xs font-medium">
             {recording ? `${t('common.recording')} ${mm}:${ss}` : audioUrl ? t('common.listen') : t('common.record')}
           </p>
-          {transcript && <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{transcript}</p>}
+          {recording && transcript && <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{transcript}</p>}
         </div>
         {audioUrl && !recording && (
           <Button type="button" size="sm" variant="ghost" className="ms-auto text-xs" onClick={reset}>
@@ -144,6 +151,26 @@ export function VoiceRecorder({ onChange, className, compact }: Props) {
         )}
       </div>
       {audioUrl && !recording && <audio src={audioUrl} controls className="w-full h-9" />}
+      {!recording && (transcript || audioUrl) && (
+        <div className="space-y-1">
+          <label className="text-[11px] font-medium text-muted-foreground block" htmlFor={tid}>{t('voice.editTranscript')}</label>
+          <div className="flex items-start gap-1.5">
+            <Textarea
+              id={tid}
+              value={transcript}
+              onChange={(e) => { setTranscript(e.target.value); onChange(blobRef.current, e.target.value); }}
+              placeholder={t('voice.transcriptPlaceholder')}
+              className="text-sm min-h-[60px]"
+            />
+            {transcript && (
+              <Button type="button" size="icon" variant="ghost" className="shrink-0" aria-label={t('voice.clearTranscript')} onClick={() => { setTranscript(''); onChange(blobRef.current, ''); }}>
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+      {followUp && <FollowUpCoach text={transcript} context={followUpContext} />}
     </div>
   );
 }
