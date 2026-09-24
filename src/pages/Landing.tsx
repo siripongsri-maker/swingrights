@@ -7,6 +7,7 @@ import { Reveal } from '@/components/Reveal';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
+import { HOTLINES } from '@/data/hotlines';
 import { BrandHeader, BrandLockup } from '@/components/BrandLogo';
 import { PartnerBar } from '@/components/PartnerBar';
 
