@@ -8,6 +8,7 @@ import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import { RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
 import { HOTLINES } from '@/data/hotlines';
+import { PrivacyContent } from '@/components/PrivacyContent';
 import { BrandHeader, BrandLockup } from '@/components/BrandLogo';
 import { PartnerBar } from '@/components/PartnerBar';
 
@@ -107,9 +108,6 @@ export default function Landing() {
             <LanguageToggle />
             <Link to="/rights" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               {t('rights.nav')}
-            </Link>
-            <Link to="/privacy" className="hidden sm:inline text-xs text-muted-foreground hover:text-primary transition-colors">
-              {t('nav.privacy')}
             </Link>
             <Link
               to="/admin/login"
@@ -264,9 +262,14 @@ export default function Landing() {
         </main>
       </div>
 
+      <section className="max-w-3xl mx-auto px-5 pb-4" aria-label={t('privacy.title')}>
+        <h2 className="font-subhead text-lg font-semibold text-foreground mb-3">{t('privacy.title')}</h2>
+        <PrivacyContent />
+      </section>
+
       <footer className="max-w-5xl mx-auto px-5 py-8 text-center text-xs text-muted-foreground">
         <PartnerBar className="mb-6 text-start" />
-        © มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) · <Link to="/privacy" className="hover:text-foreground">{t('landing.footer')}</Link> · <Link to="/recover" className="hover:text-foreground">{t('landing.footer.recover')}</Link>
+        © มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) · <Link to="/recover" className="hover:text-foreground">{t('landing.footer.recover')}</Link>
       </footer>
     </div>
   );
