@@ -2,7 +2,7 @@
  * Phase 0.8 — strips EXIF/GPS metadata from images by re-encoding through a canvas.
  * The output blob contains pixels only: no camera model, timestamps or coordinates.
  */
-const MAX_EDGE = 1920;
+const MAX_EDGE = 1600;
 
 export async function stripImageMetadata(file: File): Promise<{ blob: Blob; name: string }> {
   const bitmap = await createImageBitmap(file).catch(() => null);
@@ -21,7 +21,7 @@ export async function stripImageMetadata(file: File): Promise<{ blob: Blob; name
   bitmap.close?.();
 
   const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.85),
+    canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.8),
   );
   if (!blob) return { blob: file, name: file.name };
 

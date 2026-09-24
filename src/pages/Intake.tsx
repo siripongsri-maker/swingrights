@@ -10,7 +10,7 @@ import { SpeakButton } from '@/components/screening/SpeakButton';
 import { ScreeningTools, summarizeScreening } from '@/components/screening/ScreeningTools';
 import { nrmPositive } from '@/lib/screeningTools';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
-import { uploadCaseMedia } from '@/lib/uploadMedia';
+import { uploadAllMedia, saveDraft, finishDraft } from '@/lib/draftSync';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,7 +39,14 @@ type Step = 'consent' | 'reporter' | 'victim' | 'voice' | 'assess' | 'ai' | 'ref
 
 
 export default function Intake() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const [sync, setSync] = useState<'idle' | 'saving' | 'saved' | 'offline'>('idle');
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    const on = () => setRetry((n) => n + 1);
+    window.addEventListener('online', on);
+    return () => window.removeEventListener('online', on);
+  }, []);
   const navigate = useNavigate();
   const intake = useIntake();
   const [step, setStep] = useState<Step>('consent');
@@ -77,6 +84,29 @@ export default function Intake() {
   }, [intake]);
 
 
+  // Server draft: upload each clip/photo right away and save de-identified answers (3s debounce)
+  useEffect(() => {
+    if (intake.caseCode) return;
+    const hasContent = intake.answers.some((a) => a?.transcript?.trim()) || intake.audioBlobs.some(Boolean) || intake.photos.length;
+    if (!hasContent) return;
+    const timer = setTimeout(async () => {
+      setSync('saving');
+      try {
+        const id = currentSessionId();
+        const media = await uploadAllMedia(
+          id,
+          intake.audioBlobs.map((b, i) => ({ blob: b, question: intake.answers[i]?.question || '', base: `q${i + 1}` })),
+          intake.photos.map((p) => ({ blob: p.blob, name: p.name })),
+        );
+        const { set: _s, patch: _p, reset: _r, photos: _ph, audioBlobs: _a, signatureStaff: _ss, signatureClient: _sc, ...state } = useIntake.getState() as any;
+        await saveDraft(id, state, media, lang, 'staff');
+        setSync('saved');
+      } catch { setSync('offline'); }
+    }, 3000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intake.answers, intake.audioBlobs, intake.photos, intake.staffObs, intake.extraFacts, intake.caseCode, retry]);
+
   const resumeDraft = async () => {
     const [audio, photos] = await Promise.all([loadAudioBlobs(), loadPhotoBlobs()]);
     intake.patch({
@@ -104,6 +134,11 @@ export default function Intake() {
 
   return (
     <PhoneShell onBack={step === 'consent' ? undefined : goBack} onClose={() => navigate('/')}>
+      {sync !== 'idle' && !intake.caseCode && (
+        <p role="status" aria-live="polite" className="mb-2 text-end text-[11px] text-muted-foreground">
+          {t(`intake.sync.${sync}`)}
+        </p>
+      )}
       {draftAt && (
         <div className="mb-4 rounded-xl border border-primary/30 bg-primary-soft/50 p-3">
           <p className="text-xs font-medium text-primary mb-1">{t('intake.draft.found')}</p>
@@ -480,10 +515,11 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       chunksRef.current = [];
-      const mr = new MediaRecorder(stream);
+      const mime = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'].find((m) => MediaRecorder.isTypeSupported?.(m));
+      const mr = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), audioBitsPerSecond: 24000 });
       mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
       mr.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || 'audio/webm' });
+        const blob = new Blob(chunksRef.current, { type: (mr.mimeType || chunksRef.current[0]?.type || 'audio/webm').split(';')[0] });
         const newBlobs = [...audioBlobs];
         newBlobs[qIndex] = blob;
         patch({ audioBlobs: newBlobs });
@@ -1149,37 +1185,14 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
       const sigStaff = staffCanvas.current!.toDataURL('image/png');
       const sigClient = clientEmpty ? null : clientCanvas.current!.toDataURL('image/png');
 
-      // 1) Upload audio recordings (if any) via the validated upload endpoint
-      const audioPaths: { qIndex: number; path: string; question: string }[] = [];
-      for (let i = 0; i < intake.audioBlobs.length; i++) {
-        const blob = intake.audioBlobs[i];
-        if (!blob) continue;
-        const ext = (blob.type.split('/')[1] || 'webm').split(';')[0];
-        const path = `cases/${draftId}/q${i + 1}-${Date.now()}.${ext}`;
-        const up = await uploadCaseMedia('audio', path, blob);
-        if (!up) {
-          console.warn(`audio upload failed for q${i + 1}`);
-          continue; // don't block case save if one upload fails
-        }
-        audioPaths.push({ qIndex: i, path: up.path, question: intake.answers[i]?.question || '' });
-      }
-
-      // 1b) Upload attached photos (if any)
-      const photoPaths: { path: string; name: string }[] = [];
-      for (let i = 0; i < intake.photos.length; i++) {
-        const ph = intake.photos[i];
-        if (!ph?.blob) continue;
-        const ext = (ph.blob.type.split('/')[1] || 'jpg').split(';')[0];
-        const path = `cases/${draftId}/photo-${i + 1}-${Date.now()}.${ext}`;
-        const up = await uploadCaseMedia('photo', path, ph.blob);
-        if (!up) {
-          console.warn(`photo upload failed for #${i + 1}`);
-          continue;
-        }
-        photoPaths.push({ path: up.path, name: ph.name });
-      }
-
-
+      // 1) Media is uploaded during the conversation; this only picks up anything still pending
+      const media = await uploadAllMedia(
+        currentSessionId(),
+        intake.audioBlobs.map((b, i) => ({ blob: b, question: intake.answers[i]?.question || '', base: `q${i + 1}` })),
+        intake.photos.map((p) => ({ blob: p.blob, name: p.name })),
+      );
+      const audioPaths = media.audio;
+      const photoPaths = media.photos;
 
       const screeningResult = summarizeScreening(intake.screening);
       const suicideRisk = screeningResult.suicidalItem > 0;
@@ -1237,6 +1250,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         }).catch((err) => console.warn('notify-case failed', err));
       }
 
+      await finishDraft(sessionId, code as string);
       await deleteLocalCase(sessionId);
       rotateSessionId();
       await clearDraft();

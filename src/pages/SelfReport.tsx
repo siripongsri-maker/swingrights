@@ -262,7 +262,7 @@ export default function SelfReport() {
       if (!/^image\//.test(f.type)) continue;
       const stripped = await stripImageMetadata(f);
       const blob = new Blob([stripped.blob], { type: stripped.blob.type || f.type });
-      setPhotos((prev) => [...prev, { blob, url: URL.createObjectURL(blob), name: stripped.name, type: f.type }].slice(0, 3));
+      setPhotos((prev) => [...prev, { blob, url: URL.createObjectURL(blob), name: stripped.name, type: blob.type || 'image/jpeg' }].slice(0, 3));
     }
   };
 
