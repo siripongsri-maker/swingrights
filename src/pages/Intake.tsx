@@ -530,6 +530,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   const askFollowUp = () => {
     setFuThinking(true);
     setFuTrigger((n) => n + 1);
+    window.setTimeout(() => setFuThinking(false), 12000); // never leave the spinner stuck
   };
 
   const startRec = async (fu?: string) => {
