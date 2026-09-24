@@ -130,7 +130,7 @@ export const INTAKE_DICT: Record<string, Entry> = {
   'intake.ai.summaryTitle': { th: 'สรุปสถานการณ์', en: 'Situation summary' },
   'intake.ai.violationTagsTitle': { th: 'ประเภทการละเมิดที่พบ', en: 'Detected violation types' },
   'intake.ai.recommendationsTitle': { th: 'คำแนะนำเบื้องต้นสำหรับเจ้าหน้าที่', en: 'Initial recommendations for staff' },
-  'intake.ai.followupTitle': { th: 'คำถามเพิ่มเติม (จาก AI)', en: 'Follow-up questions (from AI)' },
+  'intake.ai.followupTitle': { th: 'คำถามเพิ่มเติม (จาก AI)', en: 'Follow-up questions (from AI)', my: 'နောက်ဆက်တွဲ မေးခွန်းများ (AI မှ)', km: 'សំណួរបន្ថែម (ពី AI)', lo: 'ຄຳຖາມເພີ່ມເຕີມ (ຈາກ AI)' },
   'intake.common.typeAnswerPlaceholder': { th: 'พิมพ์คำตอบ...', en: 'Type an answer...' },
   'intake.ai.nextBtn': { th: 'ต่อไป: เลือกการส่งต่อ', en: 'Next: choose referral' },
   'intake.referral.title': { th: 'การส่งต่อ', en: 'Referral' },
