@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import { printCaseDocument, docInputFromIntake, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
 import { DocumentDraftDialog } from '@/components/admin/DocumentDraftDialog';
 import { printCaseReport, type CaseReportData } from '@/lib/caseReport';
+import { FollowUpCoach } from '@/components/FollowUpCoach';
 import { useI18n } from "@/i18n";
 import { PiiHint, usePiiGuard } from "@/lib/piiGuard";
 
@@ -708,7 +709,19 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           placeholder={t('intake.voice.composerPlaceholder')}
           className="bg-muted/40 border-0 text-sm min-h-[52px] resize-none focus-visible:ring-1"
         />
-        <PiiHint />
+        <div className="flex items-center justify-between gap-2">
+          <PiiHint />
+          {transcript && !recording && (
+            <button type="button" onClick={() => setTranscript('')} className="text-[11px] text-muted-foreground hover:text-destructive inline-flex items-center gap-1 shrink-0 px-1">
+              <Trash2 className="w-3 h-3" /> {t('voice.clearTranscript')}
+            </button>
+          )}
+        </div>
+        <FollowUpCoach
+          className="mt-2"
+          text={transcript}
+          context={answers.slice(0, qIndex).map((a) => a?.transcript).filter(Boolean).join('\n')}
+        />
         {audioBlobs[qIndex] && !recording && (
           <div className="px-1 pt-1.5"><HistoryAudio blob={audioBlobs[qIndex]!} /></div>
         )}
