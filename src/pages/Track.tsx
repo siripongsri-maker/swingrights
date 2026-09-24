@@ -165,7 +165,7 @@ export default function Track() {
 
             {data.files && (data.files.audio.length > 0 || data.files.photos.length > 0) && (
               <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
-                <h2 className="font-display font-semibold text-sm">{t('track.files.title')}</h2>
+                <h2 className="font-subhead font-semibold text-sm">{t('track.files.title')}</h2>
                 {data.files.audio.map((u, i) => (
                   <audio key={u} controls preload="none" src={u} className="w-full" aria-label={t('track.files.clip', { n: i + 1 })} />
                 ))}
@@ -184,7 +184,7 @@ export default function Track() {
 
             {data.questions.length > 0 && (
               <div className="space-y-3">
-                <h2 className="font-display font-semibold text-sm flex items-center gap-2">
+                <h2 className="font-subhead font-semibold text-sm flex items-center gap-2">
                   <MessageCircleQuestion className="w-4 h-4 text-primary" /> {t('track.questions.title')}
                 </h2>
                 {data.questions.map((q) => {
@@ -232,7 +232,7 @@ export default function Track() {
             )}
 
             <div>
-              <h2 className="font-display font-semibold text-sm mb-3">{t('track.timeline')}</h2>
+              <h2 className="font-subhead font-semibold text-sm mb-3">{t('track.timeline')}</h2>
               <ol className="relative border-s-2 border-primary/25 ms-2 space-y-4">
                 {data.timeline.map((tItem, i) => (
                   <li key={i} className="ms-4 animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>

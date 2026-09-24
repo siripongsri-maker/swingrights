@@ -90,7 +90,7 @@
     font-size: 15px;
     line-height: 1.533;
   }
-  h1, h2, h3, .font-display { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-spacing: 0; }
+  h1, .font-display { font-family: 'IBM Plex Sans Thai Looped', 'Noto Sans Thai', sans-serif; letter-spacing: 0; }
   .font-mono, code, .case-code { font-family: 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: 0.04em; }
   a, button, input, textarea, select, [tabindex]:not([tabindex="-1"]) { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background; }
   html { scroll-behavior: smooth; }
@@ -130,6 +130,9 @@
 .stagger > *:nth-child(6) { animation-delay: 0.34s; }
 .stagger > *:nth-child(7) { animation-delay: 0.4s; }
 .stagger > *:nth-child(8) { animation-delay: 0.46s; }
+
+/* หัวข้อรอง (h2–h4) ใช้ฟอนต์ไม่มีหัวเสมอ แม้ใส่คลาส font-display — unlayered เพื่อชนะ Tailwind utilities */
+h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-spacing: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-floaty, .animate-drift, .animate-sway, .animate-pulse-ring { animation: none; }

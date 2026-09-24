@@ -9,7 +9,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['"IBM Plex Sans Thai Looped"', '"Noto Sans Thai"', 'system-ui', 'sans-serif'],
-        display: ['"Bai Jamjuree"', '"Noto Sans Thai"', 'sans-serif'],
+        display: ['"IBM Plex Sans Thai Looped"', '"Noto Sans Thai"', 'sans-serif'],
+        subhead: ['"Bai Jamjuree"', '"Noto Sans Thai"', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
       },
       colors: {
