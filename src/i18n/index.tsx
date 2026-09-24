@@ -56,7 +56,7 @@ const BASE_DICT: Dict = {
     my: 'ကိုယ်ရေးကိုယ်တာ မူဝါဒ', km: 'គោលការណ៍ភាពឯកជន', lo: 'ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ',
   },
   'nav.staff': { th: 'เจ้าหน้าที่', en: 'Staff', my: 'ဝန်ထမ်း', km: 'បុគ្គលិក', lo: 'ພະນັກງານ' },
-  'partners.supportedBy': { th: 'สนับสนุนโดย · Supported by', en: 'Supported by', my: 'ပံ့ပိုးကူညီသူ · Supported by', km: 'គាំទ្រដោយ · Supported by', lo: 'ສະໜັບສະໜູນໂດຍ · Supported by' },
+  'partners.supportedBy': { th: '\n', en: '\n', my: '\n', km: '\n', lo: '\n' },
   'partners.implementedBy': { th: 'ดำเนินงานโดย · Implemented by', en: 'Implemented by', my: 'အကောင်အထည်ဖော်သူ · Implemented by', km: 'អនុវត្តដោយ · Implemented by', lo: 'ດຳເນີນງານໂດຍ · Implemented by' },
   'common.search': { th: 'ค้นหา', en: 'Search', my: 'ရှာဖွေမည်', km: 'ស្វែងរក', lo: 'ຄົ້ນຫາ' },
   'common.back': { th: 'ย้อนกลับ', en: 'Back', my: 'နောက်သို့', km: 'ត្រឡប់ក្រោយ', lo: 'ກັບຄືນ' },
