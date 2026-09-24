@@ -252,14 +252,9 @@ export default function Landing() {
         </main>
       </div>
 
-      <section className="max-w-3xl mx-auto px-5 pb-4" aria-label={t('privacy.title')}>
-        <h2 className="font-subhead text-lg font-semibold text-foreground mb-3">{t('privacy.title')}</h2>
-        <PrivacyContent />
-      </section>
-
       <footer className="max-w-5xl mx-auto px-5 py-8 text-center text-xs text-muted-foreground">
         <PartnerBar className="mb-6 text-start" />
-        © มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)
+        © มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) · <Link to="/privacy" className="hover:text-foreground">{t('landing.footer')}</Link>
       </footer>
     </div>
   );
