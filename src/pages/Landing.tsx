@@ -61,7 +61,6 @@ export default function Landing() {
   const featuredSection = RIGHTS_SECTIONS[rightsSectionIndex];
   const sectionPreview = featuredSection ? RIGHTS_SECTION_PREVIEW[featuredSection] : undefined;
   const FeaturedSectionIcon = sectionPreview?.icon;
-  const sectionRightsCount = featuredSection ? RIGHTS.filter((right) => right.section === featuredSection).length : 0;
 
   useEffect(() => {
     let mounted = true;
@@ -189,7 +188,6 @@ export default function Landing() {
                 <div className="flex items-start justify-between gap-4 mb-5">
                   <div>
                     <p className="text-xs font-medium text-primary mb-1">{t('rights.nav')}</p>
-                    <h2 className="font-display text-xl font-medium">{t('landing.rightsPreview.title')}</h2>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <Button type="button" size="icon" variant="ghost" className="h-10 w-10 rounded-full" onClick={showPreviousRight} aria-label={t('landing.rightsPreview.previous')}>
@@ -203,16 +201,11 @@ export default function Landing() {
 
                 {featuredSection && sectionPreview && FeaturedSectionIcon && (
                   <div className="min-h-[9.5rem]" aria-live="polite" aria-atomic="true">
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary shadow-sm ring-1 ring-primary/10">
-                        <FeaturedSectionIcon className="h-6 w-6" strokeWidth={2} aria-hidden="true" />
+                    <div className="flex items-center gap-5">
+                      <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.5rem] bg-primary-soft text-primary shadow-sm ring-1 ring-primary/10 sm:h-24 sm:w-24">
+                        <FeaturedSectionIcon className="h-10 w-10 sm:h-12 sm:w-12" strokeWidth={2} aria-hidden="true" />
                       </span>
-                      <div>
-                        <h3 className="font-display text-lg font-medium leading-snug mb-2">{t(sectionPreview.labelKey)}</h3>
-                        <p className="text-base text-muted-foreground leading-relaxed">
-                          {t('landing.rightsPreview.count').replace('{count}', String(sectionRightsCount))}
-                        </p>
-                      </div>
+                      <h2 className="font-display text-2xl font-semibold leading-snug sm:text-3xl">{t(sectionPreview.labelKey)}</h2>
                     </div>
                   </div>
                 )}
