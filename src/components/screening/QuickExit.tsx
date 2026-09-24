@@ -42,7 +42,7 @@ export function QuickExit({ wipeDraft = true }: { wipeDraft?: boolean }) {
       type="button"
       onClick={() => void escape(wipeDraft)}
       aria-label={t('guard.quickExitAria')}
-      className="fixed bottom-4 end-4 z-50 h-12 rounded-full border border-accent/20 bg-accent-soft px-4 text-sm text-accent-deep shadow-elegant hover:bg-accent-soft/80 active:scale-95"
+      className="sw-quick-exit fixed bottom-4 end-4 z-50 h-12 rounded-full border border-accent/20 bg-accent-soft px-4 text-sm text-accent-deep shadow-elegant hover:bg-accent-soft/80 active:scale-95"
     >
       <X className="h-4 w-4" />
       {t('guard.quickExit')}

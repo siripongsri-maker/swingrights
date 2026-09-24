@@ -1,6 +1,17 @@
 import type { Entry } from '../index';
 
 export const CLIENT_DICT: Record<string, Entry> = {
+  'home.menu': { th: 'เมนู', en: 'Menu', my: 'မီနူး', km: 'ម៉ឺនុយ', lo: 'ເມນູ' },
+  'home.tab.home': { th: 'หน้าแรก', en: 'Home', my: 'ပင်မ', km: 'ទំព័រដើម', lo: 'ໜ້າຫຼັກ' },
+  'home.tab.rights': { th: 'สิทธิ', en: 'Rights', my: 'အခွင့်အရေး', km: 'សិទ្ធិ', lo: 'ສິດ' },
+  'home.tab.help': { th: 'สายด่วน', en: 'Hotlines', my: 'အရေးပေါ်ဖုန်း', km: 'ខ្សែបន្ទាន់', lo: 'ສາຍດ່ວນ' },
+  'home.tab.more': { th: 'เพิ่มเติม', en: 'More', my: 'နောက်ထပ်', km: 'បន្ថែម', lo: 'ເພີ່ມເຕີມ' },
+  'pdpa.title': { th: 'ความยินยอมเรื่องข้อมูลส่วนบุคคล (PDPA)', en: 'Personal data consent (PDPA)', my: 'ကိုယ်ရေးအချက်အလက် သဘောတူညီချက် (PDPA)', km: 'ការយល់ព្រមលើទិន្នន័យផ្ទាល់ខ្លួន (PDPA)', lo: 'ການຍິນຍອມຂໍ້ມູນສ່ວນບຸກຄົນ (PDPA)' },
+  'pdpa.body': { th: 'มูลนิธิเพื่อนพนักงานบริการเก็บข้อมูลเท่าที่จำเป็นเพื่อช่วยเหลือคุณ เก็บเป็นความลับ และไม่เปิดเผยชื่อโดยไม่ได้รับอนุญาต', en: 'SWING Foundation collects only what is needed to help you, keeps it confidential, and never shares your name without permission.', my: 'SWING ဖောင်ဒေးရှင်းသည် သင့်ကိုကူညီရန် လိုအပ်သောအချက်အလက်ကိုသာ စုဆောင်းပြီး လျှို့ဝှက်ထားပါသည်။', km: 'មូលនិធិ SWING ប្រមូលតែទិន្នន័យចាំបាច់ដើម្បីជួយអ្នក និងរក្សាការសម្ងាត់។', lo: 'ມູນນິທິ SWING ເກັບພຽງຂໍ້ມູນທີ່ຈຳເປັນເພື່ອຊ່ວຍເຫຼືອທ່ານ ແລະ ຮັກສາເປັນຄວາມລັບ.' },
+  'pdpa.ack': { th: 'ฉันได้อ่านและรับทราบนโยบายความเป็นส่วนตัว (PDPA)', en: 'I have read and understand the privacy policy (PDPA)', my: 'ကိုယ်ရေးလုံခြုံမှုမူဝါဒ (PDPA) ကို ဖတ်ပြီး နားလည်ပါသည်', km: 'ខ្ញុំបានអាន និងយល់ពីគោលការណ៍ឯកជនភាព (PDPA)', lo: 'ຂ້ອຍໄດ້ອ່ານ ແລະ ເຂົ້າໃຈນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ (PDPA)' },
+  'pdpa.consent': { th: 'ฉันยินยอมให้เก็บและใช้ข้อมูลเพื่อการช่วยเหลือและติดตามเรื่องของฉัน', en: 'I consent to my data being collected and used to help me and follow up my case', my: 'ကျွန်ုပ်ကိုကူညီရန်နှင့် ကိစ္စကိုစောင့်ကြည့်ရန် အချက်အလက်သုံးခြင်းကို သဘောတူပါသည်', km: 'ខ្ញុំយល់ព្រមឱ្យប្រមូល និងប្រើទិន្នន័យដើម្បីជួយ និងតាមដានករណីរបស់ខ្ញុំ', lo: 'ຂ້ອຍຍິນຍອມໃຫ້ເກັບ ແລະ ໃຊ້ຂໍ້ມູນເພື່ອຊ່ວຍເຫຼືອ ແລະ ຕິດຕາມເລື່ອງຂອງຂ້ອຍ' },
+  'pdpa.read': { th: 'อ่านนโยบายฉบับเต็ม', en: 'Read full policy', my: 'မူဝါဒအပြည့်အစုံဖတ်ရန်', km: 'អានគោលការណ៍ពេញ', lo: 'ອ່ານນະໂຍບາຍເຕັມ' },
+  'pdpa.accept': { th: 'ยืนยันและเริ่มใช้งาน', en: 'Confirm and continue', my: 'အတည်ပြုပြီး ဆက်လုပ်ရန်', km: 'បញ្ជាក់ និងបន្ត', lo: 'ຢືນຢັນ ແລະ ສືບຕໍ່' },
   'cl.nav.signin': { th: 'เข้าสู่ระบบ / สมัคร', en: 'Sign in / Sign up' },
   'cl.nav.account': { th: 'บัญชีของฉัน', en: 'My account' },
   'cl.signin.title': { th: 'เข้าสู่ระบบ หรือ ลงทะเบียน', en: 'Sign in or register' },
