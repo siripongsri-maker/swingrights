@@ -10,6 +10,8 @@ interface RefView {
   case_code: string; branch: string | null; violation_types: string[];
   note: string | null; summary: string | null; severity: string | null; province: string | null; district: string | null; outcome: string; expires_at: string | null;
   letter: Record<string, string> | null; partner_name: string | null; referred_at: string | null;
+  nationality: string | null; gender: string | null; age: string | null;
+  screening: { q2_score: number; q2_positive: boolean; q9_total: number; q9_level: 'none' | 'mild' | 'moderate' | 'severe' } | null;
 }
 
 export default function ReferralRespond() {
@@ -61,6 +63,25 @@ export default function ReferralRespond() {
               </div>
               {(data.province || data.district) && <div><dt className="text-xs text-muted-foreground">{t('ref.page.area')}</dt><dd>{[data.district, data.province].filter(Boolean).join(' · ')}</dd></div>}
               {data.severity && <div><dt className="text-xs text-muted-foreground">{t('ref.page.severity')}</dt><dd>{t(`ref.sev.${data.severity}`)}</dd></div>}
+              {(data.nationality || data.gender || data.age) && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t('ref.page.demographics')}</dt>
+                  <dd className="grid grid-cols-3 gap-2 mt-1">
+                    <span><span className="block text-[10px] text-muted-foreground">{t('ref.page.nationality')}</span>{data.nationality || t('ref.page.unspecified')}</span>
+                    <span><span className="block text-[10px] text-muted-foreground">{t('ref.page.gender')}</span>{data.gender || t('ref.page.unspecified')}</span>
+                    <span><span className="block text-[10px] text-muted-foreground">{t('ref.page.age')}</span>{data.age ? t('ref.page.ageValue', { age: data.age }) : t('ref.page.unspecified')}</span>
+                  </dd>
+                </div>
+              )}
+              {data.screening && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t('ref.page.screening')}</dt>
+                  <dd className="mt-1 rounded-lg border border-border bg-muted/40 p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-3"><span>{t('ref.page.q2')}</span><strong>{data.screening.q2_score}/2 · {data.screening.q2_positive ? t('ref.page.q2Positive') : t('ref.page.q2Negative')}</strong></div>
+                    <div className="flex items-center justify-between gap-3"><span>{t('ref.page.q9')}</span><strong>{data.screening.q9_total}/27 · {t(`tools.level.${data.screening.q9_level}`)}</strong></div>
+                  </dd>
+                </div>
+              )}
               {data.summary && <div><dt className="text-xs text-muted-foreground">{t('ref.page.summary')}</dt><dd className="whitespace-pre-wrap rounded-lg bg-muted/50 p-3 mt-1">{data.summary}</dd></div>}
               {data.letter && (
                 <div className="referral-letter rounded-xl border border-border p-4 space-y-3 bg-background">
