@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Mic, Search, ArrowRight, Lock, Leaf, HeartHandshake, Sparkles, Users, Eye, MousePointerClick, Scale } from 'lucide-react';
+import { ShieldCheck, Mic, Search, ArrowRight, Lock, Leaf, HeartHandshake, Sparkles, Users, Eye, MousePointerClick, Scale, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Reveal } from '@/components/Reveal';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
 import heroBotanical from '@/assets/hero-botanical.png';
+import { RIGHTS } from '@/data/rights';
 
 /** Eases a number from 0 → target on mount (used for the stats card). */
 function CountUp({ to }: { to: number }) {
@@ -47,6 +48,11 @@ function getSessionId() {
 export default function Landing() {
   const { t } = useI18n();
   const [stats, setStats] = useState<SiteStats>({ registered_users: 0, unique_visitors: 0, total_visits: 0 });
+  const [rightIndex, setRightIndex] = useState(0);
+
+  const showPreviousRight = () => setRightIndex((current) => (current - 1 + RIGHTS.length) % RIGHTS.length);
+  const showNextRight = () => setRightIndex((current) => (current + 1) % RIGHTS.length);
+  const featuredRight = RIGHTS[rightIndex];
 
   useEffect(() => {
     let mounted = true;
@@ -75,6 +81,11 @@ export default function Landing() {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(showNextRight, 6000);
+    return () => window.clearInterval(timer);
   }, []);
 
   return (
@@ -165,15 +176,42 @@ export default function Landing() {
           {/* Bento grid — revealed on scroll */}
           <Reveal>
             <section className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-14 stagger">
-              <article className="sm:col-span-2 relative overflow-hidden rounded-[1.75rem] bg-card border border-border p-6 shadow-card hover-lift">
-                <div className="w-10 h-10 rounded-2xl bg-primary-soft flex items-center justify-center mb-4">
-                  <HeartHandshake className="w-5 h-5 text-primary" />
+              <article className="sm:col-span-2 relative overflow-hidden rounded-[1.75rem] bg-card border border-border p-6 shadow-card" aria-roledescription="carousel" aria-label={t('landing.rightsPreview.title')}>
+                <div className="flex items-start justify-between gap-4 mb-5">
+                  <div>
+                    <p className="text-xs font-medium text-primary mb-1">{t('rights.nav')}</p>
+                    <h2 className="font-display text-xl font-medium">{t('landing.rightsPreview.title')}</h2>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button type="button" size="icon" variant="ghost" className="h-10 w-10 rounded-full" onClick={showPreviousRight} aria-label={t('landing.rightsPreview.previous')}>
+                      <ChevronLeft className="w-5 h-5 rtl:-scale-x-100" />
+                    </Button>
+                    <Button type="button" size="icon" variant="ghost" className="h-10 w-10 rounded-full" onClick={showNextRight} aria-label={t('landing.rightsPreview.next')}>
+                      <ChevronRight className="w-5 h-5 rtl:-scale-x-100" />
+                    </Button>
+                  </div>
                 </div>
-                <h2 className="font-display text-xl font-medium mb-1.5">{t('landing.card1.title')}</h2>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
-                  {t('landing.card1.body')}
-                </p>
-                <div className="pointer-events-none absolute -bottom-10 -right-6 w-40 h-40 rounded-full bg-gradient-primary opacity-10" />
+
+                {featuredRight && (
+                  <div className="min-h-[9.5rem]" aria-live="polite" aria-atomic="true">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-soft font-display text-lg font-medium text-primary">
+                        {featuredRight.id}
+                      </span>
+                      <div>
+                        <h3 className="font-display text-lg font-medium leading-snug mb-2">{featuredRight.title}</h3>
+                        <p className="text-base text-muted-foreground leading-relaxed line-clamp-2">{featuredRight.body}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-4 mt-3">
+                  <span className="text-xs text-muted-foreground tabular-nums">{rightIndex + 1} / {RIGHTS.length}</span>
+                  <Link to="/rights" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                    {t('landing.rightsPreview.all')} <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
+                  </Link>
+                </div>
               </article>
 
               <article className="rounded-[1.75rem] bg-primary text-primary-foreground p-6 shadow-elegant hover-lift">
