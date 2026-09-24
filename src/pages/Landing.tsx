@@ -194,7 +194,7 @@ export default function Landing() {
               <article className="sm:col-span-2 relative overflow-hidden rounded-[20px] bg-card border border-border p-6 shadow-card" aria-roledescription="carousel" aria-label={t('landing.rightsPreview.title')}>
                 <div className="flex items-start justify-between gap-4 mb-5">
                   <div>
-                    <p className="text-xs font-medium text-primary mb-1">{t('rights.nav')}</p>
+                    <p className="font-subhead text-base sm:text-lg font-semibold text-primary mb-1">{t('rights.nav')}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <Button type="button" size="icon" variant="ghost" className="h-10 w-10 rounded-full" onClick={showPreviousRight} aria-label={t('landing.rightsPreview.previous')}>
