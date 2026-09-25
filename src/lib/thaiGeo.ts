@@ -365,3 +365,24 @@ export function nearestProvince(geo: ProvinceRow[], lat: number, lng: number): {
   }
   return best;
 }
+
+/**
+ * Offline reverse-geocode: nearest tambon center → province / district / subdistrict / zip.
+ * Runs in the browser only (no coordinates are sent to any third party).
+ * Returns null if the point is far outside Thailand (> maxKm from any known point).
+ * Bangkok has no tambon coords in the dataset, so it resolves to province only.
+ */
+export function reverseGeocode(
+  geo: ProvinceRow[], lat: number, lng: number, maxKm = 40,
+): { province: string; district: string; subdistrict: string; zip: string; km: number } | null {
+  const here: [number, number] = [lat, lng];
+  let best: { province: string; district: string; subdistrict: string; zip: string; km: number } | null = null;
+  for (const p of geo) for (const d of p.d) for (const s of d.s) {
+    if (!s.c) continue;
+    const km = distKm(here, s.c);
+    if (!best || km < best.km) best = { province: p.n, district: d.n, subdistrict: s.n, zip: s.z ? String(s.z) : '', km };
+  }
+  const bkk = distKm(here, TH_CENTER);
+  if (bkk < 25 && (!best || bkk < best.km)) best = { province: 'กรุงเทพมหานคร', district: '', subdistrict: '', zip: '', km: bkk };
+  return best && best.km <= maxKm ? best : null;
+}
