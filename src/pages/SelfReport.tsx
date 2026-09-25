@@ -838,7 +838,22 @@ export default function SelfReport() {
                 >
                   <Copy className="w-3 h-3 me-1" /> {caseCode}
                 </Button>
+                <Button
+                  size="sm" variant="outline" className="mt-1.5 w-full rounded-xl text-xs"
+                  onClick={() => downloadCodeCard(caseCode, {
+                    title: t('report.title'),
+                    code: t('report.success.code'),
+                    track: t('report.success.track'),
+                    note: t('report.success.shotNote'),
+                  })}
+                >
+                  <Download className="w-3.5 h-3.5 me-1.5" /> {t('report.success.saveImage')}
+                </Button>
               </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5 text-start">
+                <Camera className="w-3.5 h-3.5 mt-0.5 shrink-0 text-accent" />
+                {t('report.success.shotNote')}
+              </p>
               {/* recap: what was collected + where the case goes next */}
               <div className="rounded-xl border border-border bg-card p-3 text-start text-[11px] space-y-1">
                 <p className="font-semibold text-xs">{t('report.success.summary')}</p>
