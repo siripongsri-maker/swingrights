@@ -155,6 +155,33 @@ export function DashboardOverview({ branch, onOpenCase }: { branch: string | nul
         </div>
         <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5"><Bot className="w-3.5 h-3.5" />{t('ops.ai', { n: s.ai_samples, r: s.ai_rated })}</p>
       </Section>
+
+      <Dialog open={!!pick} onOpenChange={(o) => !o && setPick(null)}>
+        <DialogContent className="max-w-md max-h-[80dvh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-base">
+              {pick ? (() => { const v = t(`report.type.${pick}`); return v === `report.type.${pick}` ? un(pick) : v; })() : ''}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 overflow-y-auto -mx-6 px-6 space-y-1.5 pb-2">
+            {pickQ.isLoading && <div className="py-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>}
+            {pickQ.data && pickQ.data.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center">{t('sys.none')}</p>}
+            {pickQ.data?.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => { setPick(null); onOpenCase?.(c.id); }}
+                className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-start hover:border-primary/50 transition"
+              >
+                <span className="font-mono text-xs font-semibold text-primary">{c.case_code}</span>
+                <span className="text-[11px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
+                <span className="text-[11px] text-muted-foreground ms-auto">{t(`status.${c.status}`)}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground rtl:-scale-x-100" />
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -178,22 +205,31 @@ function Tile({ n, label, tone, small }: { n: number; label: string; tone?: 'pri
   );
 }
 
-function Bars({ title, data, empty }: { title: string; data: { label: string; value: number }[]; empty: string }) {
+function Bars({ title, data, empty, onPick }: { title: string; data: { key: string; label: string; value: number }[]; empty: string; onPick?: (key: string) => void }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
     <div className="mb-4">
       <p className="text-xs font-medium text-muted-foreground mb-2">{title}</p>
       {data.length === 0 ? <p className="text-xs text-muted-foreground">{empty}</p> : (
         <div className="space-y-1.5">
-          {data.map((d) => (
-            <div key={d.label} className="flex items-center gap-2">
-              <span className="text-xs w-28 truncate" title={d.label}>{d.label}</span>
-              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full" style={{ width: `${(d.value / max) * 100}%` }} />
-              </div>
-              <span className="text-xs font-mono w-8 text-end tabular-nums">{d.value}</span>
-            </div>
-          ))}
+          {data.map((d) => {
+            const inner = (
+              <>
+                <span className="text-xs w-28 truncate" title={d.label}>{d.label}</span>
+                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full" style={{ width: `${(d.value / max) * 100}%` }} />
+                </div>
+                <span className="text-xs font-mono w-8 text-end tabular-nums">{d.value}</span>
+              </>
+            );
+            return onPick ? (
+              <button key={d.key} type="button" onClick={() => onPick(d.key)} className="w-full flex items-center gap-2 rounded-md px-1 -mx-1 py-0.5 hover:bg-muted/60 transition text-start">
+                {inner}
+              </button>
+            ) : (
+              <div key={d.key} className="flex items-center gap-2">{inner}</div>
+            );
+          })}
         </div>
       )}
     </div>
