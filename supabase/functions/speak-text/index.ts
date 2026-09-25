@@ -11,8 +11,8 @@ interface LangCfg { voice: string; style: string }
 // Gemini TTS: natural, expressive voices. Tone/pacing steering goes in the
 // spoken text prefix (the gateway strips systemInstruction).
 const LANG: Record<string, LangCfg> = {
-  th: { voice: "Sulafat", style: "พูดภาษาไทยเหมือนผู้ให้คำปรึกษาที่กำลังรับฟังอย่างตั้งใจ น้ำเสียงนุ่ม สงบ อ่อนโยน มั่นคง ให้ความรู้สึกปลอดภัยและไม่ตัดสิน โทนเสียงต่ำลงเล็กน้อย ไม่สดใสหรือตื่นเต้น พูดชัดทุกคำ ครบทุกพยางค์ จังหวะปกติไม่ช้า เว้นจังหวะสั้นๆ ตามธรรมชาติ" },
-  en: { voice: "Sulafat", style: "Speak like a caring counselor who is listening closely: soft, calm, gentle, steady and non-judgmental, slightly lower and warmer, not bright or upbeat. Pronounce every word clearly and completely at a normal, unhurried pace with short natural pauses" },
+  th: { voice: "Sulafat", style: "พูดภาษาไทยเหมือนผู้ให้คำปรึกษาที่กำลังรับฟังอย่างตั้งใจ น้ำเสียงนุ่ม สงบ อ่อนโยน มั่นคง ให้ความรู้สึกปลอดภัยและไม่ตัดสิน โทนเสียงต่ำลงเล็กน้อย ไม่สดใสหรือตื่นเต้น พูดเหมือนคุยกับคนตรงหน้าจริงๆ ไม่ใช่อ่านหนังสือหรือประกาศ ใช้สำเนียงไทยกลางแบบคนทั่วไปคุยกัน ขึ้นลงเสียงตามวรรณยุกต์อย่างเป็นธรรมชาติ ไม่ลากเสียงท้ายประโยค พูดชัดทุกคำ จังหวะสบายๆ เว้นหายใจสั้นๆ ตรงช่องว่างระหว่างวลี แล้วพูดข้อความต่อไปนี้" },
+  en: { voice: "Sulafat", style: "Speak like a caring counselor who is listening closely: soft, calm, gentle, steady and non-judgmental, slightly lower and warmer, not bright or upbeat. Pronounce every word clearly and completely at a normal, unhurried pace with short natural pauses. Sound like a real conversation, not reading aloud. Say the following" },
   my: { voice: "Sulafat", style: "Speak in Burmese like a caring counselor: soft, calm, gentle and non-judgmental, not bright or upbeat, every word clear and complete, normal pace" },
   km: { voice: "Sulafat", style: "Speak in Khmer like a caring counselor: soft, calm, gentle and non-judgmental, not bright or upbeat, every word clear and complete, normal pace" },
   lo: { voice: "Sulafat", style: "Speak in Lao like a caring counselor: soft, calm, gentle and non-judgmental, not bright or upbeat, every word clear and complete, normal pace" },
@@ -38,6 +38,7 @@ serve(async (req) => {
     if (!text) return json({ error: "Missing text" }, 400);
     if (text.length > MAX_CHARS) return json({ error: `Text too long (max ${MAX_CHARS} chars)` }, 400);
     const cfg = LANG[lang] ?? LANG.th;
+    const spoken = toSpeech(text);
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
       method: "POST",
@@ -47,7 +48,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-3.1-flash-tts-preview",
-        contents: [{ role: "user", parts: [{ text: `${cfg.style}: ${text}` }] }],
+        contents: [{ role: "user", parts: [{ text: `${cfg.style}\n\n${spoken}` }] }],
         generationConfig: {
           responseModalities: ["AUDIO"],
           speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: cfg.voice } } },
@@ -77,6 +78,20 @@ serve(async (req) => {
     return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
 });
+
+/** Turn on-screen punctuation into natural spoken pauses so the voice doesn't read symbols. */
+function toSpeech(t: string): string {
+  return t
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "")
+    .replace(/\s*[—–]\s*/g, ", ")
+    .replace(/\.{3}|…/g, ", ")
+    .replace(/\s*\/\s*/g, " หรือ ")
+    .replace(/[•*#_~`|<>\[\]{}]/g, " ")
+    .replace(/\(([^)]*)\)/g, ", $1, ")
+    .replace(/\s*,\s*(,\s*)+/g, ", ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
 
 function json(payload: unknown, status: number) {
   return new Response(JSON.stringify(payload), {
