@@ -148,6 +148,7 @@ export function DocumentDraftDialog({ open, onOpenChange, caseId, kind, input, e
 
         <DialogFooter className="gap-2 sm:gap-2 shrink-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('docs.review.cancel')}</Button>
+          <Button variant="outline" disabled={loading || saving} onClick={fillFromCase}><FileInput className="w-4 h-4" />{t('docs.review.fillFromCase')}</Button>
           <Button variant="outline" disabled={loading || saving} onClick={() => void generate()}><RotateCcw className="w-4 h-4" />{t('docs.review.regenerate')}</Button>
           <Button disabled={loading || saving || FIELDS.some((field) => !draft[field].trim())} onClick={() => void confirmAndPrint()}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileCheck2 className="w-4 h-4" />}{t('docs.review.confirmPrint')}
