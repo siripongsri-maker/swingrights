@@ -24,6 +24,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { printCaseDocument, docInputFromReport, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { CaseReferrals } from '@/components/admin/CaseReferrals';
 import { MapPicker } from '@/components/screening/MapPicker';
@@ -378,7 +379,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <DashboardOverview branch={branch === 'all' ? null : branch} />
+            <DashboardOverview branch={branch === 'all' ? null : branch} onOpenCase={(id) => setSelectedId(id)} />
           </TabsContent>
 
           <TabsContent value="cases">
@@ -777,6 +778,32 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
               onChange={(e) => patchCase({ follow_up_at: e.target.value ? new Date(e.target.value).toISOString() : null }, t('dash.detail.followUpSetToast'))}
               className="h-9"
             />
+          </div>
+        </section>
+
+        {/* Violation type classification (staff) */}
+        <section className="bg-card border border-border rounded-xl p-5 shadow-card">
+          <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.types')}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {(['body', 'mental', 'labor', 'health', 'property', 'other'] as const).map((k) => {
+              const cur: string[] = Array.isArray(c.violation_types) ? c.violation_types : [];
+              const active = cur.includes(k);
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  disabled={!access.canEdit}
+                  aria-pressed={active}
+                  onClick={() => patchCase({ violation_types: active ? cur.filter((x) => x !== k) : [...cur, k] }, t('dash.detail.typesSaved'))}
+                  className={cn(
+                    'rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:opacity-60',
+                    active ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card text-muted-foreground',
+                  )}
+                >
+                  {t(`report.type.${k}`)}
+                </button>
+              );
+            })}
           </div>
         </section>
 

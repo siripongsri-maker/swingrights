@@ -128,7 +128,7 @@ interface ChatMsg {
   resolved?: boolean;
 }
 
-const TYPE_KEYS = ['body', 'labor', 'health', 'property', 'other'] as const;
+const TYPE_KEYS = ['body', 'mental', 'labor', 'health', 'property', 'other'] as const;
 // Probe: sequential follow-up questions asked one at a time after the story
 const PROBE_IDS = ['when', 'where', 'who', 'safety', 'needs'] as const;
 type ProbeId = (typeof PROBE_IDS)[number];

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
-import { Loader2, Clock, ShieldAlert, HeartHandshake, Users, TrendingUp, Bot } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, Clock, ShieldAlert, HeartHandshake, Users, TrendingUp, Bot, ChevronRight } from 'lucide-react';
 
 type Map = Record<string, number>;
 interface Overview {
@@ -17,9 +18,27 @@ interface Overview {
 
 const LANG_NAME: Record<string, string> = { th: 'ไทย', en: 'English', my: 'မြန်မာ', km: 'ខ្មែរ', lo: 'ລາວ' };
 
-export function DashboardOverview({ branch }: { branch: string | null }) {
+export function DashboardOverview({ branch, onOpenCase }: { branch: string | null; onOpenCase?: (id: string) => void }) {
   const { t } = useI18n();
   const [days, setDays] = useState(30);
+  const [pick, setPick] = useState<string | null>(null);
+  const pickQ = useQuery({
+    queryKey: ['violation-cases', pick],
+    enabled: !!pick,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cases')
+        .select('id, case_code, created_at, status, violation_types, profile')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      const has = (c: any, k: string) =>
+        (Array.isArray(c.violation_types) && c.violation_types.includes(k)) ||
+        (Array.isArray(c.profile?.initialViolationTypes) && c.profile.initialViolationTypes.includes(k));
+      return (data as any[]).filter((c) => has(c, pick!));
+    },
+  });
   const q = useQuery({
     queryKey: ['overview', branch, days],
     refetchInterval: 60_000,
@@ -32,7 +51,7 @@ export function DashboardOverview({ branch }: { branch: string | null }) {
   const s = q.data;
   const un = (k: string) => (k === 'unspecified' || k === 'unset' ? t('ops.unspecified') : k);
   const rows = (m: Map | undefined, f: (k: string) => string = un) =>
-    Object.entries(m ?? {}).map(([k, v]) => ({ label: f(k), value: v })).sort((a, b) => b.value - a.value);
+    Object.entries(m ?? {}).map(([k, v]) => ({ key: k, label: f(k), value: v })).sort((a, b) => b.value - a.value);
 
   if (q.isLoading || !s) return <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>;
 
@@ -115,7 +134,10 @@ export function DashboardOverview({ branch }: { branch: string | null }) {
           <span>{s.daily[0]?.day}</span><span>{s.daily[s.daily.length - 1]?.day}</span>
         </div>
         <div className="grid sm:grid-cols-2 gap-x-6 mt-4">
-          <Bars title={t('ops.byViolation')} data={rows(s.by_violation, (k) => { const v = t(`report.type.${k}`); return v === `report.type.${k}` ? un(k) : v; })} empty={t('sys.none')} />
+          <div>
+            <Bars title={t('ops.byViolation')} data={rows(s.by_violation, (k) => { const v = t(`report.type.${k}`); return v === `report.type.${k}` ? un(k) : v; })} empty={t('sys.none')} onPick={onOpenCase ? (k) => setPick(k) : undefined} />
+            <p className="text-[11px] text-muted-foreground -mt-2 mb-4">{t('ops.byViolationHint')}</p>
+          </div>
           <Bars title={t('ops.byOccupation')} data={rows(s.by_occupation)} empty={t('sys.none')} />
           <Bars title={t('dash.chart.byStatus')} data={rows(s.by_status, (k) => t(`status.${k}`))} empty={t('sys.none')} />
           <Bars title={t('dash.chart.bySeverity')} data={rows(s.by_severity)} empty={t('sys.none')} />
@@ -133,6 +155,33 @@ export function DashboardOverview({ branch }: { branch: string | null }) {
         </div>
         <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5"><Bot className="w-3.5 h-3.5" />{t('ops.ai', { n: s.ai_samples, r: s.ai_rated })}</p>
       </Section>
+
+      <Dialog open={!!pick} onOpenChange={(o) => !o && setPick(null)}>
+        <DialogContent className="max-w-md max-h-[80dvh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-base">
+              {pick ? (() => { const v = t(`report.type.${pick}`); return v === `report.type.${pick}` ? un(pick) : v; })() : ''}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 overflow-y-auto -mx-6 px-6 space-y-1.5 pb-2">
+            {pickQ.isLoading && <div className="py-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>}
+            {pickQ.data && pickQ.data.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center">{t('sys.none')}</p>}
+            {pickQ.data?.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => { setPick(null); onOpenCase?.(c.id); }}
+                className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-start hover:border-primary/50 transition"
+              >
+                <span className="font-mono text-xs font-semibold text-primary">{c.case_code}</span>
+                <span className="text-[11px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
+                <span className="text-[11px] text-muted-foreground ms-auto">{t(`status.${c.status}`)}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground rtl:-scale-x-100" />
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -156,22 +205,31 @@ function Tile({ n, label, tone, small }: { n: number; label: string; tone?: 'pri
   );
 }
 
-function Bars({ title, data, empty }: { title: string; data: { label: string; value: number }[]; empty: string }) {
+function Bars({ title, data, empty, onPick }: { title: string; data: { key: string; label: string; value: number }[]; empty: string; onPick?: (key: string) => void }) {
   const max = Math.max(...data.map((d) => d.value), 1);
   return (
     <div className="mb-4">
       <p className="text-xs font-medium text-muted-foreground mb-2">{title}</p>
       {data.length === 0 ? <p className="text-xs text-muted-foreground">{empty}</p> : (
         <div className="space-y-1.5">
-          {data.map((d) => (
-            <div key={d.label} className="flex items-center gap-2">
-              <span className="text-xs w-28 truncate" title={d.label}>{d.label}</span>
-              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full" style={{ width: `${(d.value / max) * 100}%` }} />
-              </div>
-              <span className="text-xs font-mono w-8 text-end tabular-nums">{d.value}</span>
-            </div>
-          ))}
+          {data.map((d) => {
+            const inner = (
+              <>
+                <span className="text-xs w-28 truncate" title={d.label}>{d.label}</span>
+                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary rounded-full" style={{ width: `${(d.value / max) * 100}%` }} />
+                </div>
+                <span className="text-xs font-mono w-8 text-end tabular-nums">{d.value}</span>
+              </>
+            );
+            return onPick ? (
+              <button key={d.key} type="button" onClick={() => onPick(d.key)} className="w-full flex items-center gap-2 rounded-md px-1 -mx-1 py-0.5 hover:bg-muted/60 transition text-start">
+                {inner}
+              </button>
+            ) : (
+              <div key={d.key} className="flex items-center gap-2">{inner}</div>
+            );
+          })}
         </div>
       )}
     </div>
