@@ -606,6 +606,8 @@ const BASE_DICT: Dict = {
   'train.rate.repeat': { th: 'ถามซ้ำ', en: 'Repeated', my: 'ထပ်မေးသည်', km: 'សួរដដែល', lo: 'ຖາມຊ້ຳ' },
   'train.rate.bad': { th: 'ไม่เหมาะ', en: 'Not suitable', my: 'မသင့်တော်', km: 'មិនសមរម្យ', lo: 'ບໍ່ເໝາະ' },
   'train.rateError': { th: 'บันทึกคะแนนไม่สำเร็จ', en: 'Could not save rating', my: 'သိမ်းမရပါ', km: 'មិនអាចរក្សាទុក', lo: 'ບັນທຶກບໍ່ສຳເລັດ' },
+  'train.progress': { th: 'ให้คะแนนแล้ว {n}/{total} คำถาม — กดซ้ำเพื่อยกเลิก', en: 'Rated {n}/{total} questions — tap again to clear', my: '{n}/{total} အမှတ်ပေးပြီး', km: 'បានវាយតម្លៃ {n}/{total}', lo: 'ໃຫ້ຄະແນນແລ້ວ {n}/{total}' },
+  'train.saved': { th: 'บันทึกคะแนนแล้ว จะใช้ในการเทรนเวอร์ชันถัดไป', en: 'Rating saved — used in the next training version', my: 'သိမ်းပြီး', km: 'បានរក្សាទុក', lo: 'ບັນທຶກແລ້ວ' },
   'report.train.consent': {
     th: 'ยินยอมให้ใช้คำถามและคำตอบของฉันแบบไม่ระบุตัวตน เพื่อปรับปรุง AI ของ SWING Rights เท่านั้น (ไม่บังคับ)',
     en: 'Let SWING Rights use my questions and answers, without my identity, only to improve its own AI (optional)',

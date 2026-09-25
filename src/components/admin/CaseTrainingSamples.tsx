@@ -21,9 +21,11 @@ export function CaseTrainingSamples({ caseId }: { caseId: string }) {
   });
   if (!data.length) return null;
 
-  const rate = async (id: string, r: string) => {
-    const { error } = await supabase.rpc('rate_training_sample' as never, { _id: id, _rating: r } as never);
+  const rate = async (id: string, r: string, current: string | null) => {
+    const next = current === r ? null : r;
+    const { error } = await supabase.rpc('rate_training_sample' as never, { _id: id, _rating: next } as never);
     if (error) { toast.error(t('train.rateError')); return; }
+    if (next) toast.success(t('train.saved'));
     qc.invalidateQueries({ queryKey: ['training-samples', caseId] });
   };
 
@@ -38,6 +40,7 @@ export function CaseTrainingSamples({ caseId }: { caseId: string }) {
       <div>
         <h3 className="font-subhead text-sm flex items-center gap-1.5"><GraduationCap className="w-4 h-4 text-primary" />{t('train.title')}</h3>
         <p className="text-xs text-muted-foreground mt-0.5">{t('train.hint')}</p>
+        <p className="text-xs font-mono text-primary mt-1">{t('train.progress').replace('{n}', String(data.filter((x) => x.followup && x.staff_rating).length)).replace('{total}', String(data.filter((x) => x.followup).length))}</p>
       </div>
       <ul className="space-y-2.5">
         {data.map((s) => (
@@ -53,7 +56,7 @@ export function CaseTrainingSamples({ caseId }: { caseId: string }) {
             {s.followup && (
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {opts.map(({ k, icon: Icon }) => (
-                  <Button key={k} size="sm" variant={s.staff_rating === k ? 'default' : 'outline'} className={cn('h-7 text-xs rounded-full')} onClick={() => rate(s.id, k)}>
+                  <Button key={k} size="sm" variant={s.staff_rating === k ? 'default' : 'outline'} className={cn('h-7 text-xs rounded-full')} aria-pressed={s.staff_rating === k} onClick={() => rate(s.id, k, s.staff_rating)}>
                     <Icon className="w-3.5 h-3.5 me-1" />{t(`train.rate.${k}`)}
                   </Button>
                 ))}
