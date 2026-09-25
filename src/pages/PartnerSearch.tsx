@@ -159,6 +159,33 @@ export default function PartnerSearch() {
       </header>
 
       <main className="max-w-4xl mx-auto px-5 py-6 space-y-4">
+        <div className="bg-primary-soft border border-primary/30 rounded-xl p-4 space-y-2">
+          <p className="text-sm font-medium flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary" /> {t('psearch.focusCase')}</p>
+          <Select value={focusId ?? 'none'} onValueChange={(v) => { const n = new URLSearchParams(params); if (v === 'none') n.delete('case'); else n.set('case', v); setParams(n, { replace: true }); }}>
+            <SelectTrigger className="bg-card"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">{t('psearch.focusNone')}</SelectItem>
+              {cases.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.case_code} · {c.profile?.province || '—'} · {new Date(c.created_at).toLocaleDateString('th-TH')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {focus && (
+            <>
+              <p className="text-xs text-muted-foreground">
+                {focusProv ? t('psearch.caseArea', { area: [focusDist, focusProv].filter(Boolean).join(' · ') }) : t('psearch.caseNoArea')}
+              </p>
+              {focusProv && (
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="checkbox" checked={nearOnly} onChange={(e) => setNearOnly(e.target.checked)} className="w-4 h-4 accent-primary" />
+                  {t('psearch.nearOnly')}
+                </label>
+              )}
+            </>
+          )}
+        </div>
         <div className="bg-card border border-border rounded-xl p-4 shadow-card space-y-3">
           <div className="relative">
             <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -200,6 +227,11 @@ export default function PartnerSearch() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-sm">{p.name}</p>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{t(`partners.orgType.${p.org_type}`)}</span>
+                    {focus && nearness(p) > 0 && (
+                      <span className={cn('text-[10px] px-2 py-0.5 rounded-full', nearness(p) >= 2 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground')}>
+                        {t(nearness(p) === 3 ? 'psearch.badgeDistrict' : nearness(p) === 2 ? 'psearch.badgeProvince' : 'psearch.badgeNational')}
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                     <MapPin className="w-3 h-3" /> {[p.district, p.province].filter(Boolean).join(' · ') || '—'}
@@ -211,7 +243,7 @@ export default function PartnerSearch() {
                     </div>
                   )}
                 </div>
-                <Button size="sm" className="shrink-0" onClick={() => setReferPartner(p)}>
+                <Button size="sm" className="shrink-0" onClick={() => openRefer(p)}>
                   <Share2 className="w-3.5 h-3.5" /> {t('psearch.referNow')}
                 </Button>
               </li>
