@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { rememberReportCode } from '@/lib/myReports';
 import { supabase as sbAuth } from '@/integrations/supabase/client';
-import { ArrowLeft, Building2, Check, Copy, Loader2, MapPin, Paperclip, Phone, SendHorizonal, X } from 'lucide-react';
+import { ArrowLeft, Building2, Camera, Check, Copy, Download, Loader2, MapPin, Paperclip, Phone, SendHorizonal, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -42,6 +42,82 @@ async function uploadOne(kind: 'audio' | 'photo', file: { blob: Blob; name: stri
 
 type Stage = 'consent' | 'about' | 'story' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'done';
 type Widget = 'consent' | 'about' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'success';
+
+/** Draw a shareable case-code card (brand colors) and download it as PNG. */
+function downloadCodeCard(code: string, labels: { title: string; code: string; track: string; note: string }) {
+  const W = 1080, H = 1350;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  if (!ctx) return;
+  // background
+  ctx.fillStyle = '#F0F9F9';
+  ctx.fillRect(0, 0, W, H);
+  // header band
+  ctx.fillStyle = '#2A2A2E';
+  ctx.fillRect(0, 0, W, 220);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '700 64px "IBM Plex Sans Thai Looped", "Bai Jamjuree", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('SWING RIGHTS', W / 2, 110);
+  ctx.font = '400 34px "Bai Jamjuree", sans-serif';
+  ctx.fillStyle = '#F0F9F9';
+  ctx.fillText('มูลนิธิเพื่อนพนักงานบริการ', W / 2, 170);
+  // card
+  const cx = 90, cy = 300, cw = W - 180, ch = 620;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.strokeStyle = '#CC0099';
+  ctx.lineWidth = 6;
+  const r = 48;
+  ctx.beginPath();
+  ctx.roundRect(cx, cy, cw, ch, r);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#2A2A2E';
+  ctx.font = '400 40px "Bai Jamjuree", sans-serif';
+  ctx.fillText(labels.code, W / 2, cy + 120);
+  ctx.fillStyle = '#CC0099';
+  ctx.font = '700 120px "IBM Plex Mono", monospace';
+  ctx.fillText(code, W / 2, cy + 300);
+  ctx.fillStyle = '#2A2A2E';
+  ctx.font = '400 36px "Bai Jamjuree", sans-serif';
+  ctx.fillText(labels.track, W / 2, cy + 420);
+  ctx.fillStyle = '#CC0099';
+  ctx.font = '700 44px "IBM Plex Mono", monospace';
+  ctx.fillText('swingrights.app/track', W / 2, cy + 500);
+  // note (word-wrapped) + date
+  ctx.fillStyle = '#2A2A2E';
+  ctx.font = '400 34px "Bai Jamjuree", sans-serif';
+  const words = labels.note.split(' ');
+  let line = '';
+  let ny = 1000;
+  for (const w of words) {
+    const test = line ? `${line} ${w}` : w;
+    if (ctx.measureText(test).width > W - 200 && line) {
+      ctx.fillText(line, W / 2, ny);
+      ny += 50;
+      line = w;
+    } else line = test;
+  }
+  if (line) { ctx.fillText(line, W / 2, ny); ny += 50; }
+  ctx.font = '400 30px "IBM Plex Mono", monospace';
+  ctx.fillText(new Date().toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' }), W / 2, ny + 20);
+  // footer band
+  ctx.fillStyle = '#CC0099';
+  ctx.fillRect(0, H - 120, W, 120);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '400 34px "Bai Jamjuree", sans-serif';
+  ctx.fillText(labels.title, W / 2, H - 52);
+
+  cv.toBlob((blob) => {
+    if (!blob) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `swing-rights-${code}.png`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }, 'image/png');
+}
 
 interface ChatMsg {
   id: number;
@@ -773,7 +849,22 @@ export default function SelfReport() {
                 >
                   <Copy className="w-3 h-3 me-1" /> {caseCode}
                 </Button>
+                <Button
+                  size="sm" variant="outline" className="mt-1.5 w-full rounded-xl text-xs"
+                  onClick={() => downloadCodeCard(caseCode, {
+                    title: t('report.title'),
+                    code: t('report.success.code'),
+                    track: t('report.success.track'),
+                    note: t('report.success.shotNote'),
+                  })}
+                >
+                  <Download className="w-3.5 h-3.5 me-1.5" /> {t('report.success.saveImage')}
+                </Button>
               </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5 text-start">
+                <Camera className="w-3.5 h-3.5 mt-0.5 shrink-0 text-accent" />
+                {t('report.success.shotNote')}
+              </p>
               {/* recap: what was collected + where the case goes next */}
               <div className="rounded-xl border border-border bg-card p-3 text-start text-[11px] space-y-1">
                 <p className="font-semibold text-xs">{t('report.success.summary')}</p>
