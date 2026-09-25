@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Building2, Copy, Loader2, MapPin, Phone, Search, Share2 } from 'lucide-react';
+import { ArrowLeft, Copy, Loader2, MapPin, Phone, Search, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { useAccess } from '@/hooks/useAccess';
 import { useI18n } from '@/i18n';
 import { BrandMark } from '@/components/BrandLogo';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { cn } from '@/lib/utils';
 
 const ORG_TYPE_KEYS = ['agency', 'hospital', 'legal', 'ngo', 'shelter', 'police', 'hotline', 'other'];
 
@@ -26,15 +27,28 @@ interface Partner {
   services: string[];
 }
 
-interface CaseRow { id: string; case_code: string; status: string; created_at: string }
+interface CaseRow { id: string; case_code: string; status: string; created_at: string; profile: { province?: string; district?: string; branch?: string } | null }
+
+/** Normalise Thai place names so "จังหวัดเชียงใหม่" matches "เชียงใหม่", "กรุงเทพฯ" matches "กรุงเทพมหานคร". */
+const normPlace = (s?: string | null) => (s ?? '')
+  .replace(/^(จังหวัด|จ\.|อำเภอ|อ\.|เขต)\s*/, '')
+  .replace(/^กรุงเทพ.*$/, 'กรุงเทพ')
+  .trim();
+const samePlace = (a?: string | null, b?: string | null) => {
+  const x = normPlace(a), y = normPlace(b);
+  return !!x && !!y && (x === y || x.includes(y) || y.includes(x));
+};
 
 export default function PartnerSearch() {
   const { t } = useI18n();
   const { isStaff, loading } = useAccess();
+  const [params, setParams] = useSearchParams();
+  const focusId = params.get('case');
   const [q, setQ] = useState('');
   const [orgType, setOrgType] = useState('all');
   const [province, setProvince] = useState('all');
   const [service, setService] = useState('all');
+  const [nearOnly, setNearOnly] = useState(true);
   const [referPartner, setReferPartner] = useState<Partner | null>(null);
   const [caseId, setCaseId] = useState<string | null>(null);
   const [note, setNote] = useState('');
@@ -57,18 +71,22 @@ export default function PartnerSearch() {
 
   const { data: cases = [] } = useQuery({
     queryKey: ['partner-search-cases'],
-    enabled: isStaff && !!referPartner,
+    enabled: isStaff,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id,case_code,status,created_at')
+        .select('id,case_code,status,created_at,profile')
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) throw error;
-      return (data ?? []) as CaseRow[];
+      return (data ?? []) as unknown as CaseRow[];
     },
   });
+
+  const focus = cases.find((c) => c.id === focusId) ?? null;
+  const focusProv = focus?.profile?.province || '';
+  const focusDist = focus?.profile?.district || '';
 
   const provinces = useMemo(() => [...new Set(partners.map((p) => p.province).filter(Boolean))].sort() as string[], [partners]);
   const services = useMemo(
@@ -76,16 +94,28 @@ export default function PartnerSearch() {
     [partners],
   );
 
+  /** 3 = same district, 2 = same province, 1 = nationwide, 0 = elsewhere */
+  const nearness = (p: Partner) => {
+    if (!p.province) return 1;
+    if (!focusProv || !samePlace(p.province, focusProv)) return 0;
+    return focusDist && samePlace(p.district, focusDist) ? 3 : 2;
+  };
+
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return partners.filter((p) => {
+    const list = partners.filter((p) => {
       if (orgType !== 'all' && p.org_type !== orgType) return false;
       if (province !== 'all' && p.province !== province) return false;
       if (service !== 'all' && !(Array.isArray(p.services) && p.services.includes(service))) return false;
       if (needle && !`${p.name} ${p.district ?? ''} ${p.province ?? ''}`.toLowerCase().includes(needle)) return false;
+      if (focus && nearOnly && nearness(p) === 0) return false;
       return true;
     });
-  }, [partners, q, orgType, province, service]);
+    return focus ? [...list].sort((a, b) => nearness(b) - nearness(a)) : list;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partners, q, orgType, province, service, focus, nearOnly]);
+
+  const openRefer = (p: Partner) => { setReferPartner(p); setCaseId(focus?.id ?? null); };
 
   const submit = async () => {
     if (!referPartner || !caseId) return;
