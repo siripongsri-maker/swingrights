@@ -80,34 +80,36 @@ export function DocumentDraftDialog({ open, onOpenChange, caseId, kind, input, e
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90dvh] flex flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2"><FileCheck2 className="w-5 h-5 text-primary" />{t('docs.review.title')} · {title}</DialogTitle>
           <DialogDescription>{t('docs.review.description')}</DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-foreground flex gap-2">
-          <AlertTriangle className="w-4 h-4 text-warning-foreground shrink-0 mt-0.5" />
-          <span>{t('docs.review.disclaimer')}</span>
+        <div className="flex-1 min-h-0 overflow-y-auto -mx-6 px-6 space-y-4">
+          <div className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-foreground flex gap-2">
+            <AlertTriangle className="w-4 h-4 text-warning-foreground shrink-0 mt-0.5" />
+            <span>{t('docs.review.disclaimer')}</span>
+          </div>
+
+          {loading ? (
+            <div className="py-16 text-center text-sm text-muted-foreground"><Loader2 className="w-7 h-7 animate-spin text-primary mx-auto mb-3" />{t('docs.review.generating')}</div>
+          ) : error ? (
+            <div className="py-8 text-center"><p className="text-sm text-destructive mb-4">{error}</p><Button variant="outline" onClick={() => void generate()}><RotateCcw className="w-4 h-4" />{t('docs.review.regenerate')}</Button></div>
+          ) : (
+            <div className="space-y-4">
+              {hasExisting && existing?.reviewed_at && <p className="text-xs text-muted-foreground">{t('docs.review.lastReviewed', { date: new Date(existing.reviewed_at).toLocaleString() })}</p>}
+              {FIELDS.map((field) => (
+                <label key={field} className="block space-y-1.5">
+                  <span className="text-sm font-medium">{t(`docs.field.${kind}.${field}`)}</span>
+                  <Textarea value={draft[field]} onChange={(event) => setDraft((value) => ({ ...value, [field]: event.target.value }))} className="min-h-[92px]" />
+                </label>
+              ))}
+            </div>
+          )}
         </div>
 
-        {loading ? (
-          <div className="py-16 text-center text-sm text-muted-foreground"><Loader2 className="w-7 h-7 animate-spin text-primary mx-auto mb-3" />{t('docs.review.generating')}</div>
-        ) : error ? (
-          <div className="py-8 text-center"><p className="text-sm text-destructive mb-4">{error}</p><Button variant="outline" onClick={() => void generate()}><RotateCcw className="w-4 h-4" />{t('docs.review.regenerate')}</Button></div>
-        ) : (
-          <div className="space-y-4">
-            {hasExisting && existing?.reviewed_at && <p className="text-xs text-muted-foreground">{t('docs.review.lastReviewed', { date: new Date(existing.reviewed_at).toLocaleString() })}</p>}
-            {FIELDS.map((field) => (
-              <label key={field} className="block space-y-1.5">
-                <span className="text-sm font-medium">{t(`docs.field.${kind}.${field}`)}</span>
-                <Textarea value={draft[field]} onChange={(event) => setDraft((value) => ({ ...value, [field]: event.target.value }))} className="min-h-[92px]" />
-              </label>
-            ))}
-          </div>
-        )}
-
-        <DialogFooter className="gap-2 sm:gap-2">
+        <DialogFooter className="gap-2 sm:gap-2 shrink-0">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('docs.review.cancel')}</Button>
           <Button variant="outline" disabled={loading || saving} onClick={() => void generate()}><RotateCcw className="w-4 h-4" />{t('docs.review.regenerate')}</Button>
           <Button disabled={loading || saving || FIELDS.some((field) => !draft[field].trim())} onClick={() => void confirmAndPrint()}>
