@@ -36,6 +36,7 @@ export const OPS_DICT: Record<string, Entry> = {
   'ops.byGender': { th: 'เพศ', en: 'Gender' },
   'ops.byAge': { th: 'ช่วงอายุ', en: 'Age group' },
   'ops.byViolation': { th: 'ประเภทการละเมิด', en: 'Violation type' },
+  'ops.byViolationHint': { th: 'กดที่แถบเพื่อดูรายการเคส และจำแนกเคส "ไม่แน่ใจ/อื่นๆ" ได้ในหน้าเคส', en: 'Click a bar to view cases; classify "not sure/other" cases from the case page' },
   'ops.byOccupation': { th: 'อาชีพ', en: 'Occupation' },
   'ops.byLanguage': { th: 'ภาษาที่ใช้รายงาน', en: 'Report language' },
   'ops.bySource': { th: 'ช่องทางรับเรื่อง', en: 'Channel' },
