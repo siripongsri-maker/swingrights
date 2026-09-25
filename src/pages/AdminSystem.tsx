@@ -45,7 +45,7 @@ export default function AdminSystem() {
     a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
     a.download = `swing-activity-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
-    void supabase.from('case_exports').insert({ format: 'activity_log_csv', detail: kind } as never).then(() => undefined);
+    void supabase.auth.getUser().then(({ data }) => data.user && supabase.from('case_exports').insert({ format: 'activity_log_csv', detail: kind, exported_by: data.user.id } as never).then(() => undefined));
   };
 
   const u = usersQ.data;
