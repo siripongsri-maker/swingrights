@@ -560,6 +560,10 @@ const BASE_DICT: Dict = {
     th: 'พื้นที่ใกล้คุณ: {name} (~{km} กม.)', en: 'Closest to you: {name} (~{km} km)',
     my: 'သင့်အနီးဆုံး: {name} (~{km} ကီလိုမီတာ)', km: 'ជិតអ្នកបំផុត៖ {name} (~{km} គម.)', lo: 'ໃກ້ທ່ານທີ່ສຸດ: {name} (~{km} ກມ.)',
   },
+  'area.pinDetected': {
+    th: 'ตรวจพบพื้นที่จากหมุด: {name} (แก้ไขได้)', en: 'Detected from pin: {name} (you can change it)',
+    my: 'ပင်မှ တွေ့ရှိသည်: {name} (ပြင်နိုင်သည်)', km: 'រកឃើញពីម្ជុល៖ {name} (អាចកែបាន)', lo: 'ກວດພົບຈາກໝຸດ: {name} (ແກ້ໄຂໄດ້)',
+  },
   'area.toggleNames': {
     th: 'สลับชื่อ EN/ท้องถิ่น', en: 'Toggle EN/local names',
     my: 'အမည် EN/ဒေသ ပြောင်းမယ်', km: 'ប្ដូរឈ្មោះ EN/ក្នុងស្រុក', lo: 'ສັບປ່ຽນຊື່ EN/ທ້ອງຖິ່ນ',

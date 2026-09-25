@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { MapPicker } from './MapPicker';
-import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, geoSearchReason, highlightGeoText, nearestProvince, type ProvinceRow } from '@/lib/thaiGeo';
+import { loadThaiGeo, formatArea, geoKeywords, geoSearchScore, geoSearchReason, highlightGeoText, nearestProvince, reverseGeocode, type ProvinceRow } from '@/lib/thaiGeo';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
@@ -147,6 +147,15 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
       .catch(() => toast.error(t('area.loadError')))
       .finally(() => setLoading(false));
   }, []);
+
+  /** Pin set on map / my-location → auto-detect province/district/subdistrict offline. */
+  const setPin = (g: { lat: number; lng: number } | null) => {
+    if (!g || !geo?.length) return onChange({ ...value, geo: g });
+    const hit = reverseGeocode(geo, g.lat, g.lng);
+    if (!hit) return onChange({ ...value, geo: g });
+    onChange({ ...value, geo: g, province: hit.province, district: hit.district, subdistrict: hit.subdistrict, zip: hit.zip });
+    toast.success(t('area.pinDetected', { name: formatArea(hit.province, hit.district, hit.subdistrict, lang) }));
+  };
 
   /** Quick action: pick the province whose centroid is closest to the device's location. */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -301,7 +310,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
                 return;
               }
               navigator.geolocation.getCurrentPosition(
-                (p) => { setGeoError(null); onChange({ ...value, geo: { lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) } }); },
+                (p) => { setGeoError(null); setPin({ lat: +p.coords.latitude.toFixed(6), lng: +p.coords.longitude.toFixed(6) }); },
                 () => { setGeoError('denied'); setOpenProvince(true); },
                 { enableHighAccuracy: true, timeout: 10000 },
               );
@@ -319,7 +328,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
 
       {showMap && (
         <div className="space-y-1.5">
-          <MapPicker value={value.geo ?? null} center={center} onChange={(g) => onChange({ ...value, geo: g })} />
+          <MapPicker value={value.geo ?? null} center={center} onChange={setPin} />
           <p className="text-[11px] text-muted-foreground">
             {value.geo ? `${t('area.coordsLabel')}: ${value.geo.lat}, ${value.geo.lng} (${t('area.coordsHint')})` : t('area.tapToPin')}
           </p>
