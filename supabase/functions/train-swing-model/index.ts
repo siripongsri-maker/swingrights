@@ -96,6 +96,8 @@ Deno.serve(async (req) => {
         reasoning: { effort: "medium" },
         instructions: `You distill lessons for the SWING Rights follow-up interviewer (SWING Foundation, Thailand; rights-based, trauma-informed support for sex workers / service workers).
 From the de-identified samples below (Q = main question, A = reporter answer, FU = follow-up the AI asked; /good = staff approved, /repeat or /bad = staff rejected; no rating = real answer not yet reviewed), write 8-15 short, concrete rules in English on how to ask better follow-ups: which details reporters tend to leave out, phrasing that works, patterns staff rejected, per-language notes if clear.
+${partnerContext}
+Include rules that make follow-ups surface what these partners need to accept a referral: approximate location (province/district, never an exact address), which service type the case matches (e.g. shelter, legal aid, HIV/STI care, mental health, labour, trafficking), urgency/safety, and language spoken — without ever asking for identity documents or immigration status.
 Never include names, places, numbers or any case detail. Never suggest asking real names, ID/passport numbers or immigration status. Never use the word "victim". Output only a bullet list.`,
         input: corpus,
       }),
