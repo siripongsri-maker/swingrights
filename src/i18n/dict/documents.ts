@@ -13,6 +13,7 @@ export const DOCUMENTS_DICT: Record<string, Entry> = {
   'docs.review.saveFailed': { th: 'บันทึกร่างที่ตรวจแล้วไม่สำเร็จ', en: 'Could not save the reviewed draft', my: "ပြန်လည်စစ်ဆေးပြီးသော မူကြမ်းကို သိမ်းဆည်း၍ မရပါ", km: "មិនអាចរក្សាទុកសេចក្តីព្រាងដែលបានពិនិត្យរួចបានទេ", lo: "ບໍ່ສາມາດບັນທຶກຮ່າງທີ່ກວດທານແລ້ວໄດ້",},
   'docs.review.saved': { th: 'ยืนยันร่างและเปิดหน้าพิมพ์แล้ว', en: 'confirmed and print view opened', my: "အတည်ပြုပြီး ပုံနှိပ်ရန်မြင်ကွင်းကို ဖွင့်ထားပါပြီ", km: "បានបញ្ជាក់ និងបើកទិដ្ឋភាពបោះពុម្ពរួចហើយ", lo: "ຢືນຢັນແລ້ວ ແລະ ເປີດໜ້າສຳລັບພິມແລ້ວ",},
   'docs.review.regenerate': { th: 'สร้างร่างใหม่', en: 'Create new draft', my: "မူကြမ်းအသစ် ဖန်တီးရန်", km: "បង្កើតសេចក្តីព្រាងថ្មី", lo: "ສ້າງຮ່າງໃໝ່",},
+  'docs.review.fillFromCase': { th: 'ดึงข้อมูลจากเคส', en: 'Fill from case data', my: "ကేစ်မှ အချက်အလက်များ ဆွဲထုတ်ရန်", km: "ទាញទិន្នន័យពីករណី", lo: "ດຶງຂໍ້ມູນຈາກເຄສ",},
   'docs.review.confirmPrint': { th: 'ยืนยันและพิมพ์', en: 'Confirm and print', my: "အတည်ပြုပြီး ပုံနှိပ်ရန်", km: "បញ្ជាក់ និងបោះពុម្ព", lo: "ຢືນຢັນ ແລະ ພິມ",},
   'docs.review.cancel': { th: 'ยกเลิก', en: 'Cancel', my: "ပယ်ဖျက်ရန်", km: "បោះបង់", lo: "ຍົກເລີກ",},
   'docs.review.lastReviewed': { th: 'ตรวจล่าสุดเมื่อ {date}', en: 'Last reviewed {date}', my: "နောက်ဆုံးပြန်လည်စစ်ဆေးသည့်ရက် {date}", km: "បានពិនិត្យចុងក្រោយនៅ {date}", lo: "ກວດທານຄັ້ງຫຼ້າສຸດ {date}",},
