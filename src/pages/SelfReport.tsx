@@ -503,9 +503,11 @@ export default function SelfReport() {
 
       await deleteLocalCase(localId);
       rememberReportCode(String(code));
-      void sbAuth.auth.getSession().then(({ data }) => { setSignedIn(!!data.session); if (data.session) void sbAuth.rpc('link_my_cases' as never, { _codes: [String(code)] } as never); });
+      // supabase rpc builders are lazy: they only send when awaited/then'd
+      void sbAuth.auth.getSession().then(({ data }) => { setSignedIn(!!data.session); if (data.session) void sbAuth.rpc('link_my_cases' as never, { _codes: [String(code)] } as never).then(() => undefined); });
       setCaseCode(String(code));
-      if (trainConsent) void supabase.rpc('link_training_session' as never, { _session: trainSession.current, _case_code: String(code) } as never);
+      if (trainConsent) void supabase.rpc('link_training_session' as never, { _session: trainSession.current, _case_code: String(code) } as never)
+        .then(({ error: le }) => { if (le) console.error('link training failed'); });
       setStage('done');
       botSay({ text: t('report.success.title'), widget: 'success' }, 600);
     } catch (e) {
