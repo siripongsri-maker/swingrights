@@ -115,7 +115,7 @@ export function DashboardOverview({ branch }: { branch: string | null }) {
           <span>{s.daily[0]?.day}</span><span>{s.daily[s.daily.length - 1]?.day}</span>
         </div>
         <div className="grid sm:grid-cols-2 gap-x-6 mt-4">
-          <Bars title={t('ops.byViolation')} data={rows(s.by_violation, (k) => t(`report.type.${k}`) === `report.type.${k}` ? k : t(`report.type.${k}`))} empty={t('sys.none')} />
+          <Bars title={t('ops.byViolation')} data={rows(s.by_violation, (k) => { const v = t(`report.type.${k}`); return v === `report.type.${k}` ? un(k) : v; })} empty={t('sys.none')} />
           <Bars title={t('ops.byOccupation')} data={rows(s.by_occupation)} empty={t('sys.none')} />
           <Bars title={t('dash.chart.byStatus')} data={rows(s.by_status, (k) => t(`status.${k}`))} empty={t('sys.none')} />
           <Bars title={t('dash.chart.bySeverity')} data={rows(s.by_severity)} empty={t('sys.none')} />
