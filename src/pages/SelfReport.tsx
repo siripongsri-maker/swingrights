@@ -271,6 +271,19 @@ export default function SelfReport() {
     botSay({ text: t('report.chat.photos.ask'), widget: 'photos' }, 700);
   };
 
+  /** Only the parts the reporter actually answered go to the case (staff see '-' otherwise). */
+  const buildScreeningPayload = () => {
+    const a = screenAnswered.current;
+    if (!a.mental && !a.nrm) return {};
+    const full = summarizeScreening(screenDraft.current) as unknown as Record<string, unknown>;
+    const s: Record<string, unknown> = { completedAt: full.completedAt, source: 'self' };
+    if (a.mental) Object.assign(s, { q2: full.q2, q2Positive: full.q2Positive });
+    if (a.q9) Object.assign(s, { q9: full.q9, q9Total: full.q9Total, q9Level: full.q9Level, suicidalItem: full.suicidalItem });
+    if (a.nrm) Object.assign(s, { nrm: full.nrm, nrmUnder18: full.nrmUnder18, nrmPositive: full.nrmPositive });
+    const tests = [...(a.mental ? ['2q9q'] : []), ...(a.nrm ? ['nrm'] : [])];
+    return { screening: s, special_tests: tests, suicide_risk: suicideRisk };
+  };
+
 
   // ---- live AI follow-up: reads each answer and asks about what was actually said ----
   const MAX_FU = 2;
