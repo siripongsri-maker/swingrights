@@ -397,7 +397,8 @@ export function resolveAreaCoords(
   geo: ProvinceRow[], province?: string | null, district?: string | null,
 ): [number, number] | null {
   if (!province) return null;
-  const np = normalizeGeoText(province);
+  // "กรุงเทพฯ" / "กรุงเทพ" → canonical "กรุงเทพมหานคร" before matching
+  const np = normalizeGeoText(province).replace(/^กรุงเทพ.*$/, 'กรุงเทพมหานคร');
   if (!np) return null;
   const prov = geo.find((p) => {
     const pn = normalizeGeoText(p.n);
