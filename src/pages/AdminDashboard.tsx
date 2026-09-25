@@ -24,6 +24,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { printCaseDocument, docInputFromReport, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { CaseReferrals } from '@/components/admin/CaseReferrals';
 import { MapPicker } from '@/components/screening/MapPicker';
