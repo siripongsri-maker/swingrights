@@ -116,9 +116,27 @@ export default function SelfReport() {
   const [fuActive, setFuActive] = useState(false);
   const [followups, setFollowups] = useState<{ q: string; text: string }[]>([]);
   const heardRef = useRef<string[]>([]);
+  // every question already put to the reporter (fixed + AI) — never asked again
+  const askedRef = useRef<string[]>([]);
+  // form items the AI has heard answered so far
+  const coveredRef = useRef<Set<string>>(new Set());
+  const [trainConsent, setTrainConsent] = useState(false);
+  const trainSession = useRef<string>(crypto.randomUUID());
+  // fixed probe → form item it covers ('safety' is always asked)
+  const PROBE_SLOT: Partial<Record<ProbeId, string>> = { when: 'when', where: 'where', who: 'who', needs: 'help' };
+  const nextOpenProbe = (from: number) => {
+    let i = from;
+    while (i < PROBE_IDS.length) {
+      const slot = PROBE_SLOT[PROBE_IDS[i]];
+      if (!slot || !coveredRef.current.has(slot)) break;
+      i += 1;
+    }
+    return i;
+  };
   const askFollowUp = async (latest: string, question: string, after: () => void, fresh: boolean) => {
     if (fresh) fuCountRef.current = 0;
     const done = () => { fuRef.current = null; setFuActive(false); fuCountRef.current = 0; after(); };
+    if (question && !askedRef.current.includes(question)) askedRef.current.push(question);
     if (!latest.trim() || fuCountRef.current >= MAX_FU) return done();
     heardRef.current.push(`Q: ${question}\nA: ${latest}`);
     setTyping(true);
@@ -128,11 +146,19 @@ export default function SelfReport() {
           text: heardRef.current.join('\n\n').slice(-7500),
           context: `Current question: ${question}\nLATEST answer (build the follow-up on this): ${latest}`.slice(0, 5900),
           lang,
+          asked: askedRef.current.slice(-40).map((a) => a.slice(0, 400)),
+          covered_before: [...coveredRef.current],
+          question: question.slice(0, 500),
+          latest: latest.slice(0, 5000),
+          train_consent: trainConsent,
+          session_id: trainSession.current,
         },
       });
       setTyping(false);
+      if (!error && Array.isArray(data?.covered)) (data.covered as string[]).forEach((c) => coveredRef.current.add(c));
       const q = !error && data?.next_question ? String(data.next_question).trim() : '';
-      if (q && data.next_slot !== 'none') {
+      if (q && data.next_slot !== 'none' && !askedRef.current.includes(q)) {
+        askedRef.current.push(q);
         fuCountRef.current += 1;
         fuRef.current = { q, after };
         setFuActive(true);
@@ -250,11 +276,17 @@ export default function SelfReport() {
         ? types.map((k) => t(`report.type.${k}`)).join(' · ') + (other ? ` — ${other}` : '')
         : t('report.chat.skipped'),
     });
-    // move into the sequential probing interview
+    // move into the sequential probing interview — skip questions already answered in the story
+    const first = nextOpenProbe(0);
+    if (first >= PROBE_IDS.length) {
+      setStage('photos');
+      botSay({ text: t('report.chat.photos.ask'), widget: 'photos' }, 700);
+      return;
+    }
     setStage('probe');
-    setProbeIdx(0);
+    setProbeIdx(first);
     botSay({ text: t('report.probe.intro') });
-    botSay({ text: probeQuestionText(0), widget: 'probe' }, 1100);
+    botSay({ text: probeQuestionText(first), widget: 'probe' }, 1100);
   };
 
   const probeQuestionText = (i: number) =>
@@ -292,8 +324,8 @@ export default function SelfReport() {
     setProbeBlob(null);
     setProbeTranscript('');
     setProbeDraft('');
-    const next = probeIdx + 1;
     const advance = () => {
+      const next = nextOpenProbe(probeIdx + 1);
       if (next < PROBE_IDS.length) {
         setProbeIdx(next);
         botSay({ text: probeQuestionText(next), widget: 'probe' }, answer && qid === 'safety' && safetyRisk ? 1400 : 700);
@@ -473,6 +505,7 @@ export default function SelfReport() {
       rememberReportCode(String(code));
       void sbAuth.auth.getSession().then(({ data }) => { setSignedIn(!!data.session); if (data.session) void sbAuth.rpc('link_my_cases' as never, { _codes: [String(code)] } as never); });
       setCaseCode(String(code));
+      if (trainConsent) void supabase.rpc('link_training_session' as never, { _session: trainSession.current, _case_code: String(code) } as never);
       setStage('done');
       botSay({ text: t('report.success.title'), widget: 'success' }, 600);
     } catch (e) {
@@ -525,9 +558,15 @@ export default function SelfReport() {
 
           {/* ---------- interactive widgets ---------- */}
           {m.widget === 'consent' && !m.resolved && (
-            <Button size="sm" className="w-full mt-2.5 rounded-xl" onClick={() => agreeConsent(m.id)}>
-              <Check className="w-4 h-4 me-1" /> {t('report.chat.start')}
-            </Button>
+            <>
+              <label className="mt-2.5 flex items-start gap-2 text-xs leading-relaxed cursor-pointer">
+                <input type="checkbox" className="mt-0.5 accent-primary w-4 h-4 shrink-0" checked={trainConsent} onChange={(e) => setTrainConsent(e.target.checked)} />
+                <span>{t('report.train.consent')}</span>
+              </label>
+              <Button size="sm" className="w-full mt-2.5 rounded-xl" onClick={() => agreeConsent(m.id)}>
+                <Check className="w-4 h-4 me-1" /> {t('report.chat.start')}
+              </Button>
+            </>
           )}
 
           {m.widget === 'about' && !m.resolved && (
