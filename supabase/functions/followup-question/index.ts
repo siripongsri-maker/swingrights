@@ -26,7 +26,7 @@ const SYSTEM = `You help a rights first-responder at SWING Foundation (Thailand)
 The form needs these narrative items:
 - what: what happened (the act / violation)
 - when: date or approximate time
-- where: place or type of place / area
+- where: the Thai province (or district/city) where it happened or where the person is now. Mark covered ONLY when a province/district/city is named; "my room", "the bar", "here", "a hotel" are NOT enough — then ask gently which province or area they are in (never an exact address), because referral partners are matched by province
 - who: who did it — role or relationship only (police, client, employer, officer…), NEVER a name
 - harm: injuries, losses, money or property taken, effects
 - evidence: photos, documents, witnesses, messages that exist

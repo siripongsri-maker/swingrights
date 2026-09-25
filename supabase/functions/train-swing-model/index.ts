@@ -61,7 +61,9 @@ Deno.serve(async (req) => {
     }
     const top = (o: Record<string, number>, n: number) =>
       Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k}(${v})`).join(", ");
-    const partnerContext = `Referral network: ${(partners ?? []).length} active partners — types: ${top(typeCount, 10)}; services: ${top(svcCount, 20)}; provinces: ${top(provCount, 15)}.`;
+    const nationwide = (partners ?? []).filter((p) => !p.province).length;
+    const partnerContext = `Referral network: ${(partners ?? []).length} active partners (${nationwide} nationwide hotlines/orgs, the rest local) — types: ${top(typeCount, 10)}; services: ${top(svcCount, 20)}; provinces with local partners: ${top(provCount, 40)}.
+PROVINCE RULE (mandatory): local partners can only be matched by province. If the reporter has not clearly named a Thai province (or district/city), one of the first follow-ups must gently ask which province or area they are in now — a room, bar, house, "here" or "my place" is NOT a location. Ask only the province/district, never an exact address. If the province has no local partner, still ask; nationwide partners and SWING staff will cover it.`;
     const clean = (r: Row): Row => ({
       lang: r.lang, staff_rating: r.staff_rating,
       question: scrubText(r.question).slice(0, 200),
