@@ -20,6 +20,8 @@ import { cn } from '@/lib/utils';
 import { PiiHint, usePiiGuard } from '@/lib/piiGuard';
 import { BrandMark } from '@/components/BrandLogo';
 import { PartnerBar } from '@/components/PartnerBar';
+import { emptyScreening, summarizeScreening, type ScreeningDraft } from '@/components/screening/ScreeningTools';
+import { Q2_ITEM_IDS, Q9_ITEM_IDS, Q9_SCALE_IDS, NRM_SECTIONS } from '@/lib/screeningTools';
 
 const MEDIA_FN = 'upload-case-media';
 
@@ -40,8 +42,16 @@ async function uploadOne(kind: 'audio' | 'photo', file: { blob: Blob; name: stri
   return json.path;
 }
 
-type Stage = 'consent' | 'about' | 'story' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'done';
-type Widget = 'consent' | 'about' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'success';
+type Stage = 'consent' | 'about' | 'story' | 'types' | 'probe' | 'screen' | 'photos' | 'area' | 'contact' | 'partners' | 'done';
+type Widget = 'consent' | 'about' | 'types' | 'probe' | 'screenIntro' | 'screenItem' | 'photos' | 'area' | 'contact' | 'partners' | 'success';
+type ScreenSection = 'mental' | 'nrm';
+interface ScreenItem { id: string; group: 'q2' | 'q9' | 'nrm' | 'u18'; sec?: string; idx: number }
+const Q2_ITEMS: ScreenItem[] = Q2_ITEM_IDS.map((id, idx) => ({ id, group: 'q2', idx }));
+const Q9_ITEMS: ScreenItem[] = Q9_ITEM_IDS.map((id, idx) => ({ id, group: 'q9', idx }));
+const NRM_ITEMS: ScreenItem[] = [
+  ...NRM_SECTIONS.flatMap((s) => s.items.map((id, idx) => ({ id, group: 'nrm' as const, sec: s.key, idx }))),
+  { id: 'under18', group: 'u18', idx: 0 },
+];
 
 /** Draw a shareable case-code card (brand colors) and download it as PNG. */
 function downloadCodeCard(code: string, labels: { title: string; code: string; track: string; note: string }) {
@@ -126,6 +136,8 @@ interface ChatMsg {
   audioUrl?: string;
   widget?: Widget;
   resolved?: boolean;
+  section?: ScreenSection;
+  item?: ScreenItem;
 }
 
 const TYPE_KEYS = ['body', 'mental', 'labor', 'health', 'property', 'other'] as const;
@@ -186,6 +198,93 @@ export default function SelfReport() {
   const [probeDraft, setProbeDraft] = useState('');
   const [safetyRisk, setSafetyRisk] = useState(false);
 
+  // ---- screening (2Q→9Q, NRM): offered only when the story / AI suggests it, asked one item at a time ----
+  const trafRef = useRef(false);
+  const distressRef = useRef(false);
+  const screenDraft = useRef<ScreeningDraft>(emptyScreening());
+  const screenOffered = useRef<Record<ScreenSection, boolean>>({ mental: false, nrm: false });
+  const screenAnswered = useRef<{ mental: boolean; q9: boolean; nrm: boolean }>({ mental: false, q9: false, nrm: false });
+  const screenQueue = useRef<ScreenItem[]>([]);
+  const screenAfter = useRef<() => void>(() => undefined);
+  const [suicideRisk, setSuicideRisk] = useState(false);
+
+  const nextScreenSection = (typesNow: string[] = types) => {
+    const needMental = !screenOffered.current.mental && (typesNow.includes('mental') || distressRef.current);
+    const needNrm = !screenOffered.current.nrm && trafRef.current;
+    const section: ScreenSection | null = needMental ? 'mental' : needNrm ? 'nrm' : null;
+    if (!section) {
+      if (screenAnswered.current.mental || screenAnswered.current.nrm) botSay({ text: t('rscreen.thanks') }, 500);
+      screenAfter.current();
+      return;
+    }
+    screenOffered.current[section] = true;
+    setStage('screen');
+    botSay({ text: t(section === 'mental' ? 'rscreen.introMental' : 'rscreen.introNrm'), widget: 'screenIntro', section }, 700);
+  };
+
+  const startScreening = (after: () => void) => {
+    screenAfter.current = after;
+    nextScreenSection();
+  };
+
+  const screenQuestion = (it: ScreenItem) =>
+    it.group === 'q9' ? `${t('rscreen.q9.lead')} — ${t(`rscreen.q.${it.id}`)}` : t(`rscreen.q.${it.id}`);
+
+  const askNextScreen = () => {
+    const it = screenQueue.current.shift();
+    if (!it) { nextScreenSection(); return; }
+    botSay({ text: screenQuestion(it), widget: 'screenItem', item: it }, 500);
+  };
+
+  const answerScreenIntro = (msgId: number, section: ScreenSection, go: boolean) => {
+    resolveWidget(msgId);
+    push({ role: 'user', text: go ? t('rscreen.start') : t('rscreen.skip') });
+    if (!go) { nextScreenSection(); return; }
+    screenQueue.current = section === 'mental' ? [...Q2_ITEMS] : [...NRM_ITEMS];
+    askNextScreen();
+  };
+
+  /** v: 0/1 for yes-no, 0-3 for 9Q scale, null = rather not say, 'stop' = end this section */
+  const answerScreenItem = (msgId: number, it: ScreenItem, v: number | null | 'stop', label: string) => {
+    resolveWidget(msgId);
+    push({ role: 'user', text: label });
+    if (v === 'stop') { screenQueue.current = []; askNextScreen(); return; }
+    const d = screenDraft.current;
+    if (v !== null) {
+      if (it.group === 'q2') { d.q2[it.idx] = v as 0 | 1; screenAnswered.current.mental = true; }
+      if (it.group === 'q9') {
+        d.q9[it.idx] = v; screenAnswered.current.q9 = true;
+        if (it.idx === 8 && v > 0) { setSuicideRisk(true); botSay({ text: t('rscreen.crisis') }, 400); }
+      }
+      if (it.group === 'nrm' && it.sec) { d.nrm[it.sec][it.idx] = v === 1; screenAnswered.current.nrm = true; }
+      if (it.group === 'u18') { d.nrmUnder18 = v === 1; screenAnswered.current.nrm = true; }
+    }
+    // 2Q positive → continue with 9Q
+    if (it.group === 'q2' && !screenQueue.current.some((x) => x.group === 'q2') && d.q2.some((x) => x === 1)) {
+      screenQueue.current = [...Q9_ITEMS, ...screenQueue.current];
+    }
+    askNextScreen();
+  };
+
+  const toPhotos = () => {
+    setStage('photos');
+    botSay({ text: t('report.chat.photos.ask'), widget: 'photos' }, 700);
+  };
+
+  /** Only the parts the reporter actually answered go to the case (staff see '-' otherwise). */
+  const buildScreeningPayload = () => {
+    const a = screenAnswered.current;
+    if (!a.mental && !a.nrm) return {};
+    const full = summarizeScreening(screenDraft.current) as unknown as Record<string, unknown>;
+    const s: Record<string, unknown> = { completedAt: full.completedAt, source: 'self' };
+    if (a.mental) Object.assign(s, { q2: full.q2, q2Positive: full.q2Positive });
+    if (a.q9) Object.assign(s, { q9: full.q9, q9Total: full.q9Total, q9Level: full.q9Level, suicidalItem: full.suicidalItem });
+    if (a.nrm) Object.assign(s, { nrm: full.nrm, nrmUnder18: full.nrmUnder18, nrmPositive: full.nrmPositive });
+    const tests = [...(a.mental ? ['2q9q'] : []), ...(a.nrm ? ['nrm'] : [])];
+    return { screening: s, special_tests: tests, suicide_risk: suicideRisk };
+  };
+
+
   // ---- live AI follow-up: reads each answer and asks about what was actually said ----
   const MAX_FU = 2;
   const fuCountRef = useRef(0);
@@ -233,6 +332,8 @@ export default function SelfReport() {
       });
       setTyping(false);
       if (!error && Array.isArray(data?.covered)) (data.covered as string[]).forEach((c) => coveredRef.current.add(c));
+      if (!error && data?.trafficking_suspected) trafRef.current = true;
+      if (!error && data?.distress_suspected) distressRef.current = true;
       const q = !error && data?.next_question ? String(data.next_question).trim() : '';
       if (q && data.next_slot !== 'none' && !askedRef.current.includes(q)) {
         askedRef.current.push(q);
@@ -249,7 +350,7 @@ export default function SelfReport() {
   // ---- referral partners ----
   const [partners, setPartners] = useState<Partner[]>([]);
 
-  const stageIdx = STAGE_ORDER.indexOf(stage === 'done' || stage === 'partners' ? 'contact' : stage);
+  const stageIdx = STAGE_ORDER.indexOf(stage === 'done' || stage === 'partners' ? 'contact' : stage === 'screen' ? 'probe' : stage);
 
   // ---- chat helpers ----
   const push = (m: Omit<ChatMsg, 'id'>) => {
@@ -357,8 +458,7 @@ export default function SelfReport() {
     // move into the sequential probing interview — skip questions already answered in the story
     const first = nextOpenProbe(0);
     if (first >= PROBE_IDS.length) {
-      setStage('photos');
-      botSay({ text: t('report.chat.photos.ask'), widget: 'photos' }, 700);
+      startScreening(toPhotos);
       return;
     }
     setStage('probe');
@@ -408,8 +508,7 @@ export default function SelfReport() {
         setProbeIdx(next);
         botSay({ text: probeQuestionText(next), widget: 'probe' }, answer && qid === 'safety' && safetyRisk ? 1400 : 700);
       } else {
-        setStage('photos');
-        botSay({ text: t('report.chat.photos.ask'), widget: 'photos' }, 700);
+        startScreening(toPhotos);
       }
     };
     if (answer?.text && qid !== 'safety') void askFollowUp(answer.text, t(`report.probe.${qid}.q`), advance, true);
@@ -549,8 +648,9 @@ export default function SelfReport() {
         org_name: p.name, phone: p.phone ?? '', note: t('report.partners.noteAuto'),
       })),
       referral_note: '',
-      // flag red severity when the reporter says they are not safe
-      ...(safetyRisk ? { severity: 'red' } : {}),
+      // flag red severity when the reporter says they are not safe or reports self-harm thoughts
+      ...(safetyRisk || suicideRisk ? { severity: 'red' } : {}),
+      ...buildScreeningPayload(),
     };
 
     try {
@@ -764,6 +864,36 @@ export default function SelfReport() {
               </Button>
             </div>
           )}
+
+          {m.widget === 'screenIntro' && !m.resolved && m.section && (
+            <div className="mt-2.5 flex gap-2">
+              <Button size="sm" className="flex-1 rounded-xl" onClick={() => answerScreenIntro(m.id, m.section!, true)}>{t('rscreen.start')}</Button>
+              <Button size="sm" variant="outline" className="flex-1 rounded-xl" onClick={() => answerScreenIntro(m.id, m.section!, false)}>{t('rscreen.skip')}</Button>
+            </div>
+          )}
+
+          {m.widget === 'screenItem' && !m.resolved && m.item && (() => {
+            const it = m.item;
+            const opts = it.group === 'q9'
+              ? Q9_SCALE_IDS.map((s) => ({ v: s.v as number, label: t(`rscreen.scale.${s.id}`) }))
+              : [{ v: 1, label: t('rscreen.yes') }, { v: 0, label: t('rscreen.no') }];
+            return (
+              <div className="mt-2.5 space-y-2">
+                <div className={cn('grid gap-1.5', opts.length > 2 ? 'grid-cols-2' : 'grid-cols-2')}>
+                  {opts.map((o) => (
+                    <button key={o.v} type="button" onClick={() => answerScreenItem(m.id, it, o.v, o.label)}
+                      className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium transition hover:border-primary active:scale-95">
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" className="flex-1 text-xs text-muted-foreground" onClick={() => answerScreenItem(m.id, it, null, t('rscreen.noAnswer'))}>{t('rscreen.noAnswer')}</Button>
+                  <Button size="sm" variant="ghost" className="flex-1 text-xs text-muted-foreground" onClick={() => answerScreenItem(m.id, it, 'stop', t('rscreen.stop'))}>{t('rscreen.stop')}</Button>
+                </div>
+              </div>
+            );
+          })()}
 
           {m.widget === 'photos' && !m.resolved && (
             <div className="mt-2.5 space-y-2.5">

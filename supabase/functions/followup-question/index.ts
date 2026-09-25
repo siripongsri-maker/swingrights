@@ -47,17 +47,19 @@ If the story suggests possible human trafficking or forced labour/services (e.g.
 - Harm & health: injuries not treated; drugs used to make them work; marks/tattoos of ownership.
 - Children (if person may be under 18): travelling without parent/guardian, cannot contact parents, working in unsuitable/dangerous places.
 Ask gently and trauma-informed; stop NRM questions if the person seems distressed or says they do not want to answer.
+MENTAL HEALTH CHECK: set distress_suspected=true if the person mentions or implies emotional harm or distress (e.g. sad, scared, hopeless, cannot sleep, crying, anxious, shame, trauma, threats or humiliation, feeling worthless, thoughts of self-harm or dying). The app will then offer a standard 2Q/9Q screening with buttons, so do NOT ask 2Q/9Q items yourself.
 Rules: never ask for real names, national ID, passport, visa, work permit or immigration status; never blame; use "you"; max 30 words; simple everyday spoken words, like a kind person chatting face to face (not a form or official letter); no dashes, brackets or slashes; in Thai end politely with คะ/ค่ะ. If everything is covered and nothing is vague, next_question is an empty string.`;
 
 const schema = {
   type: "object",
   additionalProperties: false,
-  required: ["covered", "next_slot", "next_question", "trafficking_suspected"],
+  required: ["covered", "next_slot", "next_question", "trafficking_suspected", "distress_suspected"],
   properties: {
     covered: { type: "array", items: { type: "string", enum: [...SLOTS] } },
     next_slot: { type: "string", enum: [...SLOTS, "none"] },
     next_question: { type: "string" },
     trafficking_suspected: { type: "boolean" },
+    distress_suspected: { type: "boolean" },
   },
 };
 
@@ -142,6 +144,7 @@ Deno.serve(async (req) => {
       next_slot: parsed.next_slot ?? "none",
       next_question: nextQ,
       trafficking_suspected: parsed.trafficking_suspected === true,
+      distress_suspected: parsed.distress_suspected === true,
     });
   } catch (e) {
     console.error("followup error", e instanceof Error ? e.message : "unknown");
