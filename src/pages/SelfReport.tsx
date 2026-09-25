@@ -198,6 +198,80 @@ export default function SelfReport() {
   const [probeDraft, setProbeDraft] = useState('');
   const [safetyRisk, setSafetyRisk] = useState(false);
 
+  // ---- screening (2Q→9Q, NRM): offered only when the story / AI suggests it, asked one item at a time ----
+  const trafRef = useRef(false);
+  const distressRef = useRef(false);
+  const screenDraft = useRef<ScreeningDraft>(emptyScreening());
+  const screenOffered = useRef<Record<ScreenSection, boolean>>({ mental: false, nrm: false });
+  const screenAnswered = useRef<{ mental: boolean; q9: boolean; nrm: boolean }>({ mental: false, q9: false, nrm: false });
+  const screenQueue = useRef<ScreenItem[]>([]);
+  const screenAfter = useRef<() => void>(() => undefined);
+  const [suicideRisk, setSuicideRisk] = useState(false);
+
+  const nextScreenSection = (typesNow: string[] = types) => {
+    const needMental = !screenOffered.current.mental && (typesNow.includes('mental') || distressRef.current);
+    const needNrm = !screenOffered.current.nrm && trafRef.current;
+    const section: ScreenSection | null = needMental ? 'mental' : needNrm ? 'nrm' : null;
+    if (!section) {
+      if (screenAnswered.current.mental || screenAnswered.current.nrm) botSay({ text: t('rscreen.thanks') }, 500);
+      screenAfter.current();
+      return;
+    }
+    screenOffered.current[section] = true;
+    setStage('screen');
+    botSay({ text: t(section === 'mental' ? 'rscreen.introMental' : 'rscreen.introNrm'), widget: 'screenIntro', section }, 700);
+  };
+
+  const startScreening = (after: () => void) => {
+    screenAfter.current = after;
+    nextScreenSection();
+  };
+
+  const screenQuestion = (it: ScreenItem) =>
+    it.group === 'q9' ? `${t('rscreen.q9.lead')} — ${t(`rscreen.q.${it.id}`)}` : t(`rscreen.q.${it.id}`);
+
+  const askNextScreen = () => {
+    const it = screenQueue.current.shift();
+    if (!it) { nextScreenSection(); return; }
+    botSay({ text: screenQuestion(it), widget: 'screenItem', item: it }, 500);
+  };
+
+  const answerScreenIntro = (msgId: number, section: ScreenSection, go: boolean) => {
+    resolveWidget(msgId);
+    push({ role: 'user', text: go ? t('rscreen.start') : t('rscreen.skip') });
+    if (!go) { nextScreenSection(); return; }
+    screenQueue.current = section === 'mental' ? [...Q2_ITEMS] : [...NRM_ITEMS];
+    askNextScreen();
+  };
+
+  /** v: 0/1 for yes-no, 0-3 for 9Q scale, null = rather not say, 'stop' = end this section */
+  const answerScreenItem = (msgId: number, it: ScreenItem, v: number | null | 'stop', label: string) => {
+    resolveWidget(msgId);
+    push({ role: 'user', text: label });
+    if (v === 'stop') { screenQueue.current = []; askNextScreen(); return; }
+    const d = screenDraft.current;
+    if (v !== null) {
+      if (it.group === 'q2') { d.q2[it.idx] = v as 0 | 1; screenAnswered.current.mental = true; }
+      if (it.group === 'q9') {
+        d.q9[it.idx] = v; screenAnswered.current.q9 = true;
+        if (it.idx === 8 && v > 0) { setSuicideRisk(true); botSay({ text: t('rscreen.crisis') }, 400); }
+      }
+      if (it.group === 'nrm' && it.sec) { d.nrm[it.sec][it.idx] = v === 1; screenAnswered.current.nrm = true; }
+      if (it.group === 'u18') { d.nrmUnder18 = v === 1; screenAnswered.current.nrm = true; }
+    }
+    // 2Q positive → continue with 9Q
+    if (it.group === 'q2' && !screenQueue.current.some((x) => x.group === 'q2') && d.q2.some((x) => x === 1)) {
+      screenQueue.current = [...Q9_ITEMS, ...screenQueue.current];
+    }
+    askNextScreen();
+  };
+
+  const toPhotos = () => {
+    setStage('photos');
+    botSay({ text: t('report.chat.photos.ask'), widget: 'photos' }, 700);
+  };
+
+
   // ---- live AI follow-up: reads each answer and asks about what was actually said ----
   const MAX_FU = 2;
   const fuCountRef = useRef(0);
@@ -245,6 +319,8 @@ export default function SelfReport() {
       });
       setTyping(false);
       if (!error && Array.isArray(data?.covered)) (data.covered as string[]).forEach((c) => coveredRef.current.add(c));
+      if (!error && data?.trafficking_suspected) trafRef.current = true;
+      if (!error && data?.distress_suspected) distressRef.current = true;
       const q = !error && data?.next_question ? String(data.next_question).trim() : '';
       if (q && data.next_slot !== 'none' && !askedRef.current.includes(q)) {
         askedRef.current.push(q);
@@ -369,8 +445,7 @@ export default function SelfReport() {
     // move into the sequential probing interview — skip questions already answered in the story
     const first = nextOpenProbe(0);
     if (first >= PROBE_IDS.length) {
-      setStage('photos');
-      botSay({ text: t('report.chat.photos.ask'), widget: 'photos' }, 700);
+      startScreening(toPhotos);
       return;
     }
     setStage('probe');
@@ -420,8 +495,7 @@ export default function SelfReport() {
         setProbeIdx(next);
         botSay({ text: probeQuestionText(next), widget: 'probe' }, answer && qid === 'safety' && safetyRisk ? 1400 : 700);
       } else {
-        setStage('photos');
-        botSay({ text: t('report.chat.photos.ask'), widget: 'photos' }, 700);
+        startScreening(toPhotos);
       }
     };
     if (answer?.text && qid !== 'safety') void askFollowUp(answer.text, t(`report.probe.${qid}.q`), advance, true);
@@ -561,8 +635,9 @@ export default function SelfReport() {
         org_name: p.name, phone: p.phone ?? '', note: t('report.partners.noteAuto'),
       })),
       referral_note: '',
-      // flag red severity when the reporter says they are not safe
-      ...(safetyRisk ? { severity: 'red' } : {}),
+      // flag red severity when the reporter says they are not safe or reports self-harm thoughts
+      ...(safetyRisk || suicideRisk ? { severity: 'red' } : {}),
+      ...buildScreeningPayload(),
     };
 
     try {
