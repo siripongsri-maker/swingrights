@@ -386,3 +386,35 @@ export function reverseGeocode(
   if (bkk < 25 && (!best || bkk < best.km)) best = { province: 'กรุงเทพมหานคร', district: '', subdistrict: '', zip: '', km: bkk };
   return best && best.km <= maxKm ? best : null;
 }
+
+/**
+ * Resolve a province (+ optional district) name to an approximate [lat, lng]
+ * using local tambon centers — offline, no third-party calls.
+ * District match wins; falls back to the province centroid. Bangkok (no
+ * tambon coords in the dataset) falls back to TH_CENTER.
+ */
+export function resolveAreaCoords(
+  geo: ProvinceRow[], province?: string | null, district?: string | null,
+): [number, number] | null {
+  if (!province) return null;
+  const np = normalizeGeoText(province);
+  if (!np) return null;
+  const prov = geo.find((p) => {
+    const pn = normalizeGeoText(p.n);
+    return pn === np || pn.includes(np) || np.includes(pn);
+  });
+  if (!prov) return null;
+  if (district) {
+    const nd = normalizeGeoText(district);
+    const dist = prov.d.find((d) => {
+      const dn = normalizeGeoText(d.n);
+      return dn === nd || dn.includes(nd) || nd.includes(dn);
+    });
+    if (dist) {
+      let lat = 0, lng = 0, n = 0;
+      for (const s of dist.s) if (s.c) { lat += s.c[0]; lng += s.c[1]; n++; }
+      if (n) return [lat / n, lng / n];
+    }
+  }
+  return provinceCenter(prov) ?? (prov.n === 'กรุงเทพมหานคร' ? TH_CENTER : null);
+}
