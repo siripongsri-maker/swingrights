@@ -16,6 +16,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminSystem from "./pages/AdminSystem";
 import AdminPartners from "./pages/AdminPartners";
+import PartnerSearch from "./pages/PartnerSearch";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GlobalQuickExit } from "@/components/screening/GlobalQuickExit";
 import { I18nProvider } from "@/i18n";
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/admin/users" element={<ProtectedRoute allow={["admin"]}><AdminUsers /></ProtectedRoute>} />
             <Route path="/admin/system" element={<ProtectedRoute allow={["admin"]}><AdminSystem /></ProtectedRoute>} />
             <Route path="/admin/partners" element={<ProtectedRoute allow={["admin"]}><AdminPartners /></ProtectedRoute>} />
+            <Route path="/admin/partner-search" element={<ProtectedRoute><PartnerSearch /></ProtectedRoute>} />
             <Route path="/admin/report" element={<ProtectedRoute allow={["admin", "manager"]}><ProjectReport /></ProtectedRoute>} />
             <Route path="/admin/access-review" element={<ProtectedRoute allow={["admin", "manager"]}><AccessReview /></ProtectedRoute>} />
             <Route path="/admin/case/:id/history" element={<ProtectedRoute><CaseHistory /></ProtectedRoute>} />

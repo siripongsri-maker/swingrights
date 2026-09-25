@@ -283,6 +283,10 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button onClick={() => navigate('/admin/partner-search')} size="sm" variant="outline"
+              className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
+              <Search className="w-4 h-4" /> <span className="hidden sm:inline">{t('psearch.title')}</span>
+            </Button>
             {access.isAdmin && (
               <>
                 <Button onClick={() => navigate('/admin/users')} size="sm" variant="outline"
