@@ -41,13 +41,27 @@ Deno.serve(async (req) => {
     }
 
 
-    const [{ data: rated }, { data: real }] = await Promise.all([
+    const [{ data: rated }, { data: real }, { data: partners }] = await Promise.all([
       admin.from("ai_training_samples").select("lang, question, answer, followup, staff_rating")
         .not("staff_rating", "is", null).neq("followup", "").order("rated_at", { ascending: false }).limit(400),
       admin.from("ai_training_samples").select("lang, question, answer, followup, staff_rating, cases!inner(deleted_at)")
         .is("staff_rating", null).not("case_id", "is", null).neq("followup", "")
         .is("cases.deleted_at", null).order("created_at", { ascending: false }).limit(400),
+      admin.from("referral_partners").select("org_type, services, province").eq("active", true).limit(200),
     ]);
+    // Compact picture of the live referral network, so lessons teach follow-ups that
+    // surface the details partners actually need (location, service type, urgency).
+    const svcCount: Record<string, number> = {};
+    const provCount: Record<string, number> = {};
+    const typeCount: Record<string, number> = {};
+    for (const p of partners ?? []) {
+      typeCount[p.org_type] = (typeCount[p.org_type] ?? 0) + 1;
+      if (p.province) provCount[p.province] = (provCount[p.province] ?? 0) + 1;
+      for (const s of Array.isArray(p.services) ? p.services : []) svcCount[String(s)] = (svcCount[String(s)] ?? 0) + 1;
+    }
+    const top = (o: Record<string, number>, n: number) =>
+      Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k}(${v})`).join(", ");
+    const partnerContext = `Referral network: ${(partners ?? []).length} active partners — types: ${top(typeCount, 10)}; services: ${top(svcCount, 20)}; provinces: ${top(provCount, 15)}.`;
     const clean = (r: Row): Row => ({
       lang: r.lang, staff_rating: r.staff_rating,
       question: scrubText(r.question).slice(0, 200),
@@ -82,6 +96,8 @@ Deno.serve(async (req) => {
         reasoning: { effort: "medium" },
         instructions: `You distill lessons for the SWING Rights follow-up interviewer (SWING Foundation, Thailand; rights-based, trauma-informed support for sex workers / service workers).
 From the de-identified samples below (Q = main question, A = reporter answer, FU = follow-up the AI asked; /good = staff approved, /repeat or /bad = staff rejected; no rating = real answer not yet reviewed), write 8-15 short, concrete rules in English on how to ask better follow-ups: which details reporters tend to leave out, phrasing that works, patterns staff rejected, per-language notes if clear.
+${partnerContext}
+Include rules that make follow-ups surface what these partners need to accept a referral: approximate location (province/district, never an exact address), which service type the case matches (e.g. shelter, legal aid, HIV/STI care, mental health, labour, trafficking), urgency/safety, and language spoken — without ever asking for identity documents or immigration status.
 Never include names, places, numbers or any case detail. Never suggest asking real names, ID/passport numbers or immigration status. Never use the word "victim". Output only a bullet list.`,
         input: corpus,
       }),
