@@ -110,4 +110,8 @@ export const REFERRAL_DICT: Record<string, Entry> = {
   'psearch.nearButton': { th: 'หาหน่วยงานใกล้เคสนี้', en: 'Find partners near this case' },
   'psearch.distance': { th: 'ห่างจากพื้นที่เคส ≈ {km} กม.', en: '≈ {km} km from the case area' },
   'psearch.distanceHere': { th: 'อยู่ในจังหวัดเดียวกับเคส', en: 'In the same province as the case' },
+  'psearch.mapTitle': { th: 'แผนที่หน่วยงาน', en: 'Partner map' },
+  'psearch.mapEmpty': { th: 'ไม่มีหน่วยงานที่มีพิกัดในผลลัพธ์นี้', en: 'No mappable organizations in these results' },
+  'psearch.mapHint': { th: 'หมุดสีชมพูคือพื้นที่ของเคส หมุดสีเข้มคือหน่วยงาน — แตะหมุดเพื่อดูชื่อและระยะทาง (ตำแหน่งโดยประมาณระดับอำเภอ/จังหวัด)', en: 'The pink pin is the case area; dark pins are organizations — tap a pin for its name and distance (approximate district/province locations)' },
+  'psearch.mapCasePin': { th: 'พื้นที่เคส {code}', en: 'Case area {code}' },
 };

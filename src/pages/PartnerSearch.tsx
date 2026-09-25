@@ -15,6 +15,8 @@ import { BrandMark } from '@/components/BrandLogo';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { cn } from '@/lib/utils';
 import { provinceDistanceKm } from '@/lib/provinceGeo';
+import { loadThaiGeo, resolveAreaCoords, distKm } from '@/lib/thaiGeo';
+import { PartnerMap, type MapMarker } from '@/components/PartnerMap';
 
 const ORG_TYPE_KEYS = ['agency', 'hospital', 'legal', 'ngo', 'shelter', 'police', 'hotline', 'other'];
 
@@ -89,10 +91,29 @@ export default function PartnerSearch() {
   const focusProv = focus?.profile?.province || '';
   const focusDist = focus?.profile?.district || '';
 
+  // Local Thai geo data (provinces/districts/tambon centers) — loaded once, offline.
+  const { data: geo } = useQuery({ queryKey: ['thai-geo'], queryFn: loadThaiGeo, staleTime: Infinity });
+
   const provinces = useMemo(() => [...new Set(partners.map((p) => p.province).filter(Boolean))].sort() as string[], [partners]);
   const services = useMemo(
     () => [...new Set(partners.flatMap((p) => (Array.isArray(p.services) ? p.services : [])))].sort(),
     [partners],
+  );
+
+  /** Approximate [lat,lng] for a partner from local tambon/district centers (null if unknown). */
+  const partnerCoords = useMemo(() => {
+    const m = new Map<string, [number, number]>();
+    if (!geo) return m;
+    for (const p of partners) {
+      const c = resolveAreaCoords(geo, p.province, p.district);
+      if (c) m.set(p.id, c);
+    }
+    return m;
+  }, [geo, partners]);
+
+  const casePoint = useMemo(
+    () => (geo && focusProv ? resolveAreaCoords(geo, focusProv, focusDist) : null),
+    [geo, focusProv, focusDist],
   );
 
   /** 3 = same district, 2 = same province, 1 = nationwide, 0 = elsewhere */
@@ -102,10 +123,15 @@ export default function PartnerSearch() {
     return focusDist && samePlace(p.district, focusDist) ? 3 : 2;
   };
 
-  /** Straight-line km from the case province to the partner province (null if unknown). */
+  /** Straight-line km from the case area to the partner (null if unknown). */
   const distanceKm = (p: Partner): number | null => {
     if (!focusProv) return null;
     if (!p.province) return null; // nationwide — no fixed location
+    const pc = partnerCoords.get(p.id);
+    if (casePoint && pc) {
+      const d = distKm(casePoint, pc);
+      return d < 1 ? 0 : Math.round(d);
+    }
     return provinceDistanceKm(focusProv, p.province);
   };
 
@@ -130,7 +156,32 @@ export default function PartnerSearch() {
       return nearness(b) - nearness(a);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [partners, q, orgType, province, service, focus, nearOnly]);
+  }, [partners, q, orgType, province, service, focus, nearOnly, partnerCoords, casePoint]);
+
+  const mapMarkers = useMemo<MapMarker[]>(() => {
+    const list: MapMarker[] = [];
+    if (casePoint && focus) {
+      list.push({
+        id: 'case', kind: 'case', lat: casePoint[0], lng: casePoint[1],
+        name: t('psearch.mapCasePin', { code: focus.case_code }),
+        sub: [focusDist, focusProv].filter(Boolean).join(' · '),
+      });
+    }
+    for (const p of filtered) {
+      const c = partnerCoords.get(p.id);
+      if (!c) continue;
+      const d = focus ? distanceKm(p) : null;
+      list.push({
+        id: p.id, kind: 'partner', lat: c[0], lng: c[1], name: p.name,
+        sub: [
+          [p.district, p.province].filter(Boolean).join(' · ') || t('psearch.badgeNational'),
+          d !== null ? (d === 0 ? t('psearch.distanceHere') : t('psearch.distance', { km: d.toLocaleString('th-TH') })) : '',
+        ].filter(Boolean).join(' — '),
+      });
+    }
+    return list;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, partnerCoords, casePoint, focus, t]);
 
   const openRefer = (p: Partner) => { setReferPartner(p); setCaseId(focus?.id ?? null); };
 
@@ -232,6 +283,12 @@ export default function PartnerSearch() {
             </Select>
           </div>
           <p className="text-[11px] text-muted-foreground">{t('psearch.resultCount', { n: filtered.length })}</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary" /> {t('psearch.mapTitle')}</p>
+          <PartnerMap markers={mapMarkers} emptyHint={t('psearch.mapEmpty')} />
+          <p className="text-[11px] text-muted-foreground">{t('psearch.mapHint')}</p>
         </div>
 
         {filtered.length === 0 ? (
