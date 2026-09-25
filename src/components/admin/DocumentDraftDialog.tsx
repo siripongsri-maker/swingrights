@@ -59,7 +59,7 @@ export function DocumentDraftDialog({ open, onOpenChange, caseId, kind, input, e
   const fillFromCase = () => {
     const date = new Date(input.createdAt || Date.now()).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
     const profile = (input.profile ?? {}) as Record<string, unknown>;
-    const person = [profile.nationality && `สัญชาติ${profile.nationality}`, profile.gender && `เพศ${profile.gender}`, profile.age && `อายุ ${profile.age} ปี`].filter(Boolean).join ' ' as never;
+    const person = [profile.nationality && `สัญชาติ${profile.nationality}`, profile.gender && `เพศ${profile.gender}`, profile.age && `อายุ ${profile.age} ปี`].filter(Boolean).join(' ');
     const answerLines = (input.answers ?? [])
       .map((a) => {
         const text = (a as { transcript?: string; answer_text?: string }).transcript || (a as { answer_text?: string }).answer_text || '';
