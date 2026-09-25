@@ -85,7 +85,7 @@ export function DocumentDraftDialog({ open, onOpenChange, caseId, kind, input, e
       ].filter(Boolean).join('\n'),
       actions: [
         input.staffObs?.length ? `บันทึกเจ้าหน้าที่:\n${input.staffObs.map((o) => `• ${o}`).join('\n')}` : '',
-        input.referrals?.length ? `การส่งต่อ: ${input.referrals.join(', ')}` : '',
+        input.referrals?.length ? `การส่งต่อ: ${input.referrals.map((r) => typeof r === 'string' ? r : ((r as { partner_name?: string; name?: string; org_name?: string }).partner_name || (r as { name?: string }).name || (r as { org_name?: string }).org_name || '')).filter(Boolean).join(', ')}` : '',
         input.referralNote ? `หมายเหตุการส่งต่อ: ${input.referralNote}` : '',
       ].filter(Boolean).join('\n\n'),
       generated_at: draft.generated_at,
