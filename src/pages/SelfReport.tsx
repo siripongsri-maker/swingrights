@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { rememberReportCode } from '@/lib/myReports';
 import { supabase as sbAuth } from '@/integrations/supabase/client';
-import { ArrowLeft, Building2, Check, Copy, Download, Loader2, MapPin, Paperclip, Phone, SendHorizonal, X } from 'lucide-react';
+import { ArrowLeft, Building2, Camera, Check, Copy, Download, Loader2, MapPin, Paperclip, Phone, SendHorizonal, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
 import { LanguageToggle } from '@/components/LanguageToggle';
