@@ -15,13 +15,31 @@ Deno.serve(async (req) => {
     const url = Deno.env.get("SUPABASE_URL")!;
     const key = Deno.env.get("LOVABLE_API_KEY");
     if (!key) return json({ error: "AI not configured" }, 500);
-    const auth = req.headers.get("Authorization") ?? "";
-    const userClient = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: auth } } });
-    const { data: u } = await userClient.auth.getUser();
-    if (!u?.user) return json({ error: "unauthorized" }, 401);
     const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
-    if (!isAdmin) return json({ error: "forbidden" }, 403);
+    const body = await req.json().catch(() => ({})) as { action?: string; activate?: boolean };
+    let createdBy: string | null = null;
+    let autoActivate = body.activate === true;
+    const cronToken = req.headers.get("x-cron-token");
+    if (cronToken) {
+      // Scheduled auto-update: rebuild only when new consented answers arrived since the last version.
+      const { data: ok } = await admin.rpc("verify_cron_token", { _token: cronToken });
+      if (!ok) return json({ error: "forbidden" }, 403);
+      const { data: act } = await admin.from("swing_rights_models").select("created_at").eq("status", "active").maybeSingle();
+      if (!act) return json({ skipped: "no_active_model" });
+      const { count } = await admin.from("ai_training_samples").select("id", { count: "exact", head: true })
+        .or(`created_at.gt.${act.created_at},rated_at.gt.${act.created_at}`).not("case_id", "is", null);
+      if ((count ?? 0) < 3) return json({ skipped: "no_new_samples", count });
+      autoActivate = true;
+    } else {
+      const auth = req.headers.get("Authorization") ?? "";
+      const userClient = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: auth } } });
+      const { data: u } = await userClient.auth.getUser();
+      if (!u?.user) return json({ error: "unauthorized" }, 401);
+      const { data: isAdmin } = await admin.rpc("has_role", { _user_id: u.user.id, _role: "admin" });
+      if (!isAdmin) return json({ error: "forbidden" }, 403);
+      createdBy = u.user.id;
+    }
+
 
     const [{ data: rated }, { data: real }] = await Promise.all([
       admin.from("ai_training_samples").select("lang, question, answer, followup, staff_rating")
@@ -96,11 +114,15 @@ Never include names, places, numbers or any case detail. Never suggest asking re
     const { data: last } = await admin.from("swing_rights_models").select("version").order("version", { ascending: false }).limit(1);
     const version = (last?.[0]?.version ?? 0) + 1;
     const { data: row, error } = await admin.from("swing_rights_models").insert({
-      version, guidance, examples, created_by: u.user.id,
+      version, guidance, examples, created_by: createdBy,
       sample_count: R.length + L.length, good_count: good.length, rejected_count: bad.length, real_count: L.length,
     }).select("id, version").single();
     if (error) throw error;
-    return json({ ok: true, ...row });
+    if (autoActivate) {
+      await admin.from("swing_rights_models").update({ status: "archived" }).eq("status", "active");
+      await admin.from("swing_rights_models").update({ status: "active", activated_at: new Date().toISOString() }).eq("id", row.id);
+    }
+    return json({ ok: true, activated: autoActivate, ...row });
   } catch (e) {
     console.error("train-swing-model", (e as Error).message);
     return json({ error: "server_error" }, 500);
