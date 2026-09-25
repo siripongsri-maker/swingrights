@@ -1,11 +1,12 @@
 # Roadmap
-- [x] Add secure AI document drafting function for four document types
-- [x] Store reviewed document drafts with reviewer and timestamp
-- [x] Add editable review dialog before printing
-- [x] Render all four documents from reviewed structured drafts
-- [x] Add complete i18n copy and verify admin flow
-- [x] Add public Know Your Rights page and landing-page rights preview carousel
-- [x] Apply the uploaded SWING RIGHTS design system across all screens without changing behavior
-- [x] Translate the full /admin case-management workflow into Burmese, Khmer, and Lao
-- [x] Show de-identified nationality, gender, age, and 2Q/9Q/PHQ scores on referral links in five languages
-- [x] Connect Google Search Console and expose Burmese, Khmer, and Lao report URLs to search
+
+## In progress
+- [ ] หน้าค้นหาหน่วยงานส่งต่อ (/admin/partner-search) — โค้ด+route+เมนูเสร็จ, build OK; เหลือทดสอบหน้าจริงด้วยเซสชันเจ้าหน้าที่ (รออนุมัติ mint session)
+
+## New (from user 06:36 UTC)
+- [ ] แดชบอร์ด: แยกประเภทการละเมิดจากข้อความเคส (ความรุนแรง, สิทธิแรงงาน, สิทธิสุขภาพ, ค้ามนุษย์, อื่นๆ)
+- [ ] แดชบอร์ด: แยกอาชีพผู้รับบริการ (ถ้ามีข้อมูล)
+- [ ] รายงานโครงการ (/admin/report): ทำละเอียดตามแดชบอร์ด
+
+## Pending advice (older)
+- ลบเคสทดสอบ 4 เคส + ให้พนักงานให้คะแนนคำถาม AI ในเคสจริงก่อนเทรนโมเดลรอบถัดไป

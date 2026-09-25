@@ -20,6 +20,13 @@ type Summary = {
   cases_by_violation_type: Record<string, Count>;
   cases_by_client_group: Record<string, Count>;
   cases_by_severity: Record<string, Count>;
+  cases_by_occupation: Record<string, Count>;
+  cases_by_nationality: Record<string, Count>;
+  cases_by_gender: Record<string, Count>;
+  cases_by_language: Record<string, Count>;
+  cases_by_source: Record<string, Count>;
+  referrals_by_partner: Record<string, Count>;
+  trafficking_count: Count;
   sla_met_count: Count; sla_total: Count; sla_percent: number | null;
   referrals_count: Count; referrals_accepted_count: Count;
   emergency_fund_cases: Count; suicide_risk_count: Count;
@@ -70,13 +77,20 @@ export default function ProjectReport() {
       [`${r('prep.referrals')} – ${r('prep.accepted')}`, data.referrals_accepted_count],
       [r('prep.emergency'), data.emergency_fund_cases],
       [r('prep.suicide'), data.suicide_risk_count],
+      [r('prep.trafficking'), data.trafficking_count],
     ];
     const add = (label: string, m: Record<string, Count>) =>
       Object.entries(m || {}).forEach(([k, v]) => rows.push([`${label}: ${k}`, v]));
     add(r('prep.byBranch'), data.cases_by_branch);
     add(r('prep.byViolation'), data.cases_by_violation_type);
+    add(r('prep.byOccupation'), data.cases_by_occupation);
     add(r('prep.byGroup'), data.cases_by_client_group);
     add(r('prep.bySeverity'), data.cases_by_severity);
+    add(r('prep.byNationality'), data.cases_by_nationality);
+    add(r('prep.byGender'), data.cases_by_gender);
+    add(r('prep.byLanguage'), data.cases_by_language);
+    add(r('prep.bySource'), data.cases_by_source);
+    add(r('prep.byPartner'), data.referrals_by_partner);
     const esc = (v: unknown) => `"${String(v).replace(/"/g, '""')}"`;
     const csv = '\uFEFF' + [[r('prep.csv.metric'), r('prep.csv.value')], ...rows].map((x) => x.map(esc).join(',')).join('\n');
     const a = document.createElement('a');
@@ -182,12 +196,19 @@ export default function ProjectReport() {
                 <Stat label={r('prep.referrals')} value={data.referrals_count} sub={`${data.referrals_accepted_count} ${r('prep.accepted')}`} />
                 <Stat label={r('prep.emergency')} value={data.emergency_fund_cases} />
                 <Stat label={r('prep.suicide')} value={data.suicide_risk_count} />
+                <Stat label={r('prep.trafficking')} value={data.trafficking_count} />
               </section>
               <section className="grid sm:grid-cols-2 gap-3">
                 <Breakdown title={r('prep.byBranch')} m={data.cases_by_branch} />
                 <Breakdown title={r('prep.byGroup')} m={data.cases_by_client_group} />
                 <Breakdown title={r('prep.byViolation')} m={data.cases_by_violation_type} />
+                <Breakdown title={r('prep.byOccupation')} m={data.cases_by_occupation} />
                 <Breakdown title={r('prep.bySeverity')} m={data.cases_by_severity} />
+                <Breakdown title={r('prep.byNationality')} m={data.cases_by_nationality} />
+                <Breakdown title={r('prep.byGender')} m={data.cases_by_gender} />
+                <Breakdown title={r('prep.byLanguage')} m={data.cases_by_language} />
+                <Breakdown title={r('prep.bySource')} m={data.cases_by_source} />
+                <Breakdown title={r('prep.byPartner')} m={data.referrals_by_partner} />
               </section>
               <p className="text-[11px] text-muted-foreground border-t border-border pt-2">{r('prep.note')}</p>
               <PartnerBar className="shadow-none" />

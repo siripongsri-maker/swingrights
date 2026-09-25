@@ -176,6 +176,7 @@ export default function SelfReport() {
   const [nationality, setNationality] = useState('');
   const [gender, setGender] = useState('');
   const [age, setAge] = useState('');
+  const [occupation, setOccupation] = useState('');
 
   // ---- probe state (sequential probing questions) ----
   const [probeIdx, setProbeIdx] = useState(0);
@@ -324,6 +325,7 @@ export default function SelfReport() {
     if (nationality.trim()) parts.push(`${t('report.about.nationality')}: ${nationality.trim()}`);
     if (gender) parts.push(`${t('report.about.gender')}: ${t(`report.about.gender.${gender}`)}`);
     if (age.trim()) parts.push(`${t('report.about.age')}: ${age.trim()}`);
+    if (occupation.trim()) parts.push(`${t('report.about.occupation')}: ${occupation.trim()}`);
     push({ role: 'user', text: parts.length ? parts.join(' · ') : t('report.chat.skipped') });
     setStage('story');
     botSay({ text: `${t('report.story.title')} — ${t('report.story.hint')}` });
@@ -516,7 +518,7 @@ export default function SelfReport() {
       profile: {
         branch: area.province || '', province: area.province, district: area.district,
         subdistrict: area.subdistrict, zip: area.zip ?? '', geo: area.geo ?? null,
-        kp: '', gender, dob: '', age: age.trim(), nationality: nationality.trim(), incidentPlace: '',
+        kp: '', gender, dob: '', age: age.trim(), nationality: nationality.trim(), occupation: occupation.trim(), incidentPlace: '',
         initialViolationTypes: types,
       },
       answers: answersArr,
@@ -535,7 +537,7 @@ export default function SelfReport() {
         branch: area.province || 'ไม่ระบุ',
         province: area.province, district: area.district, subdistrict: area.subdistrict,
         zip: area.zip ?? '', geo: area.geo ?? null,
-        kp: '', gender, age: age.trim(), nationality: nationality.trim(),
+        kp: '', gender, age: age.trim(), nationality: nationality.trim(), occupation: occupation.trim(),
         incidentPlace: area.province ? formatArea(area.province, area.district, area.subdistrict, lang) : '',
         initialViolationTypes: types,
       },
@@ -676,8 +678,12 @@ export default function SelfReport() {
                 <p className="text-xs font-medium text-muted-foreground mb-1">{t('report.about.age')}</p>
                 <Input value={age} onChange={(e) => setAge(e.target.value.replace(/[^\d]/g, '').slice(0, 3))} placeholder={t('report.about.agePh')} inputMode="numeric" className="bg-card h-9 text-sm w-28" />
               </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">{t('report.about.occupation')}</p>
+                <Input value={occupation} onChange={(e) => setOccupation(e.target.value)} placeholder={t('report.about.occupationPh')} maxLength={60} className="bg-card h-9 text-sm" />
+              </div>
               <Button size="sm" className="w-full rounded-xl" onClick={() => finishAbout(m.id)}>
-                {nationality.trim() || gender || age.trim() ? t('report.chat.confirm') : t('report.chat.skip')}
+                {nationality.trim() || gender || age.trim() || occupation.trim() ? t('report.chat.confirm') : t('report.chat.skip')}
               </Button>
             </div>
           )}
