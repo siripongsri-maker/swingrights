@@ -865,6 +865,36 @@ export default function SelfReport() {
             </div>
           )}
 
+          {m.widget === 'screenIntro' && !m.resolved && m.section && (
+            <div className="mt-2.5 flex gap-2">
+              <Button size="sm" className="flex-1 rounded-xl" onClick={() => answerScreenIntro(m.id, m.section!, true)}>{t('rscreen.start')}</Button>
+              <Button size="sm" variant="outline" className="flex-1 rounded-xl" onClick={() => answerScreenIntro(m.id, m.section!, false)}>{t('rscreen.skip')}</Button>
+            </div>
+          )}
+
+          {m.widget === 'screenItem' && !m.resolved && m.item && (() => {
+            const it = m.item;
+            const opts = it.group === 'q9'
+              ? Q9_SCALE_IDS.map((s) => ({ v: s.v as number, label: t(`rscreen.scale.${s.id}`) }))
+              : [{ v: 1, label: t('rscreen.yes') }, { v: 0, label: t('rscreen.no') }];
+            return (
+              <div className="mt-2.5 space-y-2">
+                <div className={cn('grid gap-1.5', opts.length > 2 ? 'grid-cols-2' : 'grid-cols-2')}>
+                  {opts.map((o) => (
+                    <button key={o.v} type="button" onClick={() => answerScreenItem(m.id, it, o.v, o.label)}
+                      className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium transition hover:border-primary active:scale-95">
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" className="flex-1 text-xs text-muted-foreground" onClick={() => answerScreenItem(m.id, it, null, t('rscreen.noAnswer'))}>{t('rscreen.noAnswer')}</Button>
+                  <Button size="sm" variant="ghost" className="flex-1 text-xs text-muted-foreground" onClick={() => answerScreenItem(m.id, it, 'stop', t('rscreen.stop'))}>{t('rscreen.stop')}</Button>
+                </div>
+              </div>
+            );
+          })()}
+
           {m.widget === 'photos' && !m.resolved && (
             <div className="mt-2.5 space-y-2.5">
               <label className="flex items-center gap-2 text-xs font-medium cursor-pointer rounded-xl border border-dashed border-border bg-card px-3 py-2.5">
