@@ -30,6 +30,7 @@ import { MapPicker } from '@/components/screening/MapPicker';
 import { DocumentDraftDialog } from '@/components/admin/DocumentDraftDialog';
 import { BrandMark } from '@/components/BrandLogo';
 import { CaseAnswersEditor } from '@/components/admin/CaseAnswersEditor';
+import { CaseTrainingSamples } from '@/components/admin/CaseTrainingSamples';
 
 const PAGE_SIZE = 20;
 
@@ -902,6 +903,8 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           staffObs={c.staff_observations ?? undefined}
           staffName={(id) => staffName(id ?? null) || t('dash.staffFallback')}
         />
+
+        <CaseTrainingSamples caseId={caseId} />
 
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
           <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.referrals')}</p>

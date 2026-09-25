@@ -587,6 +587,13 @@ const BASE_DICT: Dict = {
     th: 'ยินยอมและเริ่มเล่า', en: 'I agree — start',
     my: 'သဘောတူပြီး စတင်ပါမည်', km: 'យល់ព្រម — ចាប់ផ្តើម', lo: 'ຍິນຍອມ ແລະ ເລີ່ມເລົ່າ',
   },
+  'train.title': { th: 'บันทึกคำถาม AI สำหรับฝึกโมเดล SWING Rights', en: 'AI question log for SWING Rights training', my: 'SWING Rights လေ့ကျင့်ရန် AI မေးခွန်းမှတ်တမ်း', km: 'កំណត់ត្រាសំណួរ AI សម្រាប់បណ្តុះបណ្តាល SWING Rights', lo: 'ບັນທຶກຄຳຖາມ AI ສຳລັບຝຶກ SWING Rights' },
+  'train.hint': { th: 'ผู้แจ้งยินยอมแล้ว ข้อมูลไม่ระบุตัวตน ให้คะแนนคำถามที่ AI ถามต่อ เพื่อใช้ฝึกเฉพาะโมเดลของ SWING Rights', en: 'Reporter opted in; de-identified. Rate each AI follow-up to train only the SWING Rights model.', my: 'တိုင်ကြားသူ သဘောတူထားသည်။ AI နောက်ဆက်မေးခွန်းတိုင်းကို အဆင့်သတ်မှတ်ပါ။', km: 'អ្នករាយការណ៍បានយល់ព្រម។ សូមវាយតម្លៃសំណួរតាមដានរបស់ AI នីមួយៗ។', lo: 'ຜູ້ແຈ້ງຍິນຍອມແລ້ວ. ໃຫ້ຄະແນນຄຳຖາມທີ່ AI ຖາມຕໍ່.' },
+  'train.noFollowup': { th: 'AI ไม่ถามต่อ (ข้อมูลครบหรือจะซ้ำ)', en: 'No follow-up (complete or would repeat)', my: 'နောက်ဆက်မေးခွန်းမရှိ', km: 'គ្មានសំណួរតាមដាន', lo: 'ບໍ່ມີຄຳຖາມຕໍ່' },
+  'train.rate.good': { th: 'ถามดี', en: 'Good', my: 'ကောင်းသည်', km: 'ល្អ', lo: 'ດີ' },
+  'train.rate.repeat': { th: 'ถามซ้ำ', en: 'Repeated', my: 'ထပ်မေးသည်', km: 'សួរដដែល', lo: 'ຖາມຊ້ຳ' },
+  'train.rate.bad': { th: 'ไม่เหมาะ', en: 'Not suitable', my: 'မသင့်တော်', km: 'មិនសមរម្យ', lo: 'ບໍ່ເໝາະ' },
+  'train.rateError': { th: 'บันทึกคะแนนไม่สำเร็จ', en: 'Could not save rating', my: 'သိမ်းမရပါ', km: 'មិនអាចរក្សាទុក', lo: 'ບັນທຶກບໍ່ສຳເລັດ' },
   'report.train.consent': {
     th: 'ยินยอมให้ใช้คำถามและคำตอบของฉันแบบไม่ระบุตัวตน เพื่อปรับปรุง AI ของ SWING Rights เท่านั้น (ไม่บังคับ)',
     en: 'Let SWING Rights use my questions and answers, without my identity, only to improve its own AI (optional)',
