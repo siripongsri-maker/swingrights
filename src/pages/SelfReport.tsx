@@ -20,6 +20,8 @@ import { cn } from '@/lib/utils';
 import { PiiHint, usePiiGuard } from '@/lib/piiGuard';
 import { BrandMark } from '@/components/BrandLogo';
 import { PartnerBar } from '@/components/PartnerBar';
+import { emptyScreening, summarizeScreening, type ScreeningDraft } from '@/components/screening/ScreeningTools';
+import { Q2_ITEM_IDS, Q9_ITEM_IDS, Q9_SCALE_IDS, NRM_SECTIONS } from '@/lib/screeningTools';
 
 const MEDIA_FN = 'upload-case-media';
 
@@ -40,8 +42,16 @@ async function uploadOne(kind: 'audio' | 'photo', file: { blob: Blob; name: stri
   return json.path;
 }
 
-type Stage = 'consent' | 'about' | 'story' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'done';
-type Widget = 'consent' | 'about' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'success';
+type Stage = 'consent' | 'about' | 'story' | 'types' | 'probe' | 'screen' | 'photos' | 'area' | 'contact' | 'partners' | 'done';
+type Widget = 'consent' | 'about' | 'types' | 'probe' | 'screenIntro' | 'screenItem' | 'photos' | 'area' | 'contact' | 'partners' | 'success';
+type ScreenSection = 'mental' | 'nrm';
+interface ScreenItem { id: string; group: 'q2' | 'q9' | 'nrm' | 'u18'; sec?: string; idx: number }
+const Q2_ITEMS: ScreenItem[] = Q2_ITEM_IDS.map((id, idx) => ({ id, group: 'q2', idx }));
+const Q9_ITEMS: ScreenItem[] = Q9_ITEM_IDS.map((id, idx) => ({ id, group: 'q9', idx }));
+const NRM_ITEMS: ScreenItem[] = [
+  ...NRM_SECTIONS.flatMap((s) => s.items.map((id, idx) => ({ id, group: 'nrm' as const, sec: s.key, idx }))),
+  { id: 'under18', group: 'u18', idx: 0 },
+];
 
 /** Draw a shareable case-code card (brand colors) and download it as PNG. */
 function downloadCodeCard(code: string, labels: { title: string; code: string; track: string; note: string }) {
@@ -126,6 +136,8 @@ interface ChatMsg {
   audioUrl?: string;
   widget?: Widget;
   resolved?: boolean;
+  section?: ScreenSection;
+  item?: ScreenItem;
 }
 
 const TYPE_KEYS = ['body', 'mental', 'labor', 'health', 'property', 'other'] as const;

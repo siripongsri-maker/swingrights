@@ -37,6 +37,7 @@ import { DASH_DICT } from './dict/dash';
 import { ADMIN_DICT } from './dict/admin';
 import { MISC_DICT } from './dict/misc';
 import { TOOLS_DICT } from './dict/tools';
+import { SELF_SCREEN_DICT } from './dict/selfScreen';
 import { PRIVACY_DICT } from './dict/privacy';
 import { REFERRAL_DICT } from './dict/referral';
 import { PROJECT_REPORT_DICT } from './dict/projectReport';
@@ -817,6 +818,7 @@ export const DICT: Dict = {
   ...ADMIN_DICT,
   ...MISC_DICT,
   ...TOOLS_DICT,
+  ...SELF_SCREEN_DICT,
   ...PRIVACY_DICT,
   ...REFERRAL_DICT,
   ...PROJECT_REPORT_DICT,
