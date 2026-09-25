@@ -85,12 +85,23 @@ function downloadCodeCard(code: string, labels: { title: string; code: string; t
   ctx.fillStyle = '#CC0099';
   ctx.font = '700 44px "IBM Plex Mono", monospace';
   ctx.fillText('swingrights.app/track', W / 2, cy + 500);
-  // note + date
+  // note (word-wrapped) + date
   ctx.fillStyle = '#2A2A2E';
   ctx.font = '400 34px "Bai Jamjuree", sans-serif';
-  ctx.fillText(labels.note, W / 2, 1000);
+  const words = labels.note.split(' ');
+  let line = '';
+  let ny = 1000;
+  for (const w of words) {
+    const test = line ? `${line} ${w}` : w;
+    if (ctx.measureText(test).width > W - 200 && line) {
+      ctx.fillText(line, W / 2, ny);
+      ny += 50;
+      line = w;
+    } else line = test;
+  }
+  if (line) { ctx.fillText(line, W / 2, ny); ny += 50; }
   ctx.font = '400 30px "IBM Plex Mono", monospace';
-  ctx.fillText(new Date().toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' }), W / 2, 1060);
+  ctx.fillText(new Date().toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' }), W / 2, ny + 20);
   // footer band
   ctx.fillStyle = '#CC0099';
   ctx.fillRect(0, H - 120, W, 120);
