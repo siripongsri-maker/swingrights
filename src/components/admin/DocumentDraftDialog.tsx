@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, FileCheck2, Loader2, RotateCcw } from 'lucide-react';
+import { AlertTriangle, FileCheck2, FileInput, Loader2, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,43 @@ export function DocumentDraftDialog({ open, onOpenChange, caseId, kind, input, e
     // Generate only when the selected document dialog opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, kind]);
+
+  const fillFromCase = () => {
+    const date = new Date(input.createdAt || Date.now()).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+    const profile = (input.profile ?? {}) as Record<string, unknown>;
+    const person = [profile.nationality && `สัญชาติ${profile.nationality}`, profile.gender && `เพศ${profile.gender}`, profile.age && `อายุ ${profile.age} ปี`].filter(Boolean).join ' ' as never;
+    const answerLines = (input.answers ?? [])
+      .map((a) => {
+        const text = (a as { transcript?: string; answer_text?: string }).transcript || (a as { answer_text?: string }).answer_text || '';
+        return text ? `• ${a.question}\n  ${text}` : `• ${a.question}`;
+      })
+      .join('\n');
+    const screening = (input.screening ?? {}) as Record<string, unknown>;
+    const screeningLine = [
+      screening.q2_score != null && `2Q: ${screening.q2_score}`,
+      screening.q9_total != null && `9Q: ${screening.q9_total}`,
+      screening.nrm && `NRM: ${screening.nrm}`,
+    ].filter(Boolean).join(' · ');
+    setDraft({
+      overview: [
+        `รหัสเคส ${input.caseCode ?? '-'} · รับเรื่องวันที่ ${date}`,
+        person ? `ผู้รับบริการ: ${person}` : '',
+        input.severity ? `ระดับความรุนแรง: ${input.severity}` : '',
+      ].filter(Boolean).join('\n'),
+      details: [answerLines, input.extraFacts ? `\nข้อเท็จจริงเพิ่มเติม: ${input.extraFacts}` : ''].filter(Boolean).join('\n'),
+      impact: [
+        input.violationDetails?.length ? `ประเด็นการละเมิด: ${input.violationDetails.join(', ')}` : '',
+        screeningLine ? `ผลคัดกรอง: ${screeningLine}` : '',
+      ].filter(Boolean).join('\n'),
+      actions: [
+        input.staffObs?.length ? `บันทึกเจ้าหน้าที่:\n${input.staffObs.map((o) => `• ${o}`).join('\n')}` : '',
+        input.referrals?.length ? `การส่งต่อ: ${input.referrals.join(', ')}` : '',
+        input.referralNote ? `หมายเหตุการส่งต่อ: ${input.referralNote}` : '',
+      ].filter(Boolean).join('\n\n'),
+      generated_at: draft.generated_at,
+    });
+    toast.success(t('docs.review.fillFromCase'));
+  };
 
   const confirmAndPrint = async () => {
     if (FIELDS.some((field) => !draft[field].trim())) return;
