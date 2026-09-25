@@ -99,4 +99,13 @@ export const REFERRAL_DICT: Record<string, Entry> = {
   'psearch.pickCasePlaceholder': { th: 'เลือกเคสจากรายการ…', en: 'Select a case…' },
   'psearch.quickNote': { th: 'หมายเหตุถึงหน่วยงาน (ไม่บังคับ) — อย่าใส่ชื่อจริงหรือข้อมูลระบุตัวตน', en: 'Note for the organization (optional) — no real names or identifying details' },
   'psearch.linkHint': { th: 'ส่งลิงก์นี้ให้หน่วยงานทางช่องทางที่ปลอดภัย ลิงก์จะหมดอายุตามกำหนด', en: 'Share this link with the organization through a secure channel; it expires automatically' },
+  'psearch.focusCase': { th: 'หาหน่วยงานใกล้เคส', en: 'Find partners near a case' },
+  'psearch.focusNone': { th: 'ไม่เลือกเคส (แสดงทั้งหมด)', en: 'No case (show all)' },
+  'psearch.caseArea': { th: 'พื้นที่ของเคส: {area}', en: 'Case area: {area}' },
+  'psearch.caseNoArea': { th: 'เคสนี้ยังไม่มีจังหวัด — แสดงหน่วยงานทั่วประเทศก่อน', en: 'This case has no province yet — nationwide partners shown first' },
+  'psearch.nearOnly': { th: 'แสดงเฉพาะหน่วยงานในจังหวัดของเคสและทั่วประเทศ', en: 'Only partners in the case province and nationwide' },
+  'psearch.badgeDistrict': { th: 'อำเภอเดียวกัน', en: 'Same district' },
+  'psearch.badgeProvince': { th: 'จังหวัดเดียวกัน', en: 'Same province' },
+  'psearch.badgeNational': { th: 'ทั่วประเทศ', en: 'Nationwide' },
+  'psearch.nearButton': { th: 'หาหน่วยงานใกล้เคสนี้', en: 'Find partners near this case' },
 };

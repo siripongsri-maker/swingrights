@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Building2, Copy, Loader2, MapPin, Phone, Search, Share2 } from 'lucide-react';
+import { ArrowLeft, Copy, Loader2, MapPin, Phone, Search, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { useAccess } from '@/hooks/useAccess';
 import { useI18n } from '@/i18n';
 import { BrandMark } from '@/components/BrandLogo';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { cn } from '@/lib/utils';
 
 const ORG_TYPE_KEYS = ['agency', 'hospital', 'legal', 'ngo', 'shelter', 'police', 'hotline', 'other'];
 
@@ -26,15 +27,28 @@ interface Partner {
   services: string[];
 }
 
-interface CaseRow { id: string; case_code: string; status: string; created_at: string }
+interface CaseRow { id: string; case_code: string; status: string; created_at: string; profile: { province?: string; district?: string; branch?: string } | null }
+
+/** Normalise Thai place names so "จังหวัดเชียงใหม่" matches "เชียงใหม่", "กรุงเทพฯ" matches "กรุงเทพมหานคร". */
+const normPlace = (s?: string | null) => (s ?? '')
+  .replace(/^(จังหวัด|จ\.|อำเภอ|อ\.|เขต)\s*/, '')
+  .replace(/^กรุงเทพ.*$/, 'กรุงเทพ')
+  .trim();
+const samePlace = (a?: string | null, b?: string | null) => {
+  const x = normPlace(a), y = normPlace(b);
+  return !!x && !!y && (x === y || x.includes(y) || y.includes(x));
+};
 
 export default function PartnerSearch() {
   const { t } = useI18n();
   const { isStaff, loading } = useAccess();
+  const [params, setParams] = useSearchParams();
+  const focusId = params.get('case');
   const [q, setQ] = useState('');
   const [orgType, setOrgType] = useState('all');
   const [province, setProvince] = useState('all');
   const [service, setService] = useState('all');
+  const [nearOnly, setNearOnly] = useState(true);
   const [referPartner, setReferPartner] = useState<Partner | null>(null);
   const [caseId, setCaseId] = useState<string | null>(null);
   const [note, setNote] = useState('');
@@ -57,18 +71,22 @@ export default function PartnerSearch() {
 
   const { data: cases = [] } = useQuery({
     queryKey: ['partner-search-cases'],
-    enabled: isStaff && !!referPartner,
+    enabled: isStaff,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cases')
-        .select('id,case_code,status,created_at')
+        .select('id,case_code,status,created_at,profile')
         .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) throw error;
-      return (data ?? []) as CaseRow[];
+      return (data ?? []) as unknown as CaseRow[];
     },
   });
+
+  const focus = cases.find((c) => c.id === focusId) ?? null;
+  const focusProv = focus?.profile?.province || '';
+  const focusDist = focus?.profile?.district || '';
 
   const provinces = useMemo(() => [...new Set(partners.map((p) => p.province).filter(Boolean))].sort() as string[], [partners]);
   const services = useMemo(
@@ -76,16 +94,28 @@ export default function PartnerSearch() {
     [partners],
   );
 
+  /** 3 = same district, 2 = same province, 1 = nationwide, 0 = elsewhere */
+  const nearness = (p: Partner) => {
+    if (!p.province) return 1;
+    if (!focusProv || !samePlace(p.province, focusProv)) return 0;
+    return focusDist && samePlace(p.district, focusDist) ? 3 : 2;
+  };
+
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
-    return partners.filter((p) => {
+    const list = partners.filter((p) => {
       if (orgType !== 'all' && p.org_type !== orgType) return false;
       if (province !== 'all' && p.province !== province) return false;
       if (service !== 'all' && !(Array.isArray(p.services) && p.services.includes(service))) return false;
       if (needle && !`${p.name} ${p.district ?? ''} ${p.province ?? ''}`.toLowerCase().includes(needle)) return false;
+      if (focus && nearOnly && nearness(p) === 0) return false;
       return true;
     });
-  }, [partners, q, orgType, province, service]);
+    return focus ? [...list].sort((a, b) => nearness(b) - nearness(a)) : list;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partners, q, orgType, province, service, focus, nearOnly]);
+
+  const openRefer = (p: Partner) => { setReferPartner(p); setCaseId(focus?.id ?? null); };
 
   const submit = async () => {
     if (!referPartner || !caseId) return;
@@ -129,6 +159,33 @@ export default function PartnerSearch() {
       </header>
 
       <main className="max-w-4xl mx-auto px-5 py-6 space-y-4">
+        <div className="bg-primary-soft border border-primary/30 rounded-xl p-4 space-y-2">
+          <p className="text-sm font-medium flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary" /> {t('psearch.focusCase')}</p>
+          <Select value={focusId ?? 'none'} onValueChange={(v) => { const n = new URLSearchParams(params); if (v === 'none') n.delete('case'); else n.set('case', v); setParams(n, { replace: true }); }}>
+            <SelectTrigger className="bg-card"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">{t('psearch.focusNone')}</SelectItem>
+              {cases.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.case_code} · {c.profile?.province || '—'} · {new Date(c.created_at).toLocaleDateString('th-TH')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {focus && (
+            <>
+              <p className="text-xs text-muted-foreground">
+                {focusProv ? t('psearch.caseArea', { area: [focusDist, focusProv].filter(Boolean).join(' · ') }) : t('psearch.caseNoArea')}
+              </p>
+              {focusProv && (
+                <label className="flex items-center gap-2 text-xs cursor-pointer">
+                  <input type="checkbox" checked={nearOnly} onChange={(e) => setNearOnly(e.target.checked)} className="w-4 h-4 accent-primary" />
+                  {t('psearch.nearOnly')}
+                </label>
+              )}
+            </>
+          )}
+        </div>
         <div className="bg-card border border-border rounded-xl p-4 shadow-card space-y-3">
           <div className="relative">
             <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -170,6 +227,11 @@ export default function PartnerSearch() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-sm">{p.name}</p>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{t(`partners.orgType.${p.org_type}`)}</span>
+                    {focus && nearness(p) > 0 && (
+                      <span className={cn('text-[10px] px-2 py-0.5 rounded-full', nearness(p) >= 2 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground')}>
+                        {t(nearness(p) === 3 ? 'psearch.badgeDistrict' : nearness(p) === 2 ? 'psearch.badgeProvince' : 'psearch.badgeNational')}
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                     <MapPin className="w-3 h-3" /> {[p.district, p.province].filter(Boolean).join(' · ') || '—'}
@@ -181,7 +243,7 @@ export default function PartnerSearch() {
                     </div>
                   )}
                 </div>
-                <Button size="sm" className="shrink-0" onClick={() => setReferPartner(p)}>
+                <Button size="sm" className="shrink-0" onClick={() => openRefer(p)}>
                   <Share2 className="w-3.5 h-3.5" /> {t('psearch.referNow')}
                 </Button>
               </li>

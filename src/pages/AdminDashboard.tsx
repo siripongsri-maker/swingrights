@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -780,6 +780,10 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
             />
           </div>
         </section>
+
+        <Link to={`/admin/partner-search?case=${c.id}`} className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary-soft text-primary text-sm font-medium py-2.5 hover:bg-primary/10 transition">
+          <MapPin className="w-4 h-4" /> {t('psearch.nearButton')}{c.profile?.province ? ` · ${c.profile.province}` : ''}
+        </Link>
 
         {/* Violation type classification (staff) */}
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">

@@ -428,8 +428,9 @@ export default function SelfReport() {
     if (age.trim()) parts.push(`${t('report.about.age')}: ${age.trim()}`);
     if (occupation.trim()) parts.push(`${t('report.about.occupation')}: ${occupation.trim()}`);
     push({ role: 'user', text: parts.length ? parts.join(' · ') : t('report.chat.skipped') });
-    setStage('story');
-    botSay({ text: `${t('report.story.title')} — ${t('report.story.hint')}` });
+    // ask province/area first so follow-ups and referral matching know where the person is
+    setStage('area');
+    botSay({ text: `${t('report.area.title')} — ${t('report.area.hint')}`, widget: 'area' });
   };
 
   const sendStory = () => {
@@ -527,16 +528,18 @@ export default function SelfReport() {
       role: 'user',
       text: photos.length ? `${t('report.photo.add').split('(')[0].trim()} ${photos.length} ${t('report.chat.photos.unit')}` : t('report.chat.skipped'),
     });
-    setStage('area');
-    botSay({ text: `${t('report.area.title')} (${t('common.optional')}) — ${t('report.area.hint')}`, widget: 'area' });
+    setStage('contact');
+    botSay({ text: `${t('report.contact.title')} — ${t('report.contact.hint')}`, widget: 'contact' });
   };
 
   const finishArea = (msgId: number, skip: boolean) => {
     resolveWidget(msgId);
     const hasArea = !skip && area.province;
-    push({ role: 'user', text: hasArea ? formatArea(area.province, area.district, area.subdistrict, lang) : t('report.chat.skipped') });
-    setStage('contact');
-    botSay({ text: `${t('report.contact.title')} — ${t('report.contact.hint')}`, widget: 'contact' });
+    const label = hasArea ? formatArea(area.province, area.district, area.subdistrict, lang) : '';
+    push({ role: 'user', text: hasArea ? label : t('report.chat.skipped') });
+    if (hasArea) heardRef.current.push(`Province/area where the person is (already answered, do not ask again): ${area.province}${area.district ? ` / ${area.district}` : ''}`);
+    setStage('story');
+    botSay({ text: `${t('report.story.title')} — ${t('report.story.hint')}` });
   };
 
   // ---- referral partners: matched for staff only; reporter sees next steps ----
@@ -1132,4 +1135,4 @@ export default function SelfReport() {
   );
 }
 
-const STAGE_ORDER: Stage[] = ['consent', 'about', 'story', 'types', 'probe', 'photos', 'area', 'contact'];
+const STAGE_ORDER: Stage[] = ['consent', 'about', 'area', 'story', 'types', 'probe', 'photos', 'contact'];
