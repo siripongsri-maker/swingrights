@@ -8,4 +8,4 @@
 - [x] Apply the uploaded SWING RIGHTS design system across all screens without changing behavior
 - [x] Translate the full /admin case-management workflow into Burmese, Khmer, and Lao
 - [x] Show de-identified nationality, gender, age, and 2Q/9Q/PHQ scores on referral links in five languages
-- [ ] Connect Google Search Console and expose Burmese, Khmer, and Lao report URLs to search
+- [x] Connect Google Search Console and expose Burmese, Khmer, and Lao report URLs to search
