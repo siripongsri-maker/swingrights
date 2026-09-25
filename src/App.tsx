@@ -14,6 +14,7 @@ import ReferralRespond from "./pages/ReferralRespond";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminUsers from "./pages/AdminUsers";
+import AdminSystem from "./pages/AdminSystem";
 import AdminPartners from "./pages/AdminPartners";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GlobalQuickExit } from "@/components/screening/GlobalQuickExit";
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute><MySettings /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute allow={["admin"]}><AdminUsers /></ProtectedRoute>} />
+            <Route path="/admin/system" element={<ProtectedRoute allow={["admin"]}><AdminSystem /></ProtectedRoute>} />
             <Route path="/admin/partners" element={<ProtectedRoute allow={["admin"]}><AdminPartners /></ProtectedRoute>} />
             <Route path="/admin/report" element={<ProtectedRoute allow={["admin", "manager"]}><ProjectReport /></ProtectedRoute>} />
             <Route path="/admin/access-review" element={<ProtectedRoute allow={["admin", "manager"]}><AccessReview /></ProtectedRoute>} />
