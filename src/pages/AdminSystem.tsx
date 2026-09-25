@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ArrowLeft, Download, Loader2 } from 'lucide-react';
 import { useI18n } from '@/i18n';
+import SwingModelPanel from '@/components/admin/SwingModelPanel';
 
 interface StaffRow { id: string; name: string | null; status: string; roles: string[]; assigned_open: number; views_30d: number; exports_30d: number; last_login: string | null }
 interface ReporterRow { id: string; name: string | null; gender: string | null; provider: string | null; has_emergency: boolean; cases: number; created_at: string; last_login: string | null }
@@ -72,6 +73,7 @@ export default function AdminSystem() {
             <TabsTrigger value="reporters">{t('sys.tab.reporters')}</TabsTrigger>
             <TabsTrigger value="visitors">{t('sys.tab.visitors')}</TabsTrigger>
             <TabsTrigger value="logs">{t('sys.tab.logs')}</TabsTrigger>
+            <TabsTrigger value="model">{t('sys.tab.model')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="staff">
@@ -140,6 +142,7 @@ export default function AdminSystem() {
                 empty={t('sys.none')} mono={[3]} />
             )}
           </TabsContent>
+          <TabsContent value="model"><SwingModelPanel /></TabsContent>
         </Tabs>
       </main>
     </div>

@@ -157,6 +157,22 @@ async function loadExamples(lang: string): Promise<string> {
   if (Date.now() - exCache.at < EX_TTL && lang in exCache.byLang) return exCache.byLang[lang];
   if (Date.now() - exCache.at >= EX_TTL) exCache = { at: Date.now(), byLang: {} };
   let block = "";
+  // Active SWING Rights model version (built by staff in /admin/system) takes over when present.
+  try {
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: m } = await admin.from("swing_rights_models").select("version, guidance, examples").eq("status", "active").maybeSingle();
+    if (m) {
+      type E = { question: string; answer: string; followup: string };
+      const f = (r: E) => `- Q: ${r.question}\n  A: ${r.answer}\n  Follow-up: ${r.followup}`;
+      const ex = (m.examples as Record<string, { good: E[]; bad: E[]; real: E[] }>)?.[lang] ?? { good: [], bad: [], real: [] };
+      block = `\n\nSWING RIGHTS MODEL v${m.version} — LESSONS LEARNED FROM REAL CASES (follow these):\n${m.guidance}`;
+      if (ex.good?.length) block += `\n\nEXAMPLES STAFF RATED GOOD (imitate the style and depth, never copy details):\n${ex.good.map(f).join("\n")}`;
+      if (ex.bad?.length) block += `\n\nEXAMPLES STAFF REJECTED (avoid these patterns):\n${ex.bad.map(f).join("\n")}`;
+      if (ex.real?.length) block += `\n\nREAL REPORTER ANSWERS (learn how reporters describe events; never copy details):\n${ex.real.map(f).join("\n")}`;
+      exCache.byLang[lang] = block;
+      return block;
+    }
+  } catch { /* fall back to live examples */ }
   try {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const fmt = (r: { question: string; answer: string; followup: string }) =>
