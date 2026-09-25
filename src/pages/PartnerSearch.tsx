@@ -14,6 +14,7 @@ import { useI18n } from '@/i18n';
 import { BrandMark } from '@/components/BrandLogo';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { cn } from '@/lib/utils';
+import { provinceDistanceKm } from '@/lib/provinceGeo';
 
 const ORG_TYPE_KEYS = ['agency', 'hospital', 'legal', 'ngo', 'shelter', 'police', 'hotline', 'other'];
 
@@ -101,6 +102,13 @@ export default function PartnerSearch() {
     return focusDist && samePlace(p.district, focusDist) ? 3 : 2;
   };
 
+  /** Straight-line km from the case province to the partner province (null if unknown). */
+  const distanceKm = (p: Partner): number | null => {
+    if (!focusProv) return null;
+    if (!p.province) return null; // nationwide — no fixed location
+    return provinceDistanceKm(focusProv, p.province);
+  };
+
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     const list = partners.filter((p) => {
@@ -111,7 +119,16 @@ export default function PartnerSearch() {
       if (focus && nearOnly && nearness(p) === 0) return false;
       return true;
     });
-    return focus ? [...list].sort((a, b) => nearness(b) - nearness(a)) : list;
+    if (!focus) return list;
+    // Sort by real distance when both provinces are known; fall back to the nearness tier.
+    return [...list].sort((a, b) => {
+      const da = distanceKm(a);
+      const db = distanceKm(b);
+      if (da !== null && db !== null) return da - db;
+      if (da !== null) return -1;
+      if (db !== null) return 1;
+      return nearness(b) - nearness(a);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [partners, q, orgType, province, service, focus, nearOnly]);
 
@@ -233,9 +250,16 @@ export default function PartnerSearch() {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
                     <MapPin className="w-3 h-3" /> {[p.district, p.province].filter(Boolean).join(' · ') || '—'}
                     {p.phone && <span className="inline-flex items-center gap-1 ms-2"><Phone className="w-3 h-3" /> {p.phone}</span>}
+                    {focus && focusProv && distanceKm(p) !== null && (
+                      <span className="inline-flex items-center gap-1 ms-2 text-primary font-medium">
+                        {distanceKm(p) === 0
+                          ? t('psearch.distanceHere')
+                          : t('psearch.distance', { km: distanceKm(p)!.toLocaleString('th-TH') })}
+                      </span>
+                    )}
                   </p>
                   {Array.isArray(p.services) && p.services.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">

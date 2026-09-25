@@ -108,4 +108,6 @@ export const REFERRAL_DICT: Record<string, Entry> = {
   'psearch.badgeProvince': { th: 'จังหวัดเดียวกัน', en: 'Same province' },
   'psearch.badgeNational': { th: 'ทั่วประเทศ', en: 'Nationwide' },
   'psearch.nearButton': { th: 'หาหน่วยงานใกล้เคสนี้', en: 'Find partners near this case' },
+  'psearch.distance': { th: 'ห่างจากพื้นที่เคส ≈ {km} กม.', en: '≈ {km} km from the case area' },
+  'psearch.distanceHere': { th: 'อยู่ในจังหวัดเดียวกับเคส', en: 'In the same province as the case' },
 };
