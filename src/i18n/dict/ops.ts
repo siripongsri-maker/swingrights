@@ -35,6 +35,8 @@ export const OPS_DICT: Record<string, Entry> = {
   'ops.byNationality': { th: 'สัญชาติ', en: 'Nationality' },
   'ops.byGender': { th: 'เพศ', en: 'Gender' },
   'ops.byAge': { th: 'ช่วงอายุ', en: 'Age group' },
+  'ops.byViolation': { th: 'ประเภทการละเมิด', en: 'Violation type' },
+  'ops.byOccupation': { th: 'อาชีพ', en: 'Occupation' },
   'ops.byLanguage': { th: 'ภาษาที่ใช้รายงาน', en: 'Report language' },
   'ops.bySource': { th: 'ช่องทางรับเรื่อง', en: 'Channel' },
   'ops.source.self': { th: 'ผู้แจ้งรายงานเอง', en: 'Self-report online' },
