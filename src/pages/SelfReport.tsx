@@ -43,6 +43,71 @@ async function uploadOne(kind: 'audio' | 'photo', file: { blob: Blob; name: stri
 type Stage = 'consent' | 'about' | 'story' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'done';
 type Widget = 'consent' | 'about' | 'types' | 'probe' | 'photos' | 'area' | 'contact' | 'partners' | 'success';
 
+/** Draw a shareable case-code card (brand colors) and download it as PNG. */
+function downloadCodeCard(code: string, labels: { title: string; code: string; track: string; note: string }) {
+  const W = 1080, H = 1350;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  if (!ctx) return;
+  // background
+  ctx.fillStyle = '#F0F9F9';
+  ctx.fillRect(0, 0, W, H);
+  // header band
+  ctx.fillStyle = '#2A2A2E';
+  ctx.fillRect(0, 0, W, 220);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '700 64px "IBM Plex Sans Thai Looped", "Bai Jamjuree", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('SWING RIGHTS', W / 2, 110);
+  ctx.font = '400 34px "Bai Jamjuree", sans-serif';
+  ctx.fillStyle = '#F0F9F9';
+  ctx.fillText('มูลนิธิเพื่อนพนักงานบริการ', W / 2, 170);
+  // card
+  const cx = 90, cy = 300, cw = W - 180, ch = 620;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.strokeStyle = '#CC0099';
+  ctx.lineWidth = 6;
+  const r = 48;
+  ctx.beginPath();
+  ctx.roundRect(cx, cy, cw, ch, r);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = '#2A2A2E';
+  ctx.font = '400 40px "Bai Jamjuree", sans-serif';
+  ctx.fillText(labels.code, W / 2, cy + 120);
+  ctx.fillStyle = '#CC0099';
+  ctx.font = '700 120px "IBM Plex Mono", monospace';
+  ctx.fillText(code, W / 2, cy + 300);
+  ctx.fillStyle = '#2A2A2E';
+  ctx.font = '400 36px "Bai Jamjuree", sans-serif';
+  ctx.fillText(labels.track, W / 2, cy + 420);
+  ctx.fillStyle = '#CC0099';
+  ctx.font = '700 44px "IBM Plex Mono", monospace';
+  ctx.fillText('swingrights.app/track', W / 2, cy + 500);
+  // note + date
+  ctx.fillStyle = '#2A2A2E';
+  ctx.font = '400 34px "Bai Jamjuree", sans-serif';
+  ctx.fillText(labels.note, W / 2, 1000);
+  ctx.font = '400 30px "IBM Plex Mono", monospace';
+  ctx.fillText(new Date().toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' }), W / 2, 1060);
+  // footer band
+  ctx.fillStyle = '#CC0099';
+  ctx.fillRect(0, H - 120, W, 120);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = '400 34px "Bai Jamjuree", sans-serif';
+  ctx.fillText(labels.title, W / 2, H - 52);
+
+  cv.toBlob((blob) => {
+    if (!blob) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `swing-rights-${code}.png`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }, 'image/png');
+}
+
 interface ChatMsg {
   id: number;
   role: 'bot' | 'user';
