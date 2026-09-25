@@ -3,6 +3,7 @@
 // and returns which narrative items are still missing plus ONE gentle next question.
 // Never asks for names, ID numbers, passport or immigration status. Payloads are never logged.
 import { corsHeaders, rateLimit, tooMany, scrubText } from "../_shared/guard.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { parseBody, z } from "../_shared/schemas.ts";
 
 const SLOTS = ["what", "when", "where", "who", "harm", "evidence", "reported", "help", "nrm"] as const;
@@ -11,6 +12,12 @@ const bodySchema = z.object({
   text: z.string().max(8000),
   context: z.string().max(6000).optional().default(""),
   lang: z.enum(["th", "en", "my", "km", "lo"]).optional().default("th"),
+  asked: z.array(z.string().max(400)).max(40).optional().default([]),
+  covered_before: z.array(z.string().max(20)).max(12).optional().default([]),
+  question: z.string().max(500).optional().default(""),
+  latest: z.string().max(5000).optional().default(""),
+  train_consent: z.boolean().optional().default(false),
+  session_id: z.string().uuid().optional(),
 });
 
 const LANG_NAME: Record<string, string> = { th: "Thai", en: "English", my: "Burmese", km: "Khmer", lo: "Lao" };
@@ -30,7 +37,8 @@ Then read the LATEST answer carefully and write ONE short, warm, non-judgemental
 - If the latest answer mentions something vague (e.g. "that night", "they", "a lot of money", "near the bar", "he hurt me"), ask them to make THAT exact point more specific (which date/time, what role, how much, what kind of place, what injury) — quote or refer to their own words.
 - If details conflict or are unclear, gently ask them to clarify that point.
 - Otherwise ask about the most important missing item (priority order as listed), connected to the current form question when given.
-- Never repeat a question listed as already asked.
+- LISTEN FIRST: read every earlier answer. Never ask about an item that the person already answered anywhere in the story, and never re-ask (even reworded) any question in the ALREADY ASKED list. You MAY ask to expand a detail they gave (more specific, clarify), but only if that exact point is still vague.
+- If the only remaining questions would repeat something already asked or answered, return an empty next_question and next_slot "none".
 TRAFFICKING CHECK (NRM form แบบ คก.1 — Thai National Referral Mechanism screening):
 If the story suggests possible human trafficking or forced labour/services (e.g. recruited by an agent/broker or online with false promises, moved/transported, debt for travel or fees, documents or phone taken, not free to leave, locked in, watched/tracked, threats (incl. threat to call police), forced to see clients or do work not agreed, no pay/withheld pay, no days off, excessive hours, moved between venues, controlled housing, drugs used to control, tattoos/branding by exploiter, under 18), set trafficking_suspected=true and, when the core facts are already clear, use next_slot="nrm" and ask ONE question from the NRM indicators below that is NOT yet answered, choosing the one most relevant to what the person said and phrasing it around their own situation (not as a checklist):
 - Recruitment & travel: how they were recruited (online/agent/other); who paid travel and whether they owe a debt and how much; whether destination or job matched what was promised; whether they were held somewhere waiting to be passed on; food/water or contact with family restricted during travel.
@@ -65,7 +73,7 @@ Deno.serve(async (req) => {
 
     const v = await parseBody(req, bodySchema);
     if (v.error) return v.error;
-    const { text, context, lang } = v.data;
+    const { text, context, lang, asked, covered_before, question, latest, train_consent, session_id } = v.data;
     const story = scrubText(`${context}\n${text}`).trim();
     if (story.length < 8) return json({ covered: [], next_slot: "what", next_question: "" });
 
@@ -77,7 +85,7 @@ Deno.serve(async (req) => {
         stream: true,
         reasoning: { effort: "low" },
         instructions: `${SYSTEM}\nWrite next_question in ${LANG_NAME[lang]}.`,
-        input: `Story so far (de-identified):\n${story}`,
+        input: `Story so far (de-identified):\n${story}\n\nALREADY ASKED (do not repeat):\n${asked.map((a) => "- " + scrubText(a)).join("\n") || "- none"}\n\nItems already covered earlier: ${covered_before.join(", ") || "none"}`,
         text: { format: { type: "json_schema", name: "followup", strict: true, schema } },
       }),
     });
@@ -111,10 +119,27 @@ Deno.serve(async (req) => {
       }
     }
     const parsed = JSON.parse(out || "{}");
+    let nextQ = String(parsed.next_question ?? "").slice(0, 300);
+    // safety net: drop a question that is (almost) identical to one already asked
+    const norm = (x: string) => x.replace(/[\s\p{P}]/gu, "").toLowerCase();
+    if (nextQ && asked.some((a) => norm(a) === norm(nextQ))) nextQ = "";
+    if (train_consent && session_id) {
+      try {
+        const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+        await admin.from("ai_training_samples").insert({
+          session_id, lang,
+          question: scrubText(question).slice(0, 500),
+          answer: scrubText(latest || text).slice(0, 3000),
+          followup: nextQ,
+          covered: Array.isArray(parsed.covered) ? parsed.covered : [],
+          next_slot: nextQ ? (parsed.next_slot ?? "none") : "none",
+        });
+      } catch { /* training log is best-effort */ }
+    }
     return json({
       covered: Array.isArray(parsed.covered) ? parsed.covered : [],
       next_slot: parsed.next_slot ?? "none",
-      next_question: String(parsed.next_question ?? "").slice(0, 300),
+      next_question: nextQ,
       trafficking_suspected: parsed.trafficking_suspected === true,
     });
   } catch (e) {

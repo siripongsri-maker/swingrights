@@ -38,6 +38,62 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_training_samples: {
+        Row: {
+          answer: string
+          case_id: string | null
+          covered: string[]
+          created_at: string
+          followup: string
+          id: string
+          lang: string
+          next_slot: string | null
+          question: string
+          rated_at: string | null
+          rated_by: string | null
+          session_id: string
+          staff_rating: string | null
+        }
+        Insert: {
+          answer?: string
+          case_id?: string | null
+          covered?: string[]
+          created_at?: string
+          followup?: string
+          id?: string
+          lang?: string
+          next_slot?: string | null
+          question?: string
+          rated_at?: string | null
+          rated_by?: string | null
+          session_id: string
+          staff_rating?: string | null
+        }
+        Update: {
+          answer?: string
+          case_id?: string | null
+          covered?: string[]
+          created_at?: string
+          followup?: string
+          id?: string
+          lang?: string
+          next_slot?: string | null
+          question?: string
+          rated_at?: string | null
+          rated_by?: string | null
+          session_id?: string
+          staff_rating?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_training_samples_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_access_log: {
         Row: {
           action: string
@@ -904,6 +960,10 @@ export type Database = {
       }
       is_active_staff: { Args: { _user_id: string }; Returns: boolean }
       link_my_cases: { Args: { _codes: string[] }; Returns: number }
+      link_training_session: {
+        Args: { _case_code: string; _session: string }
+        Returns: undefined
+      }
       log_case_access: {
         Args: { _action: string; _case_id: string; _detail?: string }
         Returns: undefined
@@ -922,6 +982,11 @@ export type Database = {
       project_summary: {
         Args: { _branch?: string; _from: string; _to: string }
         Returns: Json
+      }
+      purge_unlinked_training: { Args: never; Returns: undefined }
+      rate_training_sample: {
+        Args: { _id: string; _rating: string }
+        Returns: undefined
       }
       record_site_visit: {
         Args: { _path: string; _session_id: string }
