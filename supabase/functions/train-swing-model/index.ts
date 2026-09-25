@@ -114,11 +114,15 @@ Never include names, places, numbers or any case detail. Never suggest asking re
     const { data: last } = await admin.from("swing_rights_models").select("version").order("version", { ascending: false }).limit(1);
     const version = (last?.[0]?.version ?? 0) + 1;
     const { data: row, error } = await admin.from("swing_rights_models").insert({
-      version, guidance, examples, created_by: u.user.id,
+      version, guidance, examples, created_by: createdBy,
       sample_count: R.length + L.length, good_count: good.length, rejected_count: bad.length, real_count: L.length,
     }).select("id, version").single();
     if (error) throw error;
-    return json({ ok: true, ...row });
+    if (autoActivate) {
+      await admin.from("swing_rights_models").update({ status: "archived" }).eq("status", "active");
+      await admin.from("swing_rights_models").update({ status: "active", activated_at: new Date().toISOString() }).eq("id", row.id);
+    }
+    return json({ ok: true, activated: autoActivate, ...row });
   } catch (e) {
     console.error("train-swing-model", (e as Error).message);
     return json({ error: "server_error" }, 500);
