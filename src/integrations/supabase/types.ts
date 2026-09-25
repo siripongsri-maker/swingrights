@@ -845,6 +845,51 @@ export type Database = {
         }
         Relationships: []
       }
+      swing_rights_models: {
+        Row: {
+          activated_at: string | null
+          created_at: string
+          created_by: string | null
+          examples: Json
+          good_count: number
+          guidance: string
+          id: string
+          real_count: number
+          rejected_count: number
+          sample_count: number
+          status: string
+          version: number
+        }
+        Insert: {
+          activated_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          examples?: Json
+          good_count?: number
+          guidance?: string
+          id?: string
+          real_count?: number
+          rejected_count?: number
+          sample_count?: number
+          status?: string
+          version: number
+        }
+        Update: {
+          activated_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          examples?: Json
+          good_count?: number
+          guidance?: string
+          id?: string
+          real_count?: number
+          rejected_count?: number
+          sample_count?: number
+          status?: string
+          version?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -884,6 +929,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      activate_swing_model: { Args: { _id: string }; Returns: undefined }
       admin_activity_log: {
         Args: { _kind?: string; _limit?: number }
         Returns: {
@@ -945,6 +991,7 @@ export type Database = {
         Args: { _branch?: string; _from?: string; _to?: string }
         Returns: Json
       }
+      deactivate_swing_model: { Args: never; Returns: undefined }
       ensure_staff_profile: {
         Args: { _display_name?: string }
         Returns: undefined
