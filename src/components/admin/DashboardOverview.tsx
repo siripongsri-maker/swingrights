@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
-import { Loader2, Clock, ShieldAlert, HeartHandshake, Users, TrendingUp, Bot } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Loader2, Clock, ShieldAlert, HeartHandshake, Users, TrendingUp, Bot, ChevronRight } from 'lucide-react';
 
 type Map = Record<string, number>;
 interface Overview {
@@ -17,9 +18,27 @@ interface Overview {
 
 const LANG_NAME: Record<string, string> = { th: 'ไทย', en: 'English', my: 'မြန်မာ', km: 'ខ្មែរ', lo: 'ລາວ' };
 
-export function DashboardOverview({ branch }: { branch: string | null }) {
+export function DashboardOverview({ branch, onOpenCase }: { branch: string | null; onOpenCase?: (id: string) => void }) {
   const { t } = useI18n();
   const [days, setDays] = useState(30);
+  const [pick, setPick] = useState<string | null>(null);
+  const pickQ = useQuery({
+    queryKey: ['violation-cases', pick],
+    enabled: !!pick,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('cases')
+        .select('id, case_code, created_at, status, violation_types, profile')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      const has = (c: any, k: string) =>
+        (Array.isArray(c.violation_types) && c.violation_types.includes(k)) ||
+        (Array.isArray(c.profile?.initialViolationTypes) && c.profile.initialViolationTypes.includes(k));
+      return (data as any[]).filter((c) => has(c, pick!));
+    },
+  });
   const q = useQuery({
     queryKey: ['overview', branch, days],
     refetchInterval: 60_000,
@@ -32,7 +51,7 @@ export function DashboardOverview({ branch }: { branch: string | null }) {
   const s = q.data;
   const un = (k: string) => (k === 'unspecified' || k === 'unset' ? t('ops.unspecified') : k);
   const rows = (m: Map | undefined, f: (k: string) => string = un) =>
-    Object.entries(m ?? {}).map(([k, v]) => ({ label: f(k), value: v })).sort((a, b) => b.value - a.value);
+    Object.entries(m ?? {}).map(([k, v]) => ({ key: k, label: f(k), value: v })).sort((a, b) => b.value - a.value);
 
   if (q.isLoading || !s) return <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>;
 
@@ -115,7 +134,10 @@ export function DashboardOverview({ branch }: { branch: string | null }) {
           <span>{s.daily[0]?.day}</span><span>{s.daily[s.daily.length - 1]?.day}</span>
         </div>
         <div className="grid sm:grid-cols-2 gap-x-6 mt-4">
-          <Bars title={t('ops.byViolation')} data={rows(s.by_violation, (k) => { const v = t(`report.type.${k}`); return v === `report.type.${k}` ? un(k) : v; })} empty={t('sys.none')} />
+          <div>
+            <Bars title={t('ops.byViolation')} data={rows(s.by_violation, (k) => { const v = t(`report.type.${k}`); return v === `report.type.${k}` ? un(k) : v; })} empty={t('sys.none')} onPick={onOpenCase ? (k) => setPick(k) : undefined} />
+            <p className="text-[11px] text-muted-foreground -mt-2 mb-4">{t('ops.byViolationHint')}</p>
+          </div>
           <Bars title={t('ops.byOccupation')} data={rows(s.by_occupation)} empty={t('sys.none')} />
           <Bars title={t('dash.chart.byStatus')} data={rows(s.by_status, (k) => t(`status.${k}`))} empty={t('sys.none')} />
           <Bars title={t('dash.chart.bySeverity')} data={rows(s.by_severity)} empty={t('sys.none')} />
