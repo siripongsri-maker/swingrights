@@ -350,7 +350,7 @@ export default function SelfReport() {
   // ---- referral partners ----
   const [partners, setPartners] = useState<Partner[]>([]);
 
-  const stageIdx = STAGE_ORDER.indexOf(stage === 'done' || stage === 'partners' ? 'contact' : stage);
+  const stageIdx = STAGE_ORDER.indexOf(stage === 'done' || stage === 'partners' ? 'contact' : stage === 'screen' ? 'probe' : stage);
 
   // ---- chat helpers ----
   const push = (m: Omit<ChatMsg, 'id'>) => {
