@@ -781,6 +781,10 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           </div>
         </section>
 
+        <Link to={`/admin/partner-search?case=${c.id}`} className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary-soft text-primary text-sm font-medium py-2.5 hover:bg-primary/10 transition">
+          <MapPin className="w-4 h-4" /> {t('psearch.nearButton')}{c.profile?.province ? ` · ${c.profile.province}` : ''}
+        </Link>
+
         {/* Violation type classification (staff) */}
         <section className="bg-card border border-border rounded-xl p-5 shadow-card">
           <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.types')}</p>
