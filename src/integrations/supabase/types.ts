@@ -884,6 +884,18 @@ export type Database = {
           user_id: string
         }[]
       }
+      admin_activity_log: {
+        Args: { _kind?: string; _limit?: number }
+        Returns: {
+          action: string
+          actor: string
+          at: string
+          case_code: string
+          detail: string
+          kind: string
+        }[]
+      }
+      admin_users_overview: { Args: never; Returns: Json }
       answer_case_question: {
         Args: {
           _answer_audio_url?: string
@@ -923,6 +935,10 @@ export type Database = {
           _partner_id: string
           _summary?: string
         }
+        Returns: Json
+      }
+      dashboard_overview: {
+        Args: { _branch?: string; _days?: number }
         Returns: Json
       }
       dashboard_stats: {
