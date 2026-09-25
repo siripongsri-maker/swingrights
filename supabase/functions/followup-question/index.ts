@@ -77,6 +77,7 @@ Deno.serve(async (req) => {
     const story = scrubText(`${context}\n${text}`).trim();
     if (story.length < 8) return json({ covered: [], next_slot: "what", next_question: "" });
 
+    const examples = await loadExamples(lang);
     const res = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Lovable-API-Key": key, "X-Lovable-AIG-SDK": "fetch" },
@@ -84,7 +85,7 @@ Deno.serve(async (req) => {
         model: "openai/gpt-6-astra",
         stream: true,
         reasoning: { effort: "low" },
-        instructions: `${SYSTEM}\nWrite next_question in ${LANG_NAME[lang]}.`,
+        instructions: `${SYSTEM}\nWrite next_question in ${LANG_NAME[lang]}.${examples}`,
         input: `Story so far (de-identified):\n${story}\n\nALREADY ASKED (do not repeat):\n${asked.map((a) => "- " + scrubText(a)).join("\n") || "- none"}\n\nItems already covered earlier: ${covered_before.join(", ") || "none"}`,
         text: { format: { type: "json_schema", name: "followup", strict: true, schema } },
       }),
@@ -147,3 +148,28 @@ Deno.serve(async (req) => {
     return json({ error: "failed" }, 500);
   }
 });
+
+// Learning from staff-rated examples (consented, de-identified samples only; stays inside SWING Rights).
+let exCache: { at: number; byLang: Record<string, string> } = { at: 0, byLang: {} };
+async function loadExamples(lang: string): Promise<string> {
+  if (Date.now() - exCache.at < 10 * 60_000 && lang in exCache.byLang) return exCache.byLang[lang];
+  if (Date.now() - exCache.at >= 10 * 60_000) exCache = { at: Date.now(), byLang: {} };
+  let block = "";
+  try {
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data } = await admin.from("ai_training_samples")
+      .select("lang, question, answer, followup, staff_rating")
+      .not("staff_rating", "is", null).neq("followup", "")
+      .order("rated_at", { ascending: false }).limit(80);
+    const rows = (data ?? []).sort((a, b) => Number(b.lang === lang) - Number(a.lang === lang));
+    const fmt = (r: { question: string; answer: string; followup: string }) =>
+      `- Q: ${r.question.slice(0, 160)}\n  A: ${r.answer.slice(0, 300)}\n  Follow-up: ${r.followup.slice(0, 200)}`;
+    const good = rows.filter((r) => r.staff_rating === "good").slice(0, 6).map(fmt);
+    const bad = rows.filter((r) => r.staff_rating !== "good").slice(0, 4)
+      .map((r) => `${fmt(r)}  (staff: ${r.staff_rating === "repeat" ? "repeated something already answered" : "unhelpful"})`);
+    if (good.length) block += `\n\nEXAMPLES STAFF RATED GOOD (imitate the style and depth, never copy details):\n${good.join("\n")}`;
+    if (bad.length) block += `\n\nEXAMPLES STAFF REJECTED (avoid these patterns):\n${bad.join("\n")}`;
+  } catch { /* examples are optional */ }
+  exCache.byLang[lang] = block;
+  return block;
+}
