@@ -285,6 +285,12 @@ export default function PartnerSearch() {
           <p className="text-[11px] text-muted-foreground">{t('psearch.resultCount', { n: filtered.length })}</p>
         </div>
 
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary" /> {t('psearch.mapTitle')}</p>
+          <PartnerMap markers={mapMarkers} emptyHint={t('psearch.mapEmpty')} />
+          <p className="text-[11px] text-muted-foreground">{t('psearch.mapHint')}</p>
+        </div>
+
         {filtered.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-10">{t('psearch.empty')}</p>
         ) : (
