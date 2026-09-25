@@ -362,6 +362,11 @@ const BASE_DICT: Dict = {
   'report.about.gender.unspecified': { th: 'ไม่ระบุ', en: 'Prefer not to say', my: 'မပြောလို', km: 'មិនបញ្ជាក់', lo: 'ບໍ່ລະບຸ' },
   'report.about.age': { th: 'อายุ', en: 'Age', my: 'အသက်', km: 'អាយុ', lo: 'ອາຍຸ' },
   'report.about.agePh': { th: 'เช่น 25', en: 'e.g. 25', my: 'ဥပမာ 25', km: 'ឧ. 25', lo: 'ຕົວຢ່າງ 25' },
+  'report.about.occupation': { th: 'อาชีพ (ถ้าอยากบอก)', en: 'Occupation (optional)', my: 'အလုပ်အကိုင် (မပြောလည်းရ)', km: 'មុខរបរ (ស្រេចចិត្ត)', lo: 'ອາຊີບ (ຖ້າຕ້ອງການ)' },
+  'report.about.occupationPh': {
+    th: 'เช่น ร้านนวด, บาร์, ฟรีแลนซ์, โรงงาน…', en: 'e.g. massage shop, bar, freelance, factory…',
+    my: 'ဥပမာ — အနှိပ်ဆိုင်, ဘားများ, အလုပ်အကိုင်အမျိုးမျိုး…', km: 'ឧ. ហាងម៉ាស្សា, បារ, រោងចក្រ…', lo: 'ຕົວຢ່າງ ຮ້ານນວດ, ບາ, ໂຮງງານ…',
+  },
   'report.story.title': {
     th: 'เล่าเรื่องของคุณ', en: 'Tell us what happened',
     my: 'ဖြစ်ရပ်ကို ပြောပြပါ', km: 'ប្រាប់យើងអំពីរឿងដែលកើតឡើង', lo: 'ເລົ່າເລື່ອງຂອງທ່ານ',

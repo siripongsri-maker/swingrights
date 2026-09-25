@@ -12,7 +12,7 @@ interface Overview {
   pii_flag: number; alerts_unacked: number; referrals_total: number; referrals_accepted: number;
   referrals_declined: number; referrals_pending: number; referrals_by_partner: Map; by_status: Map;
   by_severity: Map; by_branch: Map; by_source: Map; by_language: Map; by_nationality: Map; by_gender: Map;
-  by_age: Map; daily: { day: string; n: number }[]; ai_samples: number; ai_rated: number;
+  by_age: Map; by_violation: Map; by_occupation: Map; daily: { day: string; n: number }[]; ai_samples: number; ai_rated: number;
 }
 
 const LANG_NAME: Record<string, string> = { th: 'ไทย', en: 'English', my: 'မြန်မာ', km: 'ខ្មែរ', lo: 'ລາວ' };
@@ -115,6 +115,8 @@ export function DashboardOverview({ branch }: { branch: string | null }) {
           <span>{s.daily[0]?.day}</span><span>{s.daily[s.daily.length - 1]?.day}</span>
         </div>
         <div className="grid sm:grid-cols-2 gap-x-6 mt-4">
+          <Bars title={t('ops.byViolation')} data={rows(s.by_violation, (k) => t(`report.type.${k}`) === `report.type.${k}` ? k : t(`report.type.${k}`))} empty={t('sys.none')} />
+          <Bars title={t('ops.byOccupation')} data={rows(s.by_occupation)} empty={t('sys.none')} />
           <Bars title={t('dash.chart.byStatus')} data={rows(s.by_status, (k) => t(`status.${k}`))} empty={t('sys.none')} />
           <Bars title={t('dash.chart.bySeverity')} data={rows(s.by_severity)} empty={t('sys.none')} />
           {branch === null && <Bars title={t('dash.chart.byBranch')} data={rows(s.by_branch)} empty={t('sys.none')} />}
