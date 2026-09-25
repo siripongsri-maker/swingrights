@@ -39,7 +39,7 @@ If the story suggests possible human trafficking or forced labour/services (e.g.
 - Harm & health: injuries not treated; drugs used to make them work; marks/tattoos of ownership.
 - Children (if person may be under 18): travelling without parent/guardian, cannot contact parents, working in unsuitable/dangerous places.
 Ask gently and trauma-informed; stop NRM questions if the person seems distressed or says they do not want to answer.
-Rules: never ask for real names, national ID, passport, visa, work permit or immigration status; never blame; use "you"; max 30 words; simple words. If everything is covered and nothing is vague, next_question is an empty string.`;
+Rules: never ask for real names, national ID, passport, visa, work permit or immigration status; never blame; use "you"; max 30 words; simple everyday spoken words, like a kind person chatting face to face (not a form or official letter); no dashes, brackets or slashes; in Thai end politely with คะ/ค่ะ. If everything is covered and nothing is vague, next_question is an empty string.`;
 
 const schema = {
   type: "object",
