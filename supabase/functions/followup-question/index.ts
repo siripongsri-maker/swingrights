@@ -150,25 +150,37 @@ Deno.serve(async (req) => {
 });
 
 // Learning from staff-rated examples (consented, de-identified samples only; stays inside SWING Rights).
+// Refreshes every 2 minutes so answers from newly submitted cases are picked up automatically.
+const EX_TTL = 2 * 60_000;
 let exCache: { at: number; byLang: Record<string, string> } = { at: 0, byLang: {} };
 async function loadExamples(lang: string): Promise<string> {
-  if (Date.now() - exCache.at < 10 * 60_000 && lang in exCache.byLang) return exCache.byLang[lang];
-  if (Date.now() - exCache.at >= 10 * 60_000) exCache = { at: Date.now(), byLang: {} };
+  if (Date.now() - exCache.at < EX_TTL && lang in exCache.byLang) return exCache.byLang[lang];
+  if (Date.now() - exCache.at >= EX_TTL) exCache = { at: Date.now(), byLang: {} };
   let block = "";
   try {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data } = await admin.from("ai_training_samples")
-      .select("lang, question, answer, followup, staff_rating")
-      .not("staff_rating", "is", null).neq("followup", "")
-      .order("rated_at", { ascending: false }).limit(80);
-    const rows = (data ?? []).sort((a, b) => Number(b.lang === lang) - Number(a.lang === lang));
     const fmt = (r: { question: string; answer: string; followup: string }) =>
       `- Q: ${r.question.slice(0, 160)}\n  A: ${r.answer.slice(0, 300)}\n  Follow-up: ${r.followup.slice(0, 200)}`;
+    const [{ data }, { data: real }] = await Promise.all([
+      admin.from("ai_training_samples")
+        .select("lang, question, answer, followup, staff_rating")
+        .not("staff_rating", "is", null).neq("followup", "")
+        .order("rated_at", { ascending: false }).limit(80),
+      // Real answers from submitted cases (consented only — samples exist only with opt-in), newest first.
+      admin.from("ai_training_samples")
+        .select("lang, question, answer, followup, cases!inner(deleted_at)")
+        .is("staff_rating", null).not("case_id", "is", null).neq("followup", "")
+        .is("cases.deleted_at", null)
+        .order("created_at", { ascending: false }).limit(60),
+    ]);
+    const rows = (data ?? []).sort((a, b) => Number(b.lang === lang) - Number(a.lang === lang));
     const good = rows.filter((r) => r.staff_rating === "good").slice(0, 6).map(fmt);
     const bad = rows.filter((r) => r.staff_rating !== "good").slice(0, 4)
       .map((r) => `${fmt(r)}  (staff: ${r.staff_rating === "repeat" ? "repeated something already answered" : "unhelpful"})`);
+    const recent = (real ?? []).filter((r) => r.lang === lang).slice(0, 5).map(fmt);
     if (good.length) block += `\n\nEXAMPLES STAFF RATED GOOD (imitate the style and depth, never copy details):\n${good.join("\n")}`;
     if (bad.length) block += `\n\nEXAMPLES STAFF REJECTED (avoid these patterns):\n${bad.join("\n")}`;
+    if (recent.length) block += `\n\nRECENT REAL REPORTER ANSWERS (not yet reviewed — learn how reporters actually describe events and which details they tend to leave out; never copy details, staff-rated examples take priority):\n${recent.join("\n")}`;
   } catch { /* examples are optional */ }
   exCache.byLang[lang] = block;
   return block;
