@@ -790,7 +790,9 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.types')}</p>
           <div className="flex flex-wrap gap-1.5">
             {(['body', 'mental', 'labor', 'health', 'property', 'other'] as const).map((k) => {
-              const cur: string[] = Array.isArray(c.violation_types) ? c.violation_types : [];
+              const staffTypes: string[] = Array.isArray(c.violation_types) ? c.violation_types : [];
+              const initTypes: string[] = Array.isArray((c.profile as any)?.initialViolationTypes) ? (c.profile as any).initialViolationTypes : [];
+              const cur: string[] = staffTypes.length > 0 ? staffTypes : initTypes;
               const active = cur.includes(k);
               return (
                 <button
