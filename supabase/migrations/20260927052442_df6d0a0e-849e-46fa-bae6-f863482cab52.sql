@@ -1,0 +1,1 @@
+GRANT SELECT (active) ON public.referral_partners TO anon;
