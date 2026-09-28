@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -112,6 +112,9 @@ export default function AdminLogin() {
             <button onClick={forgot} disabled={loading} className="w-full mt-2 text-xs text-muted-foreground hover:text-primary">
               {t('login.forgot')}
             </button>
+            <Link to="/admin/signup" className="block text-center mt-2 text-xs text-primary hover:underline">
+              {t('staffsignup.link')}
+            </Link>
           </>
         )}
 
