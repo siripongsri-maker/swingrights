@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAccess, type AppRole, useRoleLabels } from '@/hooks/useAccess';
 import { useIdleLogout } from '@/hooks/useIdleLogout';
 import { useI18n } from '@/i18n';
+import { StaffPending } from '@/components/StaffPending';
 
 interface Props {
   children: ReactNode | ((access: ReturnType<typeof useAccess>) => ReactNode);
@@ -29,6 +30,8 @@ export function ProtectedRoute({ children, allow }: Props) {
   }
 
   if (!access.uid) return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+
+  if (access.status !== 'suspended' && access.roles.length === 0) return <StaffPending />;
 
   const denied =
     access.status === 'suspended' ||
