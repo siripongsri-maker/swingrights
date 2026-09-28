@@ -48,10 +48,28 @@ export default function SignIn() {
       } else {
         const { data, error } = await supabase.auth.signUp({ email: p.data.email, password: p.data.password, options: { emailRedirectTo: window.location.origin + '/signin' } });
         if (error) throw error;
+        // Existing confirmed email: backend returns a user with no identities
+        if (data.user && (data.user.identities?.length ?? 0) === 0) {
+          toast.error(t('cl.signin.err.exists'), { duration: 8000 });
+          setMode('login');
+          return;
+        }
         if (!data.session) toast.success(t('cl.signin.checkEmail'), { duration: 8000 });
       }
-    } catch {
-      toast.error(t('cl.signin.failed'));
+    } catch (err) {
+      const e = err as { code?: string; message?: string; status?: number };
+      const c = (e.code || '').toLowerCase();
+      const m = (e.message || '').toLowerCase();
+      let key = mode === 'login' ? 'cl.signin.failed' : 'cl.signin.regFailed';
+      if (c === 'user_already_exists' || c === 'email_exists' || m.includes('already registered')) key = 'cl.signin.err.exists';
+      else if (c === 'weak_password' || m.includes('pwned') || m.includes('weak')) key = 'cl.signin.err.weak';
+      else if (c === 'email_address_invalid' || c === 'validation_failed' || m.includes('invalid email')) key = 'cl.signin.err.badEmail';
+      else if (e.status === 429 || c.includes('rate_limit')) key = 'cl.signin.err.rate';
+      else if (c === 'signup_disabled' || c === 'email_provider_disabled' || m.includes('signups not allowed')) key = 'cl.signin.err.disabled';
+      else if (c === 'invalid_credentials' || m.includes('invalid login')) key = 'cl.signin.err.wrong';
+      else if (c === 'email_not_confirmed' || m.includes('not confirmed')) key = 'cl.signin.err.unconfirmed';
+      else if (m.includes('fetch') || m.includes('network')) key = 'cl.signin.err.network';
+      toast.error(t(key), { duration: 8000 });
     } finally { setBusy(false); }
   };
 
