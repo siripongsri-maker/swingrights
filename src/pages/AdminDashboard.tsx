@@ -792,21 +792,26 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
             {(['body', 'mental', 'labor', 'health', 'property', 'other'] as const).map((k) => {
               const staffTypes: string[] = Array.isArray(c.violation_types) ? c.violation_types : [];
               const initTypes: string[] = Array.isArray((c.profile as any)?.initialViolationTypes) ? (c.profile as any).initialViolationTypes : [];
-              const cur: string[] = staffTypes.length > 0 ? staffTypes : initTypes;
-              const active = cur.includes(k);
+              const fromReporter = initTypes.includes(k);
+              const fromStaff = staffTypes.includes(k);
+              const active = fromReporter || fromStaff;
               return (
                 <button
                   key={k}
                   type="button"
-                  disabled={!access.canEdit}
+                  disabled={!access.canEdit || fromReporter}
                   aria-pressed={active}
-                  onClick={() => patchCase({ violation_types: active ? cur.filter((x) => x !== k) : [...cur, k] }, t('dash.detail.typesSaved'))}
+                  title={fromReporter ? t('dash.detail.typeReporter') : undefined}
+                  onClick={() => patchCase({ violation_types: fromStaff ? staffTypes.filter((x) => x !== k) : [...staffTypes, k] }, t('dash.detail.typesSaved'))}
                   className={cn(
-                    'rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:opacity-60',
+                    'rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:cursor-default',
                     active ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card text-muted-foreground',
+                    !access.canEdit && !fromReporter && 'opacity-60',
                   )}
                 >
                   {t(`report.type.${k}`)}
+                  {fromReporter && <span className="ms-1 opacity-80">· {t('dash.detail.typeReporterShort')}</span>}
+                  {fromStaff && !fromReporter && <span className="ms-1 opacity-80">· {t('dash.detail.typeStaffShort')}</span>}
                 </button>
               );
             })}
