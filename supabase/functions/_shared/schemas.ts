@@ -94,6 +94,8 @@ export const adminUsersSchema = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("set_role"), user_id: uuid, role }),
   z.object({ action: z.literal("set_status"), user_id: uuid, status: z.enum(["active", "suspended"]) }),
+  z.object({ action: z.literal("approve"), user_id: uuid, role: role.optional() }),
+  z.object({ action: z.literal("reject"), user_id: uuid }),
   z.object({
     action: z.literal("reset_password"),
     email: z.string().trim().toLowerCase().email().max(255),

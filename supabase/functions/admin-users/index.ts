@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     if (action === "list") {
       const { data: profiles } = await admin
         .from("staff_profiles")
-        .select("id, email, display_name, status, created_at")
+        .select("id, email, display_name, status, created_at, request_note, requested_at")
         .order("created_at", { ascending: false });
       const { data: allRoles } = await admin.from("user_roles").select("user_id, role");
       const users = (profiles ?? []).map((p: Record<string, unknown>) => ({
@@ -115,6 +115,28 @@ Deno.serve(async (req) => {
       if (status === "suspended") {
         try { await admin.auth.admin.signOut(userId, "global"); } catch { /* ignore */ }
       }
+      return json({ ok: true });
+    }
+
+    if (action === "approve") {
+      const userId = body.user_id;
+      const role = body.role && ROLES.includes(body.role) ? body.role : "caseworker";
+      const { data: p } = await admin.from("staff_profiles").select("status").eq("id", userId).maybeSingle();
+      if (!p || !["pending", "rejected"].includes(p.status)) return json({ error: "ไม่พบคำขอที่รออนุมัติ" }, 400);
+      const { error: e1 } = await admin.from("staff_profiles").update({ status: "active" }).eq("id", userId);
+      if (e1) return json({ error: e1.message }, 400);
+      await admin.from("user_roles").delete().eq("user_id", userId);
+      const { error: e2 } = await admin.from("user_roles").insert({ user_id: userId, role });
+      if (e2) return json({ error: e2.message }, 400);
+      return json({ ok: true });
+    }
+
+    if (action === "reject") {
+      const userId = body.user_id;
+      if (userId === caller.id) return json({ error: "ข้อมูลไม่ถูกต้อง" }, 400);
+      await admin.from("user_roles").delete().eq("user_id", userId);
+      const { error } = await admin.from("staff_profiles").update({ status: "rejected" }).eq("id", userId).in("status", ["pending"]);
+      if (error) return json({ error: error.message }, 400);
       return json({ ok: true });
     }
 

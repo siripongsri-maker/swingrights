@@ -16,7 +16,9 @@ interface StaffUser {
   id: string;
   email: string | null;
   display_name: string | null;
-  status: 'active' | 'suspended';
+  status: 'active' | 'suspended' | 'pending' | 'rejected';
+  request_note?: string | null;
+  requested_at?: string | null;
   created_at: string;
   roles: AppRole[];
 }
@@ -64,6 +66,15 @@ export default function AdminUsers() {
     onSuccess: () => { toast.success(t('users.status.updateSuccess')); refresh(); },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const decide = useMutation({
+    mutationFn: (v: { action: 'approve' | 'reject'; user_id: string }) => callAdmin(v),
+    onSuccess: (_d, v) => { toast.success(t(v.action === 'approve' ? 'users.pending.approved' : 'users.pending.rejected')); refresh(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const pendingUsers = (usersQ.data ?? []).filter((u) => u.status === 'pending');
+  const otherUsers = (usersQ.data ?? []).filter((u) => u.status !== 'pending');
 
   const resetPw = useMutation({
     mutationFn: (v: { email: string }) => callAdmin({
@@ -113,19 +124,46 @@ export default function AdminUsers() {
           </p>
         </section>
 
+        {pendingUsers.length > 0 && (
+          <section className="bg-card border-2 border-primary/40 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-border text-sm font-medium">{t('users.pending.title')} ({pendingUsers.length})</div>
+            <div className="divide-y divide-border">
+              {pendingUsers.map((u) => (
+                <div key={u.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{u.display_name || u.email}</p>
+                    <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                    {u.request_note && <p className="text-xs mt-1 break-words">{u.request_note}</p>}
+                    {u.requested_at && <p className="text-[11px] text-muted-foreground font-mono">{new Date(u.requested_at).toLocaleString()}</p>}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="action" disabled={decide.isPending} onClick={() => decide.mutate({ action: 'approve', user_id: u.id })}>
+                      {t('users.pending.approve')}
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-destructive" disabled={decide.isPending} onClick={() => decide.mutate({ action: 'reject', user_id: u.id })}>
+                      {t('users.pending.reject')}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border text-sm font-medium">
-            {t('users.list.title')} {usersQ.data ? `(${usersQ.data.length})` : ''}
+            {t('users.list.title')} {usersQ.data ? `(${otherUsers.length})` : ''}
           </div>
           {usersQ.isLoading && <div className="p-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
           {usersQ.error && <div className="p-6 text-sm text-destructive">{(usersQ.error as Error).message}</div>}
           <div className="divide-y divide-border">
-            {usersQ.data?.map((u) => (
+            {otherUsers.map((u) => (
               <div key={u.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{u.display_name || u.email}</p>
                   <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                   {u.status === 'suspended' && <span className="text-[11px] text-destructive">{t('users.list.suspended')}</span>}
+                  {u.status === 'rejected' && <span className="text-[11px] text-destructive">{t('users.list.rejected')}</span>}
                 </div>
                 <Select
                   value={u.roles[0] ?? ''}

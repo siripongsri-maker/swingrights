@@ -34,6 +34,7 @@ import CaseHistory from "./pages/CaseHistory";
 import SignIn from "./pages/SignIn";
 import MyAccount from "./pages/MyAccount";
 import Onboarding from "./pages/Onboarding";
+import StaffSignup from "./pages/StaffSignup";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/me" element={<MyAccount />} />
             <Route path="/welcome" element={<Onboarding />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/signup" element={<StaffSignup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute><MySettings /></ProtectedRoute>} />
