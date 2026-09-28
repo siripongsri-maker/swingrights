@@ -818,6 +818,8 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          request_note: string | null
+          requested_at: string | null
           status: string
           suspended_at: string | null
           suspended_by: string | null
@@ -828,6 +830,8 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id: string
+          request_note?: string | null
+          requested_at?: string | null
           status?: string
           suspended_at?: string | null
           suspended_by?: string | null
@@ -838,6 +842,8 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          request_note?: string | null
+          requested_at?: string | null
           status?: string
           suspended_at?: string | null
           suspended_by?: string | null
@@ -1054,6 +1060,10 @@ export type Database = {
       record_site_visit: {
         Args: { _path: string; _session_id: string }
         Returns: undefined
+      }
+      request_staff_access: {
+        Args: { _display_name: string; _note?: string }
+        Returns: string
       }
       save_case_draft: {
         Args: {
