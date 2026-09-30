@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BrandHeader } from '@/components/BrandLogo';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { SosButton } from '@/components/SosButton';
 import { linkDeviceReports } from '@/lib/myReports';
 import { useI18n } from '@/i18n';
@@ -90,6 +91,7 @@ export default function MyAccount() {
       <header className="max-w-2xl mx-auto px-5 pt-6 flex items-center justify-between gap-3">
         <BrandHeader />
         <div className="flex items-center gap-2">
+          <QuickExitSlot />
           <LanguageToggle />
           <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="w-4 h-4" /> {t('cl.signout')}</Button>
         </div>

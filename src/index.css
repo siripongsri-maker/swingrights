@@ -157,7 +157,7 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
   h2, h3 { break-after: avoid; }
 }
 
-/* Sound wave — faint full-page background: bars bounce, magenta light flows */
+/* Sound wave: calm brand motif, bottom 35vh only, settles after ~8s */
 @keyframes wave-bounce {
   0%, 100% { transform: scaleY(0.3); }
   50% { transform: scaleY(1); }
@@ -168,7 +168,10 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
 }
 .sw-wave {
   position: fixed;
-  inset: 0;
+  inset-inline: 0;
+  bottom: 0;
+  height: 35vh;
+  max-height: 35vh;
   z-index: 0;
   display: flex;
   align-items: flex-end;
@@ -176,7 +179,7 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
   gap: 0.35rem;
   padding: 0 0.5rem;
   pointer-events: none;
-  opacity: 0.14;
+  opacity: 0.10;
 }
 .sw-wave-bar {
   display: block;
@@ -191,21 +194,49 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
     hsl(var(--accent) / 0.25));
   background-size: 300% 100%;
   animation:
-    wave-bounce 1.8s ease-in-out infinite,
-    wave-flow 7s linear infinite;
+    wave-bounce 2s ease-in-out 4 forwards,
+    wave-flow 8s linear 1 forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .sw-wave-bar { animation: none; }
 }
-
-/* phones: fewer, thicker wave bars so the background reads like desktop */
 @media (max-width: 639px) {
-  .sw-wave { gap: 0.4rem; padding: 0 0.4rem; opacity: 0.18; }
+  .sw-wave { gap: 0.4rem; padding: 0 0.4rem; opacity: 0.08; }
   .sw-wave-bar { max-width: 22px; }
   .sw-wave-bar:nth-child(even) { display: none; }
 }
+
+/* Fixed-layer system: bottom bars publish their height, Quick Exit clears them */
+:root { --bottom-nav-h: 0px; --action-bar-h: 0px; }
 @media (max-width: 639px) {
-  body:has(.sw-bottom-nav) .sw-quick-exit { bottom: calc(5rem + env(safe-area-inset-bottom)); }
+  body:has(.sw-bottom-nav) { --bottom-nav-h: 64px; }
+  body:has(.sw-action-bar) { --action-bar-h: 72px; }
+  .sw-quick-exit-float { top: calc(0.625rem + env(safe-area-inset-top)); inset-inline-end: 0.75rem; }
+}
+@media (min-width: 640px) {
+  .sw-quick-exit-float {
+    inset-inline-end: 1rem;
+    bottom: calc(var(--action-bar-h) + var(--bottom-nav-h) + 16px + env(safe-area-inset-bottom));
+  }
+}
+.sw-pad-action-bar { padding-bottom: calc(var(--action-bar-h) + 1.5rem + env(safe-area-inset-bottom)); }
+
+/* Thai-safe type scale, public screens only */
+body[data-area="public"] { font-size: 16px; line-height: 1.7; }
+body[data-area="public"] h1 { font-size: 28px; line-height: 1.3; text-wrap: balance; }
+body[data-area="public"] h2 { font-size: 22px; line-height: 1.35; text-wrap: balance; }
+body[data-area="public"] h3, body[data-area="public"] h4 { text-wrap: balance; }
+@media (min-width: 640px) {
+  body[data-area="public"] h1 { font-size: 44px; line-height: 1.2; }
+}
+body[data-area="public"] .text-sm { line-height: 1.6; }
+body[data-area="public"] .text-xs { line-height: 1.5; }
+.font-mono, .case-code, a[href^="tel:"] { font-variant-numeric: tabular-nums; }
+
+/* Global focus ring on every interactive element */
+:where(a, button, input, textarea, select, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
 }
 
 /* Respect reduced motion everywhere */

@@ -7,6 +7,7 @@ import { PdpaConsent } from '@/components/PdpaConsent';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { Reveal } from '@/components/Reveal';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
@@ -128,7 +129,7 @@ export default function Landing() {
             <span
               key={index}
               className="sw-wave-bar"
-              style={{ height: `${Math.round((height / 186) * 62)}vh`, animationDelay: `${index * 0.1}s, ${index * -0.33}s` }}
+              style={{ height: `${Math.round((height / 186) * 100)}%`, animationDelay: `${index * 0.1}s, ${index * -0.33}s` }}
             />
           ))}
         </div>
@@ -161,6 +162,8 @@ export default function Landing() {
               <Lock className="w-3.5 h-3.5" /> {t('nav.staff')}
             </Link>
           </div>
+          <div className="flex items-center gap-2 sm:hidden">
+          <QuickExitSlot />
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <Button type="button" variant="outline" size="icon" className="sm:hidden h-11 w-11 rounded-full bg-card/80" aria-label={t('home.menu')}>
@@ -196,11 +199,12 @@ export default function Landing() {
               </div>
             </SheetContent>
           </Sheet>
+          </div>
         </header>
 
         <main className="relative flex-1 min-h-0 overflow-y-auto sm:overflow-visible max-w-5xl w-full mx-auto px-4 sm:px-5 pt-4 sm:pt-14 pb-6 sm:pb-16">
           <div className={cn(show('home'), 'h-full sm:h-auto')}><div className="h-full flex flex-col justify-center sm:grid sm:grid-cols-[1.15fr_0.85fr] items-center gap-6 sm:gap-10 animate-slide-up">
-            <div className="text-center sm:text-start">
+            <div className="text-center sm:text-start rounded-[1.25rem] bg-background/90 p-2 sm:p-4">
               <BrandLockup className="mx-auto mb-5 sm:mb-7 sm:mx-0" />
               <span className="inline-flex items-center gap-1.5 bg-card border border-border text-foreground text-xs font-semibold px-3.5 py-1.5 rounded-full mb-5">
                 <Sparkles className="w-3 h-3" /> {t('landing.badge')}
@@ -214,13 +218,13 @@ export default function Landing() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center sm:justify-start w-full max-w-sm mx-auto sm:max-w-none sm:mx-0">
-                <Link to="/report" className="block">
-                  <Button size="lg" variant="action" className="px-7 shadow-elegant text-base w-full sm:w-auto">
+                <Link to="/report" className="block w-full sm:w-auto min-w-0">
+                  <Button size="lg" variant="action" className="shadow-elegant text-base w-full sm:w-auto">
                     <HeartHandshake className="w-4 h-4" /> {t('landing.cta.report')} <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
                   </Button>
                 </Link>
-                <Link to="/track" className="block">
-                  <Button size="lg" variant="outline" className="px-7 bg-card text-base w-full sm:w-auto">
+                <Link to="/track" className="block w-full sm:w-auto min-w-0">
+                  <Button size="lg" variant="outline" className="bg-card text-base w-full sm:w-auto">
                     <Search className="w-4 h-4" /> {t('landing.cta.track')}
                   </Button>
                 </Link>

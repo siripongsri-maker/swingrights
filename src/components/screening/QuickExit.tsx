@@ -1,9 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { clearDraft } from '@/lib/draft';
 import { clearAllLocalCases } from '@/lib/localCases';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 
 const SAFE_URL = 'https://www.google.co.th/search?q=พยากรณ์อากาศวันนี้';
 
@@ -17,14 +18,38 @@ async function escape(wipeDraft: boolean) {
   }
 }
 
+/** Place inside a page header. On phones the Quick Exit button moves into this spot. */
+export function QuickExitSlot({ className }: { className?: string }) {
+  return <div data-qe-slot className={cn('flex sm:hidden empty:hidden', className)} />;
+}
+
+/** Finds a visible header slot (phones only). Re-checks when the page changes. */
+function useHeaderSlot() {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const find = () => {
+      const el = mq.matches ? document.querySelector<HTMLElement>('[data-qe-slot]') : null;
+      setSlot((prev) => (prev === el ? prev : el));
+    };
+    find();
+    const obs = new MutationObserver(find);
+    obs.observe(document.body, { childList: true, subtree: true });
+    mq.addEventListener('change', find);
+    return () => { obs.disconnect(); mq.removeEventListener('change', find); };
+  }, []);
+  return slot;
+}
+
 /**
- * Phase 0.9 — Quick exit.
- * Leaves the page immediately, replaces the history entry and (by default) wipes
- * the local draft so an abuser with the device cannot read it from IndexedDB.
+ * Quick exit. Leaves the page immediately, replaces the history entry and (by default)
+ * wipes the local draft so someone else with the device cannot read it.
  * Press Esc twice quickly as a keyboard shortcut.
  */
 export function QuickExit({ wipeDraft = true }: { wipeDraft?: boolean }) {
   const { t } = useI18n();
+  const slot = useHeaderSlot();
+
   useEffect(() => {
     let last = 0;
     const onKey = (e: KeyboardEvent) => {
@@ -37,15 +62,22 @@ export function QuickExit({ wipeDraft = true }: { wipeDraft?: boolean }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [wipeDraft]);
 
-  return (
-    <Button
+  const button = (
+    <button
       type="button"
       onClick={() => void escape(wipeDraft)}
       aria-label={t('guard.quickExitAria')}
-      className="sw-quick-exit fixed bottom-4 end-4 z-50 h-12 rounded-full border border-accent/20 bg-accent-soft px-4 text-sm text-accent-deep shadow-elegant hover:bg-accent-soft/80 active:scale-95"
+      aria-describedby="sw-qe-hint"
+      className={cn(
+        'sw-quick-exit inline-flex items-center justify-center gap-1.5 rounded-full bg-danger text-danger-foreground font-semibold shadow-elegant transition-[background-color,transform] duration-150 ease-out hover:bg-danger/90 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        slot ? 'relative z-[60] h-10 min-w-11 px-3 text-sm shrink-0' : 'sw-quick-exit-float fixed z-50 h-10 min-w-11 px-3 text-sm sm:h-12 sm:px-4',
+      )}
     >
-      <X className="h-4 w-4" />
-      {t('guard.quickExit')}
-    </Button>
+      <X className="h-4 w-4 shrink-0" aria-hidden />
+      <span>{t('guard.quickExit')}</span>
+      <span id="sw-qe-hint" className="sr-only">{t('guard.quickExitHint')}</span>
+    </button>
   );
+
+  return slot ? createPortal(button, slot) : button;
 }
