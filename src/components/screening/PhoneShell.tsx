@@ -28,9 +28,9 @@ export function PhoneShell({ title = 'voice screening', onBack, onClose, childre
           >
             {onBack ? <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" /> : <X className="w-4 h-4" />}
           </Button>
-          <div className="flex min-w-0 flex-col items-center">
+          <div className="flex min-w-0 flex-1 flex-col items-center px-1">
             <BrandHeader className="[&_img]:h-7 [&_img]:w-7 [&>span]:hidden" />
-            <span className="max-w-[9rem] sm:max-w-[13rem] truncate text-xs font-semibold text-muted-foreground">{title}</span>
+            <span className="max-w-full truncate text-xs font-semibold text-muted-foreground">{title}</span>
           </div>
           <div className="min-w-11 flex items-center justify-end gap-2 shrink-0"><QuickExitSlot />{trailing}</div>
         </div>
