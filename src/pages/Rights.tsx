@@ -99,7 +99,7 @@ export default function Rights() {
                 <h2 className="sticky top-0 z-10 -mx-5 px-5 py-3 mb-3 bg-background/95 backdrop-blur font-subhead text-xl font-medium flex items-center gap-2.5">
                   <span className="w-1.5 h-6 rounded-full bg-primary/70" aria-hidden />
                   {t(SECTION_LABEL_KEYS[section])}
-                  <span className="ms-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">{t('rights.count', { n: items.length })}</span>
+                  <span className="ms-auto shrink-0 whitespace-nowrap rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">{t('rights.count', { n: items.length })}</span>
                 </h2>
                 <Accordion
                   type="multiple"
