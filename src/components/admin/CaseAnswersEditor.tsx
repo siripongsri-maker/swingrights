@@ -77,9 +77,9 @@ export function CaseAnswersEditor({ caseId, answers, canEdit, audioSigned, staff
           return (
             <div key={i} className={`border-b border-border/60 pb-3 last:border-none last:pb-0 ${side}`}>
               <div className="flex items-center justify-between gap-2 mb-1">
-                <p className="text-[10px] uppercase tracking-wider text-primary">{label(a.cat)}</p>
+                <p className="text-xs uppercase tracking-wider text-primary">{label(a.cat)}</p>
                 {canEdit && editIdx !== i && (
-                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { setEditIdx(i); setDraft(a.transcript || ''); }}>
+                  <Button size="sm" variant="ghost" className="h-11 px-2 text-xs" onClick={() => { setEditIdx(i); setDraft(a.transcript || ''); }}>
                     <Pencil className="w-3 h-3 me-1" />{t('dash.ans.edit')}
                   </Button>
                 )}
@@ -100,16 +100,16 @@ export function CaseAnswersEditor({ caseId, answers, canEdit, audioSigned, staff
                 <p className="text-sm bg-muted/40 border border-border rounded-md p-2 whitespace-pre-wrap">{a.transcript || t('dash.detail.noAnswer')}</p>
               )}
               {audioSigned[i] && <audio src={audioSigned[i]} controls className="w-full mt-2 h-9" />}
-              {staffObs?.[i] && <p className="text-xs text-amber-700 mt-1.5">{t('dash.detail.staffNote', { note: staffObs[i] })}</p>}
+              {staffObs?.[i] && <p className="text-xs text-sevYellow-fg mt-1.5">{t('dash.detail.staffNote', { note: staffObs[i] })}</p>}
               {(a.edited_at || a.added_by) && (
-                <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
                   <UserPen className="w-3 h-3" />
                   {t('dash.ans.byLine', { name: staffName(a.edited_by || a.added_by), at: new Date(a.edited_at || '').toLocaleString() })}
                 </p>
               )}
               {hist.length > 0 && (
                 <div className="mt-1">
-                  <button type="button" className="text-[11px] text-primary inline-flex items-center gap-1 underline-offset-2 hover:underline"
+                  <button type="button" className="text-xs text-primary inline-flex items-center gap-1 underline-offset-2 hover:underline"
                     onClick={() => setOpenHist(openHist === i ? null : i)}>
                     <History className="w-3 h-3" />{t('dash.ans.history', { n: hist.length })}
                   </button>

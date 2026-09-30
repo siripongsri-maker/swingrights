@@ -18,7 +18,7 @@ const OUTCOME_CLS: Record<string, string> = {
   accepted: 'bg-sevGreen-bg text-sevGreen-fg',
   completed: 'bg-sevGreen-bg text-sevGreen-fg',
   declined: 'bg-sevRed-bg text-sevRed-fg',
-  no_response: 'bg-amber-100 text-amber-800',
+  no_response: 'bg-sevYellow-bg text-sevYellow-fg',
 };
 
 /** Referral log for one case: history list + "Refer to partner" dialog. */
@@ -141,7 +141,7 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
     <section className="bg-card border border-border rounded-xl p-5 shadow-card">
       <div className="flex items-center justify-between gap-2 mb-3">
         <p className="text-xs font-medium text-muted-foreground">{t('ref.historyTitle')}</p>
-        {canEdit && <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setOpen(true)}><Share2 className="w-3.5 h-3.5" /> {t('ref.button')}</Button>}
+        {canEdit && <Button size="sm" variant="outline" className="h-11 text-xs" onClick={() => setOpen(true)}><Share2 className="w-3.5 h-3.5" /> {t('ref.button')}</Button>}
       </div>
       {history.length === 0 ? (
         <p className="text-xs text-muted-foreground">{t('ref.historyEmpty')}</p>
@@ -154,9 +154,9 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
                 <span className="absolute -start-[7px] mt-1.5 w-3 h-3 rounded-full bg-primary border-2 border-background" />
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium">{names[r.partner_id] ?? '—'}</span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${OUTCOME_CLS[o] ?? ''}`}>{t(`ref.outcome.${o}`)}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${OUTCOME_CLS[o] ?? ''}`}>{t(`ref.outcome.${o}`)}</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {t('ref.referredAt', { date: fmt(r.referred_at) })}
                   {r.accepted_at ? ` · ${t('ref.acceptedAt', { date: fmt(r.accepted_at) })}` : ''}
                 </p>
@@ -189,9 +189,9 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
                   <button key={p.id} type="button" onClick={() => setPartnerId(p.id)}
                     className={`w-full text-start border rounded-lg p-3 text-sm transition ${partnerId === p.id ? 'border-primary bg-primary-soft' : 'border-border hover:border-primary'}`}>
                     <p className="font-medium text-[13px]">{p.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{[p.district, p.province].filter(Boolean).join(' · ')}</p>
+                    <p className="text-xs text-muted-foreground">{[p.district, p.province].filter(Boolean).join(' · ')}</p>
                     {Array.isArray(p.services) && p.services.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">{p.services.map((s, i) => <span key={i} className="text-[10px] bg-muted px-2 py-0.5 rounded-full">{s}</span>)}</div>
+                      <div className="flex flex-wrap gap-1 mt-1">{p.services.map((s, i) => <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded-full">{s}</span>)}</div>
                     )}
                   </button>
                 ))}
@@ -207,26 +207,26 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
                     {adding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} {t('ref.addPlaceBtn')}
                   </Button>
                 </div>
-                <p className="text-[11px] text-muted-foreground">{t('ref.addPlaceHint')}</p>
+                <p className="text-xs text-muted-foreground">{t('ref.addPlaceHint')}</p>
               </div>
-              {!showAll && <button type="button" className="text-[11px] text-primary underline" onClick={() => setShowAll(true)}>{t('ref.showAll')}</button>}
+              {!showAll && <button type="button" className="text-xs text-primary underline" onClick={() => setShowAll(true)}>{t('ref.showAll')}</button>}
               <div className="space-y-1">
                 <p className="text-xs font-medium flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-primary" /> {t('ref.summaryLabel')}</p>
                 <Textarea value={summary} onChange={(e) => setSummary(e.target.value)} maxLength={4000} className="min-h-[110px] text-sm" />
-                <p className="text-[11px] text-muted-foreground flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> {t('ref.summaryHint')}</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> {t('ref.summaryHint')}</p>
               </div>
               <div className="space-y-2 rounded-lg border border-border p-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-medium flex items-center gap-1.5"><FileText className="w-3.5 h-3.5 text-primary" /> {t('ref.letterTitle')}</p>
-                  <Button size="sm" variant="outline" className="h-8 text-xs" disabled={drafting} onClick={() => void draftLetter()}>
+                  <Button size="sm" variant="outline" className="h-11 text-xs" disabled={drafting} onClick={() => void draftLetter()}>
                     {drafting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} {letter ? t('ref.letterRedo') : t('ref.letterDraft')}
                   </Button>
                 </div>
-                {drafting && <p className="text-[11px] text-muted-foreground">{t('ref.letterDrafting')}</p>}
-                {!letter && !drafting && <p className="text-[11px] text-muted-foreground">{t('ref.letterHint')}</p>}
+                {drafting && <p className="text-xs text-muted-foreground">{t('ref.letterDrafting')}</p>}
+                {!letter && !drafting && <p className="text-xs text-muted-foreground">{t('ref.letterHint')}</p>}
                 {letter && LETTER_KEYS.map((k) => (
                   <div key={k} className="space-y-1">
-                    <p className="text-[11px] text-muted-foreground">{t(`ref.letter.${k}`)}</p>
+                    <p className="text-xs text-muted-foreground">{t(`ref.letter.${k}`)}</p>
                     <Textarea value={letter[k] ?? ''} maxLength={4000} className="min-h-[80px] text-sm"
                       onChange={(e) => setLetter({ ...letter, [k]: e.target.value })} />
                   </div>

@@ -72,11 +72,11 @@ function SlaBadge({ createdAt }: { createdAt: string }) {
   const elapsed = (Date.now() - new Date(createdAt).getTime()) / 3_600_000;
   const left = 24 - elapsed;
   if (left <= 0) {
-    return <span className="text-[10px] bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full tabular-nums">{t('dash.sla.overdue', { h: Math.floor(elapsed) })}</span>;
+    return <span className="text-xs bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full tabular-nums">{t('dash.sla.overdue', { h: Math.floor(elapsed) })}</span>;
   }
   const h = Math.ceil(left);
-  const cls = left < 6 ? 'bg-amber-100 text-amber-800' : 'bg-muted text-muted-foreground';
-  return <span className={`text-[10px] px-2 py-0.5 rounded-full tabular-nums ${cls}`}>{t('dash.sla.remaining', { h })}</span>;
+  const cls = left < 6 ? 'bg-sevYellow-bg text-sevYellow-fg' : 'bg-muted text-muted-foreground';
+  return <span className={`text-xs px-2 py-0.5 rounded-full tabular-nums ${cls}`}>{t('dash.sla.remaining', { h })}</span>;
 }
 
 interface Staff { id: string; display_name: string | null; email: string | null }
@@ -278,7 +278,7 @@ export default function AdminDashboard() {
             <BrandMark className="h-10 w-10" />
             <div>
               <p className="font-display font-medium">SWING Admin Dashboard</p>
-              <p className="text-[11px] text-sidebar-foreground/60">
+              <p className="text-xs text-sidebar-foreground/60">
                 Voice Screening · {access.roles.map((r) => roleLabels[r]).join(', ') || t('dash.staffFallback')}
               </p>
             </div>
@@ -340,16 +340,16 @@ export default function AdminDashboard() {
               {alertsQ.data?.map((a) => (
                 <div key={a.id} className="flex items-center gap-2 text-xs bg-card border border-border rounded-lg px-3 py-2">
                   {a.kind === 'suicide_risk' && <ShieldAlert className="w-3.5 h-3.5 text-destructive shrink-0" />}
-                  {a.kind === 'new_case' && <span className="text-[10px] font-medium bg-accent text-accent-foreground px-2 py-0.5 rounded-full shrink-0">{t('dash.alerts.newBadge')}</span>}
+                  {a.kind === 'new_case' && <span className="text-xs font-medium bg-accent text-accent-foreground px-2 py-0.5 rounded-full shrink-0">{t('dash.alerts.newBadge')}</span>}
                   <span className="font-mono">{a.case_code}</span>
                   <span className="text-muted-foreground">· {a.branch || t('dash.alerts.unspecified')} · {t('dash.alerts.level', { level: a.level })}</span>
                   <span className="text-muted-foreground ml-auto hidden sm:inline">{new Date(a.created_at).toLocaleString('th-TH')}</span>
-                  <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => a.case_id && setSelectedId(a.case_id)}>{t('dash.alerts.openCase')}</Button>
-                  <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => ackAlert.mutate(a.id)}><Check className="w-3 h-3" /> {t('dash.alerts.ack')}</Button>
+                  <Button size="sm" variant="outline" className="h-11 text-xs" onClick={() => a.case_id && setSelectedId(a.case_id)}>{t('dash.alerts.openCase')}</Button>
+                  <Button size="sm" variant="ghost" className="h-11 text-xs" onClick={() => ackAlert.mutate(a.id)}><Check className="w-3 h-3" /> {t('dash.alerts.ack')}</Button>
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2">{t('dash.alerts.footnote')}</p>
+            <p className="text-xs text-muted-foreground mt-2">{t('dash.alerts.footnote')}</p>
           </div>
         )}
 
@@ -367,15 +367,15 @@ export default function AdminDashboard() {
                 <MapPin className="w-4 h-4 text-primary shrink-0" />
                 <span className="text-xs text-muted-foreground shrink-0">{t('dash.filter.area')}</span>
                 <Select value={branch} onValueChange={setBranch}>
-                  <SelectTrigger className="h-9 max-w-[220px]"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-11 max-w-[220px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {branchOptions.map((b) => <SelectItem key={b} value={b}>{b === 'all' ? t('dash.filter.allAreas') : b}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <span className="text-[11px] text-muted-foreground ml-1">{t('dash.filter.caseCount', { n: stats?.total ?? 0 })}</span>
+                <span className="text-xs text-muted-foreground ml-1">{t('dash.filter.caseCount', { n: stats?.total ?? 0 })}</span>
               </div>
               <div className="flex gap-2">
-                <Button onClick={exportCSV} variant="outline" size="sm" className="h-9"><Download className="w-3.5 h-3.5" /> {t('dash.export.csv')}</Button>
+                <Button onClick={exportCSV} variant="outline" size="sm" className="h-11"><Download className="w-3.5 h-3.5" /> {t('dash.export.csv')}</Button>
               </div>
             </div>
 
@@ -389,18 +389,18 @@ export default function AdminDashboard() {
                 <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('dash.filter.searchPlaceholder')} className="h-9 pl-8 text-sm" />
               </div>
               <Select value={status} onValueChange={(v) => setStatus(v as any)}>
-                <SelectTrigger className="h-9"><SelectValue placeholder={t('dash.filter.status')} /></SelectTrigger>
+                <SelectTrigger className="h-11"><SelectValue placeholder={t('dash.filter.status')} /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('dash.filter.allStatuses')}</SelectItem>
                   {(['received', 'inprogress', 'completed', 'cancelled'] as CaseStatus[]).map((s) => <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Select value={branch} onValueChange={setBranch}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                 <SelectContent>{branchOptions.map((b) => <SelectItem key={b} value={b}>{b === 'all' ? t('dash.filter.allAreas') : b}</SelectItem>)}</SelectContent>
               </Select>
               <Select value={assignee} onValueChange={setAssignee}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('dash.filter.allAssignees')}</SelectItem>
                   <SelectItem value="me">{t('dash.filter.myCases')}</SelectItem>
@@ -422,18 +422,18 @@ export default function AdminDashboard() {
                     <button key={c.id} onClick={() => setSelectedId(c.id)}
                       className="w-full text-left bg-card border border-border rounded-xl p-3.5 hover:border-primary transition shadow-card">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <span className="font-mono text-[11px] bg-foreground/90 text-background px-2 py-1 rounded">{c.case_code}</span>
+                        <span className="font-mono text-xs bg-foreground/90 text-background px-2 py-1 rounded">{c.case_code}</span>
                         <StatusBadge value={c.status} />
                         {c.severity && <SeverityBadge value={c.severity} />}
-                        {c.suicide_risk && <span className="text-[10px] bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full">{t('dash.cases.suicideRiskBadge')}</span>}
+                        {c.suicide_risk && <span className="text-xs bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full">{t('dash.cases.suicideRiskBadge')}</span>}
                         {!c.first_response_at && <SlaBadge createdAt={c.created_at} />}
                         {c.pii_flag && <span title={t('pii.flag.title')} aria-label={t('pii.flag.title')} className="text-warning"><Flag className="w-3.5 h-3.5" /></span>}
-                        {overdue && <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">{t('dash.cases.overdueBadge')}</span>}
-                        <span className="ml-auto text-[11px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
+                        {overdue && <span className="text-xs bg-sevYellow-bg text-sevYellow-fg px-2 py-0.5 rounded-full">{t('dash.cases.overdueBadge')}</span>}
+                        <span className="ml-auto text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
                       </div>
                       <p className="text-sm font-medium truncate">{c.victim?.name_masked || t('dash.cases.unnamed')} · {c.profile?.kp || '-'}</p>
                       <p className="text-xs text-muted-foreground truncate">{c.ai_result?.summary || c.profile?.incidentPlace || '-'}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                         <UserCheck className="w-3 h-3" /> {staffName(c.assigned_to) || t('dash.cases.unassigned')}
                         {c.follow_up_at && <> · <CalendarClock className="w-3 h-3" /> {t('dash.cases.followUp', { date: new Date(c.follow_up_at).toLocaleDateString('th-TH') })}</>}
                       </p>
@@ -463,7 +463,7 @@ export default function AdminDashboard() {
                     <UserCheck className="w-4 h-4 text-primary" />
                     <span className="flex-1 truncate">{k === 'unassigned' ? t('dash.filter.unassigned') : staffName(k)}</span>
                     <span className="tabular-nums font-medium">{v}</span>
-                    <Button size="sm" variant="outline" className="h-7 text-[11px]"
+                    <Button size="sm" variant="outline" className="h-11 text-xs"
                       onClick={() => { setAssignee(k === 'unassigned' ? 'unassigned' : k); toast.info(t('dash.caseload.filteredToast')); }}>
                       {t('dash.caseload.viewCases')}
                     </Button>
@@ -710,7 +710,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           <button onClick={onBack} className="w-10 h-10 rounded-full bg-sidebar-accent hover:bg-sidebar-accent/80 flex items-center justify-center transition"><ArrowLeft className="w-4 h-4" /></button>
           <div>
             <p className="font-mono text-sm">{c.case_code}</p>
-            <p className="text-[11px] text-sidebar-foreground/60">{new Date(c.created_at).toLocaleString('th-TH')}</p>
+            <p className="text-xs text-sidebar-foreground/60">{new Date(c.created_at).toLocaleString('th-TH')}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Button size="sm" variant="outline" className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80" onClick={() => navigate(`/admin/case/${caseId}/history`)}>
@@ -763,7 +763,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           <div>
             <p className="text-xs text-muted-foreground mb-1.5">{t('dash.detail.assignee')}</p>
             <Select value={c.assigned_to ?? 'none'} onValueChange={(v) => patchCase({ assigned_to: v === 'none' ? null : v }, t('dash.detail.assignedToast'))}>
-              <SelectTrigger className="h-9"><SelectValue placeholder={t('dash.detail.selectStaff')} /></SelectTrigger>
+              <SelectTrigger className="h-11"><SelectValue placeholder={t('dash.detail.selectStaff')} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">{t('dash.filter.unassigned')}</SelectItem>
                 {staff.map((st) => <SelectItem key={st.id} value={st.id}>{st.display_name || st.email}</SelectItem>)}
@@ -829,14 +829,14 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
             </div>
             <p className="text-sm leading-relaxed mb-3">{c.ai_result.summary}</p>
             <div className="flex flex-wrap gap-1.5 mb-3">
-              {(c.ai_result.violationTags || []).map((t: any, i: number) => <span key={i} className="text-[11px] bg-primary-soft text-primary px-2 py-1 rounded-full">{t.label}</span>)}
+              {(c.ai_result.violationTags || []).map((t: any, i: number) => <span key={i} className="text-xs bg-primary-soft text-primary px-2 py-1 rounded-full">{t.label}</span>)}
             </div>
             <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground mb-3">
               {(c.ai_result.recommendations || []).map((r: string, i: number) => <li key={i}>{r}</li>)}
             </ul>
-            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-lg p-3">
-              <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">{AI_DISCLAIMER}</p>
-              <Button size="sm" variant={c.ai_reviewed ? 'outline' : 'default'} className="mt-2 h-8 text-[11px]"
+            <div className="bg-sevYellow-bg/60 dark:bg-sevYellow-bg border border-warning/40 dark:border-warning/40/40 rounded-lg p-3">
+              <p className="text-xs text-sevYellow-fg text-sevYellow-fg leading-relaxed">{AI_DISCLAIMER}</p>
+              <Button size="sm" variant={c.ai_reviewed ? 'outline' : 'default'} className="mt-2 h-11 text-xs"
                 disabled={c.ai_reviewed}
                 onClick={async () => {
                   const { data: sess } = await supabase.auth.getUser();
@@ -889,7 +889,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
               <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.area')}</p>
               <p>{[c.profile?.subdistrict && `ต.${c.profile.subdistrict}`, c.profile?.district && `อ.${c.profile.district}`, c.profile?.province || c.profile?.branch].filter(Boolean).join(' ')}</p>
               {c.profile?.geo && (
-                <Button type="button" variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setShowMap((current) => !current)}>
+                <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setShowMap((current) => !current)}>
                   {showMap ? t('dash.detail.hideMap') : t('dash.detail.viewOnMap')}
                 </Button>
               )}
@@ -919,7 +919,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           <div className="flex flex-wrap gap-1.5 mb-2">
             {(c.referrals || []).map((r: unknown, i: number) => {
               const label = referralLabel(r);
-              return label ? <span key={i} className="text-[11px] bg-primary-soft text-primary px-2 py-1 rounded-full">{label}</span> : null;
+              return label ? <span key={i} className="text-xs bg-primary-soft text-primary px-2 py-1 rounded-full">{label}</span> : null;
             })}
             {(!c.referrals || c.referrals.length === 0) && <span className="text-xs text-muted-foreground">{t('dash.detail.none')}</span>}
           </div>
@@ -942,13 +942,13 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
               {partners.map((p) => (
                 <div key={p.id} className="border border-border/60 rounded-lg p-3 text-sm">
                   <p className="font-medium text-[13px]">{p.name}</p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {[p.district, p.province].filter(Boolean).join(' · ') || t('dash.detail.allAreas')}
                     {p.phone ? t('dash.detail.phone', { phone: p.phone }) : ''}{p.email ? ` · ${p.email}` : ''}
                   </p>
                   {Array.isArray(p.services) && p.services.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
-                      {p.services.map((sv, i) => <span key={i} className="text-[10px] bg-muted px-2 py-0.5 rounded-full">{sv}</span>)}
+                      {p.services.map((sv, i) => <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded-full">{sv}</span>)}
                     </div>
                   )}
                 </div>
@@ -964,21 +964,21 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           {questions.map((q) => (
             <div key={q.id} className="border border-border/60 rounded-lg p-3 space-y-2">
               <p className="text-sm font-medium">{q.question}</p>
-              <p className="text-[10px] text-muted-foreground">{new Date(q.created_at).toLocaleString('th-TH')}</p>
+              <p className="text-xs text-muted-foreground">{new Date(q.created_at).toLocaleString('th-TH')}</p>
               {q.answer_text || q.answer_audio_url ? (
                 <div className="bg-muted/50 rounded-md p-2.5 space-y-1.5">
-                  <p className="text-[10px] uppercase tracking-wider text-primary">{t('dash.detail.answerFromReporter')}</p>
+                  <p className="text-xs uppercase tracking-wider text-primary">{t('dash.detail.answerFromReporter')}</p>
                   {q.answer_text && <p className="text-sm">{q.answer_text}</p>}
                   {q.answer_audio_url && (
                     answerAudio[q.id]
                       ? <audio src={answerAudio[q.id]} controls className="w-full h-9" />
-                      : <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => void playAnswerAudio(q.id, q.answer_audio_url!)}>
+                      : <Button size="sm" variant="outline" className="h-11 text-xs" onClick={() => void playAnswerAudio(q.id, q.answer_audio_url!)}>
                           <Volume2 className="w-3 h-3 mr-1" /> {t('dash.detail.listenAnswer')}
                         </Button>
                   )}
                 </div>
               ) : (
-                <p className="text-[11px] text-muted-foreground">{t('dash.detail.waitingAnswer', { code: c.case_code })}</p>
+                <p className="text-xs text-muted-foreground">{t('dash.detail.waitingAnswer', { code: c.case_code })}</p>
               )}
             </div>
           ))}
@@ -1004,7 +1004,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
                 <p className="text-xs font-medium text-muted-foreground">{t('dash.media.audio', { n: allAudio.length })}</p>
                 {allAudio.map((a, i) => (
                   <div key={i} className="rounded-lg border border-border p-2.5">
-                    <p className="text-[11px] text-muted-foreground mb-1 line-clamp-1">{a.label}</p>
+                    <p className="text-xs text-muted-foreground mb-1 line-clamp-1">{a.label}</p>
                     <audio src={a.url} controls preload="none" className="w-full h-9" />
                   </div>
                 ))}
@@ -1022,7 +1022,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
                 </div>
               </div>
             )}
-            <p className="text-[10px] text-muted-foreground">{t('dash.media.note')}</p>
+            <p className="text-xs text-muted-foreground">{t('dash.media.note')}</p>
           </section>
         )}
 
@@ -1048,7 +1048,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
             ))}
           </div>
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('dash.detail.replyPlaceholder')} className="min-h-[70px]" maxLength={1000} />
-          <p className="text-[11px] text-muted-foreground mt-1">{t('dash.detail.replyHint')}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t('dash.detail.replyHint')}</p>
           <div className="flex justify-end mt-2">
             <Button size="sm" disabled={!note.trim() || saving} onClick={() => void updateStatus(c.status as CaseStatus)}>
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {t('dash.detail.sendReply')}
@@ -1060,7 +1060,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
                 <li key={i} className="text-xs flex gap-2">
                   <StatusBadge value={it.status as CaseStatus} />
                   <div className="min-w-0">
-                    <p className="text-muted-foreground font-mono text-[10px]">{new Date(it.created_at).toLocaleString('th-TH')}</p>
+                    <p className="text-muted-foreground font-mono text-xs">{new Date(it.created_at).toLocaleString('th-TH')}</p>
                     {it.note && <p className="break-words">{it.note}</p>}
                   </div>
                 </li>

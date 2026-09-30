@@ -46,7 +46,7 @@ export function ScreeningTools({ value, onChange, showMental = true }: { value: 
   const toneCls: Record<string, string> = {
     green: 'bg-success/10 text-success border-success/30',
     yellow: 'bg-warning/10 text-warning border-warning/30',
-    amber: 'bg-amber-100 text-amber-800 border-amber-300',
+    amber: 'bg-sevYellow-bg text-sevYellow-fg border-warning/40',
     red: 'bg-destructive/10 text-destructive border-destructive/30',
   };
 
@@ -56,7 +56,7 @@ export function ScreeningTools({ value, onChange, showMental = true }: { value: 
       {/* 2Q */}
       <div className="bg-card border border-border rounded-2xl p-4">
         <p className="text-sm font-medium mb-1">{t('tools.q2.title')}</p>
-        <p className="text-[11px] text-muted-foreground mb-3">{t('tools.q2.subtitle')}</p>
+        <p className="text-xs text-muted-foreground mb-3">{t('tools.q2.subtitle')}</p>
         {Q2_ITEM_IDS.map((qid, i) => (
           <div key={qid} className="flex items-start gap-3 py-2 border-b border-border/60 last:border-none">
             <p className="text-sm flex-1 leading-relaxed">{i + 1}. {t(`tools.q.${qid}`)}</p>
@@ -82,7 +82,7 @@ export function ScreeningTools({ value, onChange, showMental = true }: { value: 
       {/* 9Q */}
       <div className="bg-card border border-border rounded-2xl p-4">
         <p className="text-sm font-medium mb-1">{t('tools.q9.title')}</p>
-        <p className="text-[11px] text-muted-foreground mb-3">{t('tools.q9.subtitle')}</p>
+        <p className="text-xs text-muted-foreground mb-3">{t('tools.q9.subtitle')}</p>
         {Q9_ITEM_IDS.map((qid, i) => (
           <div key={qid} className={`py-2.5 border-b border-border/60 last:border-none ${i === 8 ? 'bg-destructive/5 -mx-4 px-4 rounded-lg' : ''}`}>
             <p className="text-sm mb-2 leading-relaxed">{i + 1}. {t(`tools.q.${qid}`)}</p>
@@ -92,7 +92,7 @@ export function ScreeningTools({ value, onChange, showMental = true }: { value: 
                   key={s.v}
                   type="button"
                   onClick={() => { const q9 = [...value.q9]; q9[i] = s.v; onChange({ ...value, q9 }); }}
-                  className={`text-[11px] px-1 py-1.5 rounded-lg border transition ${value.q9[i] === s.v ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary'}`}
+                  className={`text-xs px-1 py-1.5 rounded-lg border transition ${value.q9[i] === s.v ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary'}`}
                 >
                   {t(`tools.q9.scale.${s.id}`)}
                 </button>
@@ -117,7 +117,7 @@ export function ScreeningTools({ value, onChange, showMental = true }: { value: 
           >
             <Phone className="w-4 h-4" /> {t('tools.escalation.call')} {t('tools.escalation.hotlineName')}
           </a>
-          <p className="text-[11px] text-muted-foreground mb-2">{t('tools.escalation.hotlineNote')}</p>
+          <p className="text-xs text-muted-foreground mb-2">{t('tools.escalation.hotlineNote')}</p>
           <p className="text-xs font-medium mb-1">{t('tools.escalation.safetyPlanTitle')}</p>
           <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside leading-relaxed">
             {SAFETY_PLAN_STEP_IDS.map((sid) => <li key={sid}>{t(`tools.q.${sid}`)}</li>)}
@@ -131,7 +131,7 @@ export function ScreeningTools({ value, onChange, showMental = true }: { value: 
       {/* NRM */}
       <div className="bg-card border border-border rounded-2xl p-4">
         <p className="text-sm font-medium mb-1">{t('tools.nrm.title')}</p>
-        <p className="text-[11px] text-muted-foreground mb-3">{t('tools.nrm.subtitle')}</p>
+        <p className="text-xs text-muted-foreground mb-3">{t('tools.nrm.subtitle')}</p>
         {NRM_SECTIONS.map((s) => (
           <div key={s.key} className="mb-3">
             <p className="text-xs font-medium text-primary mb-1.5">{t(s.titleId)}</p>
@@ -165,7 +165,7 @@ export function ScreeningTools({ value, onChange, showMental = true }: { value: 
           {t('tools.nrm.resultLabel')}: {nrmPos ? t('tools.nrm.positive') : t('tools.nrm.negative')}
         </p>
         {value.nrmUnder18 && (
-          <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-2 flex items-start gap-1.5">
+          <p className="text-xs text-sevYellow-fg text-sevYellow-fg mt-2 flex items-start gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
             {t('tools.nrm.minorNote')}
           </p>

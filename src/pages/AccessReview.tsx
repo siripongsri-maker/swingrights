@@ -108,11 +108,11 @@ export default function AccessReview() {
                         <div className="font-medium">{r.name_masked || '—'}</div>
                         <div className="flex gap-1 mt-0.5 flex-wrap">
                           {idle && (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-warning">
+                            <span className="inline-flex items-center gap-1 text-xs text-warning">
                               <AlertTriangle className="w-3 h-3" /> {t('areview.inactive')}
                             </span>
                           )}
-                          {r.status === 'suspended' && <span className="text-[10px] text-muted-foreground">· {t('areview.suspended')}</span>}
+                          {r.status === 'suspended' && <span className="text-xs text-muted-foreground">· {t('areview.suspended')}</span>}
                         </div>
                       </td>
                       <td className="p-3 text-xs">{r.roles.join(', ') || '—'}</td>

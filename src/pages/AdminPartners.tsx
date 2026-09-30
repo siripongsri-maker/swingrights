@@ -123,7 +123,7 @@ export default function AdminPartners() {
           <div>
             <BrandMark className="mb-1 h-7 w-7" />
             <h1 className="font-display font-semibold">{t('partners.header.title')}</h1>
-            <p className="text-[11px] text-sidebar-foreground/60">{t('partners.header.subtitle')}</p>
+            <p className="text-xs text-sidebar-foreground/60">{t('partners.header.subtitle')}</p>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <LanguageToggle className="ml-auto border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-foreground" />
@@ -175,8 +175,8 @@ export default function AdminPartners() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="font-medium text-sm">{p.name}</h2>
-                  <span className="text-[10px] bg-primary-soft text-primary px-2 py-0.5 rounded-full">{typeLabel(p.org_type)}</span>
-                  {!p.active && <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{t('partners.inactive')}</span>}
+                  <span className="text-xs bg-primary-soft text-primary px-2 py-0.5 rounded-full">{typeLabel(p.org_type)}</span>
+                  {!p.active && <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">{t('partners.inactive')}</span>}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                   <MapPin className="w-3 h-3" /> {[p.district, p.province].filter(Boolean).join(' · ') || t('partners.allAreas')}
@@ -187,15 +187,15 @@ export default function AdminPartners() {
                 </div>
                 {Array.isArray(p.services) && p.services.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-2">
-                    {p.services.map((s, i) => <span key={i} className="text-[10px] bg-muted px-2 py-0.5 rounded-full">{s}</span>)}
+                    {p.services.map((s, i) => <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded-full">{s}</span>)}
                   </div>
                 )}
               </div>
               <div className="flex flex-col gap-1.5 shrink-0">
-                <Button size="sm" variant="outline" className="h-8 text-[11px]" onClick={() => void toggle(p)}>
+                <Button size="sm" variant="outline" className="h-11 text-xs" onClick={() => void toggle(p)}>
                   {p.active ? t('partners.disable') : t('partners.enable')}
                 </Button>
-                <Button size="sm" variant="ghost" className="h-8 text-[11px] text-destructive" onClick={() => void remove(p)}>
+                <Button size="sm" variant="ghost" className="h-11 text-xs text-destructive" onClick={() => void remove(p)}>
                   <Trash2 className="w-3 h-3 mr-1" /> {t('partners.delete')}
                 </Button>
               </div>

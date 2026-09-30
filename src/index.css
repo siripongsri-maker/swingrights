@@ -244,3 +244,9 @@ body[data-area="public"] .text-xs { line-height: 1.5; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Staff area type scale: body 15px, captions 13px, nothing below 12px */
+body[data-area='admin'] { font-size: 15px; }
+body[data-area='admin'] .text-sm { font-size: 0.9375rem; }
+body[data-area='admin'] .text-xs { font-size: 0.8125rem; }
+@media (min-width: 1024px) { body[data-area='admin'] { --bottom-nav-h: 0px; } }

@@ -69,7 +69,7 @@ export function DashboardOverview({ branch, onOpenCase }: { branch: string | nul
             {t(`ops.range.${d}`)}
           </button>
         ))}
-        <span className="text-[11px] text-muted-foreground ms-auto">{t('ops.updated')}</span>
+        <span className="text-xs text-muted-foreground ms-auto">{t('ops.updated')}</span>
       </div>
 
       <Section icon={<Users className="w-4 h-4" />} title={t('ops.sec.today')}>
@@ -130,13 +130,13 @@ export function DashboardOverview({ branch, onOpenCase }: { branch: string | nul
             </div>
           ))}
         </div>
-        <div className="flex justify-between text-[10px] text-muted-foreground mt-1 font-mono">
+        <div className="flex justify-between text-xs text-muted-foreground mt-1 font-mono">
           <span>{s.daily[0]?.day}</span><span>{s.daily[s.daily.length - 1]?.day}</span>
         </div>
         <div className="grid sm:grid-cols-2 gap-x-6 mt-4">
           <div>
             <Bars title={t('ops.byViolation')} data={rows(s.by_violation, (k) => { const v = t(`report.type.${k}`); return v === `report.type.${k}` ? un(k) : v; })} empty={t('sys.none')} onPick={onOpenCase ? (k) => setPick(k) : undefined} />
-            <p className="text-[11px] text-muted-foreground -mt-2 mb-4">{t('ops.byViolationHint')}</p>
+            <p className="text-xs text-muted-foreground -mt-2 mb-4">{t('ops.byViolationHint')}</p>
           </div>
           <Bars title={t('ops.byOccupation')} data={rows(s.by_occupation)} empty={t('sys.none')} />
           <Bars title={t('dash.chart.byStatus')} data={rows(s.by_status, (k) => t(`status.${k}`))} empty={t('sys.none')} />
@@ -174,8 +174,8 @@ export function DashboardOverview({ branch, onOpenCase }: { branch: string | nul
                 className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-start hover:border-primary/50 transition"
               >
                 <span className="font-mono text-xs font-semibold text-primary">{c.case_code}</span>
-                <span className="text-[11px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
-                <span className="text-[11px] text-muted-foreground ms-auto">{t(`status.${c.status}`)}</span>
+                <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
+                <span className="text-xs text-muted-foreground ms-auto">{t(`status.${c.status}`)}</span>
                 <ChevronRight className="w-3.5 h-3.5 text-muted-foreground rtl:-scale-x-100" />
               </button>
             ))}
@@ -200,7 +200,7 @@ function Tile({ n, label, tone, small }: { n: number; label: string; tone?: 'pri
   return (
     <div className="rounded-2xl bg-background border border-border p-3 text-center">
       <p className={`font-mono ${small ? 'text-xl' : 'text-2xl'} font-semibold tabular-nums ${c}`}>{n}</p>
-      <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{label}</p>
+      <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{label}</p>
     </div>
   );
 }

@@ -111,7 +111,7 @@ export default function AdminSystem() {
                       </div>
                     ))}
                   </div>
-                  <div className="flex justify-between text-[10px] text-muted-foreground mt-1 font-mono">
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1 font-mono">
                     <span>{u.visits_daily[0]?.day}</span><span>{u.visits_daily[u.visits_daily.length - 1]?.day}</span>
                   </div>
                 </div>
@@ -135,7 +135,7 @@ export default function AdminSystem() {
                 <Download className="w-3.5 h-3.5" /> {t('sys.log.csv')}
               </Button>
             </div>
-            <p className="text-[11px] text-muted-foreground mb-2">{t('sys.log.note')}</p>
+            <p className="text-xs text-muted-foreground mb-2">{t('sys.log.note')}</p>
             {logQ.isLoading ? loading : (
               <Table head={[t('sys.col.time'), t('sys.col.type'), t('sys.col.action'), t('sys.col.case'), t('sys.col.actor'), t('sys.col.detail')]}
                 rows={(logQ.data ?? []).map((r) => [fmt(r.at), t(`sys.log.${r.kind}`), r.action, r.case_code ?? '—', r.actor ?? '—', r.detail ?? ''])}

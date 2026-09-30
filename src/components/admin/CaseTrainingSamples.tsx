@@ -50,13 +50,13 @@ export function CaseTrainingSamples({ caseId }: { caseId: string }) {
             <p className="text-primary">{s.followup ? `→ ${s.followup}` : t('train.noFollowup')}</p>
             {s.covered?.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {s.covered.map((c) => <span key={c} className="text-[10px] px-2 py-0.5 rounded-full bg-background border border-border">{t(`followup.slot.${c}`)}</span>)}
+                {s.covered.map((c) => <span key={c} className="text-xs px-2 py-0.5 rounded-full bg-background border border-border">{t(`followup.slot.${c}`)}</span>)}
               </div>
             )}
             {s.followup && (
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {opts.map(({ k, icon: Icon }) => (
-                  <Button key={k} size="sm" variant={s.staff_rating === k ? 'default' : 'outline'} className={cn('h-7 text-xs rounded-full')} aria-pressed={s.staff_rating === k} onClick={() => rate(s.id, k, s.staff_rating)}>
+                  <Button key={k} size="sm" variant={s.staff_rating === k ? 'default' : 'outline'} className={cn('h-11 text-xs rounded-full')} aria-pressed={s.staff_rating === k} onClick={() => rate(s.id, k, s.staff_rating)}>
                     <Icon className="w-3.5 h-3.5 me-1" />{t(`train.rate.${k}`)}
                   </Button>
                 ))}

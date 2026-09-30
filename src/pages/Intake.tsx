@@ -136,21 +136,21 @@ export default function Intake() {
   return (
     <PhoneShell onBack={step === 'consent' ? undefined : goBack} onClose={() => navigate('/')}>
       {sync !== 'idle' && !intake.caseCode && (
-        <p role="status" aria-live="polite" className="mb-2 text-end text-[11px] text-muted-foreground">
+        <p role="status" aria-live="polite" className="mb-2 text-end text-xs text-muted-foreground">
           {t(`intake.sync.${sync}`)}
         </p>
       )}
       {draftAt && (
         <div className="mb-4 rounded-xl border border-primary/30 bg-primary-soft/50 p-3">
           <p className="text-xs font-medium text-primary mb-1">{t('intake.draft.found')}</p>
-          <p className="text-[11px] text-muted-foreground mb-2.5">
+          <p className="text-xs text-muted-foreground mb-2.5">
             {t('intake.draft.savedAt', { date: new Date(draftAt).toLocaleString('th-TH') })}
           </p>
           <div className="flex gap-2">
-            <Button variant="action" onClick={resumeDraft} className="flex-1 h-10 text-xs">
+            <Button variant="action" onClick={resumeDraft} className="flex-1 h-11 text-xs">
               <RotateCcw className="w-3.5 h-3.5" /> {t('intake.draft.resume')}
             </Button>
-            <Button onClick={discardDraft} variant="outline" className="flex-1 h-9 rounded-lg text-xs">
+            <Button onClick={discardDraft} variant="outline" className="flex-1 h-11 rounded-lg text-xs">
               <Trash2 className="w-3.5 h-3.5" /> {t('intake.draft.startNew')}
             </Button>
           </div>
@@ -162,7 +162,7 @@ export default function Intake() {
           className="mb-4 w-full text-left rounded-xl border border-border bg-muted/40 p-3"
         >
           <p className="text-xs font-medium">{t('intake.pending.count', { n: pending })}</p>
-          <p className="text-[11px] text-muted-foreground">{t('intake.pending.tap')}</p>
+          <p className="text-xs text-muted-foreground">{t('intake.pending.tap')}</p>
         </button>
       )}
 
@@ -215,7 +215,7 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
       </div>
 
       <div className="bg-destructive/10 dark:bg-destructive/20 border border-destructive/30 rounded-xl p-3 mb-5 flex gap-2.5 items-start">
-        <span className="bg-destructive text-destructive-foreground text-[10px] font-medium px-1.5 py-0.5 rounded">SOS</span>
+        <span className="bg-destructive text-destructive-foreground text-xs font-medium px-1.5 py-0.5 rounded">SOS</span>
         <p className="text-xs text-destructive leading-relaxed">
           {t('intake.consent.sos').split('1300')[0]}<strong>1300</strong>{t('intake.consent.sos').split('1300')[1].split('1669')[0]}<strong>1669</strong>{t('intake.consent.sos').split('1669')[1]}
         </p>
@@ -243,7 +243,7 @@ function ConsentStep({ onNext }: { onNext: () => void }) {
           </span>
           <span className="text-sm">
             {c.label}
-            {!c.required && <span className="block text-[11px] text-muted-foreground mt-0.5">{c.note}</span>}
+            {!c.required && <span className="block text-xs text-muted-foreground mt-0.5">{c.note}</span>}
           </span>
         </button>
       ))}
@@ -269,7 +269,7 @@ function ReporterStep({ onNext }: { onNext: () => void }) {
   const update = (k: keyof typeof reporter, v: string) => set('reporter', { ...reporter, [k]: v });
   return (
     <div>
-      <p className="text-[11px] text-muted-foreground">{t('intake.reporter.eyebrow')}</p>
+      <p className="text-xs text-muted-foreground">{t('intake.reporter.eyebrow')}</p>
       <h1 className="text-xl font-medium mt-1 mb-4">{t('intake.reporter.title')}</h1>
 
       <Label className="text-xs text-muted-foreground mb-1.5 block">{t('intake.reporter.statusLabel')}</Label>
@@ -344,7 +344,7 @@ function VictimStep({ onNext }: { onNext: () => void }) {
 
   return (
     <div>
-      <p className="text-[11px] text-muted-foreground">{t('intake.victim.eyebrow')}</p>
+      <p className="text-xs text-muted-foreground">{t('intake.victim.eyebrow')}</p>
       <h1 className="text-xl font-medium mt-1 mb-4">{t('intake.victim.title')}</h1>
 
       {reporter.type === 'self' && (
@@ -448,7 +448,7 @@ function VictimStep({ onNext }: { onNext: () => void }) {
               <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                 selected ? 'bg-destructive text-destructive-foreground' : 'bg-card border border-border'
               }`}>{i + 1}</span>
-              <span className="text-[11px] leading-tight">{label.replace(t('intake.row.type'), '')}</span>
+              <span className="text-xs leading-tight">{label.replace(t('intake.row.type'), '')}</span>
             </button>
           );
         })}
@@ -667,7 +667,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
   };
 
   const tag = (cls: string, text: string) => (
-    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${cls}`}>{text}</span>
+    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls}`}>{text}</span>
   );
 
   const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
@@ -694,7 +694,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
       {/* chat thread */}
       <div ref={chatRef} className="bg-muted/30 border border-border rounded-2xl p-3 space-y-3 h-[42vh] min-h-[300px] overflow-y-auto mb-3">
         <div className="flex justify-center">
-          <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-3 py-1">
+          <span className="text-xs text-muted-foreground bg-muted rounded-full px-3 py-1">
             {t('intake.voice.introBubble')}
           </span>
         </div>
@@ -711,13 +711,13 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
                     <p className="text-[17px] leading-[26px] whitespace-pre-wrap">{ans.transcript || t('intake.voice.noAnswer')}</p>
                     {audioBlobs[i] && <HistoryAudio blob={audioBlobs[i]!} />}
                     {staffObs[i] && (
-                      <p className="text-[11px] mt-1.5 bg-sevYellow-bg text-sevYellow-fg rounded-md px-2 py-1 leading-relaxed">
+                      <p className="text-xs mt-1.5 bg-sevYellow-bg text-sevYellow-fg rounded-md px-2 py-1 leading-relaxed">
                         {t('intake.voice.staffNotePrefix', { note: staffObs[i] })}
                       </p>
                     )}
                     <button
                       onClick={() => jumpTo(i)}
-                       className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition"
+                       className="mt-1.5 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition"
                     >
                       <Pencil className="w-2.5 h-2.5" /> {t('intake.voice.editAnswer')}
                     </button>
@@ -742,7 +742,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <SpeakButton text={fq} />
                 {i === followups.length - 1 && !recording && !transcribing && (
-                  <Button size="sm" variant="outline" className="h-8 text-xs rounded-full" onClick={() => void startRec(fq)}>
+                  <Button size="sm" variant="outline" className="h-11 text-xs rounded-full" onClick={() => void startRec(fq)}>
                     <Mic className="w-3.5 h-3.5 me-1" /> {t('followup.answerVoice')}
                   </Button>
                 )}
@@ -777,7 +777,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         <div className="flex items-center justify-between gap-2">
           <PiiHint />
           {transcript && !recording && (
-            <button type="button" onClick={() => setTranscript('')} className="text-[11px] text-muted-foreground hover:text-destructive inline-flex items-center gap-1 shrink-0 px-1">
+            <button type="button" onClick={() => setTranscript('')} className="text-xs text-muted-foreground hover:text-destructive inline-flex items-center gap-1 shrink-0 px-1">
               <Trash2 className="w-3 h-3" /> {t('voice.clearTranscript')}
             </button>
           )}
@@ -817,7 +817,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
             ) : transcribing ? (
               <p className="text-xs text-muted-foreground">{t('intake.voice.waitingTranscribe')}</p>
             ) : (
-              <p className="text-[11px] text-muted-foreground truncate">
+              <p className="text-xs text-muted-foreground truncate">
                 {allowServerStt ? t('intake.voice.speakHint') : t('intake.voice.noConsentHint')}
               </p>
             )}
@@ -825,7 +825,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
           {qIndex > 0 && (
             <button
               onClick={() => saveAndAdvance(-1)}
-              className="text-[11px] text-muted-foreground underline underline-offset-2 shrink-0 px-1"
+              className="text-xs text-muted-foreground underline underline-offset-2 shrink-0 px-1"
             >
               {t('common.back')}
             </button>
@@ -843,7 +843,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
         {/* staff observation (collapsible) */}
         <button
           onClick={() => setShowObs((v) => !v)}
-          className="mt-2 flex items-center gap-1.5 text-[11px] text-warning font-medium"
+          className="mt-2 flex items-center gap-1.5 text-xs text-warning font-medium"
         >
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showObs ? 'rotate-180' : ''}`} />
           {t('intake.voice.staffObsToggle')} {obs && !showObs ? `· ${t('intake.voice.hasNote')}` : ''}
@@ -882,7 +882,7 @@ function QuestionBubble({ q, index, current }: { q: (typeof QUESTIONS)[number]; 
         {current && (
           <div className="flex items-center gap-2 mt-2">
             <SpeakButton text={t(q.main as any)} />
-            <p className="text-[10px] text-muted-foreground">{t(q.hint as any)}</p>
+            <p className="text-xs text-muted-foreground">{t(q.hint as any)}</p>
           </div>
         )}
       </div>
@@ -948,7 +948,7 @@ function AssessStep({ onNext }: { onNext: () => void }) {
                   <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${sel ? 'bg-destructive text-destructive-foreground' : 'bg-muted'}`}>
                     {String.fromCharCode(97 + i)}
                   </span>
-                  <span className="text-[11px]">{label.replace(t('intake.row.type'), '')}</span>
+                  <span className="text-xs">{label.replace(t('intake.row.type'), '')}</span>
                 </button>
               );
             })}
@@ -973,7 +973,7 @@ function AssessStep({ onNext }: { onNext: () => void }) {
             );
           })}
         </div>
-        <p className="text-[11px] text-muted-foreground leading-relaxed">{t('intake.assess.severityLegend')}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">{t('intake.assess.severityLegend')}</p>
       </Card>
 
       <Card title={t('intake.assess.q4title')}>
@@ -982,13 +982,13 @@ function AssessStep({ onNext }: { onNext: () => void }) {
             const done = specialTests.includes(test.id);
             return (
               <div key={test.id} className="flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-md bg-primary text-primary-foreground text-[11px] font-medium flex items-center justify-center shrink-0">{test.short}</span>
+                <span className="w-7 h-7 rounded-md bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center shrink-0">{test.short}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm">{test.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{test.desc}</p>
+                  <p className="text-xs text-muted-foreground">{test.desc}</p>
                 </div>
                 <button onClick={() => toggleTest(test.id)}
-                  className={`text-[11px] px-3 py-1.5 rounded-full shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${done ? 'bg-success text-success-foreground' : 'bg-primary text-primary-foreground'}`}>
+                  className={`text-xs px-3 py-1.5 rounded-full shrink-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${done ? 'bg-success text-success-foreground' : 'bg-primary text-primary-foreground'}`}>
                   {done ? t('intake.assess.done') : t('intake.assess.markDone')}
                 </button>
               </div>
@@ -1088,7 +1088,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
             <SkipForward className="w-4 h-4" /> {t('intake.ai.skip')}
           </Button>
         </div>
-        <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed max-w-xs mx-auto">
+        <p className="text-xs text-muted-foreground mt-3 leading-relaxed max-w-xs mx-auto">
           {t('intake.ai.skipNote')}
         </p>
       </div>
@@ -1115,15 +1115,15 @@ function AIStep({ onNext }: { onNext: () => void }) {
         </div>
         <div>
           <p className="text-sm font-medium text-primary">{t('intake.ai.resultTitle')}</p>
-          <p className="text-[11px] text-primary/80">{t('intake.ai.newCase', { date: new Date().toLocaleDateString('th-TH') })}</p>
-          <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+          <p className="text-xs text-primary/80">{t('intake.ai.newCase', { date: new Date().toLocaleDateString('th-TH') })}</p>
+          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
             {t('intake.ai.disclaimer')}
           </p>
         </div>
       </div>
 
       <div className="bg-muted/40 border border-border rounded-xl p-3.5 mb-3">
-        <p className="text-[11px] text-muted-foreground mb-2">{t('intake.ai.riskLevel')}</p>
+        <p className="text-xs text-muted-foreground mb-2">{t('intake.ai.riskLevel')}</p>
         <div className="flex items-center gap-2.5">
           <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
             <div className={`h-full rounded-full transition-all duration-1000 ${fillCls}`} style={{ width: `${r.riskScore}%` }} />
@@ -1136,21 +1136,21 @@ function AIStep({ onNext }: { onNext: () => void }) {
       </div>
 
       <div className="bg-muted/40 border border-border rounded-xl p-3.5 mb-3">
-        <p className="text-[11px] text-muted-foreground mb-1.5">{t('intake.ai.summaryTitle')}</p>
+        <p className="text-xs text-muted-foreground mb-1.5">{t('intake.ai.summaryTitle')}</p>
         <p className="text-sm leading-relaxed">{r.summary}</p>
       </div>
 
       <div className="mb-4">
-        <p className="text-[11px] text-muted-foreground mb-1.5">{t('intake.ai.violationTagsTitle')}</p>
+        <p className="text-xs text-muted-foreground mb-1.5">{t('intake.ai.violationTagsTitle')}</p>
         <div className="flex flex-wrap gap-1.5">
           {r.violationTags.map((t, i) => (
-            <span key={i} className={`text-[11px] px-2.5 py-1 rounded-full font-medium ${tagCls[t.type] || 'bg-muted'}`}>{t.label}</span>
+            <span key={i} className={`text-xs px-2.5 py-1 rounded-full font-medium ${tagCls[t.type] || 'bg-muted'}`}>{t.label}</span>
           ))}
         </div>
       </div>
 
       <div className="bg-success/5 border border-success/30 rounded-xl p-3.5 mb-4">
-        <p className="text-[11px] font-medium text-success mb-2">{t('intake.ai.recommendationsTitle')}</p>
+        <p className="text-xs font-medium text-success mb-2">{t('intake.ai.recommendationsTitle')}</p>
         {r.recommendations.map((rec, i) => (
           <div key={i} className="flex gap-2 text-xs text-success mb-1.5 last:mb-0">
             <span className="w-1.5 h-1.5 mt-1.5 rounded-full bg-success shrink-0" /> <span>{rec}</span>
@@ -1165,7 +1165,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
           </p>
           {r.followUpQuestions.map((q, i) => (
             <div key={i} className="bg-muted/40 border border-border rounded-xl p-3 mb-2">
-              <p className="text-[10px] font-medium text-primary mb-1 tracking-wider uppercase">{q.category}</p>
+              <p className="text-xs font-medium text-primary mb-1 tracking-wider uppercase">{q.category}</p>
               <p className="text-sm mb-2">{q.question}</p>
               <Textarea
                 value={intake.extraAnswers[`q${i}`] || ''}
@@ -1404,7 +1404,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
         {intake.referralNote && <p className="text-xs text-muted-foreground mt-2">{intake.referralNote}</p>}
       </SummaryBlock>
 
-      <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-xl p-3 mb-4 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+      <div className="bg-sevYellow-bg/60 dark:bg-sevYellow-bg border border-warning/40 dark:border-warning/40/40 rounded-xl p-3 mb-4 text-xs text-sevYellow-fg text-sevYellow-fg leading-relaxed">
         <strong>{t('intake.sig.certifyLabel')}</strong> {t('intake.sig.certifyText')}
       </div>
 
@@ -1414,7 +1414,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
           <canvas ref={staffCanvas} width={400} height={100} className="block w-full h-[100px] cursor-crosshair touch-none" />
           {staffEmpty && <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 pointer-events-none">{t('intake.sig.signHere')}</p>}
         </div>
-        <button onClick={() => clear('staff')} className="text-[11px] text-muted-foreground underline mt-1">{t('intake.sig.clearSig')}</button>
+        <button onClick={() => clear('staff')} className="text-xs text-muted-foreground underline mt-1">{t('intake.sig.clearSig')}</button>
         <Input value={staffName} onChange={(e) => setStaffName(e.target.value)} placeholder={t('intake.sig.staffNamePlaceholder')} className="mt-2" />
       </div>
 
@@ -1424,7 +1424,7 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
           <canvas ref={clientCanvas} width={400} height={100} className="block w-full h-[100px] cursor-crosshair touch-none" />
           {clientEmpty && <p className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-muted-foreground/60 pointer-events-none">{t('intake.sig.signHere')} (ไม่บังคับ)</p>}
         </div>
-        <button onClick={() => clear('client')} className="text-[11px] text-muted-foreground underline mt-1">{t('intake.sig.clearSig')}</button>
+        <button onClick={() => clear('client')} className="text-xs text-muted-foreground underline mt-1">{t('intake.sig.clearSig')}</button>
       </div>
 
       <Button variant="action" onClick={save} disabled={saving} className="w-full">
@@ -1496,26 +1496,26 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
       <p className="text-sm text-muted-foreground mb-5">{t('intake.confirmed.subtitle')}</p>
 
       <div className="bg-primary-deep text-primary-foreground rounded-xl p-4 mb-4">
-        <p className="text-[11px] text-primary-glow tracking-wider mb-1.5">{t('intake.confirmed.caseCodeLabel')}</p>
+        <p className="text-xs text-primary-glow tracking-wider mb-1.5">{t('intake.confirmed.caseCodeLabel')}</p>
         <p className="text-3xl font-medium text-primary-foreground tracking-widest font-mono">{caseCode}</p>
         <button
           onClick={() => { navigator.clipboard.writeText(caseCode || ''); toast.success(t('intake.confirmed.copied')); }}
-          className="inline-flex items-center gap-1.5 text-[11px] text-primary-glow bg-primary/20 border border-primary/40 rounded-full px-3 py-1 mt-2"
+          className="inline-flex items-center gap-1.5 text-xs text-primary-glow bg-primary/20 border border-primary/40 rounded-full px-3 py-1 mt-2"
         >
           <Copy className="w-3 h-3" /> {t('intake.confirmed.copyBtn')}
         </button>
-        <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">{t('intake.confirmed.keepCodeHint')}</p>
+        <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{t('intake.confirmed.keepCodeHint')}</p>
         {qr && (
           <div className="mt-3 flex flex-col items-center gap-1.5">
             <img src={qr} alt={t('intake.confirmed.qrAlt', { code: caseCode || '' })} className="w-32 h-32 rounded-lg bg-card p-1.5" />
-            <p className="text-[11px] text-muted-foreground">{t('intake.confirmed.qrHint')}</p>
+            <p className="text-xs text-muted-foreground">{t('intake.confirmed.qrHint')}</p>
           </div>
         )}
       </div>
 
       {/* {t('intake.confirmed.caseSummary')} */}
       <div className="text-left mb-4">
-        <p className="text-[10px] font-medium text-muted-foreground tracking-widest uppercase mb-2">{t('intake.confirmed.caseSummary')}</p>
+        <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase mb-2">{t('intake.confirmed.caseSummary')}</p>
         <SummaryBlock title={t('intake.confirmed.blockClient')}>
           <Row k={t('intake.row.name')} v={intake.victim.name || '-'} />
           <Row k={t('intake.row.kpGender')} v={`${intake.profile.kp} · ${intake.profile.gender}`} />
@@ -1531,7 +1531,7 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
 
       {/* เอกสารสำหรับดำเนินเคสต่อ */}
       <div className="text-left mb-4">
-        <p className="text-[10px] font-medium text-muted-foreground tracking-widest uppercase mb-2">{t('intake.confirmed.docsTitle')}</p>
+        <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase mb-2">{t('intake.confirmed.docsTitle')}</p>
         <div className="grid grid-cols-2 gap-2">
           {DOC_KINDS.map((dk) => (
             <button
@@ -1543,14 +1543,14 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
                 {DOC_ICONS[dk.key]}
               </span>
               <span className="block text-xs font-medium">{dk.label}</span>
-              <span className="block text-[10px] text-muted-foreground leading-snug mt-0.5">{dk.desc}</span>
+              <span className="block text-xs text-muted-foreground leading-snug mt-0.5">{dk.desc}</span>
             </button>
           ))}
         </div>
-        <Button onClick={printFull} variant="outline" className="w-full mt-2 rounded-xl h-10 text-xs">
+        <Button onClick={printFull} variant="outline" className="w-full mt-2 rounded-xl h-11 text-xs">
           <Printer className="w-3.5 h-3.5" /> {t('intake.confirmed.fullReportBtn')}
         </Button>
-        <p className="text-[10px] text-muted-foreground mt-1.5 leading-relaxed">{t('intake.confirmed.printHint')}</p>
+        <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{t('intake.confirmed.printHint')}</p>
       </div>
 
       <Button variant="action" onClick={() => navigate(`/track?code=${caseCode}`)} className="w-full mb-2">{t('intake.confirmed.trackBtn')}</Button>
@@ -1683,7 +1683,7 @@ function PhotoUpload() {
         </div>
       )}
       {photos.length > 0 && (
-        <p className="text-[11px] text-muted-foreground mt-1.5">{t('intake.photo.attachedCount', { n: photos.length })}</p>
+        <p className="text-xs text-muted-foreground mt-1.5">{t('intake.photo.attachedCount', { n: photos.length })}</p>
       )}
     </div>
   );
@@ -1701,7 +1701,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 function SummaryBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-muted/40 border border-border rounded-xl p-3.5 mb-3">
-      <p className="text-[10px] font-medium text-muted-foreground tracking-wider uppercase mb-2">{title}</p>
+      <p className="text-xs font-medium text-muted-foreground tracking-wider uppercase mb-2">{title}</p>
       <div className="space-y-1.5 text-xs">{children}</div>
     </div>
   );

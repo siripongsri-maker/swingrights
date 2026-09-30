@@ -96,7 +96,7 @@ export default function AdminUsers() {
             <BrandMark className="h-9 w-9" />
             <div>
               <p className="font-medium">{t('users.header.title')}</p>
-              <p className="text-[11px] text-sidebar-foreground/60">{t('users.header.subtitle')}</p>
+              <p className="text-xs text-sidebar-foreground/60">{t('users.header.subtitle')}</p>
             </div>
           </div>
           <LanguageToggle className="ml-auto border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-foreground" />
@@ -119,7 +119,7 @@ export default function AdminUsers() {
               {invite.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t('users.invite.send')}
             </Button>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             {t('users.invite.note')}
           </p>
         </section>
@@ -134,7 +134,7 @@ export default function AdminUsers() {
                     <p className="text-sm font-medium truncate">{u.display_name || u.email}</p>
                     <p className="text-xs text-muted-foreground truncate">{u.email}</p>
                     {u.request_note && <p className="text-xs mt-1 break-words">{u.request_note}</p>}
-                    {u.requested_at && <p className="text-[11px] text-muted-foreground font-mono">{new Date(u.requested_at).toLocaleString()}</p>}
+                    {u.requested_at && <p className="text-xs text-muted-foreground font-mono">{new Date(u.requested_at).toLocaleString()}</p>}
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" variant="action" disabled={decide.isPending} onClick={() => decide.mutate({ action: 'approve', user_id: u.id })}>
@@ -162,8 +162,8 @@ export default function AdminUsers() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{u.display_name || u.email}</p>
                   <p className="text-xs text-muted-foreground truncate">{u.email}</p>
-                  {u.status === 'suspended' && <span className="text-[11px] text-destructive">{t('users.list.suspended')}</span>}
-                  {u.status === 'rejected' && <span className="text-[11px] text-destructive">{t('users.list.rejected')}</span>}
+                  {u.status === 'suspended' && <span className="text-xs text-destructive">{t('users.list.suspended')}</span>}
+                  {u.status === 'rejected' && <span className="text-xs text-destructive">{t('users.list.rejected')}</span>}
                 </div>
                 <Select
                   value={u.roles[0] ?? ''}

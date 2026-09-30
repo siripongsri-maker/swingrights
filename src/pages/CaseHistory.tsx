@@ -73,7 +73,7 @@ export default function CaseHistory() {
           </button>
           <div>
             <p className="font-mono text-sm">{c.case_code}</p>
-            <p className="text-[11px] text-sidebar-foreground/60">{fmt(c.created_at)}</p>
+            <p className="text-xs text-sidebar-foreground/60">{fmt(c.created_at)}</p>
           </div>
           <div className="ms-auto"><StatusBadge value={c.status} /></div>
         </div>
@@ -117,7 +117,7 @@ export default function CaseHistory() {
               {timeline.map((ev, i) => (
                 <li key={i} className="relative">
                   <span className="absolute -start-[21px] top-1 w-2.5 h-2.5 rounded-full bg-primary" />
-                  <p className="text-[11px] text-muted-foreground font-mono">{fmt(ev.created_at)}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{fmt(ev.created_at)}</p>
                   <p className="text-sm font-medium"><StatusBadge value={ev.status as any} /></p>
                   {ev.note && <p className="text-sm text-muted-foreground mt-0.5">{ev.note}</p>}
                 </li>
@@ -138,7 +138,7 @@ export default function CaseHistory() {
             {answers.length === 0 && <p className="text-xs text-muted-foreground">{t('dash.hist.empty')}</p>}
             {answers.map((a, i) => (
               <div key={i} className={`border-b border-border/60 pb-3 last:border-none last:pb-0 ${a.cat === 'self_followup' ? 'ps-3 border-s-2 border-s-accent' : ''}`}>
-                <p className="text-[10px] uppercase tracking-wider text-primary mb-1">{a.cat === 'self_followup' ? t('dash.detail.followupLabel') : t('dash.detail.mainQLabel')}</p>
+                <p className="text-xs uppercase tracking-wider text-primary mb-1">{a.cat === 'self_followup' ? t('dash.detail.followupLabel') : t('dash.detail.mainQLabel')}</p>
                 <p className="text-xs text-muted-foreground mb-1">{a.question}</p>
                 <p className="text-sm bg-muted/40 border border-border rounded-md p-2">{a.transcript || t('dash.detail.noAnswer')}</p>
               </div>
@@ -153,14 +153,14 @@ export default function CaseHistory() {
             {questions.map((q) => (
               <div key={q.id} className="border border-border/60 rounded-lg p-3 space-y-1.5">
                 <p className="text-sm font-medium">{q.question}</p>
-                <p className="text-[10px] text-muted-foreground font-mono">{fmt(q.created_at)}</p>
+                <p className="text-xs text-muted-foreground font-mono">{fmt(q.created_at)}</p>
                 {q.answer_text ? (
                   <div className="bg-muted/50 rounded-md p-2.5">
-                    <p className="text-[10px] uppercase tracking-wider text-primary">{t('dash.detail.answerFromReporter')}</p>
+                    <p className="text-xs uppercase tracking-wider text-primary">{t('dash.detail.answerFromReporter')}</p>
                     <p className="text-sm">{q.answer_text}</p>
                   </div>
                 ) : (
-                  <p className="text-[11px] text-muted-foreground">{t('dash.hist.waiting')}</p>
+                  <p className="text-xs text-muted-foreground">{t('dash.hist.waiting')}</p>
                 )}
               </div>
             ))}
