@@ -205,6 +205,10 @@ export const MISC_DICT: Record<string, Entry> = {
     th: 'ออกด่วน', en: 'Exit quickly',
     my: 'အမြန်ထွက်ရန်', km: 'ចេញរហ័ស', lo: 'ອອກດ່ວນ',
   },
+  'guard.quickExitHint': {
+    th: 'กด Esc สองครั้งเพื่อออกทันที', en: 'Press Esc twice to leave now',
+    my: 'ချက်ချင်းထွက်ရန် Esc ကို နှစ်ကြိမ်နှိပ်ပါ', km: 'ចុច Esc ពីរដង ដើម្បីចេញភ្លាមៗ', lo: 'ກົດ Esc ສອງເທື່ອເພື່ອອອກທັນທີ',
+  },
 
   // ---------- SeverityBadge ----------
   'severity.green': {
