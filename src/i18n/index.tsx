@@ -204,8 +204,8 @@ const BASE_DICT: Dict = {
     my: 'စိတ်ကျန်းမာရေး ဟော့လိုင်း', km: 'ខ្សែទូរស័ព្ទសុខភាពផ្លូវចិត្ត', lo: 'ສາຍດ່ວນສຸຂະພາບຈິດ',
   },
   'landing.help.hl.emergency': {
-    th: 'เหตุด่วนเหตุร้าย', en: 'Emergency police',
-    my: 'အရေးပေါ် ရဲ', km: 'ប៉ូលិសបន្ទាន់', lo: 'ເຫດດ່ວນເຫດຮ້າຍ',
+    th: 'เหตุด่วนเหตุร้าย', en: 'Emergency line',
+    my: 'အရေးပေါ် ဖုန်းလိုင်း', km: 'ខ្សែទូរស័ព្ទបន្ទាន់', lo: 'ເຫດດ່ວນເຫດຮ້າຍ',
   },
   'landing.help.hl.social': {
     th: 'สายด่วนสวัสดิการสังคม', en: 'Social welfare hotline',
@@ -709,7 +709,7 @@ const BASE_DICT: Dict = {
   },
   'report.probe.needs.q': {
     th: 'ตอนนี้อยากให้เราช่วยเรื่องอะไรมากที่สุดคะ เช่น หาที่พักปลอดภัย ปรึกษากฎหมาย ค่ารักษา หรือไปแจ้งความ',
-    en: 'What help do you need most right now? (e.g. safe shelter, legal advice, medical costs, or filing a police report)',
+    en: 'What help do you need most right now? (e.g. safe shelter, legal advice, medical costs, or filing an official complaint)',
     my: 'အခု ဘယ်အကူအညီ အလိုအပ်ဆုံး လဲ? (ဥပမာ ဘေးကင်းရာ၊ ဥပဒေ အကြံဉာဏ်၊ ဆေးကုသမှု သို့မဟုတ် တရားစွဲမှု)',
     km: 'តើពេលនេះអ្នកត្រូវការជំនួយបែបណាខ្លះ? (ឧ. ទីជំរកសុវត្ថិភាព ដំបូន្មានផ្លូវច្បាប់ ថ្លៃព្យាបាល ឬដាក់ពាក្យបណ្តឹង)',
     lo: 'ຕອນນີ້ທ່ານຕ້ອງການຄວາມຊ່ວຍເຫຼືອແບບໃດທີ່ສຸດ? (ເຊັ່ນ ທີ່ພັກປອດໄພ ຄຳປຶກສາກົດໝາຍ ຄ່າຮັກສາພະຍາບານ ຫຼື ການແຈ້ງຄວາມ)',

@@ -242,10 +242,10 @@ export default function Track() {
                   return (
                     <div key={q.id} className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-card">
                       <p className="text-sm font-medium">{q.question}</p>
-                      <p className="text-[11px] text-muted-foreground">{formatDateTime(q.created_at)}</p>
+                      <p className="text-xs text-muted-foreground">{formatDateTime(q.created_at)}</p>
                       {q.answer_text || q.answered_at ? (
                         <div className="rounded-xl bg-primary-soft p-3">
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t('track.answered')}</p>
+                          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t('track.answered')}</p>
                           <p className="text-sm">{q.answer_text || '—'}</p>
                         </div>
                       ) : (
@@ -292,7 +292,7 @@ export default function Track() {
                       <StatusBadge value={toStatus(tItem.status)} />
                     </p>
                     {tItem.note && <p className="text-xs text-muted-foreground mt-0.5">{tItem.note}</p>}
-                    <p className="text-[11px] text-muted-foreground">{formatDateTime(tItem.created_at)}</p>
+                    <p className="text-xs text-muted-foreground">{formatDateTime(tItem.created_at)}</p>
                   </li>
                 ))}
               </ol>
