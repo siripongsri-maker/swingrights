@@ -7,6 +7,7 @@ import type { Entry } from '../index';
  * USER-FACING: all 5 languages (th/en/my/km/lo) required for every key.
  */
 export const MISC_DICT: Record<string, Entry> = {
+  'recover.refresh': { th: 'โหลดรายการใหม่', en: 'Refresh list', my: 'စာရင်းကို ပြန်လည်ဖွင့်ရန်', km: 'ផ្ទុកបញ្ជីឡើងវិញ', lo: 'ໂຫຼດລາຍການໃໝ່' },
   // ---------- Track polish ----------
   'track.codeLabel': { th: 'รหัสเคส', en: 'Case code', my: 'အမှုကုတ်', km: 'លេខកូដករណី', lo: 'ລະຫັດເຄສ' },
   'track.notfoundHint': { th: 'ไม่พบรหัสนี้ ลองเช็กตัวอักษรอีกครั้ง', en: 'Code not found. Please check the letters again.', my: 'ဤကုတ်ကို မတွေ့ပါ။ စာလုံးများကို ပြန်စစ်ပါ။', km: 'រកមិនឃើញលេខកូដនេះ។ សូមពិនិត្យអក្សរម្តងទៀត។', lo: 'ບໍ່ພົບລະຫັດນີ້. ລອງກວດຕົວອັກສອນອີກຄັ້ງ.' },
