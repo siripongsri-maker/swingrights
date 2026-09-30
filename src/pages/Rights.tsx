@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, ChevronsUpDown, Phone, Share2 } from 'lucide-react';
+import { ArrowLeft, ChevronsUpDown, Phone, Share2, Camera } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { SWING_BRANCHES } from '@/data/hotlines';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -10,8 +12,6 @@ import { RIGHTS, RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
 import { toast } from 'sonner';
 import { BrandHeader } from '@/components/BrandLogo';
 
-/** Placeholder — SWING fills in the real hotline number. */
-const SWING_PHONE = '+6600000000';
 
 const SECTION_LABEL_KEYS: Record<RightsSectionId, string> = {
   arrest: 'rights.section.arrest',
@@ -22,10 +22,11 @@ const SECTION_LABEL_KEYS: Record<RightsSectionId, string> = {
 export default function Rights() {
   const { t } = useI18n();
   const [open, setOpen] = useState<string[]>([]);
+  const [callOpen, setCallOpen] = useState(false);
   const allOpen = open.length === RIGHTS.length;
-  // Jump to /rights#section-… links from the landing page
+  // Jump to /rights#arrest (and old #section-arrest) links from the landing page
   useEffect(() => {
-    const id = window.location.hash.slice(1);
+    const id = window.location.hash.slice(1).replace(/^section-/, '');
     if (id) window.setTimeout(() => document.getElementById(id)?.scrollIntoView(), 50);
   }, []);
 
@@ -58,7 +59,7 @@ export default function Rights() {
           <div className="flex items-center gap-2"><QuickExitSlot /><LanguageToggle /></div>
         </header>
 
-        <main className="max-w-5xl mx-auto px-5 pt-10 sw-pad-action-bar sm:pb-16">
+        <main className="max-w-5xl mx-auto px-5 pt-10 sw-pad-action-bar">
           {/* Header */}
           <div className="max-w-2xl">
             <h1 className="font-display text-3xl sm:text-4xl font-medium tracking-tight mb-2">
@@ -68,12 +69,23 @@ export default function Rights() {
             <p className="mt-3 text-sm text-primary font-medium">{t('rights.context')}</p>
           </div>
 
+          {/* Jump chips */}
+          <nav aria-label={t('rights.jump')} className="mt-5 -mx-5 px-5 flex gap-2 overflow-x-auto pb-1">
+            {RIGHTS_SECTIONS.map((sec) => (
+              <a key={sec} href={`#${sec}`}
+                onClick={(e) => { e.preventDefault(); document.getElementById(sec)?.scrollIntoView({ behavior: 'smooth' }); history.replaceState(null, '', `#${sec}`); }}
+                className="shrink-0 inline-flex min-h-11 items-center rounded-full border border-border bg-card px-4 text-sm font-medium hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                {t(SECTION_LABEL_KEYS[sec])}
+              </a>
+            ))}
+          </nav>
+
           {/* Controls */}
           <div className="mt-6 mb-8 flex items-center justify-between gap-3">
             <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
               <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" /> {t('common.back')}
             </Link>
-            <Button variant="outline" size="sm" onClick={toggleAll} className="rounded-full bg-card/70 backdrop-blur">
+            <Button variant="outline" onClick={toggleAll} aria-pressed={allOpen} className="min-h-11 rounded-full bg-card/70 backdrop-blur">
               <ChevronsUpDown className="w-4 h-4" />
               {allOpen ? t('rights.collapseAll') : t('rights.expandAll')}
             </Button>
@@ -83,10 +95,11 @@ export default function Rights() {
           {RIGHTS_SECTIONS.map((section) => {
             const items = RIGHTS.filter((r) => r.section === section);
             return (
-              <section key={section} id={`section-${section}`} className="mb-10 scroll-mt-6">
-                <h2 className="font-subhead text-xl font-medium mb-4 flex items-center gap-2.5">
+              <section key={section} id={section} className="mb-10 scroll-mt-2">
+                <h2 className="sticky top-0 z-10 -mx-5 px-5 py-3 mb-3 bg-background/95 backdrop-blur font-subhead text-xl font-medium flex items-center gap-2.5">
                   <span className="w-1.5 h-6 rounded-full bg-primary/70" aria-hidden />
                   {t(SECTION_LABEL_KEYS[section])}
+                  <span className="ms-1 rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">{t('rights.count', { n: items.length })}</span>
                 </h2>
                 <Accordion
                   type="multiple"
@@ -102,23 +115,17 @@ export default function Rights() {
                         value={String(r.id)}
                         className="rounded-[20px] bg-card border border-border shadow-card overflow-hidden"
                       >
-                        <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-primary-soft/40 transition-colors text-start [&>svg]:shrink-0">
-                          <span className="flex items-start gap-3.5">
-                            <span className="mt-0.5 w-10 h-10 rounded-2xl bg-primary-soft flex items-center justify-center shrink-0">
-                              <Icon className="w-5 h-5 text-primary" aria-hidden />
+                        <AccordionTrigger className="min-h-16 w-full gap-3 px-4 py-3 hover:no-underline hover:bg-primary-soft/40 transition-colors text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring [&>svg]:h-5 [&>svg]:w-5 [&>svg]:shrink-0">
+                          <span className="flex items-center gap-3">
+                            <span className="w-8 h-8 rounded-full bg-primary-soft text-primary font-mono text-sm font-semibold flex items-center justify-center shrink-0" aria-hidden>
+                              {r.id}
                             </span>
-                            <span>
-                              <span className="block text-xs font-medium text-primary/80 mb-0.5">
-                                {r.id}
-                              </span>
-                              <span className="block text-base font-semibold leading-snug">
-                                {r.title}
-                              </span>
-                            </span>
+                            <Icon className="w-5 h-5 text-primary shrink-0" aria-hidden />
+                            <span className="text-[17px] font-semibold leading-snug">{r.title}</span>
                           </span>
                         </AccordionTrigger>
-                        <AccordionContent className="px-5 pb-5 ps-[4.25rem] text-base leading-relaxed text-muted-foreground">
-                          {r.body}
+                        <AccordionContent className="px-4 pb-5 ps-[3.75rem] text-base leading-[1.75] text-foreground/85">
+                          <p className="max-w-[65ch]">{r.body}</p>
                         </AccordionContent>
                       </AccordionItem>
                     );
@@ -128,6 +135,15 @@ export default function Rights() {
             );
           })}
 
+          {/* Save for offline */}
+          <div className="mb-4 flex items-start gap-3 rounded-[20px] border border-border bg-card p-5 shadow-card">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent-soft text-accent"><Camera className="h-5 w-5" aria-hidden /></span>
+            <div>
+              <p className="font-subhead text-base font-semibold">{t('rights.saveTitle')}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{t('rights.saveBody')}</p>
+            </div>
+          </div>
+
           {/* Disclaimer footer */}
           <footer className="mt-4 rounded-[20px] border border-border bg-card/70 backdrop-blur p-5">
             <p className="text-sm leading-relaxed text-muted-foreground">{t('rights.disclaimer')}</p>
@@ -135,21 +151,35 @@ export default function Rights() {
         </main>
       </div>
 
-      {/* Sticky bottom action bar (mobile) */}
-      <div className="sw-action-bar fixed bottom-0 inset-x-0 z-40 sm:hidden bg-card/90 backdrop-blur border-t border-border px-4 py-3 flex gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <Button asChild variant="action" className="flex-1 h-12 text-base">
-          <a href={`tel:${SWING_PHONE}`}>
-            <Phone className="w-4 h-4" /> {t('rights.call')}
-          </a>
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1 h-12 rounded-full text-base"
-          onClick={share}
-        >
-          <Share2 className="w-4 h-4" /> {t('rights.share')}
-        </Button>
+      {/* Sticky bottom action bar */}
+      <div className="sw-action-bar fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur border-t border-border">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 gap-3 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <Button variant="action" className="h-[52px] text-base" onClick={() => setCallOpen(true)}>
+            <Phone className="w-5 h-5" /> {t('rights.call')}
+          </Button>
+          <Button variant="outline" className="h-[52px] rounded-full text-base" onClick={share}>
+            <Share2 className="w-5 h-5" /> {t('rights.share')}
+          </Button>
+        </div>
       </div>
+
+      <Sheet open={callOpen} onOpenChange={setCallOpen}>
+        <SheetContent side="bottom" className="rounded-t-[1.5rem] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          <SheetHeader className="text-start">
+            <SheetTitle className="font-subhead">{t('rights.branches')}</SheetTitle>
+          </SheetHeader>
+          <ul className="mt-4 mx-auto max-w-md space-y-2">
+            {SWING_BRANCHES.map((b) => (
+              <li key={b.tel}>
+                <a href={`tel:${b.tel}`} className="flex min-h-14 items-center justify-between gap-3 rounded-xl border border-border bg-background px-4 hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span className="font-semibold">{t(b.labelKey)}</span>
+                  <span className="inline-flex items-center gap-2 font-mono text-base text-accent" dir="ltr"><Phone className="h-4 w-4" aria-hidden />{b.display}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
