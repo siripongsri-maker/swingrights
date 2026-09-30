@@ -202,7 +202,7 @@ export default function Landing() {
           <div className={cn(show('home'), 'h-full sm:h-auto')}><div className="h-full flex flex-col justify-center sm:grid sm:grid-cols-[1.15fr_0.85fr] items-center gap-6 sm:gap-10 animate-slide-up">
             <div className="text-center sm:text-start">
               <BrandLockup className="mx-auto mb-5 sm:mb-7 sm:mx-0" />
-              <span className="inline-flex items-center gap-1.5 bg-card border border-border text-foreground text-[10px] font-semibold px-3.5 py-1.5 rounded-full mb-5">
+              <span className="inline-flex items-center gap-1.5 bg-card border border-border text-foreground text-xs font-semibold px-3.5 py-1.5 rounded-full mb-5">
                 <Sparkles className="w-3 h-3" /> {t('landing.badge')}
               </span>
               <h1 className="font-display text-[2rem] leading-tight sm:text-4xl sm:text-[2.75rem] font-bold leading-[1.1] text-balance mb-4">
@@ -237,10 +237,10 @@ export default function Landing() {
                     <p className="font-subhead text-base sm:text-lg font-semibold text-primary mb-1">{t('rights.nav')}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Button type="button" size="icon" variant="ghost" className="h-10 w-10 rounded-full" onClick={showPreviousRight} aria-label={t('landing.rightsPreview.previous')}>
+                    <Button type="button" size="icon" variant="ghost" className="h-11 w-11 rounded-full" onClick={showPreviousRight} aria-label={t('landing.rightsPreview.previous')}>
                       <ChevronLeft className="w-5 h-5 rtl:-scale-x-100" />
                     </Button>
-                    <Button type="button" size="icon" variant="ghost" className="h-10 w-10 rounded-full" onClick={showNextRight} aria-label={t('landing.rightsPreview.next')}>
+                    <Button type="button" size="icon" variant="ghost" className="h-11 w-11 rounded-full" onClick={showNextRight} aria-label={t('landing.rightsPreview.next')}>
                       <ChevronRight className="w-5 h-5 rtl:-scale-x-100" />
                     </Button>
                   </div>

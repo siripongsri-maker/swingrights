@@ -734,7 +734,7 @@ export default function SelfReport() {
           {m.text && (
             <div className="flex items-start gap-2">
               <p className="whitespace-pre-line flex-1">{m.text}</p>
-              {isBot && <SpeakButton text={m.text} className="w-8 h-8 [&_svg]:w-4 [&_svg]:h-4 -me-1 -mt-1" />}
+              {isBot && <SpeakButton text={m.text} className="w-11 h-11 [&_svg]:w-4 [&_svg]:h-4 -me-2 -mt-2" />}
             </div>
           )}
           {m.audioUrl && <audio src={m.audioUrl} controls className="w-full h-9 mt-2" />}
@@ -961,7 +961,7 @@ export default function SelfReport() {
                 type="tel" inputMode="tel" autoComplete="tel" required aria-required="true" aria-invalid={!!contact && !phoneOk}
                 maxLength={20} className="bg-card h-9 text-sm"
               />
-              {contact && !phoneOk && <p className="text-[11px] text-destructive">{t('report.contact.phoneInvalid')}</p>}
+              {contact && !phoneOk && <p className="text-xs text-destructive">{t('report.contact.phoneInvalid')}</p>}
               <Button size="sm" className="w-full rounded-xl" disabled={submitting || !phoneOk} onClick={() => void startPartners(m.id)}>
                 {t('report.chat.confirm')}
               </Button>
@@ -980,7 +980,7 @@ export default function SelfReport() {
             <div className="mt-3 space-y-3 text-center">
               <BrandMark className="mx-auto h-20 w-20" />
               <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3">
-                <p className="text-[11px] text-muted-foreground mb-1">{t('report.success.code')}</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('report.success.code')}</p>
                 <p className="font-mono text-lg font-bold tracking-widest text-primary">{caseCode}</p>
                 <Button
                   size="sm" variant="ghost" className="mt-1 text-xs h-7"
@@ -1000,12 +1000,12 @@ export default function SelfReport() {
                   <Download className="w-3.5 h-3.5 me-1.5" /> {t('report.success.saveImage')}
                 </Button>
               </div>
-              <p className="text-[11px] text-muted-foreground leading-relaxed flex items-start gap-1.5 text-start">
+              <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5 text-start">
                 <Camera className="w-3.5 h-3.5 mt-0.5 shrink-0 text-accent" />
                 {t('report.success.shotNote')}
               </p>
               {/* recap: what was collected + where the case goes next */}
-              <div className="rounded-xl border border-border bg-card p-3 text-start text-[11px] space-y-1">
+              <div className="rounded-xl border border-border bg-card p-3 text-start text-xs space-y-1">
                 <p className="font-semibold text-xs">{t('report.success.summary')}</p>
                 {area.province && <p>📍 {formatArea(area.province, area.district, area.subdistrict, lang)}</p>}
                 <p>{types.map((k) => t(`report.type.${k}`)).join(' · ')}</p>
@@ -1021,7 +1021,7 @@ export default function SelfReport() {
                   <Button asChild size="sm" variant="action" className="w-full rounded-xl"><Link to="/signin">{t('cl.prompt.cta')}</Link></Button>
                 </div>
               )}
-              <p className="text-[11px] text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
               <div className="grid gap-1.5">
                 <Button asChild size="sm" className="rounded-xl"><Link to={`/track?code=${caseCode}`}>{t('report.success.track')}</Link></Button>
                 <Button asChild size="sm" variant="outline" className="rounded-xl"><Link to="/report" onClick={() => window.location.reload()}>{t('report.success.new')}</Link></Button>
@@ -1084,10 +1084,10 @@ export default function SelfReport() {
                   rows={5}
                   maxLength={5000}
                   placeholder={t('report.fullStory.placeholder')}
-                  className="w-full resize-y rounded-xl border border-border bg-background px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  className="w-full resize-y rounded-xl border border-border bg-background px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-ring"
                 />
                 <PiiHint className="mt-0" />
-                <p className="text-[11px] text-muted-foreground text-end font-mono">{fullStory.length}/5000</p>
+                <p className="text-xs text-muted-foreground text-end font-mono">{fullStory.length}/5000</p>
               </div>
             )}
           </div>
@@ -1106,7 +1106,7 @@ export default function SelfReport() {
                 placeholder={transcript || t('report.chat.input.placeholder')}
                 rows={2}
                 maxLength={5000}
-                className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <Button
                 size="icon"
