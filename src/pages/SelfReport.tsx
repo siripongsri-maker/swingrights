@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { rememberReportCode } from '@/lib/myReports';
 import { supabase as sbAuth } from '@/integrations/supabase/client';
-import { ArrowLeft, Building2, Camera, Check, Copy, Download, Loader2, MapPin, Paperclip, Phone, SendHorizonal, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, Building2, Camera, Check, Copy, Download, Loader2, MapPin, Paperclip, Phone, SendHorizonal, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -11,6 +11,7 @@ import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { AreaPicker, type AreaValue } from '@/components/screening/AreaPicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
 import { formatArea } from '@/lib/thaiGeo';
@@ -379,7 +380,7 @@ export default function SelfReport() {
       setTyping(true);
       window.setTimeout(() => {
         setTyping(false);
-        push({ role: 'bot', text: `${t('report.consent.title')} — ${t('report.consent.body')}`, widget: 'consent' });
+        push({ role: 'bot', text: t('report.consent.title'), widget: 'consent' });
       }, 650);
     }, 950);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -715,40 +716,61 @@ export default function SelfReport() {
   const currentProbeId: ProbeId = PROBE_IDS[Math.min(probeIdx, PROBE_IDS.length - 1)];
   const answeredProbeCount = PROBE_IDS.filter((q) => probeAnswers[q]?.text).length;
 
+  const consentMsg = msgs.find((x) => x.widget === 'consent' && !x.resolved);
+
   // ---- render one message ----
   const renderMsg = (m: ChatMsg) => {
     const isBot = m.role === 'bot';
     return (
-      <div key={m.id} className={cn('flex items-end gap-2 animate-fade-in', isBot ? '' : 'flex-row-reverse')}>
+      <div key={m.id} className={cn('flex items-start gap-2 animate-fade-in', isBot ? '' : 'flex-row-reverse')}>
         {isBot && (
-          <span className="w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0 mb-0.5">
+          <span className="w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0 mt-1" aria-hidden>
             <BrandMark className="h-5 w-5" />
           </span>
         )}
         <div
           className={cn(
-            'max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm',
-            isBot ? 'bg-card border border-border text-foreground rounded-es-lg' : 'bg-primary-soft text-foreground rounded-ee-lg',
+            'relative max-w-[85%] rounded-2xl p-3 text-base leading-[1.7] shadow-sm',
+            isBot ? 'bg-card border border-border text-foreground rounded-ss-md' : 'bg-accent-soft text-foreground rounded-se-md',
+            isBot && m.text && 'pe-14',
           )}
         >
           {m.text && (
-            <div className="flex items-start gap-2">
-              <p className="whitespace-pre-line flex-1">{m.text}</p>
-              {isBot && <SpeakButton text={m.text} className="w-11 h-11 [&_svg]:w-4 [&_svg]:h-4 -me-2 -mt-2" />}
-            </div>
+            <>
+              <p className="whitespace-pre-line">{m.text}</p>
+              {isBot && <SpeakButton text={m.text} label={t('report.listenMsg')} className="absolute top-1 end-1 w-11 h-11 [&_svg]:w-4 [&_svg]:h-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />}
+            </>
           )}
           {m.audioUrl && <audio src={m.audioUrl} controls className="w-full h-9 mt-2" />}
 
           {/* ---------- interactive widgets ---------- */}
           {m.widget === 'consent' && !m.resolved && (
             <>
-              <label className="mt-2.5 flex items-start gap-2 text-xs leading-relaxed cursor-pointer">
-                <input type="checkbox" className="mt-0.5 accent-primary w-4 h-4 shrink-0" checked={trainConsent} onChange={(e) => setTrainConsent(e.target.checked)} />
+              <ul className="mt-2 space-y-1.5">
+                {(['What', 'Use', 'Who'] as const).map((k) => (
+                  <li key={k} className="flex items-start gap-2">
+                    <Check className="w-4 h-4 mt-1.5 shrink-0 text-accent" aria-hidden />
+                    <span><span className="font-semibold">{t(`report.consent.sum${k}L`)}:</span> {t(`report.consent.sum${k}`)}</span>
+                  </li>
+                ))}
+              </ul>
+              <Collapsible className="mt-2">
+                <CollapsibleTrigger className="group inline-flex min-h-11 items-center gap-1 rounded-lg text-sm font-semibold text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  {t('report.consent.details')}
+                  <ChevronDown className="w-4 h-4 transition-transform group-data-[state=open]:rotate-180" aria-hidden />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <p className="text-sm leading-[1.7] text-muted-foreground pb-1">{t('report.consent.body')}</p>
+                </CollapsibleContent>
+              </Collapsible>
+            </>
+          )}
+          {m.widget === 'consent' && !m.resolved && (
+            <>
+              <label className="mt-2 flex min-h-11 items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 text-sm leading-snug cursor-pointer focus-within:ring-2 focus-within:ring-ring">
                 <span>{t('report.train.consent')}</span>
+                <input type="checkbox" className="accent-primary w-5 h-5 shrink-0" checked={trainConsent} onChange={(e) => setTrainConsent(e.target.checked)} />
               </label>
-              <Button size="sm" className="w-full mt-2.5 rounded-xl" onClick={() => agreeConsent(m.id)}>
-                <Check className="w-4 h-4 me-1" /> {t('report.chat.start')}
-              </Button>
             </>
           )}
 
@@ -760,7 +782,7 @@ export default function SelfReport() {
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-foreground mb-1">{t('report.about.gender')}</p>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {(['male', 'female', 'diverse', 'unspecified'] as const).map((g) => (
                     <button
                       key={g}
@@ -768,7 +790,7 @@ export default function SelfReport() {
                       onClick={() => setGender((prev) => (prev === g ? '' : g))}
                       aria-pressed={gender === g}
                       className={cn(
-                        'rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95',
+                        'min-h-12 rounded-xl border px-3 py-2 text-sm font-medium text-start transition active:scale-95',
                         gender === g ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card text-muted-foreground',
                       )}
                     >
@@ -793,7 +815,7 @@ export default function SelfReport() {
 
           {m.widget === 'types' && !m.resolved && (
             <div className="mt-2.5 space-y-2.5">
-              <div className="flex flex-wrap gap-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {TYPE_KEYS.map((k) => (
                   <button
                     key={k}
@@ -801,7 +823,7 @@ export default function SelfReport() {
                     onClick={() => toggleType(k)}
                     aria-pressed={types.includes(k)}
                     className={cn(
-                      'rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95',
+                      'min-h-12 rounded-xl border px-3 py-2 text-sm font-medium text-start transition active:scale-95',
                       types.includes(k) ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card text-muted-foreground',
                     )}
                   >
@@ -828,14 +850,14 @@ export default function SelfReport() {
             <div className="mt-2.5 space-y-2.5">
               {/* quick choices for the safety question */}
               {currentProbeId === 'safety' && !fuActive && (
-                <div className="flex flex-wrap gap-1.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {SAFETY_CHOICES.map((c) => (
                     <button
                       key={c}
                       type="button"
                       onClick={() => answerProbe(m.id, { text: t(`report.probe.safety.${c}`), blob: probeBlob })}
                       className={cn(
-                        'rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95',
+                        'min-h-12 rounded-xl border px-3 py-2 text-sm font-medium text-start transition active:scale-95',
                         c === 'unsafe' ? 'border-destructive/50 text-destructive bg-card' : 'border-border bg-card text-muted-foreground',
                       )}
                     >
@@ -882,10 +904,10 @@ export default function SelfReport() {
               : [{ v: 1, label: t('rscreen.yes') }, { v: 0, label: t('rscreen.no') }];
             return (
               <div className="mt-2.5 space-y-2">
-                <div className={cn('grid gap-1.5', opts.length > 2 ? 'grid-cols-2' : 'grid-cols-2')}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {opts.map((o) => (
                     <button key={o.v} type="button" onClick={() => answerScreenItem(m.id, it, o.v, o.label)}
-                      className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium transition hover:border-primary active:scale-95">
+                      className="min-h-12 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-start transition hover:border-primary active:scale-95">
                       {o.label}
                     </button>
                   ))}
@@ -980,13 +1002,14 @@ export default function SelfReport() {
             <div className="mt-3 space-y-3 text-center">
               <BrandMark className="mx-auto h-20 w-20" />
               <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3">
-                <p className="text-xs text-muted-foreground mb-1">{t('report.success.code')}</p>
-                <p className="font-mono text-lg font-bold tracking-widest text-primary">{caseCode}</p>
+                <p className="text-sm text-muted-foreground mb-1">{t('report.success.code')}</p>
+                <p className="font-mono text-[28px] leading-tight font-bold tracking-wider text-primary break-all" dir="ltr">{caseCode}</p>
+                <p className="mt-1 text-sm text-foreground">{t('report.success.keep')}</p>
                 <Button
-                  size="sm" variant="ghost" className="mt-1 text-xs h-7"
-                  onClick={() => { void navigator.clipboard?.writeText(caseCode); toast.success(<Check className="inline w-3.5 h-3.5" />); }}
+                  size="lg" className="mt-2 w-full rounded-xl"
+                  onClick={() => { void navigator.clipboard?.writeText(caseCode); toast.success(t('report.success.copied')); }}
                 >
-                  <Copy className="w-3 h-3 me-1" /> {caseCode}
+                  <Copy className="w-4 h-4 me-1.5" /> {t('report.success.copy')}
                 </Button>
                 <Button
                   size="sm" variant="outline" className="mt-1.5 w-full rounded-xl text-xs"
@@ -1023,7 +1046,7 @@ export default function SelfReport() {
               )}
               <p className="text-xs text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
               <div className="grid gap-1.5">
-                <Button asChild size="sm" className="rounded-xl"><Link to={`/track?code=${caseCode}`}>{t('report.success.track')}</Link></Button>
+                <Button asChild size="lg" variant="action" className="rounded-xl"><Link to="/track">{t('report.success.track')}</Link></Button>
                 <Button asChild size="sm" variant="outline" className="rounded-xl"><Link to="/report" onClick={() => window.location.reload()}>{t('report.success.new')}</Link></Button>
               </div>
               <PartnerBar className="mt-4 text-start" />
@@ -1040,14 +1063,19 @@ export default function SelfReport() {
     <PhoneShell contained={false} title={t('report.title')} onClose={() => { window.location.href = '/'; }} trailing={<LanguageToggle />}>
       <div className="flex flex-col h-[calc(100dvh-9rem)] max-h-[46rem]">
         {/* progress */}
-        <div className="flex gap-1.5 px-4 pt-3 pb-1" aria-hidden>
-          {STAGE_ORDER.map((s, i) => (
-            <span key={s} className={cn('h-1 flex-1 rounded-full transition-colors', i <= stageIdx ? 'bg-primary' : 'bg-muted')} />
-          ))}
+        <div className="px-4 pt-3 pb-1">
+          <div className="flex gap-1.5" aria-hidden>
+            {STAGE_ORDER.map((s, i) => (
+              <span key={s} className={cn('h-1.5 flex-1 rounded-full transition-colors', i <= stageIdx ? 'bg-accent' : 'bg-muted')} />
+            ))}
+          </div>
+          <p className="mt-1.5 text-xs font-medium text-muted-foreground" aria-live="polite">
+            {t('report.step', { n: Math.max(1, stageIdx + 1), total: STAGE_ORDER.length })}
+          </p>
         </div>
 
         {/* chat thread */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3.5">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
           {msgs.map(renderMsg)}
           {typing && (
             <div className="flex items-end gap-2 animate-fade-in">
@@ -1123,9 +1151,14 @@ export default function SelfReport() {
 
         {/* back link for pre-chat */}
         {stage === 'consent' && (
-          <div className="border-t border-border px-4 py-2.5">
-            <Button asChild variant="ghost" size="sm" className="text-xs -ms-2">
-              <Link to="/"><ArrowLeft className="w-3.5 h-3.5 me-1 rtl:-scale-x-100" />{t('common.back')}</Link>
+          <div className="border-t border-border bg-card px-4 py-2.5 space-y-2">
+            {consentMsg && (
+              <Button variant="action" size="lg" className="w-full rounded-xl" onClick={() => agreeConsent(consentMsg.id)}>
+                <Check className="w-4 h-4 me-1" /> {t('report.chat.start')}
+              </Button>
+            )}
+            <Button asChild variant="ghost" className="min-h-11 text-sm -ms-2">
+              <Link to="/"><ChevronLeft className="w-4 h-4 me-1 rtl:-scale-x-100" />{t('common.back')}</Link>
             </Button>
           </div>
         )}
