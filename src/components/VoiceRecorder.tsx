@@ -146,10 +146,10 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
             aria-label={t('common.record')}
             className={cn(
               'rounded-full bg-accent text-accent-foreground flex items-center justify-center shadow-elegant transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              compact ? 'w-12 h-12' : 'w-14 h-14',
+              'w-14 h-14',
             )}
           >
-            <Mic className={compact ? 'w-5 h-5' : 'w-6 h-6'} />
+            <Mic className="w-6 h-6" />
           </button>
         ) : (
           <button
@@ -157,22 +157,27 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
             onClick={stop}
             aria-label={t('common.stop')}
             className={cn(
-              'rounded-full bg-accent text-accent-foreground flex items-center justify-center animate-pulse-ring transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              compact ? 'w-12 h-12' : 'w-14 h-14',
+              'rounded-full bg-destructive text-destructive-foreground flex items-center justify-center animate-pulse-ring transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              'w-14 h-14',
             )}
           >
-            <Square className={compact ? 'w-5 h-5' : 'w-6 h-6'} />
+            <Square className="w-6 h-6 fill-current" />
           </button>
         )}
         <div className="min-w-0">
-          <p className="text-xs font-medium">
-            {recording ? `${t('common.recording')} ${mm}:${ss}` : audioUrl ? t('common.listen') : t('common.record')}
-          </p>
-          {transcribing && <p className="text-[11px] text-muted-foreground mt-0.5">{t('voice.transcribing')}</p>}
-          {recording && transcript && <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{transcript}</p>}
+          {recording ? (
+            <p className="flex items-center gap-2 text-sm font-semibold text-destructive" role="status">
+              <span className="h-2.5 w-2.5 rounded-full bg-destructive animate-pulse" aria-hidden />
+              {t('voice.recordingNow')} <span className="font-mono tabular-nums">{mm}:{ss}</span>
+            </p>
+          ) : (
+            <p className="text-sm font-medium">{audioUrl ? t('common.listen') : t('common.record')}</p>
+          )}
+          {transcribing && <p className="text-xs text-muted-foreground mt-0.5">{t('voice.transcribing')}</p>}
+          {recording && transcript && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{transcript}</p>}
         </div>
         {audioUrl && !recording && (
-          <Button type="button" size="sm" variant="ghost" className="ms-auto text-xs" onClick={reset}>
+          <Button type="button" size="sm" variant="ghost" className="ms-auto min-h-11 text-sm" onClick={reset}>
             <RotateCcw className="w-3.5 h-3.5 me-1" /> {t('common.rerecord')}
           </Button>
         )}
@@ -180,7 +185,7 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
       {audioUrl && !recording && <audio src={audioUrl} controls className="w-full h-9" />}
       {!recording && (transcript || audioUrl) && (
         <div className="space-y-1">
-          <label className="text-[11px] font-medium text-muted-foreground block" htmlFor={tid}>{t('voice.editTranscript')}</label>
+          <label className="text-xs font-medium text-muted-foreground block" htmlFor={tid}>{t('voice.editTranscript')}</label>
           <div className="flex items-start gap-1.5">
             <Textarea
               id={tid}
