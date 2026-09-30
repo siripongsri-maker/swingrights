@@ -97,7 +97,7 @@ export default function Landing() {
         </div>
       )}
       <div className="relative flex-1 min-h-0 flex flex-col sm:block overflow-hidden bg-transparent">
-        <header className="relative shrink-0 max-w-5xl w-full mx-auto px-4 sm:px-5 pt-4 sm:pt-7 flex items-center justify-between gap-3">
+        <header className="relative shrink-0 max-w-[1120px] w-full mx-auto px-4 sm:px-6 pt-4 sm:pt-7 flex items-center justify-between gap-3">
           <BrandHeader />
           <div className="hidden sm:flex items-center gap-3">
             <button
