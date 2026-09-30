@@ -7,6 +7,20 @@ import type { Entry } from '../index';
  * USER-FACING: all 5 languages (th/en/my/km/lo) required for every key.
  */
 export const MISC_DICT: Record<string, Entry> = {
+  // ---------- Self-report polish ----------
+  'report.step': { th: 'ขั้นที่ {n} จาก {total}', en: 'Step {n} of {total}', my: 'အဆင့် {total} ခုအနက် {n}', km: 'ជំហាន {n} នៃ {total}', lo: 'ຂັ້ນທີ {n} ຈາກ {total}' },
+  'report.consent.sumWhatL': { th: 'เก็บอะไร', en: 'What we keep', my: 'ဘာသိမ်းမလဲ', km: 'រក្សាទុកអ្វី', lo: 'ເກັບຫຍັງ' },
+  'report.consent.sumWhat': { th: 'เสียงและเรื่องที่คุณเล่า', en: 'Your voice and your story', my: 'သင့်အသံနှင့် ပြောပြသောအကြောင်းအရာ', km: 'សំឡេង និងរឿងដែលអ្នកប្រាប់', lo: 'ສຽງ ແລະ ເລື່ອງທີ່ທ່ານເລົ່າ' },
+  'report.consent.sumUseL': { th: 'ใช้ทำอะไร', en: 'What it is for', my: 'ဘာအတွက်သုံးမလဲ', km: 'ប្រើធ្វើអ្វី', lo: 'ໃຊ້ເຮັດຫຍັງ' },
+  'report.consent.sumUse': { th: 'ใช้ช่วยเหลือคุณเท่านั้น', en: 'Only to help you', my: 'သင့်ကိုကူညီရန်သာ', km: 'សម្រាប់ជួយអ្នកតែប៉ុណ្ណោះ', lo: 'ໃຊ້ຊ່ວຍເຫຼືອທ່ານເທົ່ານັ້ນ' },
+  'report.consent.sumWhoL': { th: 'ใครเห็นได้', en: 'Who can see it', my: 'ဘယ်သူမြင်နိုင်လဲ', km: 'អ្នកណាអាចមើលឃើញ', lo: 'ໃຜເຫັນໄດ້' },
+  'report.consent.sumWho': { th: 'เจ้าหน้าที่ SWING ที่ดูแลเคส ไม่เปิดเผยถ้าคุณไม่อนุญาต', en: 'SWING staff handling your case. Never shared without your permission', my: 'အမှုကိုကိုင်တွယ်သော SWING ဝန်ထမ်းများ။ ခွင့်ပြုချက်မရှိဘဲ မမျှဝေပါ', km: 'បុគ្គលិក SWING ដែលមើលការខុសត្រូវករណី។ មិនចែករំលែកដោយគ្មានការអនុញ្ញាត', lo: 'ພະນັກງານ SWING ທີ່ດູແລເຄສ. ບໍ່ເປີດເຜີຍຖ້າທ່ານບໍ່ອະນຸຍາດ' },
+  'report.consent.details': { th: 'อ่านรายละเอียด', en: 'Read details', my: 'အသေးစိတ်ဖတ်ရန်', km: 'អានព័ត៌មានលម្អិត', lo: 'ອ່ານລາຍລະອຽດ' },
+  'report.listenMsg': { th: 'ฟังข้อความนี้', en: 'Listen to this message', my: 'ဤစာကို နားထောင်ရန်', km: 'ស្តាប់សារនេះ', lo: 'ຟັງຂໍ້ຄວາມນີ້' },
+  'voice.recordingNow': { th: 'กำลังอัด', en: 'Recording', my: 'အသံသွင်းနေသည်', km: 'កំពុងថត', lo: 'ກຳລັງອັດ' },
+  'report.success.copy': { th: 'คัดลอกรหัส', en: 'Copy code', my: 'ကုတ်ကူးယူရန်', km: 'ចម្លងលេខកូដ', lo: 'ສຳເນົາລະຫັດ' },
+  'report.success.copied': { th: 'คัดลอกแล้ว', en: 'Copied', my: 'ကူးယူပြီးပါပြီ', km: 'បានចម្លង', lo: 'ສຳເນົາແລ້ວ' },
+  'report.success.keep': { th: 'เก็บรหัสนี้ไว้ ใช้ติดตามเคส', en: 'Keep this code. Use it to track your case', my: 'ဤကုတ်ကို သိမ်းထားပါ။ အမှုခြေရာခံရန် အသုံးပြုပါ', km: 'រក្សាលេខកូដនេះទុក។ ប្រើវាដើម្បីតាមដានករណី', lo: 'ເກັບລະຫັດນີ້ໄວ້. ໃຊ້ຕິດຕາມເຄສ' },
   // ---------- Recover ----------
   'recover.pageTitle': {
     th: 'กู้เคสจากเครื่องนี้', en: 'Recover cases from this device',
