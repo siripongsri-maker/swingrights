@@ -937,7 +937,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   };
 
   const actionCol = (
-    <div className="space-y-4 xl:sticky xl:top-[calc(var(--case-head-h,120px)+16px)]">
+    <div className="space-y-4 xl:sticky xl:top-44">
       <section className={card}>
         <h2 className={h2}>{t('cd.next')}</h2>
         <div className="space-y-4">
