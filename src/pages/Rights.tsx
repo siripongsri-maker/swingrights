@@ -73,7 +73,7 @@ export default function Rights() {
           <nav aria-label={t('rights.jump')} className="mt-5 -mx-5 px-5 flex gap-2 overflow-x-auto pb-1">
             {RIGHTS_SECTIONS.map((sec) => (
               <a key={sec} href={`#${sec}`}
-                onClick={(e) => { e.preventDefault(); document.getElementById(sec)?.scrollIntoView({ behavior: 'smooth' }); history.replaceState(null, '', `#${sec}`); }}
+                onClick={(e) => { e.preventDefault(); document.getElementById(sec)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); history.replaceState(null, '', `#${sec}`); }}
                 className="shrink-0 inline-flex min-h-11 items-center rounded-full border border-border bg-card px-4 text-sm font-medium hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 {t(SECTION_LABEL_KEYS[sec])}
               </a>
