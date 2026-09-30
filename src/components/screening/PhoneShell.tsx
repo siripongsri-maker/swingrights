@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 import { BrandHeader } from '@/components/BrandLogo';
 import { Button } from '@/components/ui/button';
+import { QuickExitSlot } from './QuickExit';
 
 interface Props {
   title?: string;
@@ -23,15 +24,15 @@ export function PhoneShell({ title = 'voice screening', onBack, onClose, childre
             size="icon"
             onClick={onBack ?? onClose}
             aria-label="back"
-            className="h-10 w-10 rounded-full"
+            className="h-11 w-11 rounded-full shrink-0"
           >
             {onBack ? <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" /> : <X className="w-4 h-4" />}
           </Button>
           <div className="flex min-w-0 flex-col items-center">
             <BrandHeader className="[&_img]:h-7 [&_img]:w-7 [&>span]:hidden" />
-            <span className="max-w-[13rem] truncate text-xs font-semibold text-muted-foreground">{title}</span>
+            <span className="max-w-[9rem] sm:max-w-[13rem] truncate text-xs font-semibold text-muted-foreground">{title}</span>
           </div>
-          <div className="w-10 min-w-10 flex items-center justify-center">{trailing}</div>
+          <div className="min-w-11 flex items-center justify-end gap-2 shrink-0"><QuickExitSlot />{trailing}</div>
         </div>
         {contained ? (
           <div className="bg-card border border-t-0 rounded-b-[20px] px-4 py-5 sm:px-5 sm:py-6 shadow-card animate-fade-in">

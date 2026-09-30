@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronsUpDown, Phone, Share2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { useI18n } from '@/i18n';
 import { RIGHTS, RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
 import { toast } from 'sonner';
@@ -49,10 +50,10 @@ export default function Rights() {
       <div className="bg-background">
         <header className="max-w-5xl mx-auto px-5 pt-7 flex items-center justify-between gap-3">
           <Link to="/"><BrandHeader /></Link>
-          <LanguageToggle />
+          <div className="flex items-center gap-2"><QuickExitSlot /><LanguageToggle /></div>
         </header>
 
-        <main className="max-w-5xl mx-auto px-5 pt-10 pb-28 sm:pb-16">
+        <main className="max-w-5xl mx-auto px-5 pt-10 sw-pad-action-bar sm:pb-16">
           {/* Header */}
           <div className="max-w-2xl">
             <h1 className="font-display text-3xl sm:text-4xl font-medium tracking-tight mb-2">
@@ -130,7 +131,7 @@ export default function Rights() {
       </div>
 
       {/* Sticky bottom action bar (mobile) */}
-      <div className="fixed bottom-0 inset-x-0 sm:hidden bg-card/90 backdrop-blur border-t border-border px-4 py-3 flex gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="sw-action-bar fixed bottom-0 inset-x-0 z-40 sm:hidden bg-card/90 backdrop-blur border-t border-border px-4 py-3 flex gap-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <Button asChild variant="action" className="flex-1 h-12 text-base">
           <a href={`tel:${SWING_PHONE}`}>
             <Phone className="w-4 h-4" /> {t('rights.call')}

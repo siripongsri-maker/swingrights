@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { BrandHeader } from '@/components/BrandLogo';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { useI18n } from '@/i18n';
 
 const schema = z.object({ email: z.string().trim().email().max(255), password: z.string().min(8).max(72) });
@@ -77,7 +78,7 @@ export default function SignIn() {
     <div className="min-h-screen bg-background">
       <header className="max-w-md mx-auto px-5 pt-6 flex items-center justify-between">
         <BrandHeader />
-        <LanguageToggle />
+        <div className="flex items-center gap-2"><QuickExitSlot /><LanguageToggle /></div>
       </header>
       <main className="max-w-md mx-auto px-5 py-8">
         <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
