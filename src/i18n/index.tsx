@@ -48,6 +48,7 @@ import { PROFILE_DICT } from './dict/profile';
 import { CLIENT_DICT } from './dict/client';
 import { DOCUMENTS_DICT } from './dict/documents';
 import { RIGHTS_DICT } from './dict/rights';
+import { STAFF_DICT } from './dict/staff';
 
 const BASE_DICT: Dict = {
   // ---------- Common ----------
@@ -857,6 +858,7 @@ export const DICT: Dict = {
   ...PII_DICT,
   ...ACCESS_REVIEW_DICT,
   ...OPS_DICT,
+  ...STAFF_DICT,
   ...PROFILE_DICT,
   ...CLIENT_DICT,
   ...DOCUMENTS_DICT,
