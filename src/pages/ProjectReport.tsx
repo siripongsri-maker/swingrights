@@ -129,9 +129,9 @@ export default function ProjectReport() {
 
   const Stat = ({ label, value, sub }: { label: string; value: Count; sub?: string }) => (
     <div className="border border-border rounded-xl p-3 bg-primary-soft/40">
-      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
       <p className="font-display text-2xl font-medium tabular-nums">{value}</p>
-      {sub && <p className="text-[11px] text-muted-foreground">{sub}</p>}
+      {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
     </div>
   );
 
@@ -210,7 +210,7 @@ export default function ProjectReport() {
                 <Breakdown title={r('prep.bySource')} m={data.cases_by_source} />
                 <Breakdown title={r('prep.byPartner')} m={data.referrals_by_partner} />
               </section>
-              <p className="text-[11px] text-muted-foreground border-t border-border pt-2">{r('prep.note')}</p>
+              <p className="text-xs text-muted-foreground border-t border-border pt-2">{r('prep.note')}</p>
               <PartnerBar className="shadow-none" />
             </article>
           </>

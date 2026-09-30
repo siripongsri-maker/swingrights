@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import { useAccess, useRoleLabels } from '@/hooks/useAccess';
 import {
   Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin,
   Search, ChevronLeft, ChevronRight, UserCheck, UserCog, CalendarClock, BellRing, ShieldAlert, Check,
-  MessageCircleQuestion, Send, Building2, Volume2, ChevronDown, Printer, Scale, Share2, HeartHandshake, Flag, History,
+  MessageCircleQuestion, Send, AlertTriangle, Clock, HelpCircle, Building2, Volume2, ChevronDown, Printer, Scale, Share2, HeartHandshake, Flag, History,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { printCaseDocument, docInputFromReport, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
@@ -33,6 +33,7 @@ import { BrandMark } from '@/components/BrandLogo';
 import { CaseAnswersEditor } from '@/components/admin/CaseAnswersEditor';
 import { CaseTrainingSamples } from '@/components/admin/CaseTrainingSamples';
 import { DashboardOverview } from '@/components/admin/DashboardOverview';
+import { StaffShell } from '@/components/admin/StaffShell';
 
 const PAGE_SIZE = 20;
 
@@ -72,11 +73,11 @@ function SlaBadge({ createdAt }: { createdAt: string }) {
   const elapsed = (Date.now() - new Date(createdAt).getTime()) / 3_600_000;
   const left = 24 - elapsed;
   if (left <= 0) {
-    return <span className="text-[10px] bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full tabular-nums">{t('dash.sla.overdue', { h: Math.floor(elapsed) })}</span>;
+    return <span className="text-xs bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full tabular-nums">{t('dash.sla.overdue', { h: Math.floor(elapsed) })}</span>;
   }
   const h = Math.ceil(left);
-  const cls = left < 6 ? 'bg-amber-100 text-amber-800' : 'bg-muted text-muted-foreground';
-  return <span className={`text-[10px] px-2 py-0.5 rounded-full tabular-nums ${cls}`}>{t('dash.sla.remaining', { h })}</span>;
+  const cls = left < 6 ? 'bg-sevYellow-bg text-sevYellow-fg' : 'bg-muted text-muted-foreground';
+  return <span className={`text-xs px-2 py-0.5 rounded-full tabular-nums ${cls}`}>{t('dash.sla.remaining', { h })}</span>;
 }
 
 interface Staff { id: string; display_name: string | null; email: string | null }
@@ -88,15 +89,92 @@ interface Stats {
   by_branch: Record<string, number>; by_kp: Record<string, number>; by_caseworker: Record<string, number>;
 }
 
+type StaffView = 'queue' | 'cases' | 'caseload' | 'overview';
+
+const QUEUE_COLS =
+  'id, case_code, status, severity, created_at, follow_up_at, assigned_to, suicide_risk, profile, ai_result, first_response_at, pii_flag, violation_types';
+
+interface QueueRow {
+  id: string; case_code: string; status: CaseStatus; severity: 'green' | 'yellow' | 'red' | null;
+  created_at: string; follow_up_at: string | null; assigned_to: string | null; suicide_risk: boolean;
+  profile: any; ai_result: any; first_response_at: string | null; pii_flag?: boolean; violation_types: string[] | null;
+}
+
+interface OverviewKpi { overdue_24h: number; awaiting_response: number; unassigned_open: number; sla_total: number; sla_met: number; open: number }
+
+type QueueChip = 'open' | 'mine' | 'unassigned' | 'high' | 'overdue';
+
+const hoursLeft = (createdAt: string) => 24 - (Date.now() - new Date(createdAt).getTime()) / 3_600_000;
+const isFollowOverdue = (c: { follow_up_at: string | null; status: CaseStatus }) =>
+  !!c.follow_up_at && new Date(c.follow_up_at) < new Date() && c.status !== 'completed';
+const isHigh = (c: QueueRow) => c.severity === 'red' || c.suicide_risk;
+const isNrm = (c: QueueRow) => !!(c.ai_result?.trafficking_suspected || c.profile?.trafficking_suspected
+  || (Array.isArray(c.profile?.special_tests) && c.profile.special_tests.includes('nrm')));
+const typesOf = (c: QueueRow): string[] => Array.from(new Set([
+  ...(Array.isArray(c.violation_types) ? c.violation_types : []),
+  ...(Array.isArray(c.profile?.initialViolationTypes) ? c.profile.initialViolationTypes : []),
+]));
+
+/** Urgency: unanswered first (most overdue / least time left), then answered by follow-up date. */
+function urgencySort(a: QueueRow, b: QueueRow) {
+  const au = !a.first_response_at, bu = !b.first_response_at;
+  if (au !== bu) return au ? -1 : 1;
+  if (au && bu) return hoursLeft(a.created_at) - hoursLeft(b.created_at);
+  const af = a.follow_up_at ? new Date(a.follow_up_at).getTime() : Infinity;
+  const bf = b.follow_up_at ? new Date(b.follow_up_at).getTime() : Infinity;
+  return af - bf;
+}
+
+function SlaPill({ c }: { c: { created_at: string; first_response_at: string | null } }) {
+  const { t } = useI18n();
+  const base = 'inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums';
+  if (c.first_response_at) return <span className={cn(base, 'bg-muted text-muted-foreground')}><Check className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.done')}</span>;
+  const left = hoursLeft(c.created_at);
+  if (left <= 0) return <span className={cn(base, 'bg-destructive text-destructive-foreground')}><AlertTriangle className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.over', { h: Math.floor(-left) })}</span>;
+  const h = Math.ceil(left);
+  return left < 6
+    ? <span className={cn(base, 'bg-sevYellow-bg text-sevYellow-fg')}><Clock className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.left', { h })}</span>
+    : <span className={cn(base, 'bg-sevGreen-bg text-sevGreen-fg')}><Clock className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.left', { h })}</span>;
+}
+
+function SevCell({ v }: { v: QueueRow['severity'] }) {
+  const { t } = useI18n();
+  if (!v) return <span className="text-sm text-muted-foreground">{t('staff.sev.none')}</span>;
+  return <SeverityBadge value={v} />;
+}
+
+function Flags({ c }: { c: QueueRow }) {
+  const { t } = useI18n();
+  const items: { key: string; label: string; tone: string }[] = [];
+  if (c.suicide_risk) items.push({ key: 's', label: t('staff.flag.suicide'), tone: 'text-destructive' });
+  if (isNrm(c)) items.push({ key: 'n', label: t('staff.flag.nrm'), tone: 'text-sevYellow-fg' });
+  if (isFollowOverdue(c)) items.push({ key: 'f', label: t('staff.flag.followup'), tone: 'text-sevYellow-fg' });
+  if (c.pii_flag) items.push({ key: 'p', label: t('staff.flag.pii'), tone: 'text-sevYellow-fg' });
+  if (!items.length) return <span className="text-sm text-muted-foreground">-</span>;
+  return (
+    <ul className="flex flex-wrap gap-x-3 gap-y-1">
+      {items.map((f) => (
+        <li key={f.key} className={cn('inline-flex items-center gap-1 text-sm font-medium', f.tone)}>
+          <Flag className="h-3.5 w-3.5 shrink-0" aria-hidden />{f.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function AdminDashboard() {
   const { t } = useI18n();
-  const roleLabels = useRoleLabels();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const { id: routeCaseId } = useParams();
   const qc = useQueryClient();
   const [authorized, setAuthorized] = useState(false);
   const [checking, setChecking] = useState(true);
   const [uid, setUid] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const view: StaffView = pathname.startsWith('/admin/cases') ? 'cases'
+    : pathname.startsWith('/admin/caseload') ? 'caseload'
+    : pathname.startsWith('/admin/overview') ? 'overview' : 'queue';
+  const openCase = (id: string) => navigate(`/admin/case/${id}`);
 
   // filters (server-side)
   const [status, setStatus] = useState<'all' | CaseStatus>('all');
@@ -105,6 +183,10 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
   const [page, setPage] = useState(0);
+  // queue filters (client-side over open cases)
+  const [chip, setChip] = useState<QueueChip>('open');
+  const [qSearch, setQSearch] = useState('');
+  const [alertOnly, setAlertOnly] = useState(false);
 
   useEffect(() => { const t = setTimeout(() => { setDebounced(search.trim()); setPage(0); }, 350); return () => clearTimeout(t); }, [search]);
   useEffect(() => { setPage(0); }, [status, branch, assignee]);
@@ -118,12 +200,12 @@ export default function AdminDashboard() {
     setChecking(false);
   }, [access.loading, access.uid, access.isStaff]);
 
-
   useCaseAlerts(authorized, () => {
     qc.invalidateQueries({ queryKey: ['alerts'] });
     qc.invalidateQueries({ queryKey: ['cases'] });
     qc.invalidateQueries({ queryKey: ['stats'] });
-  }, (id) => setSelectedId(id));
+    qc.invalidateQueries({ queryKey: ['queue'] });
+  }, (id) => openCase(id));
 
   const staffQ = useQuery({
     queryKey: ['staff'],
@@ -152,7 +234,7 @@ export default function AdminDashboard() {
 
   const casesQ = useQuery({
     queryKey: ['cases', status, branch, assignee, debounced, page],
-    enabled: authorized,
+    enabled: authorized && view === 'cases',
     queryFn: async () => {
       let q = supabase.from('cases').select(sel(LIST_COLS), { count: 'exact' });
       if (status !== 'all') q = q.eq('status', status);
@@ -167,6 +249,29 @@ export default function AdminDashboard() {
         .returns<CaseListRow[]>();
       if (error) throw error;
       return { rows: data ?? [], count: count ?? 0 };
+    },
+  });
+
+  const queueQ = useQuery({
+    queryKey: ['queue', branch],
+    enabled: authorized && view === 'queue',
+    queryFn: async () => {
+      let q = supabase.from('cases').select(sel(QUEUE_COLS)).in('status', ['received', 'inprogress']);
+      if (branch !== 'all') q = q.eq('profile->>branch', branch);
+      const { data, error } = await q.order('created_at', { ascending: false }).limit(300).returns<QueueRow[]>();
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const kpiQ = useQuery({
+    queryKey: ['overview', branch === 'all' ? null : branch, 30],
+    enabled: authorized && view === 'queue',
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('dashboard_overview' as never, { _branch: branch === 'all' ? null : branch, _days: 30 } as never);
+      if (error) throw error;
+      return data as unknown as OverviewKpi;
     },
   });
 
@@ -197,13 +302,21 @@ export default function AdminDashboard() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['alerts'] }),
   });
 
+  const claim = useMutation({
+    mutationFn: async (caseId: string) => {
+      const { error } = await supabase.from('cases').update({ assigned_to: uid } as never).eq('id', caseId);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success(t('staff.claimed')); invalidateCase(); },
+    onError: () => toast.error(t('dash.detail.saveFailed')),
+  });
+
   const invalidateCase = () => {
     qc.invalidateQueries({ queryKey: ['cases'] });
+    qc.invalidateQueries({ queryKey: ['queue'] });
     qc.invalidateQueries({ queryKey: ['stats'] });
     qc.invalidateQueries({ queryKey: ['case'] });
   };
-
-  const logout = async () => { await supabase.auth.signOut(); navigate('/admin/login'); };
 
   const branchOptions = useMemo(() => {
     const fromData = Object.keys(statsQ.data?.by_branch ?? {}).filter((b) => b && b !== 'ไม่ระบุ');
@@ -211,6 +324,23 @@ export default function AdminDashboard() {
   }, [statsQ.data]);
   const stats = statsQ.data;
   const totalPages = Math.max(1, Math.ceil((casesQ.data?.count ?? 0) / PAGE_SIZE));
+
+  const highAlerts = (alertsQ.data ?? []).filter((a) => a.kind !== 'new_case');
+  const alertIds = new Set(highAlerts.map((a) => a.case_id).filter(Boolean) as string[]);
+
+  const chipTest: Record<QueueChip, (c: QueueRow) => boolean> = {
+    open: () => true,
+    mine: (c) => !!uid && c.assigned_to === uid,
+    unassigned: (c) => !c.assigned_to,
+    high: isHigh,
+    overdue: isFollowOverdue,
+  };
+  const queueAll = queueQ.data ?? [];
+  const queueRows = queueAll
+    .filter(chipTest[chip])
+    .filter((c) => !qSearch.trim() || c.case_code.toUpperCase().includes(qSearch.trim().toUpperCase()))
+    .filter((c) => !alertOnly || alertIds.has(c.id))
+    .sort(urgencySort);
 
   const exportCSV = async () => {
     const { data, error } = await supabase
@@ -258,238 +388,313 @@ export default function AdminDashboard() {
   if (checking) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   if (!authorized) return null;
 
-  if (selectedId) {
+  if (routeCaseId) {
     return (
-      <CaseDetail
-        caseId={selectedId}
-        staff={staffQ.data ?? []}
-        staffName={staffName}
-        onBack={() => setSelectedId(null)}
-        onChanged={invalidateCase}
-      />
+      <StaffShell>
+        <CaseDetail
+          caseId={routeCaseId}
+          staff={staffQ.data ?? []}
+          staffName={staffName}
+          onBack={() => (window.history.length > 1 ? navigate(-1) : navigate('/admin'))}
+          onChanged={invalidateCase}
+        />
+      </StaffShell>
     );
   }
 
+  const titles: Record<StaffView, [string, string]> = {
+    queue: [t('staff.nav.queue'), t('staff.ctx.queue')],
+    cases: [t('staff.nav.cases'), t('staff.ctx.cases')],
+    caseload: [t('staff.nav.caseload'), t('staff.ctx.caseload')],
+    overview: [t('staff.nav.overview'), t('staff.ctx.overview')],
+  };
+
+  const actions = (
+    <>
+      {view === 'queue' && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" aria-label={t('staff.help')}><HelpCircle className="w-4 h-4" /> <span className="hidden sm:inline">{t('staff.help')}</span></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem className="min-h-11" onClick={() => navigate('/track')}>{t('staff.openTracker')}</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+      {view === 'overview' && (
+        <Button onClick={exportCSV} variant="outline" size="sm"><Download className="w-4 h-4" /> {t('dash.export.csv')}</Button>
+      )}
+      {!access.isViewer && (
+        <Button onClick={() => navigate('/intake')} size="sm" variant="default"><Plus className="w-4 h-4" /> {t('staff.newCase')}</Button>
+      )}
+    </>
+  );
+
+  const branchSelect = (
+    <Select value={branch} onValueChange={setBranch}>
+      <SelectTrigger className="h-11 w-full sm:w-[220px]" aria-label={t('dash.filter.area')}><SelectValue /></SelectTrigger>
+      <SelectContent>{branchOptions.map((b) => <SelectItem key={b} value={b}>{b === 'all' ? t('dash.filter.allAreas') : b}</SelectItem>)}</SelectContent>
+    </Select>
+  );
+
+  const k = kpiQ.data;
+  const slaPct = k && k.sla_total > 0 ? Math.round((k.sla_met / k.sla_total) * 100) : null;
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-primary-deep text-primary-foreground sticky top-0 z-30 shadow-elegant">
-        <div className="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <BrandMark className="h-10 w-10" />
-            <div>
-              <p className="font-display font-medium">SWING Admin Dashboard</p>
-              <p className="text-[11px] text-sidebar-foreground/60">
-                Voice Screening · {access.roles.map((r) => roleLabels[r]).join(', ') || t('dash.staffFallback')}
+    <StaffShell title={titles[view][0]} context={titles[view][1]} actions={actions}>
+      {view === 'queue' && (
+        <div className="space-y-5">
+          {highAlerts.length > 0 && (
+            <div role="alert" className="rounded-2xl border border-destructive/40 bg-sevRed-bg p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <p className="flex-1 flex items-center gap-2 font-semibold text-sevRed-fg">
+                <BellRing className="h-5 w-5 shrink-0" aria-hidden /> {t('staff.alert.banner', { n: highAlerts.length })}
               </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button onClick={() => navigate('/admin/partner-search')} size="sm" variant="outline"
-              className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
-              <Search className="w-4 h-4" /> <span className="hidden sm:inline">{t('psearch.title')}</span>
-            </Button>
-            {access.isAdmin && (
-              <>
-                <Button onClick={() => navigate('/admin/users')} size="sm" variant="outline"
-                  className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
-                  <UserCog className="w-4 h-4" /> {t('dash.nav.users')}
-                </Button>
-                <Button onClick={() => navigate('/admin/system')} size="sm" variant="outline"
-                  className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
-                  <History className="w-4 h-4" /> <span className="hidden sm:inline">{t('sys.nav')}</span>
-                </Button>
-                <Button onClick={() => navigate('/admin/partners')} size="sm" variant="outline"
-                  className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
-                  <Building2 className="w-4 h-4" /> {t('dash.nav.partners')}
-                </Button>
-              </>
-            )}
-            <Button onClick={() => navigate('/admin/settings')} size="sm" variant="outline"
-              className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
-              <UserCheck className="w-4 h-4" /> <span className="hidden sm:inline">{t('prof.nav')}</span>
-            </Button>
-            {access.canManage && (
-              <Button onClick={() => navigate('/admin/access-review')} size="sm" variant="outline"
-                className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
-                <ShieldCheck className="w-4 h-4" /> <span className="hidden sm:inline">{t('areview.nav')}</span>
-              </Button>
-            )}
-            {access.canManage && (
-              <Button onClick={() => navigate('/admin/report')} size="sm" variant="outline"
-                className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
-                <FileText className="w-4 h-4" /> <span className="hidden sm:inline">{t('prep.button')}</span>
-              </Button>
-            )}
-            {!access.isViewer && (
-              <Button onClick={() => navigate('/intake')} size="sm" variant="action"><Plus className="w-4 h-4" /> {t('dash.nav.newCase')}</Button>
-            )}
-            <LanguageToggle className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-foreground" />
-            <Button onClick={logout} size="sm" variant="outline" className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80"><LogOut className="w-4 h-4" /></Button>
-
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 sm:px-5 py-6">
-        {(alertsQ.data?.length ?? 0) > 0 && (
-          <div className="mb-4 border-2 border-destructive/50 bg-destructive/5 rounded-xl p-4">
-            <p className="text-sm font-medium text-destructive flex items-center gap-2 mb-2">
-              <BellRing className="w-4 h-4" /> {t('dash.alerts.title', { n: alertsQ.data?.length })}
-            </p>
-            <div className="space-y-1.5">
-              {alertsQ.data?.map((a) => (
-                <div key={a.id} className="flex items-center gap-2 text-xs bg-card border border-border rounded-lg px-3 py-2">
-                  {a.kind === 'suicide_risk' && <ShieldAlert className="w-3.5 h-3.5 text-destructive shrink-0" />}
-                  {a.kind === 'new_case' && <span className="text-[10px] font-medium bg-accent text-accent-foreground px-2 py-0.5 rounded-full shrink-0">{t('dash.alerts.newBadge')}</span>}
-                  <span className="font-mono">{a.case_code}</span>
-                  <span className="text-muted-foreground">· {a.branch || t('dash.alerts.unspecified')} · {t('dash.alerts.level', { level: a.level })}</span>
-                  <span className="text-muted-foreground ml-auto hidden sm:inline">{new Date(a.created_at).toLocaleString('th-TH')}</span>
-                  <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => a.case_id && setSelectedId(a.case_id)}>{t('dash.alerts.openCase')}</Button>
-                  <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => ackAlert.mutate(a.id)}><Check className="w-3 h-3" /> {t('dash.alerts.ack')}</Button>
-                </div>
-              ))}
-            </div>
-            <p className="text-[10px] text-muted-foreground mt-2">{t('dash.alerts.footnote')}</p>
-          </div>
-        )}
-
-        <Tabs defaultValue="overview">
-          <TabsList className="mb-4">
-            <TabsTrigger value="overview">{t('dash.tabs.overview')}</TabsTrigger>
-            <TabsTrigger value="cases">{t('dash.tabs.cases')}</TabsTrigger>
-            <TabsTrigger value="caseload">{t('dash.tabs.caseload')}</TabsTrigger>
-            <TabsTrigger value="tracker">{t('dash.tabs.tracker')}</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview">
-            <div className="bg-card border border-border rounded-xl p-3 mb-4 flex flex-col sm:flex-row gap-3 sm:items-center shadow-card">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <MapPin className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-xs text-muted-foreground shrink-0">{t('dash.filter.area')}</span>
-                <Select value={branch} onValueChange={setBranch}>
-                  <SelectTrigger className="h-9 max-w-[220px]"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {branchOptions.map((b) => <SelectItem key={b} value={b}>{b === 'all' ? t('dash.filter.allAreas') : b}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <span className="text-[11px] text-muted-foreground ml-1">{t('dash.filter.caseCount', { n: stats?.total ?? 0 })}</span>
-              </div>
               <div className="flex gap-2">
-                <Button onClick={exportCSV} variant="outline" size="sm" className="h-9"><Download className="w-3.5 h-3.5" /> {t('dash.export.csv')}</Button>
+                <Button variant="outline" className="h-11 bg-card" aria-pressed={alertOnly} onClick={() => setAlertOnly((v) => !v)}>
+                  {alertOnly ? t('staff.alert.showAll') : t('staff.alert.filter')}
+                </Button>
+                <Button variant="destructive" className="h-11" disabled={ackAlert.isPending}
+                  onClick={() => { highAlerts.forEach((a) => ackAlert.mutate(a.id)); setAlertOnly(false); }}>
+                  <Check className="h-4 w-4" /> {t('staff.alert.ack')}
+                </Button>
               </div>
             </div>
+          )}
 
-            <DashboardOverview branch={branch === 'all' ? null : branch} onOpenCase={(id) => setSelectedId(id)} />
-          </TabsContent>
-
-          <TabsContent value="cases">
-            <div className="bg-card border border-border rounded-xl p-3 mb-4 grid sm:grid-cols-4 gap-2 shadow-card">
-              <div className="relative sm:col-span-1">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('dash.filter.searchPlaceholder')} className="h-9 pl-8 text-sm" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <Kpi label={t('staff.kpi.overdue')} n={k?.overdue_24h} tone={k?.overdue_24h ? 'danger' : undefined} />
+            <Kpi label={t('staff.kpi.awaiting')} n={k?.awaiting_response} />
+            <Kpi label={t('staff.kpi.unassigned')} n={k?.unassigned_open} tone={k?.unassigned_open ? 'watch' : undefined} />
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
+              <p className="text-sm text-muted-foreground">{t('staff.kpi.sla')}</p>
+              <p className={cn('font-mono text-[32px] leading-tight font-semibold tabular-nums', slaPct !== null && slaPct < 90 ? 'text-destructive' : 'text-foreground')}>
+                {slaPct === null ? '-' : `${slaPct}%`}
+              </p>
+              <div className="relative mt-2 h-2 rounded-full bg-muted" role="img" aria-label={`${slaPct ?? '-'}% · ${t('staff.kpi.target')}`}>
+                <div className={cn('h-full rounded-full', slaPct !== null && slaPct >= 90 ? 'bg-success' : 'bg-destructive')} style={{ width: `${slaPct ?? 0}%` }} />
+                <div className="absolute -top-1 -bottom-1 w-0.5 bg-foreground" style={{ insetInlineStart: '90%' }} aria-hidden />
               </div>
-              <Select value={status} onValueChange={(v) => setStatus(v as any)}>
-                <SelectTrigger className="h-9"><SelectValue placeholder={t('dash.filter.status')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('dash.filter.allStatuses')}</SelectItem>
-                  {(['received', 'inprogress', 'completed', 'cancelled'] as CaseStatus[]).map((s) => <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={branch} onValueChange={setBranch}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>{branchOptions.map((b) => <SelectItem key={b} value={b}>{b === 'all' ? t('dash.filter.allAreas') : b}</SelectItem>)}</SelectContent>
-              </Select>
-              <Select value={assignee} onValueChange={setAssignee}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('dash.filter.allAssignees')}</SelectItem>
-                  <SelectItem value="me">{t('dash.filter.myCases')}</SelectItem>
-                  <SelectItem value="unassigned">{t('dash.filter.unassigned')}</SelectItem>
-                  {(staffQ.data ?? []).map((s) => <SelectItem key={s.id} value={s.id}>{s.display_name || s.email}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <p className="mt-1 text-xs text-muted-foreground text-end">{t('staff.kpi.target')}</p>
             </div>
+          </div>
 
-            {casesQ.isLoading ? (
-              <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>
-            ) : (casesQ.data?.rows.length ?? 0) === 0 ? (
-              <p className="text-sm text-center text-muted-foreground py-12">{t('dash.cases.noneFound')}</p>
-            ) : (
-              <div className="space-y-2">
-                {casesQ.data?.rows.map((c) => {
-                  const overdue = c.follow_up_at && new Date(c.follow_up_at) < new Date() && c.status !== 'completed';
-                  return (
-                    <button key={c.id} onClick={() => setSelectedId(c.id)}
-                      className="w-full text-left bg-card border border-border rounded-xl p-3.5 hover:border-primary transition shadow-card">
+          <div className="space-y-3">
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" role="group" aria-label={t('dash.filter.status')}>
+              {(['open', 'mine', 'unassigned', 'high', 'overdue'] as QueueChip[]).map((key) => {
+                const n = queueAll.filter(chipTest[key]).length;
+                const on = chip === key;
+                return (
+                  <button key={key} type="button" aria-pressed={on} onClick={() => setChip(key)}
+                    className={cn('inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-medium leading-normal transition-colors duration-150',
+                      on ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:bg-primary-soft')}>
+                    {t(`staff.chip.${key}`)}
+                    <span className={cn('rounded-full px-2 font-mono text-xs tabular-nums', on ? 'bg-primary-foreground/20' : 'bg-muted')}>{n}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden />
+                <Input value={qSearch} onChange={(e) => setQSearch(e.target.value)} placeholder={t('staff.searchCode')} aria-label={t('staff.searchCode')} className="h-11 ps-9 font-mono uppercase" />
+              </div>
+              {branchSelect}
+            </div>
+          </div>
+
+          {queueQ.isLoading ? (
+            <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>
+          ) : queueRows.length === 0 ? (
+            <p className="text-sm text-center text-muted-foreground py-12">{t('staff.queueEmpty')}</p>
+          ) : (
+            <>
+              <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border bg-card shadow-card">
+                <table className="w-full text-[15px]">
+                  <thead className="bg-muted/50 text-start text-xs text-muted-foreground">
+                    <tr>
+                      {['sla', 'code', 'severity', 'types', 'flags', 'area', 'owner'].map((h) => (
+                        <th key={h} scope="col" className="px-3 py-3 text-start font-semibold whitespace-nowrap">{t(`staff.col.${h}`)}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {queueRows.map((c) => (
+                      <tr key={c.id} className="border-t border-border h-16 align-middle hover:bg-primary-soft/40">
+                        <td className="px-3"><SlaPill c={c} /></td>
+                        <td className="px-3"><Link to={`/admin/case/${c.id}`} className="inline-flex min-h-11 items-center whitespace-nowrap font-mono font-semibold text-accent underline-offset-4 hover:underline">{c.case_code}</Link></td>
+                        <td className="px-3 whitespace-nowrap"><SevCell v={c.severity} /></td>
+                        <td className="px-3 text-sm">{typesOf(c).map((x) => t(`report.type.${x}`)).join(', ') || '-'}</td>
+                        <td className="px-3"><Flags c={c} /></td>
+                        <td className="px-3 text-sm">{c.profile?.province || c.profile?.branch || '-'}</td>
+                        <td className="px-3"><Owner c={c} name={staffName(c.assigned_to)} canClaim={access.canEdit} onClaim={() => claim.mutate(c.id)} busy={claim.isPending} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <ul className="lg:hidden space-y-3">
+                {queueRows.map((c) => (
+                  <li key={c.id} className="rounded-2xl border border-border bg-card p-4 shadow-card space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <Link to={`/admin/case/${c.id}`} className="inline-flex min-h-11 items-center font-mono text-base font-semibold text-accent underline underline-offset-4">{c.case_code}</Link>
+                      <SlaPill c={c} />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <SevCell v={c.severity} />
+                      <span className="text-sm text-muted-foreground">{typesOf(c).map((x) => t(`report.type.${x}`)).join(', ')}</span>
+                    </div>
+                    <Flags c={c} />
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                      <span className="inline-flex items-center gap-1 text-muted-foreground"><MapPin className="h-4 w-4" aria-hidden />{c.profile?.province || c.profile?.branch || '-'}</span>
+                      <Owner c={c} name={staffName(c.assigned_to)} canClaim={access.canEdit} onClaim={() => claim.mutate(c.id)} busy={claim.isPending} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
+
+      {view === 'overview' && (
+        <div>
+          <div className="bg-card border border-border rounded-2xl p-3 mb-4 flex flex-col sm:flex-row gap-3 sm:items-center shadow-card">
+            <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
+              <MapPin className="w-4 h-4 text-primary shrink-0" aria-hidden />
+              <span className="text-sm text-muted-foreground shrink-0">{t('dash.filter.area')}</span>
+              {branchSelect}
+              <span className="text-sm text-muted-foreground">{t('dash.filter.caseCount', { n: stats?.total ?? 0 })}</span>
+            </div>
+          </div>
+          <DashboardOverview branch={branch === 'all' ? null : branch} onOpenCase={openCase} />
+        </div>
+      )}
+
+      {view === 'cases' && (
+        <div>
+          <div className="bg-card border border-border rounded-2xl p-3 mb-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-2 shadow-card">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('dash.filter.searchPlaceholder')} aria-label={t('dash.filter.searchPlaceholder')} className="h-11 ps-9 text-sm" />
+            </div>
+            <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+              <SelectTrigger className="h-11" aria-label={t('dash.filter.status')}><SelectValue placeholder={t('dash.filter.status')} /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('dash.filter.allStatuses')}</SelectItem>
+                {(['received', 'inprogress', 'completed', 'cancelled'] as CaseStatus[]).map((s) => <SelectItem key={s} value={s}>{t(`status.${s}`)}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {branchSelect}
+            <Select value={assignee} onValueChange={setAssignee}>
+              <SelectTrigger className="h-11" aria-label={t('staff.col.owner')}><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('dash.filter.allAssignees')}</SelectItem>
+                <SelectItem value="me">{t('dash.filter.myCases')}</SelectItem>
+                <SelectItem value="unassigned">{t('dash.filter.unassigned')}</SelectItem>
+                {(staffQ.data ?? []).map((s) => <SelectItem key={s.id} value={s.id}>{s.display_name || s.email}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {casesQ.isLoading ? (
+            <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>
+          ) : (casesQ.data?.rows.length ?? 0) === 0 ? (
+            <p className="text-sm text-center text-muted-foreground py-12">{t('dash.cases.noneFound')}</p>
+          ) : (
+            <ul className="space-y-2">
+              {casesQ.data?.rows.map((c) => {
+                const overdue = isFollowOverdue(c);
+                return (
+                  <li key={c.id}>
+                    <Link to={`/admin/case/${c.id}`}
+                      className="block w-full min-h-16 text-start bg-card border border-border rounded-2xl p-4 hover:border-primary transition-colors shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <span className="font-mono text-[11px] bg-foreground/90 text-background px-2 py-1 rounded">{c.case_code}</span>
+                        <span className="font-mono text-sm font-semibold">{c.case_code}</span>
                         <StatusBadge value={c.status} />
                         {c.severity && <SeverityBadge value={c.severity} />}
-                        {c.suicide_risk && <span className="text-[10px] bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full">{t('dash.cases.suicideRiskBadge')}</span>}
-                        {!c.first_response_at && <SlaBadge createdAt={c.created_at} />}
-                        {c.pii_flag && <span title={t('pii.flag.title')} aria-label={t('pii.flag.title')} className="text-warning"><Flag className="w-3.5 h-3.5" /></span>}
-                        {overdue && <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">{t('dash.cases.overdueBadge')}</span>}
-                        <span className="ml-auto text-[11px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
+                        {c.suicide_risk && <span className="inline-flex items-center gap-1 text-xs font-semibold bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full"><ShieldAlert className="h-3.5 w-3.5" aria-hidden />{t('dash.cases.suicideRiskBadge')}</span>}
+                        {!c.first_response_at && <SlaPill c={c} />}
+                        {c.pii_flag && <span className="inline-flex items-center gap-1 text-xs font-medium text-sevYellow-fg"><Flag className="w-3.5 h-3.5" aria-hidden />{t('staff.flag.pii')}</span>}
+                        {overdue && <span className="text-xs font-semibold bg-sevYellow-bg text-sevYellow-fg px-2 py-0.5 rounded-full">{t('dash.cases.overdueBadge')}</span>}
+                        <span className="ms-auto font-mono text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
                       </div>
                       <p className="text-sm font-medium truncate">{c.victim?.name_masked || t('dash.cases.unnamed')} · {c.profile?.kp || '-'}</p>
-                      <p className="text-xs text-muted-foreground truncate">{c.ai_result?.summary || c.profile?.incidentPlace || '-'}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                        <UserCheck className="w-3 h-3" /> {staffName(c.assigned_to) || t('dash.cases.unassigned')}
-                        {c.follow_up_at && <> · <CalendarClock className="w-3 h-3" /> {t('dash.cases.followUp', { date: new Date(c.follow_up_at).toLocaleDateString('th-TH') })}</>}
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 flex-wrap">
+                        <UserCheck className="w-3.5 h-3.5" aria-hidden /> {staffName(c.assigned_to) || t('dash.cases.unassigned')}
+                        {c.follow_up_at && <> · <CalendarClock className="w-3.5 h-3.5" aria-hidden /> {t('dash.cases.followUp', { date: new Date(c.follow_up_at).toLocaleDateString('th-TH') })}</>}
                       </p>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
 
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-xs text-muted-foreground">
-                {t('dash.cases.pageInfo', { n: casesQ.data?.count ?? 0, page: page + 1, total: totalPages })}
-              </span>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" disabled={page === 0} onClick={() => setPage((p) => p - 1)}><ChevronLeft className="w-4 h-4" /></Button>
-                <Button size="sm" variant="outline" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}><ChevronRight className="w-4 h-4" /></Button>
-              </div>
+          <div className="flex items-center justify-between mt-4">
+            <span className="text-sm text-muted-foreground">
+              {t('dash.cases.pageInfo', { n: casesQ.data?.count ?? 0, page: page + 1, total: totalPages })}
+            </span>
+            <div className="flex gap-2">
+              <Button size="icon" variant="outline" aria-label="Previous page" disabled={page === 0} onClick={() => setPage((p) => p - 1)}><ChevronLeft className="w-4 h-4 rtl:-scale-x-100" /></Button>
+              <Button size="icon" variant="outline" aria-label="Next page" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}><ChevronRight className="w-4 h-4 rtl:-scale-x-100" /></Button>
             </div>
-          </TabsContent>
+          </div>
+        </div>
+      )}
 
-          <TabsContent value="caseload">
-            <div className="bg-card border border-border rounded-xl p-5 shadow-card">
-              <p className="text-sm font-medium mb-3">{t('dash.caseload.title')}</p>
-              <div className="space-y-2">
-                {Object.entries(stats?.by_caseworker ?? {}).map(([k, v]) => (
-                  <div key={k} className="flex items-center gap-3 text-sm border-b border-border/60 pb-2 last:border-none">
-                    <UserCheck className="w-4 h-4 text-primary" />
-                    <span className="flex-1 truncate">{k === 'unassigned' ? t('dash.filter.unassigned') : staffName(k)}</span>
-                    <span className="tabular-nums font-medium">{v}</span>
-                    <Button size="sm" variant="outline" className="h-7 text-[11px]"
-                      onClick={() => { setAssignee(k === 'unassigned' ? 'unassigned' : k); toast.info(t('dash.caseload.filteredToast')); }}>
-                      {t('dash.caseload.viewCases')}
-                    </Button>
-                  </div>
-                ))}
-                {Object.keys(stats?.by_caseworker ?? {}).length === 0 && <p className="text-xs text-muted-foreground">{t('dash.caseload.noData')}</p>}
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <StatCard num={stats?.unassigned ?? 0} label={t('dash.stat.unassigned')} tone="amber" />
-                <StatCard num={stats?.overdue_follow_up ?? 0} label={t('dash.stat.overdue')} tone="red" />
-              </div>
-            </div>
-          </TabsContent>
+      {view === 'caseload' && (
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
+          <h2 className="font-subhead text-lg font-semibold mb-3">{t('dash.caseload.title')}</h2>
+          <ul className="divide-y divide-border">
+            {Object.entries(stats?.by_caseworker ?? {}).map(([key, v]) => (
+              <li key={key} className="flex min-h-16 items-center gap-3 text-sm">
+                <UserCheck className="w-4 h-4 text-primary shrink-0" aria-hidden />
+                <span className="flex-1 truncate">{key === 'unassigned' ? t('dash.filter.unassigned') : staffName(key)}</span>
+                <span className="font-mono tabular-nums font-semibold">{v}</span>
+                <Button size="sm" variant="outline"
+                  onClick={() => { setAssignee(key === 'unassigned' ? 'unassigned' : key); navigate('/admin/cases'); toast.info(t('dash.caseload.filteredToast')); }}>
+                  {t('dash.caseload.viewCases')}
+                </Button>
+              </li>
+            ))}
+          </ul>
+          {Object.keys(stats?.by_caseworker ?? {}).length === 0 && <p className="text-sm text-muted-foreground">{t('dash.caseload.noData')}</p>}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <StatCard num={stats?.unassigned ?? 0} label={t('dash.stat.unassigned')} tone="amber" />
+            <StatCard num={stats?.overdue_follow_up ?? 0} label={t('dash.stat.overdue')} tone="red" />
+          </div>
+        </div>
+      )}
+    </StaffShell>
+  );
+}
 
-          <TabsContent value="tracker">
-            <div className="bg-card border border-border rounded-xl p-5 mb-3">
-              <p className="font-medium mb-1">{t('dash.tracker.title')}</p>
-              <p className="text-sm text-muted-foreground mb-3 leading-relaxed">{t('dash.tracker.body')}</p>
-              <Button variant="action" onClick={() => navigate('/track')}>{t('dash.tracker.open')}</Button>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </main>
+function Kpi({ label, n, tone }: { label: string; n?: number; tone?: 'danger' | 'watch' }) {
+  return (
+    <div className={cn('rounded-2xl border p-4 shadow-card',
+      tone === 'danger' ? 'border-destructive/40 bg-sevRed-bg' : tone === 'watch' ? 'border-warning/40 bg-sevYellow-bg' : 'border-border bg-card')}>
+      <p className={cn('text-sm', tone === 'danger' ? 'text-sevRed-fg' : tone === 'watch' ? 'text-sevYellow-fg' : 'text-muted-foreground')}>
+        {tone === 'danger' && <AlertTriangle className="me-1 inline h-4 w-4 align-[-2px]" aria-hidden />}{label}
+      </p>
+      <p className={cn('font-mono text-[32px] leading-tight font-semibold tabular-nums', tone === 'danger' ? 'text-sevRed-fg' : tone === 'watch' ? 'text-sevYellow-fg' : 'text-foreground')}>{n ?? '-'}</p>
     </div>
   );
 }
+
+function Owner({ c, name, canClaim, onClaim, busy }: { c: QueueRow; name: string | null; canClaim: boolean; onClaim: () => void; busy: boolean }) {
+  const { t } = useI18n();
+  if (c.assigned_to && name) {
+    return (
+      <span className="inline-flex items-center gap-2 text-sm">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft font-semibold text-primary" aria-hidden>{name.slice(0, 1).toUpperCase()}</span>
+        <span className="truncate max-w-[10rem]">{name}</span>
+      </span>
+    );
+  }
+  if (!canClaim) return <span className="text-sm text-muted-foreground">{t('dash.cases.unassigned')}</span>;
+  return <Button size="sm" variant="action" disabled={busy} onClick={onClaim}><UserCheck className="h-4 w-4" /> {t('staff.claim')}</Button>;
+}
+
 
 function StatCard({ num, label, tone }: { num: number; label: string; tone: 'purple' | 'red' | 'amber' | 'default' }) {
   const cls = tone === 'purple' ? 'text-primary' : tone === 'red' ? 'text-destructive' : tone === 'amber' ? 'text-warning' : 'text-foreground';
@@ -710,7 +915,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           <button onClick={onBack} className="w-10 h-10 rounded-full bg-sidebar-accent hover:bg-sidebar-accent/80 flex items-center justify-center transition"><ArrowLeft className="w-4 h-4" /></button>
           <div>
             <p className="font-mono text-sm">{c.case_code}</p>
-            <p className="text-[11px] text-sidebar-foreground/60">{new Date(c.created_at).toLocaleString('th-TH')}</p>
+            <p className="text-xs text-sidebar-foreground/60">{new Date(c.created_at).toLocaleString('th-TH')}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Button size="sm" variant="outline" className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80" onClick={() => navigate(`/admin/case/${caseId}/history`)}>
@@ -763,7 +968,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           <div>
             <p className="text-xs text-muted-foreground mb-1.5">{t('dash.detail.assignee')}</p>
             <Select value={c.assigned_to ?? 'none'} onValueChange={(v) => patchCase({ assigned_to: v === 'none' ? null : v }, t('dash.detail.assignedToast'))}>
-              <SelectTrigger className="h-9"><SelectValue placeholder={t('dash.detail.selectStaff')} /></SelectTrigger>
+              <SelectTrigger className="h-11"><SelectValue placeholder={t('dash.detail.selectStaff')} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">{t('dash.filter.unassigned')}</SelectItem>
                 {staff.map((st) => <SelectItem key={st.id} value={st.id}>{st.display_name || st.email}</SelectItem>)}
@@ -829,14 +1034,14 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
             </div>
             <p className="text-sm leading-relaxed mb-3">{c.ai_result.summary}</p>
             <div className="flex flex-wrap gap-1.5 mb-3">
-              {(c.ai_result.violationTags || []).map((t: any, i: number) => <span key={i} className="text-[11px] bg-primary-soft text-primary px-2 py-1 rounded-full">{t.label}</span>)}
+              {(c.ai_result.violationTags || []).map((t: any, i: number) => <span key={i} className="text-xs bg-primary-soft text-primary px-2 py-1 rounded-full">{t.label}</span>)}
             </div>
             <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground mb-3">
               {(c.ai_result.recommendations || []).map((r: string, i: number) => <li key={i}>{r}</li>)}
             </ul>
-            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 rounded-lg p-3">
-              <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">{AI_DISCLAIMER}</p>
-              <Button size="sm" variant={c.ai_reviewed ? 'outline' : 'default'} className="mt-2 h-8 text-[11px]"
+            <div className="bg-sevYellow-bg/60 dark:bg-sevYellow-bg border border-warning/40 dark:border-warning/40/40 rounded-lg p-3">
+              <p className="text-xs text-sevYellow-fg text-sevYellow-fg leading-relaxed">{AI_DISCLAIMER}</p>
+              <Button size="sm" variant={c.ai_reviewed ? 'outline' : 'default'} className="mt-2 h-11 text-xs"
                 disabled={c.ai_reviewed}
                 onClick={async () => {
                   const { data: sess } = await supabase.auth.getUser();
@@ -889,7 +1094,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
               <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.area')}</p>
               <p>{[c.profile?.subdistrict && `ต.${c.profile.subdistrict}`, c.profile?.district && `อ.${c.profile.district}`, c.profile?.province || c.profile?.branch].filter(Boolean).join(' ')}</p>
               {c.profile?.geo && (
-                <Button type="button" variant="link" size="sm" className="h-auto p-0 text-[11px]" onClick={() => setShowMap((current) => !current)}>
+                <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setShowMap((current) => !current)}>
                   {showMap ? t('dash.detail.hideMap') : t('dash.detail.viewOnMap')}
                 </Button>
               )}
@@ -919,7 +1124,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           <div className="flex flex-wrap gap-1.5 mb-2">
             {(c.referrals || []).map((r: unknown, i: number) => {
               const label = referralLabel(r);
-              return label ? <span key={i} className="text-[11px] bg-primary-soft text-primary px-2 py-1 rounded-full">{label}</span> : null;
+              return label ? <span key={i} className="text-xs bg-primary-soft text-primary px-2 py-1 rounded-full">{label}</span> : null;
             })}
             {(!c.referrals || c.referrals.length === 0) && <span className="text-xs text-muted-foreground">{t('dash.detail.none')}</span>}
           </div>
@@ -942,13 +1147,13 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
               {partners.map((p) => (
                 <div key={p.id} className="border border-border/60 rounded-lg p-3 text-sm">
                   <p className="font-medium text-[13px]">{p.name}</p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {[p.district, p.province].filter(Boolean).join(' · ') || t('dash.detail.allAreas')}
                     {p.phone ? t('dash.detail.phone', { phone: p.phone }) : ''}{p.email ? ` · ${p.email}` : ''}
                   </p>
                   {Array.isArray(p.services) && p.services.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
-                      {p.services.map((sv, i) => <span key={i} className="text-[10px] bg-muted px-2 py-0.5 rounded-full">{sv}</span>)}
+                      {p.services.map((sv, i) => <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded-full">{sv}</span>)}
                     </div>
                   )}
                 </div>
@@ -964,21 +1169,21 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           {questions.map((q) => (
             <div key={q.id} className="border border-border/60 rounded-lg p-3 space-y-2">
               <p className="text-sm font-medium">{q.question}</p>
-              <p className="text-[10px] text-muted-foreground">{new Date(q.created_at).toLocaleString('th-TH')}</p>
+              <p className="text-xs text-muted-foreground">{new Date(q.created_at).toLocaleString('th-TH')}</p>
               {q.answer_text || q.answer_audio_url ? (
                 <div className="bg-muted/50 rounded-md p-2.5 space-y-1.5">
-                  <p className="text-[10px] uppercase tracking-wider text-primary">{t('dash.detail.answerFromReporter')}</p>
+                  <p className="text-xs uppercase tracking-wider text-primary">{t('dash.detail.answerFromReporter')}</p>
                   {q.answer_text && <p className="text-sm">{q.answer_text}</p>}
                   {q.answer_audio_url && (
                     answerAudio[q.id]
                       ? <audio src={answerAudio[q.id]} controls className="w-full h-9" />
-                      : <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => void playAnswerAudio(q.id, q.answer_audio_url!)}>
+                      : <Button size="sm" variant="outline" className="h-11 text-xs" onClick={() => void playAnswerAudio(q.id, q.answer_audio_url!)}>
                           <Volume2 className="w-3 h-3 mr-1" /> {t('dash.detail.listenAnswer')}
                         </Button>
                   )}
                 </div>
               ) : (
-                <p className="text-[11px] text-muted-foreground">{t('dash.detail.waitingAnswer', { code: c.case_code })}</p>
+                <p className="text-xs text-muted-foreground">{t('dash.detail.waitingAnswer', { code: c.case_code })}</p>
               )}
             </div>
           ))}
@@ -1004,7 +1209,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
                 <p className="text-xs font-medium text-muted-foreground">{t('dash.media.audio', { n: allAudio.length })}</p>
                 {allAudio.map((a, i) => (
                   <div key={i} className="rounded-lg border border-border p-2.5">
-                    <p className="text-[11px] text-muted-foreground mb-1 line-clamp-1">{a.label}</p>
+                    <p className="text-xs text-muted-foreground mb-1 line-clamp-1">{a.label}</p>
                     <audio src={a.url} controls preload="none" className="w-full h-9" />
                   </div>
                 ))}
@@ -1022,7 +1227,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
                 </div>
               </div>
             )}
-            <p className="text-[10px] text-muted-foreground">{t('dash.media.note')}</p>
+            <p className="text-xs text-muted-foreground">{t('dash.media.note')}</p>
           </section>
         )}
 
@@ -1048,7 +1253,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
             ))}
           </div>
           <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('dash.detail.replyPlaceholder')} className="min-h-[70px]" maxLength={1000} />
-          <p className="text-[11px] text-muted-foreground mt-1">{t('dash.detail.replyHint')}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t('dash.detail.replyHint')}</p>
           <div className="flex justify-end mt-2">
             <Button size="sm" disabled={!note.trim() || saving} onClick={() => void updateStatus(c.status as CaseStatus)}>
               {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {t('dash.detail.sendReply')}
@@ -1060,7 +1265,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
                 <li key={i} className="text-xs flex gap-2">
                   <StatusBadge value={it.status as CaseStatus} />
                   <div className="min-w-0">
-                    <p className="text-muted-foreground font-mono text-[10px]">{new Date(it.created_at).toLocaleString('th-TH')}</p>
+                    <p className="text-muted-foreground font-mono text-xs">{new Date(it.created_at).toLocaleString('th-TH')}</p>
                     {it.note && <p className="break-words">{it.note}</p>}
                   </div>
                 </li>

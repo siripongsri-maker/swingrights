@@ -282,13 +282,13 @@ export default function PartnerSearch() {
               </SelectContent>
             </Select>
           </div>
-          <p className="text-[11px] text-muted-foreground">{t('psearch.resultCount', { n: filtered.length })}</p>
+          <p className="text-xs text-muted-foreground">{t('psearch.resultCount', { n: filtered.length })}</p>
         </div>
 
         <div className="space-y-1.5">
           <p className="text-sm font-medium flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary" /> {t('psearch.mapTitle')}</p>
           <PartnerMap markers={mapMarkers} emptyHint={t('psearch.mapEmpty')} />
-          <p className="text-[11px] text-muted-foreground">{t('psearch.mapHint')}</p>
+          <p className="text-xs text-muted-foreground">{t('psearch.mapHint')}</p>
         </div>
 
         {filtered.length === 0 ? (
@@ -300,9 +300,9 @@ export default function PartnerSearch() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-sm">{p.name}</p>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{t(`partners.orgType.${p.org_type}`)}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{t(`partners.orgType.${p.org_type}`)}</span>
                     {focus && nearness(p) > 0 && (
-                      <span className={cn('text-[10px] px-2 py-0.5 rounded-full', nearness(p) >= 2 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground')}>
+                      <span className={cn('text-xs px-2 py-0.5 rounded-full', nearness(p) >= 2 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground')}>
                         {t(nearness(p) === 3 ? 'psearch.badgeDistrict' : nearness(p) === 2 ? 'psearch.badgeProvince' : 'psearch.badgeNational')}
                       </span>
                     )}
@@ -320,7 +320,7 @@ export default function PartnerSearch() {
                   </p>
                   {Array.isArray(p.services) && p.services.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1.5">
-                      {p.services.map((s, i) => <span key={i} className="text-[10px] bg-muted px-2 py-0.5 rounded-full">{s}</span>)}
+                      {p.services.map((s, i) => <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded-full">{s}</span>)}
                     </div>
                   )}
                 </div>
@@ -348,7 +348,7 @@ export default function PartnerSearch() {
                   <Copy className="w-3.5 h-3.5" /> {t('ref.copy')}
                 </Button>
               </div>
-              <p className="text-[11px] text-muted-foreground">{t('psearch.linkHint')}</p>
+              <p className="text-xs text-muted-foreground">{t('psearch.linkHint')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -366,7 +366,7 @@ export default function PartnerSearch() {
                 </Select>
               </div>
               <Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} placeholder={t('ref.notePlaceholder')} className="min-h-[70px] text-sm" />
-              <p className="text-[11px] text-muted-foreground">{t('psearch.quickNote')}</p>
+              <p className="text-xs text-muted-foreground">{t('psearch.quickNote')}</p>
             </div>
           )}
           <DialogFooter>

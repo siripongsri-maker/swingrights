@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { useI18n } from '@/i18n';
 import { BrandMark } from '@/components/BrandLogo';
 
@@ -77,7 +78,7 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-elegant p-6">
-        <div className="flex justify-end mb-2"><LanguageToggle /></div>
+        <div className="flex justify-end items-center gap-2 mb-2"><QuickExitSlot /><LanguageToggle /></div>
         <div className="text-center mb-5">
           <BrandMark className="mx-auto mb-3 h-12 w-12" />
           <h1 className="text-xl font-medium">{t('login.title')}</h1>
@@ -118,7 +119,7 @@ export default function AdminLogin() {
           </>
         )}
 
-        <div className="mt-5 bg-muted/50 border border-border rounded-lg p-3 text-[11px] leading-relaxed text-muted-foreground">
+        <div className="mt-5 bg-muted/50 border border-border rounded-lg p-3 text-xs leading-relaxed text-muted-foreground">
           {t('login.notice')}
         </div>
       </div>

@@ -237,15 +237,15 @@ export const MISC_DICT: Record<string, Entry> = {
 
   // ---------- SeverityBadge ----------
   'severity.green': {
-    th: 'เขียว', en: 'Green',
-    my: 'အစိမ်း', km: 'បៃតង', lo: 'ສີຂຽວ',
+    th: 'ต่ำ', en: 'Low',
+    my: 'နိမ့်', km: 'ទាប', lo: 'ຕ່ຳ',
   },
   'severity.yellow': {
-    th: 'เหลือง', en: 'Yellow',
-    my: 'အဝါ', km: 'លឿង', lo: 'ສີເຫຼືອງ',
+    th: 'ปานกลาง', en: 'Medium',
+    my: 'အလယ်အလတ်', km: 'មធ្យម', lo: 'ປານກາງ',
   },
   'severity.red': {
-    th: 'แดง', en: 'Red',
-    my: 'အနီ', km: 'ក្រហម', lo: 'ສີແດງ',
+    th: 'สูง', en: 'High',
+    my: 'မြင့်', km: 'ខ្ពស់', lo: 'ສູງ',
   },
 };
