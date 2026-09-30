@@ -76,7 +76,7 @@ export default function Recover() {
         <Button onClick={downloadLocalCasesJson} variant="outline" disabled={!items.length} className="h-11 rounded-xl text-sm">
           <Download className="w-4 h-4" /> {t('recover.backupJson')}
         </Button>
-        <Button onClick={refresh} variant="outline" size="icon" aria-label={t('recover.refresh')} className="rounded-xl">
+        <Button onClick={refresh} variant="outline" size="icon" aria-label={t('recover.refresh')} className="shrink-0 rounded-xl">
           <RefreshCw className="w-4 h-4" />
         </Button>
       </div>
