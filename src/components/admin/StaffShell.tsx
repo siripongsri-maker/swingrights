@@ -137,7 +137,7 @@ export function StaffShell({ children, title, context, actions }: {
         <NavBody />
       </aside>
 
-      <div className="min-w-0 flex-1 pb-[calc(64px+env(safe-area-inset-bottom))] lg:pb-0">
+      <div className="min-w-0 flex-1 pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-24">
         {title || actions ? (
           <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
             <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">

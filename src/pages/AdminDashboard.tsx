@@ -513,7 +513,7 @@ export default function AdminDashboard() {
                   <thead className="bg-muted/50 text-start text-xs text-muted-foreground">
                     <tr>
                       {['sla', 'code', 'severity', 'types', 'flags', 'area', 'owner'].map((h) => (
-                        <th key={h} scope="col" className="px-3 py-3 text-start font-semibold">{t(`staff.col.${h}`)}</th>
+                        <th key={h} scope="col" className="px-3 py-3 text-start font-semibold whitespace-nowrap">{t(`staff.col.${h}`)}</th>
                       ))}
                     </tr>
                   </thead>
@@ -521,8 +521,8 @@ export default function AdminDashboard() {
                     {queueRows.map((c) => (
                       <tr key={c.id} className="border-t border-border h-16 align-middle hover:bg-primary-soft/40">
                         <td className="px-3"><SlaPill c={c} /></td>
-                        <td className="px-3"><Link to={`/admin/case/${c.id}`} className="inline-flex min-h-11 items-center font-mono font-semibold text-accent underline-offset-4 hover:underline">{c.case_code}</Link></td>
-                        <td className="px-3"><SevCell v={c.severity} /></td>
+                        <td className="px-3"><Link to={`/admin/case/${c.id}`} className="inline-flex min-h-11 items-center whitespace-nowrap font-mono font-semibold text-accent underline-offset-4 hover:underline">{c.case_code}</Link></td>
+                        <td className="px-3 whitespace-nowrap"><SevCell v={c.severity} /></td>
                         <td className="px-3 text-sm">{typesOf(c).map((x) => t(`report.type.${x}`)).join(', ') || '-'}</td>
                         <td className="px-3"><Flags c={c} /></td>
                         <td className="px-3 text-sm">{c.profile?.province || c.profile?.branch || '-'}</td>
