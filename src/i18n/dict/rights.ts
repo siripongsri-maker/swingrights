@@ -3,8 +3,8 @@ import type { Entry } from '../index';
 /** Know Your Rights public page (/rights). USER-FACING: all 5 languages. */
 export const RIGHTS_DICT: Record<string, Entry> = {
   'rights.nav': {
-    th: 'ถ้าคุณถูกตำรวจจับ', en: 'If the police arrest you',
-    my: 'ရဲဖမ်းဆီးခဲ့လျှင်', km: 'បើអ្នកត្រូវបានប៉ូលិសចាប់ខ្លួន', lo: 'ຖ້າທ່ານຖືກຕຳຫຼວດຈັບ',
+    th: 'ถ้าคุณถูกจับ', en: 'If you are arrested',
+    my: 'ဖမ်းဆီးခံရလျှင်', km: 'បើអ្នកត្រូវបានចាប់ខ្លួន', lo: 'ຖ້າທ່ານຖືກຈັບ',
   },
   'rights.title': {
     th: 'สิทธิของผู้ต้องหา', en: 'Rights of the Accused',
@@ -12,7 +12,7 @@ export const RIGHTS_DICT: Record<string, Entry> = {
   },
   'rights.subtitle': {
     th: 'รู้ไว้ก่อน ใช้ได้ทันทีเมื่อถูกจับหรือควบคุมตัว',
-    en: 'Know them before you need them — they apply the moment you are arrested or detained.',
+    en: 'Know them before you need them. They apply the moment you are arrested or detained.',
     my: 'ဖမ်းဆီးခံရသောအခါ ချက်ချင်းသုံးလို့ရစေရန် ကြိုတင်သိထားပါ',
     km: 'ដឹងទុកមុន ប្រើបានភ្លាមៗនៅពេលត្រូវបានចាប់ខ្លួន',
     lo: 'ຮູ້ໄວ້ກ່ອນ ໃຊ້ໄດ້ທັນທີເມື່ອຖືກຈັບ ຫຼື ຄວບຄຸມຕົວ',

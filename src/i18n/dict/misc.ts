@@ -95,8 +95,8 @@ export const MISC_DICT: Record<string, Entry> = {
     my: 'ဤစက်တွင် နောက်ထပ် {n} ခု တွေ့ရှိသည်', km: 'រកឃើញធាតុបន្ថែម {n} នៅលើឧបករណ៍នេះ', lo: 'ພົບຂໍ້ມູນຄ້າງເພີ່ມ {n} ລາຍການ',
   },
   'recover.sentSuccess': {
-    th: 'ส่งเคสสำเร็จ — รหัส {code}', en: 'Case sent successfully — code {code}',
-    my: 'အမှုပို့ခြင်းအောင်မြင်ပါသည် — ကုတ် {code}', km: 'ផ្ញើករណីបានជោគជ័យ — កូដ {code}', lo: 'ສົ່ງເຄສສຳເລັດ — ລະຫັດ {code}',
+    th: 'ส่งเคสสำเร็จ, รหัส {code}', en: 'Case sent successfully, code {code}',
+    my: 'အမှုပို့ခြင်းအောင်မြင်ပါသည်, ကုတ် {code}', km: 'ផ្ញើករណីបានជោគជ័យ, កូដ {code}', lo: 'ສົ່ງເຄສສຳເລັດ, ລະຫັດ {code}',
   },
   'recover.sendOneFailed': {
     th: 'ส่งไม่สำเร็จ', en: 'Failed to send',

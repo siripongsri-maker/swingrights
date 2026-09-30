@@ -275,7 +275,7 @@ export default function Track() {
                       {q.answer_text || q.answered_at ? (
                         <div className="rounded-xl bg-primary-soft p-3">
                           <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t('track.answered')}</p>
-                          <p className="text-sm">{q.answer_text || '—'}</p>
+                          <p className="text-sm">{q.answer_text || '-'}</p>
                         </div>
                       ) : (
                         <div className="space-y-2.5">
