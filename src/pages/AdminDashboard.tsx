@@ -34,6 +34,9 @@ import { CaseAnswersEditor } from '@/components/admin/CaseAnswersEditor';
 import { CaseTrainingSamples } from '@/components/admin/CaseTrainingSamples';
 import { DashboardOverview } from '@/components/admin/DashboardOverview';
 import { StaffShell } from '@/components/admin/StaffShell';
+import { QuickExitSlot } from '@/components/screening/QuickExit';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const PAGE_SIZE = 20;
 
@@ -390,7 +393,7 @@ export default function AdminDashboard() {
 
   if (routeCaseId) {
     return (
-      <StaffShell>
+      <StaffShell bare>
         <CaseDetail
           caseId={routeCaseId}
           staff={staffQ.data ?? []}
@@ -751,6 +754,7 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
   const [showMap, setShowMap] = useState(false);
   const [documentKind, setDocumentKind] = useState<DocKind | null>(null);
   const [documentInput, setDocumentInput] = useState<ReturnType<typeof docInputFromReport> | null>(null);
+  const [confirmStatus, setConfirmStatus] = useState<CaseStatus | null>(null);
 
 
   const revealPii = async () => {
@@ -908,42 +912,155 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
     });
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-primary-deep text-primary-foreground sticky top-0 z-30 shadow-elegant">
-        <div className="max-w-4xl mx-auto px-5 py-4 flex items-center gap-3">
-          <button onClick={onBack} className="w-10 h-10 rounded-full bg-sidebar-accent hover:bg-sidebar-accent/80 flex items-center justify-center transition"><ArrowLeft className="w-4 h-4" /></button>
+  const card = 'bg-card border border-border rounded-2xl p-5 shadow-card';
+  const h2 = 'font-subhead text-base font-semibold mb-3 flex items-center gap-2';
+  const q9 = typeof s.q9Total === 'number' ? s.q9Total : null;
+  const tiles: { label: string; value: string; tone: 'ok' | 'watch' | 'danger' | 'none' }[] = [
+    { label: '2Q', value: s.q2Positive === undefined ? '-' : s.q2Positive ? t('dash.detail.q2Abnormal') : t('dash.detail.q2Normal'), tone: s.q2Positive === undefined ? 'none' : s.q2Positive ? 'watch' : 'ok' },
+    { label: '9Q', value: q9 === null ? '-' : `${q9} · ${q9Level(q9).label}`, tone: q9 === null ? 'none' : q9 >= 19 ? 'danger' : q9 >= 7 ? 'watch' : 'ok' },
+    { label: t('cd.selfHarm'), value: c.suicide_risk ? t('dash.detail.riskFound') : t('dash.detail.riskNotFound'), tone: c.suicide_risk ? 'danger' : 'ok' },
+    { label: 'NRM', value: (s.nrmPositive === undefined ? '-' : s.nrmPositive ? t('dash.detail.nrmTrafficking') : t('dash.detail.nrmNotYet')) + (s.nrmUnder18 ? t('dash.detail.nrmMinor') : ''), tone: s.nrmPositive === undefined ? 'none' : s.nrmPositive ? 'danger' : 'ok' },
+  ];
+  const toneCls = { ok: 'bg-sevGreen-bg text-sevGreen-fg border-transparent', watch: 'bg-sevYellow-bg text-sevYellow-fg border-transparent', danger: 'bg-sevRed-bg text-sevRed-fg border-transparent', none: 'bg-muted/50 text-muted-foreground border-border' };
+  const source = c.source || c.channel || c.profile?.source;
+
+  const pickStatus = (st: CaseStatus) => {
+    if (st === c.status) return;
+    if (st === 'completed' || st === 'cancelled') setConfirmStatus(st);
+    else void updateStatus(st);
+  };
+
+  const followValue = c.follow_up_at ? new Date(c.follow_up_at).toISOString().slice(0, 10) : '';
+  const saveFollow = (v: string) => {
+    if (v === followValue) return;
+    void patchCase({ follow_up_at: v ? new Date(v).toISOString() : null }, t('dash.detail.followUpSetToast'));
+  };
+
+  const actionCol = (
+    <div className="space-y-4 xl:sticky xl:top-44">
+      <section className={card}>
+        <h2 className={h2}>{t('cd.next')}</h2>
+        <div className="space-y-4">
           <div>
-            <p className="font-mono text-sm">{c.case_code}</p>
-            <p className="text-xs text-sidebar-foreground/60">{new Date(c.created_at).toLocaleString('th-TH')}</p>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <Button size="sm" variant="outline" className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80" onClick={() => navigate(`/admin/case/${caseId}/history`)}>
-              <History className="w-4 h-4" /> {t('dash.detail.openHistory')}
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline" className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80">
-                  <FileText className="w-4 h-4" /> {t('dash.detail.docsMenu')} <ChevronDown className="w-3.5 h-3.5" />
+            <label className="block text-sm text-muted-foreground mb-1.5">{t('dash.detail.assignee')}</label>
+            <div className="flex flex-col gap-2">
+              <Select value={c.assigned_to ?? 'none'} onValueChange={(v) => patchCase({ assigned_to: v === 'none' ? null : v }, t('dash.detail.assignedToast'))} disabled={!access.canEdit}>
+                <SelectTrigger className="h-11" aria-label={t('dash.detail.assignee')}><SelectValue placeholder={t('dash.detail.selectStaff')} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{t('dash.filter.unassigned')}</SelectItem>
+                  {staff.map((st) => <SelectItem key={st.id} value={st.id}>{st.display_name || st.email}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {access.canEdit && access.uid && c.assigned_to !== access.uid && (
+                <Button variant="outline" onClick={() => patchCase({ assigned_to: access.uid }, t('dash.detail.assignedToast'))}>
+                  <UserCheck className="w-4 h-4" /> {t('cd.claimSelf')}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuItem onClick={() => void withPii((full) => printCaseReport(full))}>
-                  <Printer className="w-4 h-4" /> {t('dash.detail.fullReportPdf')}
-                </DropdownMenuItem>
-                {DOC_KINDS.map((dk) => (
-                  <DropdownMenuItem key={dk.key} onClick={() => void reviewDocument(dk.key)}>
-                    {DOC_ICONS[dk.key]} {dk.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <StatusBadge value={c.status} /> {c.severity && <SeverityBadge value={c.severity} />}
+              )}
+            </div>
           </div>
+          <div>
+            <label htmlFor="cd-follow" className="block text-sm text-muted-foreground mb-1.5">{t('dash.detail.followUpDate')}</label>
+            <Input id="cd-follow" key={followValue} type="date" defaultValue={followValue} disabled={!access.canEdit}
+              onBlur={(e) => saveFollow(e.target.value)} className="h-11" />
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground mb-1.5" id="cd-status-label">{t('cd.status')}</p>
+            <div role="radiogroup" aria-labelledby="cd-status-label" className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+              {(['received', 'inprogress', 'completed', 'cancelled'] as CaseStatus[]).map((st) => (
+                <button key={st} type="button" role="radio" aria-checked={c.status === st} disabled={saving || !access.canEdit}
+                  onClick={() => pickStatus(st)}
+                  className={cn('min-h-11 rounded-lg px-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed',
+                    c.status === st ? 'bg-primary text-primary-foreground shadow-card' : 'text-foreground hover:bg-card')}>
+                  {t(`status.${st}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={card}>
+        <h2 className={h2}><Send className="w-4 h-4 text-accent" aria-hidden />{t('cd.msgTitle')}</h2>
+        <p className="text-sm text-muted-foreground mb-2">{t('dash.detail.replyHint')}</p>
+        <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('dash.detail.replyPlaceholder')} aria-label={t('cd.msgTitle')} className="min-h-[96px]" maxLength={1000} />
+        <Button variant="action" className="w-full mt-3" disabled={!note.trim() || saving} onClick={() => void updateStatus(c.status as CaseStatus)}>
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} {t('cd.sendMsg')}
+        </Button>
+        <button type="button" className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-accent underline underline-offset-4"
+          onClick={() => document.getElementById('cd-questions')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })}>
+          <MessageCircleQuestion className="w-4 h-4" aria-hidden /> {t('cd.askMore')}
+        </button>
+      </section>
+
+      <section className={card}>
+        <h2 className={h2}><History className="w-4 h-4" aria-hidden />{t('cd.activity')}</h2>
+        {timeline.length > 0 ? (
+          <ol className="relative ms-2 space-y-4 border-s-2 border-border">
+            {timeline.map((it, i) => (
+              <li key={i} className="ms-4">
+                <span className="absolute -start-[7px] mt-1.5 h-3 w-3 rounded-full border-2 border-card bg-accent" aria-hidden />
+                <p className="font-mono text-xs text-muted-foreground">{new Date(it.created_at).toLocaleString('th-TH')}</p>
+                <div className="mt-1"><StatusBadge value={it.status as CaseStatus} /></div>
+                {it.note && <p className="mt-1 text-sm break-words">{it.note}</p>}
+              </li>
+            ))}
+          </ol>
+        ) : <p className="text-sm text-muted-foreground">{t('dash.detail.none')}</p>}
+        <Button variant="outline" className="w-full mt-4" onClick={() => navigate(`/admin/case/${caseId}/history`)}>
+          <History className="w-4 h-4" /> {t('cd.allHistory')}
+        </Button>
+      </section>
+    </div>
+  );
+
+  return (
+    <div className="min-h-dvh bg-background">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+        <div className="mx-auto max-w-[1280px] px-4 py-3 sm:px-6">
+          <div className="flex items-center justify-between gap-2">
+            <button type="button" onClick={onBack} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg pe-2 text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" aria-hidden /> {t('staff.nav.queue')}
+            </button>
+            <div className="flex items-center gap-2">
+              <Link to={`/admin/partner-search?case=${c.id}`} className="hidden sm:inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <MapPin className="w-4 h-4" aria-hidden /> {t('psearch.nearButton')}
+              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="outline"><FileText className="w-4 h-4" /> {t('dash.detail.docsMenu')} <ChevronDown className="w-4 h-4" /></Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuItem className="min-h-11" onClick={() => void withPii((full) => printCaseReport(full))}>
+                    <Printer className="w-4 h-4" /> {t('dash.detail.fullReportPdf')}
+                  </DropdownMenuItem>
+                  {DOC_KINDS.map((dk) => (
+                    <DropdownMenuItem key={dk.key} className="min-h-11" onClick={() => void reviewDocument(dk.key)}>
+                      {DOC_ICONS[dk.key]} {dk.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <QuickExitSlot />
+            </div>
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <h1 className="font-mono text-[28px] font-semibold leading-tight tracking-wide">{c.case_code}</h1>
+            <StatusBadge value={c.status} />
+            {c.severity && <SeverityBadge value={c.severity} />}
+            {!c.first_response_at && <SlaPill c={c} />}
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            <span className="font-mono">{new Date(c.created_at).toLocaleString('th-TH')}</span>
+            {(c.profile?.branch || c.profile?.province) && <> · {c.profile?.branch || c.profile?.province}</>}
+            {source && <> · {String(source)}</>}
+          </p>
+          <Link to={`/admin/partner-search?case=${c.id}`} className="sm:hidden mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-accent underline underline-offset-4">
+            <MapPin className="w-4 h-4" aria-hidden /> {t('psearch.nearButton')}
+          </Link>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-5 py-6 space-y-4">
+      <div className="mx-auto max-w-[1280px] px-4 py-5 sm:px-6 space-y-4">
         {documentKind && documentInput && (
           <DocumentDraftDialog
             open
@@ -956,332 +1073,301 @@ function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
           />
         )}
         {c.suicide_risk && (
-          <section className="border-2 border-destructive rounded-xl p-4 bg-destructive/5">
-            <p className="text-sm font-semibold text-destructive flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4" /> {t('dash.detail.suicideBanner')}
+          <section role="alert" className="rounded-2xl border border-destructive/40 bg-sevRed-bg p-4">
+            <p className="flex items-start gap-2 font-semibold text-sevRed-fg">
+              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" aria-hidden /> {t('cd.safety')}
             </p>
           </section>
         )}
 
-        {/* Case assignment & follow-up */}
-        <section className="bg-card border border-border rounded-xl p-5 shadow-card grid sm:grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs text-muted-foreground mb-1.5">{t('dash.detail.assignee')}</p>
-            <Select value={c.assigned_to ?? 'none'} onValueChange={(v) => patchCase({ assigned_to: v === 'none' ? null : v }, t('dash.detail.assignedToast'))}>
-              <SelectTrigger className="h-11"><SelectValue placeholder={t('dash.detail.selectStaff')} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">{t('dash.filter.unassigned')}</SelectItem>
-                {staff.map((st) => <SelectItem key={st.id} value={st.id}>{st.display_name || st.email}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1.5">{t('dash.detail.followUpDate')}</p>
-            <Input
-              type="date"
-              value={c.follow_up_at ? new Date(c.follow_up_at).toISOString().slice(0, 10) : ''}
-              onChange={(e) => patchCase({ follow_up_at: e.target.value ? new Date(e.target.value).toISOString() : null }, t('dash.detail.followUpSetToast'))}
-              className="h-9"
-            />
-          </div>
-        </section>
+        <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start">
+          <div className="order-2 xl:order-1 min-w-0 space-y-4">
+            <section aria-label={t('cd.story')} className="space-y-2">
+              <h2 className="font-subhead text-lg font-semibold">{t('cd.story')}</h2>
+              <CaseAnswersEditor
+                caseId={caseId}
+                answers={Array.isArray(c.answers) ? c.answers : []}
+                canEdit={access.canEdit}
+                audioSigned={audioSigned}
+                staffObs={c.staff_observations ?? undefined}
+                staffName={(id) => staffName(id ?? null) || t('dash.staffFallback')}
+              />
+            </section>
 
-        <Link to={`/admin/partner-search?case=${c.id}`} className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary-soft text-primary text-sm font-medium py-2.5 hover:bg-primary/10 transition">
-          <MapPin className="w-4 h-4" /> {t('psearch.nearButton')}{c.profile?.province ? ` · ${c.profile.province}` : ''}
-        </Link>
-
-        {/* Violation type classification (staff) */}
-        <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-          <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.types')}</p>
-          <div className="flex flex-wrap gap-1.5">
-            {(['body', 'mental', 'labor', 'health', 'property', 'other'] as const).map((k) => {
-              const staffTypes: string[] = Array.isArray(c.violation_types) ? c.violation_types : [];
-              const initTypes: string[] = Array.isArray((c.profile as any)?.initialViolationTypes) ? (c.profile as any).initialViolationTypes : [];
-              const fromReporter = initTypes.includes(k);
-              const fromStaff = staffTypes.includes(k);
-              const active = fromReporter || fromStaff;
-              return (
-                <button
-                  key={k}
-                  type="button"
-                  disabled={!access.canEdit || fromReporter}
-                  aria-pressed={active}
-                  title={fromReporter ? t('dash.detail.typeReporter') : undefined}
-                  onClick={() => patchCase({ violation_types: fromStaff ? staffTypes.filter((x) => x !== k) : [...staffTypes, k] }, t('dash.detail.typesSaved'))}
-                  className={cn(
-                    'rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:cursor-default',
-                    active ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card text-muted-foreground',
-                    !access.canEdit && !fromReporter && 'opacity-60',
-                  )}
-                >
-                  {t(`report.type.${k}`)}
-                  {fromReporter && <span className="ms-1 opacity-80">· {t('dash.detail.typeReporterShort')}</span>}
-                  {fromStaff && !fromReporter && <span className="ms-1 opacity-80">· {t('dash.detail.typeStaffShort')}</span>}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {c.ai_result && (
-          <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-            <p className="text-xs font-medium text-primary mb-2">{t('dash.detail.aiOpinion')}</p>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                <div className={`h-full ${c.ai_result.riskLevel === 'high' ? 'bg-destructive' : c.ai_result.riskLevel === 'medium' ? 'bg-warning' : 'bg-success'}`} style={{ width: `${c.ai_result.riskScore}%` }} />
-              </div>
-              <span className="font-medium tabular-nums">{c.ai_result.riskScore}</span>
-            </div>
-            <p className="text-sm leading-relaxed mb-3">{c.ai_result.summary}</p>
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {(c.ai_result.violationTags || []).map((t: any, i: number) => <span key={i} className="text-xs bg-primary-soft text-primary px-2 py-1 rounded-full">{t.label}</span>)}
-            </div>
-            <ul className="text-sm space-y-1 list-disc list-inside text-muted-foreground mb-3">
-              {(c.ai_result.recommendations || []).map((r: string, i: number) => <li key={i}>{r}</li>)}
-            </ul>
-            <div className="bg-sevYellow-bg/60 dark:bg-sevYellow-bg border border-warning/40 dark:border-warning/40/40 rounded-lg p-3">
-              <p className="text-xs text-sevYellow-fg text-sevYellow-fg leading-relaxed">{AI_DISCLAIMER}</p>
-              <Button size="sm" variant={c.ai_reviewed ? 'outline' : 'default'} className="mt-2 h-11 text-xs"
-                disabled={c.ai_reviewed}
-                onClick={async () => {
-                  const { data: sess } = await supabase.auth.getUser();
-                  patchCase({ ai_reviewed: true, ai_reviewed_at: new Date().toISOString(), ai_reviewed_by: sess.user?.id }, t('dash.detail.aiReviewedToast'));
-                }}>
-                <Check className="w-3 h-3" /> {c.ai_reviewed ? t('dash.detail.aiReviewedLabel', { date: c.ai_reviewed_at ? ` · ${new Date(c.ai_reviewed_at).toLocaleDateString('th-TH')}` : '' }) : t('dash.detail.markReviewed')}
-              </Button>
-            </div>
-          </section>
-        )}
-
-        <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-          <p className="text-xs font-medium text-muted-foreground mb-3">{t('dash.detail.standardScreening')}</p>
-          <div className="grid sm:grid-cols-2 gap-3 text-sm">
-            <div><span className="text-muted-foreground text-xs">2Q: </span>{s.q2Positive === undefined ? '-' : s.q2Positive ? t('dash.detail.q2Abnormal') : t('dash.detail.q2Normal')}</div>
-            <div><span className="text-muted-foreground text-xs">9Q: </span>{typeof s.q9Total === 'number' ? `${s.q9Total} — ${q9Level(s.q9Total).label}` : '-'}</div>
-            <div><span className="text-muted-foreground text-xs">{t('dash.detail.q9SelfHarmLabel')}</span>{c.suicide_risk ? t('dash.detail.riskFound') : t('dash.detail.riskNotFound')}</div>
-            <div><span className="text-muted-foreground text-xs">NRM: </span>{s.nrmPositive === undefined ? '-' : s.nrmPositive ? t('dash.detail.nrmTrafficking') : t('dash.detail.nrmNotYet')}{s.nrmUnder18 ? t('dash.detail.nrmMinor') : ''}</div>
-          </div>
-        </section>
-
-        <section className="bg-card border border-border rounded-xl p-5 shadow-card space-y-4 text-sm">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <p className="text-xs font-medium text-muted-foreground">{t('dash.detail.relatedInfo')}</p>
-            {!pii && (
-              <Button size="sm" variant="outline" className="gap-1.5 text-xs" disabled={piiLoading} onClick={revealPii}>
-                {piiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldAlert className="w-3 h-3" />} {t('dash.detail.revealPii')}
-              </Button>
+            {c.ai_result && (
+              <section className={card}>
+                <h2 className={h2}>{t('dash.detail.aiOpinion')}</h2>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden" role="img" aria-label={`${c.ai_result.riskLevel ?? ''} ${c.ai_result.riskScore}`}>
+                    <div className={`h-full ${c.ai_result.riskLevel === 'high' ? 'bg-destructive' : c.ai_result.riskLevel === 'medium' ? 'bg-warning' : 'bg-success'}`} style={{ width: `${c.ai_result.riskScore}%` }} />
+                  </div>
+                  <span className="font-mono font-semibold tabular-nums">{c.ai_result.riskScore}</span>
+                </div>
+                <p className="text-sm leading-relaxed mb-3">{c.ai_result.summary}</p>
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {(c.ai_result.violationTags || []).map((tg: any, i: number) => <span key={i} className="text-xs bg-primary-soft text-primary px-2.5 py-1 rounded-full">{tg.label}</span>)}
+                </div>
+                {(c.ai_result.recommendations || []).length > 0 && (
+                  <ul className="text-sm space-y-1 list-disc ps-5 text-muted-foreground mb-3">
+                    {(c.ai_result.recommendations || []).map((r: string, i: number) => <li key={i}>{r}</li>)}
+                  </ul>
+                )}
+                <div className="rounded-xl border border-warning/40 bg-sevYellow-bg/60 p-3">
+                  <p className="text-sm text-sevYellow-fg">{t('cd.aiNotice')}</p>
+                  <Collapsible>
+                    <CollapsibleTrigger className="group mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-sevYellow-fg underline underline-offset-4">
+                      {t('cd.aiLimits')} <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" aria-hidden />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent><p className="pb-2 text-sm leading-relaxed text-sevYellow-fg">{AI_DISCLAIMER}</p></CollapsibleContent>
+                  </Collapsible>
+                  <Button size="sm" variant={c.ai_reviewed ? 'outline' : 'default'} className="mt-1"
+                    disabled={c.ai_reviewed}
+                    onClick={async () => {
+                      const { data: sess } = await supabase.auth.getUser();
+                      patchCase({ ai_reviewed: true, ai_reviewed_at: new Date().toISOString(), ai_reviewed_by: sess.user?.id }, t('dash.detail.aiReviewedToast'));
+                    }}>
+                    <Check className="w-4 h-4" /> {c.ai_reviewed ? t('dash.detail.aiReviewedLabel', { date: c.ai_reviewed_at ? ` · ${new Date(c.ai_reviewed_at).toLocaleDateString('th-TH')}` : '' }) : t('dash.detail.markReviewed')}
+                  </Button>
+                </div>
+              </section>
             )}
-          </div>
-          {!pii && (
-            <p className="text-xs text-muted-foreground">
-              {t('dash.detail.piiHint')}
-            </p>
-          )}
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.reporter')}</p>
-              <p>{pii ? (pii.reporter?.name || '-') : '••••••'}</p>
-              <p className="text-xs text-muted-foreground">{pii ? [pii.reporter?.phone, pii.reporter?.email].filter(Boolean).join(' · ') : '••••••'}</p>
-              {pii?.reporter?.address && <p className="text-xs text-muted-foreground">{pii.reporter.address}</p>}
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.client')}</p>
-              <p>{pii ? (pii.victim?.name || '-') : (c.victim?.name_masked || '••••••')}</p>
-              <p className="text-xs text-muted-foreground">{c.profile?.kp} · {c.profile?.gender} · {c.profile?.age}</p>
-              {pii?.victim?.contact && <p className="text-xs text-muted-foreground">{pii.victim.contact}</p>}
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.area')}</p>
-              <p>{[c.profile?.subdistrict && `ต.${c.profile.subdistrict}`, c.profile?.district && `อ.${c.profile.district}`, c.profile?.province || c.profile?.branch].filter(Boolean).join(' ')}</p>
-              {c.profile?.geo && (
-                <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setShowMap((current) => !current)}>
-                  {showMap ? t('dash.detail.hideMap') : t('dash.detail.viewOnMap')}
-                </Button>
-              )}
-            </div>
-            <div><p className="text-xs text-muted-foreground mb-1">{t('dash.detail.incidentPlace')}</p><p>{c.profile?.incidentPlace || '-'}</p></div>
-          </div>
-          {showMap && c.profile?.geo && (
-            <div className="mt-4" aria-label={t('dash.detail.mapLabel')}>
-              <MapPicker value={c.profile.geo} center={[c.profile.geo.lat, c.profile.geo.lng]} onChange={() => undefined} readOnly />
-            </div>
-          )}
-        </section>
 
-        <CaseAnswersEditor
-          caseId={caseId}
-          answers={Array.isArray(c.answers) ? c.answers : []}
-          canEdit={access.canEdit}
-          audioSigned={audioSigned}
-          staffObs={c.staff_observations ?? undefined}
-          staffName={(id) => staffName(id ?? null) || t('dash.staffFallback')}
-        />
-
-        <CaseTrainingSamples caseId={caseId} />
-
-        <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-          <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.referrals')}</p>
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {(c.referrals || []).map((r: unknown, i: number) => {
-              const label = referralLabel(r);
-              return label ? <span key={i} className="text-xs bg-primary-soft text-primary px-2 py-1 rounded-full">{label}</span> : null;
-            })}
-            {(!c.referrals || c.referrals.length === 0) && <span className="text-xs text-muted-foreground">{t('dash.detail.none')}</span>}
-          </div>
-          {c.referral_note && <p className="text-xs text-muted-foreground">{c.referral_note}</p>}
-        </section>
-
-        <CaseReferrals
-          caseId={caseId}
-          province={c.profile?.province ?? null}
-          violationTypes={Array.isArray(c.violation_types) ? c.violation_types : []}
-          canEdit={access.canEdit}
-        />
-
-        {partners.length > 0 && (
-          <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-            <p className="text-xs font-medium text-muted-foreground mb-3 flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5" /> {t('dash.detail.localPartners', { province: c.profile?.province ? ` (${c.profile.province})` : '' })}
-            </p>
-            <div className="space-y-2.5">
-              {partners.map((p) => (
-                <div key={p.id} className="border border-border/60 rounded-lg p-3 text-sm">
-                  <p className="font-medium text-[13px]">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {[p.district, p.province].filter(Boolean).join(' · ') || t('dash.detail.allAreas')}
-                    {p.phone ? t('dash.detail.phone', { phone: p.phone }) : ''}{p.email ? ` · ${p.email}` : ''}
-                  </p>
-                  {Array.isArray(p.services) && p.services.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {p.services.map((sv, i) => <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded-full">{sv}</span>)}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <section className="bg-card border border-border rounded-xl p-5 shadow-card space-y-3">
-          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-            <MessageCircleQuestion className="w-3.5 h-3.5" /> {t('dash.detail.askQuestionsTitle')}
-          </p>
-          {questions.map((q) => (
-            <div key={q.id} className="border border-border/60 rounded-lg p-3 space-y-2">
-              <p className="text-sm font-medium">{q.question}</p>
-              <p className="text-xs text-muted-foreground">{new Date(q.created_at).toLocaleString('th-TH')}</p>
-              {q.answer_text || q.answer_audio_url ? (
-                <div className="bg-muted/50 rounded-md p-2.5 space-y-1.5">
-                  <p className="text-xs uppercase tracking-wider text-primary">{t('dash.detail.answerFromReporter')}</p>
-                  {q.answer_text && <p className="text-sm">{q.answer_text}</p>}
-                  {q.answer_audio_url && (
-                    answerAudio[q.id]
-                      ? <audio src={answerAudio[q.id]} controls className="w-full h-9" />
-                      : <Button size="sm" variant="outline" className="h-11 text-xs" onClick={() => void playAnswerAudio(q.id, q.answer_audio_url!)}>
-                          <Volume2 className="w-3 h-3 mr-1" /> {t('dash.detail.listenAnswer')}
-                        </Button>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">{t('dash.detail.waitingAnswer', { code: c.case_code })}</p>
-              )}
-            </div>
-          ))}
-          <div className="flex gap-2">
-            <Textarea
-              value={newQuestion}
-              onChange={(e) => setNewQuestion(e.target.value)}
-              placeholder={t('dash.detail.questionPlaceholder')}
-              className="min-h-[44px] text-sm"
-              maxLength={1000}
-            />
-            <Button size="sm" className="self-end" disabled={!newQuestion.trim()} onClick={() => void askQuestion()}>
-              <Send className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-        </section>
-
-        {(allAudio.length > 0 || photoSigned.length > 0) && (
-          <section className="bg-card border border-border rounded-xl p-5 shadow-card space-y-4" aria-label={t('dash.media.title')}>
-            <p className="text-sm font-medium">{t('dash.media.title')}</p>
-            {allAudio.length > 0 && (
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">{t('dash.media.audio', { n: allAudio.length })}</p>
-                {allAudio.map((a, i) => (
-                  <div key={i} className="rounded-lg border border-border p-2.5">
-                    <p className="text-xs text-muted-foreground mb-1 line-clamp-1">{a.label}</p>
-                    <audio src={a.url} controls preload="none" className="w-full h-9" />
+            <section className={card}>
+              <h2 className={h2}>{t('dash.detail.standardScreening')}</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {tiles.map((tl) => (
+                  <div key={tl.label} className={cn('rounded-xl border p-3', toneCls[tl.tone])}>
+                    <p className="text-xs font-semibold opacity-90">{tl.label}</p>
+                    <p className="mt-1 text-sm font-semibold leading-snug">{tl.value}</p>
                   </div>
                 ))}
               </div>
-            )}
-            {photoSigned.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.photos', { n: photoSigned.length })}</p>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                  {photoSigned.map((url, i) => (
-                    <button key={i} type="button" onClick={() => setLightbox(i)} className="block aspect-square rounded-lg overflow-hidden border border-border hover:opacity-90 transition">
-                      <img src={url} loading="lazy" alt={t('dash.detail.photoAlt', { n: i + 1 })} className="w-full h-full object-cover" />
+            </section>
+
+            <section className={cn(card, 'space-y-4 text-sm')}>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <h2 className="font-subhead text-base font-semibold">{t('dash.detail.relatedInfo')}</h2>
+                {!pii && (
+                  <Button size="sm" variant="outline" disabled={piiLoading} onClick={revealPii}>
+                    {piiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldAlert className="w-4 h-4" />} {t('dash.detail.revealPii')}
+                  </Button>
+                )}
+              </div>
+              {!pii && <p className="text-xs text-muted-foreground">{t('dash.detail.piiHint')}</p>}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.reporter')}</p>
+                  <p>{pii ? (pii.reporter?.name || '-') : '••••••'}</p>
+                  <p className="text-xs text-muted-foreground">{pii ? [pii.reporter?.phone, pii.reporter?.email].filter(Boolean).join(' · ') : '••••••'}</p>
+                  {pii?.reporter?.address && <p className="text-xs text-muted-foreground">{pii.reporter.address}</p>}
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.client')}</p>
+                  <p>{pii ? (pii.victim?.name || '-') : (c.victim?.name_masked || '••••••')}</p>
+                  <p className="text-xs text-muted-foreground">{c.profile?.kp} · {c.profile?.gender} · {c.profile?.age}</p>
+                  {pii?.victim?.contact && <p className="text-xs text-muted-foreground">{pii.victim.contact}</p>}
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.area')}</p>
+                  <p>{[c.profile?.subdistrict && `ต.${c.profile.subdistrict}`, c.profile?.district && `อ.${c.profile.district}`, c.profile?.province || c.profile?.branch].filter(Boolean).join(' ')}</p>
+                  {c.profile?.geo && (
+                    <Button type="button" variant="link" size="sm" className="px-0" onClick={() => setShowMap((current) => !current)}>
+                      {showMap ? t('dash.detail.hideMap') : t('dash.detail.viewOnMap')}
+                    </Button>
+                  )}
+                </div>
+                <div><p className="text-xs text-muted-foreground mb-1">{t('dash.detail.incidentPlace')}</p><p>{c.profile?.incidentPlace || '-'}</p></div>
+              </div>
+              {showMap && c.profile?.geo && (
+                <div className="mt-4" aria-label={t('dash.detail.mapLabel')}>
+                  <MapPicker value={c.profile.geo} center={[c.profile.geo.lat, c.profile.geo.lng]} onChange={() => undefined} readOnly />
+                </div>
+              )}
+            </section>
+
+            <section className={card}>
+              <h2 className={h2}>{t('dash.detail.types')}</h2>
+              <div className="flex flex-wrap gap-2">
+                {(['body', 'mental', 'labor', 'health', 'property', 'other'] as const).map((k) => {
+                  const staffTypes: string[] = Array.isArray(c.violation_types) ? c.violation_types : [];
+                  const initTypes: string[] = Array.isArray((c.profile as any)?.initialViolationTypes) ? (c.profile as any).initialViolationTypes : [];
+                  const fromReporter = initTypes.includes(k);
+                  const fromStaff = staffTypes.includes(k);
+                  const active = fromReporter || fromStaff;
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      disabled={!access.canEdit || fromReporter}
+                      aria-pressed={active}
+                      title={fromReporter ? t('dash.detail.typeReporter') : undefined}
+                      onClick={() => patchCase({ violation_types: fromStaff ? staffTypes.filter((x) => x !== k) : [...staffTypes, k] }, t('dash.detail.typesSaved'))}
+                      className={cn(
+                        'inline-flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-sm font-medium leading-normal transition-colors duration-150 disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                        active ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card text-foreground hover:bg-primary-soft',
+                      )}
+                    >
+                      {active && <Check className="h-4 w-4" aria-hidden />}
+                      {t(`report.type.${k}`)}
+                      {fromReporter && <span className="text-xs opacity-90">· {t('dash.detail.typeReporterShort')}</span>}
+                      {fromStaff && !fromReporter && <span className="text-xs opacity-90">· {t('dash.detail.typeStaffShort')}</span>}
                     </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            {(allAudio.length > 0 || photoSigned.length > 0) && (
+              <section className={cn(card, 'space-y-4')} aria-label={t('dash.media.title')}>
+                <h2 className="font-subhead text-base font-semibold">{t('dash.media.title')}</h2>
+                {allAudio.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">{t('dash.media.audio', { n: allAudio.length })}</p>
+                    {allAudio.map((a, i) => (
+                      <div key={i} className="rounded-xl border border-border p-2.5">
+                        <p className="text-xs text-muted-foreground mb-1 line-clamp-1">{a.label}</p>
+                        <audio src={a.url} controls preload="none" className="w-full h-11" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {photoSigned.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.photos', { n: photoSigned.length })}</p>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {photoSigned.map((url, i) => (
+                        <button key={i} type="button" onClick={() => setLightbox(i)} className="block aspect-square rounded-lg overflow-hidden border border-border hover:opacity-90 transition-opacity">
+                          <img src={url} loading="lazy" alt={t('dash.detail.photoAlt', { n: i + 1 })} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">{t('dash.media.note')}</p>
+              </section>
+            )}
+
+            <section className={card}>
+              <h2 className={h2}>{t('dash.detail.referrals')}</h2>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {(c.referrals || []).map((r: unknown, i: number) => {
+                  const label = referralLabel(r);
+                  return label ? <span key={i} className="text-xs bg-primary-soft text-primary px-2.5 py-1 rounded-full">{label}</span> : null;
+                })}
+                {(!c.referrals || c.referrals.length === 0) && <span className="text-sm text-muted-foreground">{t('dash.detail.none')}</span>}
+              </div>
+              {c.referral_note && <p className="text-sm text-muted-foreground">{c.referral_note}</p>}
+            </section>
+
+            <CaseReferrals
+              caseId={caseId}
+              province={c.profile?.province ?? null}
+              violationTypes={Array.isArray(c.violation_types) ? c.violation_types : []}
+              canEdit={access.canEdit}
+            />
+
+            {partners.length > 0 && (
+              <section className={card}>
+                <h2 className={h2}><Building2 className="w-4 h-4" aria-hidden /> {t('dash.detail.localPartners', { province: c.profile?.province ? ` (${c.profile.province})` : '' })}</h2>
+                <div className="space-y-2.5">
+                  {partners.map((p) => (
+                    <div key={p.id} className="border border-border/60 rounded-xl p-3 text-sm">
+                      <p className="font-medium">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {[p.district, p.province].filter(Boolean).join(' · ') || t('dash.detail.allAreas')}
+                        {p.phone ? t('dash.detail.phone', { phone: p.phone }) : ''}{p.email ? ` · ${p.email}` : ''}
+                      </p>
+                      {Array.isArray(p.services) && p.services.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {p.services.map((sv, i) => <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded-full">{sv}</span>)}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
-            <p className="text-xs text-muted-foreground">{t('dash.media.note')}</p>
-          </section>
-        )}
+
+            <section id="cd-questions" className={cn(card, 'space-y-3 scroll-mt-40')}>
+              <h2 className="font-subhead text-base font-semibold flex items-center gap-2">
+                <MessageCircleQuestion className="w-4 h-4 text-accent" aria-hidden /> {t('dash.detail.askQuestionsTitle')}
+              </h2>
+              {questions.map((q) => (
+                <div key={q.id} className="border border-border/60 rounded-xl p-3 space-y-2">
+                  <p className="text-sm font-medium">{q.question}</p>
+                  <p className="font-mono text-xs text-muted-foreground">{new Date(q.created_at).toLocaleString('th-TH')}</p>
+                  {q.answer_text || q.answer_audio_url ? (
+                    <div className="bg-muted/50 rounded-lg p-2.5 space-y-1.5">
+                      <p className="text-xs font-semibold text-primary">{t('dash.detail.answerFromReporter')}</p>
+                      {q.answer_text && <p className="text-sm">{q.answer_text}</p>}
+                      {q.answer_audio_url && (
+                        answerAudio[q.id]
+                          ? <audio src={answerAudio[q.id]} controls className="w-full h-11" />
+                          : <Button size="sm" variant="outline" onClick={() => void playAnswerAudio(q.id, q.answer_audio_url!)}>
+                              <Volume2 className="w-4 h-4" /> {t('dash.detail.listenAnswer')}
+                            </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{t('dash.detail.waitingAnswer', { code: c.case_code })}</p>
+                  )}
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <Textarea
+                  value={newQuestion}
+                  onChange={(e) => setNewQuestion(e.target.value)}
+                  placeholder={t('dash.detail.questionPlaceholder')}
+                  aria-label={t('dash.detail.questionPlaceholder')}
+                  className="min-h-[44px] text-sm"
+                  maxLength={1000}
+                />
+                <Button size="icon" className="self-end shrink-0" aria-label={t('cd.askMore')} disabled={!newQuestion.trim()} onClick={() => void askQuestion()}>
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </section>
+
+            <CaseTrainingSamples caseId={caseId} />
+
+            {c.signature_staff && (
+              <section className={card}>
+                <p className="text-sm text-muted-foreground mb-2">{t('dash.detail.staffSignature', { name: c.signature_staff_name })}</p>
+                <img src={c.signature_staff} alt="signature" className="bg-card border border-border rounded-md max-h-24" />
+              </section>
+            )}
+          </div>
+
+          <aside className="order-1 xl:order-2 min-w-0" aria-label={t('cd.next')}>{actionCol}</aside>
+        </div>
 
         {lightbox !== null && photoSigned[lightbox] && (
           <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-foreground/80 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
             <img src={photoSigned[lightbox]} alt={t('dash.detail.photoAlt', { n: lightbox + 1 })} className="max-h-[85vh] max-w-full rounded-xl" onClick={(e) => e.stopPropagation()} />
             <div className="absolute bottom-6 flex gap-2" onClick={(e) => e.stopPropagation()}>
-              <Button variant="secondary" disabled={lightbox === 0} onClick={() => setLightbox(lightbox - 1)}>‹</Button>
+              <Button variant="secondary" size="icon" aria-label="Previous" disabled={lightbox === 0} onClick={() => setLightbox(lightbox - 1)}>‹</Button>
               <Button variant="secondary" onClick={() => setLightbox(null)}>{t('dash.media.close')}</Button>
-              <Button variant="secondary" disabled={lightbox >= photoSigned.length - 1} onClick={() => setLightbox(lightbox + 1)}>›</Button>
+              <Button variant="secondary" size="icon" aria-label="Next" disabled={lightbox >= photoSigned.length - 1} onClick={() => setLightbox(lightbox + 1)}>›</Button>
             </div>
           </div>
         )}
 
-        <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-          <p className="text-xs font-medium text-muted-foreground mb-3">{t('dash.detail.updateStatus')}</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-            {(['received', 'inprogress', 'completed', 'cancelled'] as CaseStatus[]).map((st) => (
-              <button key={st} disabled={saving} onClick={() => void updateStatus(st)}
-                className={`text-xs py-2 rounded-lg border transition disabled:opacity-60 ${c.status === st ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border hover:border-primary'}`}>
-                {t(`status.${st}`)}
-              </button>
-            ))}
-          </div>
-          <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('dash.detail.replyPlaceholder')} className="min-h-[70px]" maxLength={1000} />
-          <p className="text-xs text-muted-foreground mt-1">{t('dash.detail.replyHint')}</p>
-          <div className="flex justify-end mt-2">
-            <Button size="sm" disabled={!note.trim() || saving} onClick={() => void updateStatus(c.status as CaseStatus)}>
-              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />} {t('dash.detail.sendReply')}
-            </Button>
-          </div>
-          {timeline.length > 0 && (
-            <ol className="mt-4 space-y-2 border-t border-border pt-3">
-              {timeline.map((it, i) => (
-                <li key={i} className="text-xs flex gap-2">
-                  <StatusBadge value={it.status as CaseStatus} />
-                  <div className="min-w-0">
-                    <p className="text-muted-foreground font-mono text-xs">{new Date(it.created_at).toLocaleString('th-TH')}</p>
-                    {it.note && <p className="break-words">{it.note}</p>}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
-
-
-        {c.signature_staff && (
-          <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-            <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.staffSignature', { name: c.signature_staff_name })}</p>
-            <img src={c.signature_staff} alt="signature" className="bg-white border border-border rounded-md max-h-24" />
-          </section>
-        )}
-      </main>
+        <AlertDialog open={!!confirmStatus} onOpenChange={(o) => { if (!o) setConfirmStatus(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{confirmStatus ? t('cd.confirmTitle', { s: t(`status.${confirmStatus}`) }) : ''}</AlertDialogTitle>
+              <AlertDialogDescription>{t('cd.confirmBody')}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('dash.detail.replyPlaceholder')} aria-label={t('cd.msgTitle')} className="min-h-[88px]" maxLength={1000} />
+            <AlertDialogFooter>
+              <AlertDialogCancel className="min-h-11">{t('cd.cancel')}</AlertDialogCancel>
+              <AlertDialogAction className="min-h-11" onClick={() => { const st = confirmStatus; setConfirmStatus(null); if (st) void updateStatus(st); }}>
+                {t('cd.confirm')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }

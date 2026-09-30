@@ -120,8 +120,8 @@ function NavBody({ onPick }: { onPick?: () => void }) {
 }
 
 /** Staff area frame: sidebar on >=1024px, bottom nav + sheet menu below. */
-export function StaffShell({ children, title, context, actions }: {
-  children: ReactNode; title?: string; context?: string; actions?: ReactNode;
+export function StaffShell({ children, title, context, actions, bare }: {
+  children: ReactNode; title?: string; context?: string; actions?: ReactNode; bare?: boolean;
 }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
@@ -151,7 +151,7 @@ export function StaffShell({ children, title, context, actions }: {
             </div>
             {actions && <div className="flex flex-wrap items-center gap-2 px-4 pb-3 sm:hidden">{actions}</div>}
           </header>
-        ) : (
+        ) : bare ? null : (
           // Pages with their own header: only a small phone row for Quick Exit.
           <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2 sm:hidden">
             <BrandMark className="h-9 w-9 shrink-0" />
