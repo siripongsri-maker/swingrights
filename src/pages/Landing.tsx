@@ -128,7 +128,7 @@ export default function Landing() {
             <span
               key={index}
               className="sw-wave-bar"
-              style={{ height: `${Math.round((height / 186) * 62)}vh`, animationDelay: `${index * 0.1}s, ${index * -0.33}s` }}
+              style={{ height: `${Math.round((height / 186) * 100)}%`, animationDelay: `${index * 0.1}s, ${index * -0.33}s` }}
             />
           ))}
         </div>
