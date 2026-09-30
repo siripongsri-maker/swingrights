@@ -1,3 +1,4 @@
+import { StaffShell } from '@/components/admin/StaffShell';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -70,14 +71,18 @@ const App = () => (
             <Route path="/admin/signup" element={<StaffSignup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin/settings" element={<ProtectedRoute><MySettings /></ProtectedRoute>} />
-            <Route path="/admin/users" element={<ProtectedRoute allow={["admin"]}><AdminUsers /></ProtectedRoute>} />
-            <Route path="/admin/system" element={<ProtectedRoute allow={["admin"]}><AdminSystem /></ProtectedRoute>} />
-            <Route path="/admin/partners" element={<ProtectedRoute allow={["admin"]}><AdminPartners /></ProtectedRoute>} />
-            <Route path="/admin/partner-search" element={<ProtectedRoute><PartnerSearch /></ProtectedRoute>} />
-            <Route path="/admin/report" element={<ProtectedRoute allow={["admin", "manager"]}><ProjectReport /></ProtectedRoute>} />
-            <Route path="/admin/access-review" element={<ProtectedRoute allow={["admin", "manager"]}><AccessReview /></ProtectedRoute>} />
-            <Route path="/admin/case/:id/history" element={<ProtectedRoute><CaseHistory /></ProtectedRoute>} />
+            <Route path="/admin/cases" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/caseload" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/overview" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/case/:id" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/settings" element={<ProtectedRoute><StaffShell><MySettings /></StaffShell></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute allow={["admin"]}><StaffShell><AdminUsers /></StaffShell></ProtectedRoute>} />
+            <Route path="/admin/system" element={<ProtectedRoute allow={["admin"]}><StaffShell><AdminSystem /></StaffShell></ProtectedRoute>} />
+            <Route path="/admin/partners" element={<ProtectedRoute allow={["admin"]}><StaffShell><AdminPartners /></StaffShell></ProtectedRoute>} />
+            <Route path="/admin/partner-search" element={<ProtectedRoute><StaffShell><PartnerSearch /></StaffShell></ProtectedRoute>} />
+            <Route path="/admin/report" element={<ProtectedRoute allow={["admin", "manager"]}><StaffShell><ProjectReport /></StaffShell></ProtectedRoute>} />
+            <Route path="/admin/access-review" element={<ProtectedRoute allow={["admin", "manager"]}><StaffShell><AccessReview /></StaffShell></ProtectedRoute>} />
+            <Route path="/admin/case/:id/history" element={<ProtectedRoute><StaffShell><CaseHistory /></StaffShell></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
