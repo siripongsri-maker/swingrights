@@ -36,12 +36,19 @@ export const RIGHTS_DICT: Record<string, Entry> = {
     th: 'การดูแลตัวเองระหว่างถูกควบคุมตัว', en: 'Taking care of yourself in detention',
     my: 'ထောင်ချခံနေရစဉ် ကိုယ့်ကိုယ်ကိုယ် ဂရုစိုက်ခြင်း', km: 'ការថែរក្សាខ្លួនឯងក្នុងអំឡុងឃាត់ខ្លួន', lo: 'ການດູແລຕົນເອງໃນຂະນະຖືກຄວບຄຸມຕົວ',
   },
+  'rights.count': { th: '{n} ข้อ', en: '{n} items', my: '{n} ချက်', km: '{n} ចំណុច', lo: '{n} ຂໍ້' },
+  'rights.jump': { th: 'ไปที่หมวด', en: 'Jump to section', my: 'အပိုင်းသို့ သွားရန်', km: 'ទៅកាន់ផ្នែក', lo: 'ໄປທີ່ໝວດ' },
+  'rights.branches': { th: 'เบอร์โทรสาขา SWING', en: 'SWING branch numbers', my: 'SWING ရုံးခွဲ ဖုန်းနံပါတ်များ', km: 'លេខទូរស័ព្ទសាខា SWING', lo: 'ເບີໂທສາຂາ SWING' },
+  'rights.branch.silom': { th: 'สีลม', en: 'Silom', my: 'ဆီလုံ', km: 'ស៊ីឡុម', lo: 'ສີລົມ' },
+  'rights.branch.pattaya': { th: 'พัทยา', en: 'Pattaya', my: 'ပတ္တယား', km: 'ប៉ាតាយ៉ា', lo: 'ພັດທະຍາ' },
+  'rights.saveTitle': { th: 'พิมพ์ / บันทึกเป็นภาพ', en: 'Print / save as image', my: 'ပုံနှိပ်ရန် / ပုံအဖြစ် သိမ်းရန်', km: 'បោះពុម្ព / រក្សាទុកជារូបភាព', lo: 'ພິມ / ບັນທຶກເປັນຮູບ' },
+  'rights.saveBody': { th: 'แคปหน้าจอนี้เก็บไว้ในเครื่อง เปิดดูได้แม้ไม่มีเน็ต', en: 'Take a screenshot of this page and keep it on your phone. You can open it even without internet.', my: 'ဤစာမျက်နှာကို screenshot ရိုက်ပြီး ဖုန်းထဲသိမ်းထားပါ။ အင်တာနက်မရှိလည်း ကြည့်နိုင်ပါသည်။', km: 'ថតអេក្រង់ទំព័រនេះទុកក្នុងទូរស័ព្ទ។ អាចបើកមើលបានទោះគ្មានអ៊ីនធឺណិត។', lo: 'ແຄັບໜ້າຈໍນີ້ເກັບໄວ້ໃນເຄື່ອງ. ເປີດເບິ່ງໄດ້ເຖິງວ່າບໍ່ມີເນັດ.' },
   'rights.expandAll': {
     th: 'ขยายทั้งหมด', en: 'Expand all',
     my: 'အားလုံး ချဲ့ပါ', km: 'ពង្រីកទាំងអស់', lo: 'ຂະຫຍາຍທັງໝົດ',
   },
   'rights.collapseAll': {
-    th: 'ยุบทั้งหมด', en: 'Collapse all',
+    th: 'ย่อทั้งหมด', en: 'Collapse all',
     my: 'အားလုံး ခေါင်းပါ', km: 'បង្រួមទាំងអស់', lo: 'ຫຍໍ້ທັງໝົດ',
   },
   'rights.call': {
