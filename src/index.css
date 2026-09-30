@@ -208,9 +208,9 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
 
 /* Fixed-layer system: bottom bars publish their height, Quick Exit clears them */
 :root { --bottom-nav-h: 0px; --action-bar-h: 0px; }
+body:has(.sw-action-bar) { --action-bar-h: 76px; }
 @media (max-width: 639px) {
   body:has(.sw-bottom-nav) { --bottom-nav-h: 64px; }
-  body:has(.sw-action-bar) { --action-bar-h: 72px; }
   .sw-quick-exit-float { top: calc(0.625rem + env(safe-area-inset-top)); inset-inline-end: 0.75rem; }
 }
 @media (min-width: 640px) {

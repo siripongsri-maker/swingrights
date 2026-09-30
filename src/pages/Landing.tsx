@@ -191,7 +191,7 @@ export default function Landing() {
                 <Button asChild size="lg" variant="outline" className="w-full bg-card text-base">
                   <Link to="/track"><Search className="w-4 h-4" aria-hidden /> {t('landing.cta.trackCode')}</Link>
                 </Button>
-                <Link to="/rights#section-arrest" className="sm:hidden flex min-h-14 items-center gap-3 rounded-[20px] border border-border bg-card px-4 py-2.5 shadow-card transition-colors hover:bg-primary-soft">
+                <Link to="/rights#arrest" className="sm:hidden flex min-h-14 items-center gap-3 rounded-[20px] border border-border bg-card px-4 py-2.5 shadow-card transition-colors hover:bg-primary-soft">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft"><Scale className="w-5 h-5 text-foreground" aria-hidden /></span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-subhead text-sm font-semibold text-foreground">{t('landing.arrested.title')}</span>
@@ -249,7 +249,7 @@ export default function Landing() {
                 const pv = RIGHTS_SECTION_PREVIEW[sec]; const Icon = pv.icon;
                 return (
                   <li key={sec}>
-                    <Link to={`/rights#section-${sec}`} className="flex min-h-16 items-center gap-4 rounded-[20px] bg-card border border-border p-4 shadow-card transition-colors hover:bg-primary-soft">
+                    <Link to={`/rights#${sec}`} className="flex min-h-16 items-center gap-4 rounded-[20px] bg-card border border-border p-4 shadow-card transition-colors hover:bg-primary-soft">
                       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-soft"><Icon className="w-6 h-6 text-foreground" aria-hidden /></span>
                       <span className="flex-1 font-subhead text-base font-semibold text-foreground">{t(pv.labelKey)}</span>
                       <ArrowRight className="w-4 h-4 text-muted-foreground rtl:-scale-x-100" aria-hidden />
