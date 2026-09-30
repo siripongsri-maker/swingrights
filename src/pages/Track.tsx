@@ -328,7 +328,7 @@ export default function Track() {
         )}
 
         <div className="text-center">
-          <Link to="/" className="inline-flex min-h-11 items-center text-sm text-accent underline underline-offset-4">
+          <Link to="/" className="inline-flex min-h-11 items-center px-2 text-sm text-accent underline underline-offset-4">
             {t('common.back')}
           </Link>
         </div>

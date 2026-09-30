@@ -55,7 +55,7 @@ export default function Rights() {
     <div className="min-h-dvh bg-background">
       <div className="bg-background">
         <header className="max-w-5xl mx-auto px-5 pt-7 flex items-center justify-between gap-3">
-          <Link to="/"><BrandHeader /></Link>
+          <Link to="/" className="inline-flex min-h-11 items-center"><BrandHeader /></Link>
           <div className="flex items-center gap-2"><QuickExitSlot /><LanguageToggle /></div>
         </header>
 
@@ -82,7 +82,7 @@ export default function Rights() {
 
           {/* Controls */}
           <div className="mt-6 mb-8 flex items-center justify-between gap-3">
-            <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
+            <Link to="/" className="inline-flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors">
               <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" /> {t('common.back')}
             </Link>
             <Button variant="outline" onClick={toggleAll} aria-pressed={allOpen} className="min-h-11 rounded-full bg-card/70 backdrop-blur">
