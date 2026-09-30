@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ChevronsUpDown, Phone, Share2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -23,6 +23,11 @@ export default function Rights() {
   const { t } = useI18n();
   const [open, setOpen] = useState<string[]>([]);
   const allOpen = open.length === RIGHTS.length;
+  // Jump to /rights#section-… links from the landing page
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (id) window.setTimeout(() => document.getElementById(id)?.scrollIntoView(), 50);
+  }, []);
 
   const toggleAll = () => setOpen(allOpen ? [] : RIGHTS.map((r) => String(r.id)));
 
@@ -78,7 +83,7 @@ export default function Rights() {
           {RIGHTS_SECTIONS.map((section) => {
             const items = RIGHTS.filter((r) => r.section === section);
             return (
-              <section key={section} className="mb-10">
+              <section key={section} id={`section-${section}`} className="mb-10 scroll-mt-6">
                 <h2 className="font-subhead text-xl font-medium mb-4 flex items-center gap-2.5">
                   <span className="w-1.5 h-6 rounded-full bg-primary/70" aria-hidden />
                   {t(SECTION_LABEL_KEYS[section])}

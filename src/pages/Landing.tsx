@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEffect as useEff2, useState as useSt2 } from 'react';
-import { ShieldCheck, Search, ArrowRight, Lock, HeartHandshake, Sparkles, Users, Eye, MousePointerClick, Scale, ChevronLeft, ChevronRight, AudioWaveform, AudioLines, Menu, Home, Phone, MoreHorizontal } from 'lucide-react';
+import { ShieldCheck, Search, ArrowRight, Lock, HeartHandshake, Scale, AudioWaveform, AudioLines, Menu, Home, Phone, MoreHorizontal, BadgeCheck, UserX } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { PdpaConsent } from '@/components/PdpaConsent';
 import { cn } from '@/lib/utils';
@@ -11,39 +11,21 @@ import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { Reveal } from '@/components/Reveal';
 import { useI18n } from '@/i18n';
 import { supabase } from '@/integrations/supabase/client';
-import { RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
+import { RIGHTS, RIGHTS_SECTIONS, type RightsSectionId } from '@/data/rights';
 import { HOTLINES } from '@/data/hotlines';
 import { BrandHeader, BrandLockup } from '@/components/BrandLogo';
 import { PartnerBar } from '@/components/PartnerBar';
+
+const SWING_LINES = [
+  { number: '02-632-9501', labelKey: 'landing.hl.silom' },
+  { number: '038-412-297', labelKey: 'landing.hl.pattaya' },
+];
 
 const RIGHTS_SECTION_PREVIEW: Record<RightsSectionId, { labelKey: string; icon: typeof ShieldCheck }> = {
   arrest: { labelKey: 'landing.rightsPreview.arrest', icon: ShieldCheck },
   investigation: { labelKey: 'rights.section.investigation', icon: Scale },
   detention: { labelKey: 'rights.section.detention', icon: HeartHandshake },
 };
-
-/** Eases a number from 0 → target on mount (used for the stats card). */
-function CountUp({ to }: { to: number }) {
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const p = Math.min(1, (now - start) / 1100);
-      setN(Math.round(to * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [to]);
-  return <>{n}</>;
-}
-
-interface SiteStats {
-  registered_users: number;
-  unique_visitors: number;
-  total_visits: number;
-}
 
 function getSessionId() {
   try {
@@ -66,8 +48,6 @@ export default function Landing() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSignedIn(!!s));
     return () => sub.subscription.unsubscribe();
   }, []);
-  const [stats, setStats] = useState<SiteStats>({ registered_users: 0, unique_visitors: 0, total_visits: 0 });
-  const [rightsSectionIndex, setRightsSectionIndex] = useState(0);
   const [tab, setTab] = useState<'home' | 'rights' | 'help' | 'more'>('home');
   const [menuOpen, setMenuOpen] = useState(false);
   const show = (k: typeof tab) => (tab === k ? 'block' : 'hidden sm:block');
@@ -81,12 +61,6 @@ export default function Landing() {
     });
   };
 
-  const showPreviousRight = () => setRightsSectionIndex((current) => (current - 1 + RIGHTS_SECTIONS.length) % RIGHTS_SECTIONS.length);
-  const showNextRight = () => setRightsSectionIndex((current) => (current + 1) % RIGHTS_SECTIONS.length);
-  const featuredSection = RIGHTS_SECTIONS[rightsSectionIndex];
-  const sectionPreview = featuredSection ? RIGHTS_SECTION_PREVIEW[featuredSection] : undefined;
-  const FeaturedSectionIcon = sectionPreview?.icon;
-
   useEffect(() => {
     let mounted = true;
     const sessionId = getSessionId();
@@ -99,13 +73,6 @@ export default function Landing() {
           _path: window.location.pathname,
         });
 
-        // ดึงสถิติจาก Edge Function
-        const { data, error } = await supabase.functions.invoke('site-stats', { method: 'GET' });
-        if (!mounted || error) return;
-        const s = data as SiteStats | null;
-        if (s && typeof s.registered_users === 'number') {
-          setStats(s);
-        }
       } catch {
         // ไม่บล็อกหน้า Landing หากสถิติไม่พร้อมใช้งานชั่วคราว
       }
@@ -114,11 +81,6 @@ export default function Landing() {
     return () => {
       mounted = false;
     };
-  }, []);
-
-  useEffect(() => {
-    const timer = window.setInterval(showNextRight, 6000);
-    return () => window.clearInterval(timer);
   }, []);
 
   return (
@@ -135,7 +97,7 @@ export default function Landing() {
         </div>
       )}
       <div className="relative flex-1 min-h-0 flex flex-col sm:block overflow-hidden bg-transparent">
-        <header className="relative shrink-0 max-w-5xl w-full mx-auto px-4 sm:px-5 pt-4 sm:pt-7 flex items-center justify-between gap-3">
+        <header className="relative shrink-0 max-w-[1120px] w-full mx-auto px-4 sm:px-6 pt-4 sm:pt-7 flex items-center justify-between gap-3">
           <BrandHeader />
           <div className="hidden sm:flex items-center gap-3">
             <button
@@ -202,138 +164,156 @@ export default function Landing() {
           </div>
         </header>
 
-        <main className="relative flex-1 min-h-0 overflow-y-auto sm:overflow-visible max-w-5xl w-full mx-auto px-4 sm:px-5 pt-4 sm:pt-14 pb-6 sm:pb-16">
-          <div className={cn(show('home'), 'h-full sm:h-auto')}><div className="h-full flex flex-col justify-center sm:grid sm:grid-cols-[1.15fr_0.85fr] items-center gap-6 sm:gap-10 animate-slide-up">
-            <div className="text-center sm:text-start rounded-[1.25rem] bg-background/90 p-2 sm:p-4">
-              <BrandLockup className="mx-auto mb-5 sm:mb-7 sm:mx-0" />
-              <span className="inline-flex items-center gap-1.5 bg-card border border-border text-foreground text-xs font-semibold px-3.5 py-1.5 rounded-full mb-5">
-                <Sparkles className="w-3 h-3" /> {t('landing.badge')}
-              </span>
-              <h1 className="font-display text-[2rem] leading-tight sm:text-4xl sm:text-[2.75rem] font-bold leading-[1.1] text-balance mb-4">
-                {t('landing.title1')}<br />
-                 <span>{t('landing.title2')}</span>
+        <main className="relative flex-1 min-h-0 overflow-y-auto sm:overflow-visible max-w-[1120px] w-full mx-auto px-4 sm:px-6 pt-3 sm:pt-14 pb-6 sm:pb-16">
+          {/* Home: hero */}
+          <section className={cn(show('home'), 'sm:grid sm:grid-cols-[1.1fr_0.9fr] sm:items-center sm:gap-10 animate-slide-up')}>
+            <div className="rounded-[20px] bg-background/90 sm:p-2">
+              <BrandLockup className="hidden sm:flex mb-7" />
+              <ul className="flex flex-wrap gap-2 mb-4" aria-label={t('landing.trust.private')}>
+                {([[BadgeCheck, 'landing.trust.free'], [Lock, 'landing.trust.private'], [UserX, 'landing.trust.noSignup']] as const).map(([Icon, k]) => (
+                  <li key={k} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold text-foreground">
+                    <Icon className="w-3.5 h-3.5 text-accent" aria-hidden /> {t(k)}
+                  </li>
+                ))}
+              </ul>
+              <h1 className="font-display font-bold mb-3">
+                {t('landing.title1')}<br /><span>{t('landing.title2')}</span>
               </h1>
-              <p className="text-base text-muted-foreground max-w-lg mx-auto sm:mx-0 text-balance leading-relaxed mb-6 sm:mb-8">
-                {t('landing.subtitle')}
-              </p>
+              <p className="text-base text-muted-foreground max-w-lg text-pretty mb-5 sm:mb-8">{t('landing.subtitle2')}</p>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center sm:justify-start w-full max-w-sm mx-auto sm:max-w-none sm:mx-0">
-                <Link to="/report" className="block w-full sm:w-auto min-w-0">
-                  <Button size="lg" variant="action" className="shadow-elegant text-base w-full sm:w-auto">
-                    <HeartHandshake className="w-4 h-4" /> {t('landing.cta.report')} <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
-                  </Button>
-                </Link>
-                <Link to="/track" className="block w-full sm:w-auto min-w-0">
-                  <Button size="lg" variant="outline" className="bg-card text-base w-full sm:w-auto">
-                    <Search className="w-4 h-4" /> {t('landing.cta.track')}
-                  </Button>
+              <div className="flex flex-col gap-3 w-full sm:max-w-md">
+                <Button asChild size="lg" variant="action" className="w-full min-h-14 flex-col gap-0 shadow-elegant">
+                  <Link to="/report">
+                    <span className="inline-flex items-center gap-2 text-base"><HeartHandshake className="w-5 h-5" aria-hidden /> {t('landing.cta.start2')}</span>
+                    <span className="text-[13px] font-normal opacity-95">{t('landing.cta.startSub')}</span>
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="w-full bg-card text-base">
+                  <Link to="/track"><Search className="w-4 h-4" aria-hidden /> {t('landing.cta.trackCode')}</Link>
+                </Button>
+                <Link to="/rights#section-arrest" className="sm:hidden flex min-h-14 items-center gap-3 rounded-[20px] border border-border bg-card px-4 py-2.5 shadow-card transition-colors hover:bg-primary-soft">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft"><Scale className="w-5 h-5 text-foreground" aria-hidden /></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-subhead text-sm font-semibold text-foreground">{t('landing.arrested.title')}</span>
+                    <span className="block text-xs text-muted-foreground">{t('landing.arrested.sub')}</span>
+                  </span>
+                  <ArrowRight className="w-4 h-4 shrink-0 text-muted-foreground rtl:-scale-x-100" aria-hidden />
                 </Link>
               </div>
             </div>
 
-          </div></div>
+            {/* Desktop: first rights card */}
+            <aside className="hidden sm:block rounded-[20px] bg-card border border-border p-6 shadow-card">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft"><Scale className="w-5 h-5 text-foreground" aria-hidden /></span>
+                <h2 className="font-subhead font-semibold">{t('landing.arrested.title')}</h2>
+              </div>
+              <ol className="space-y-2.5 mb-4">
+                {RIGHTS.slice(0, 3).map((r, i) => (
+                  <li key={r.id} className="flex gap-3 rounded-2xl bg-background px-3.5 py-3 text-sm text-foreground">
+                    <span className="font-mono tabular-nums text-accent font-semibold">{i + 1}</span>
+                    <span>{r.title}</span>
+                  </li>
+                ))}
+              </ol>
+              <Link to="/rights" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
+                {t('landing.arrested.all').replace('{n}', String(RIGHTS.length))} <ArrowRight className="w-4 h-4 rtl:-scale-x-100" aria-hidden />
+              </Link>
+            </aside>
+          </section>
 
-          {/* Bento grid — revealed on scroll */}
-          <section className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:mt-14">
-              <article className={cn(show('rights'), "sm:col-span-2 relative overflow-hidden rounded-[20px] bg-card border border-border p-6 shadow-card")} aria-roledescription="carousel" aria-label={t('landing.rightsPreview.title')}>
-                <div className="flex items-start justify-between gap-4 mb-5">
-                  <div>
-                    <p className="font-subhead text-base sm:text-lg font-semibold text-primary mb-1">{t('rights.nav')}</p>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button type="button" size="icon" variant="ghost" className="h-11 w-11 rounded-full" onClick={showPreviousRight} aria-label={t('landing.rightsPreview.previous')}>
-                      <ChevronLeft className="w-5 h-5 rtl:-scale-x-100" />
-                    </Button>
-                    <Button type="button" size="icon" variant="ghost" className="h-11 w-11 rounded-full" onClick={showNextRight} aria-label={t('landing.rightsPreview.next')}>
-                      <ChevronRight className="w-5 h-5 rtl:-scale-x-100" />
-                    </Button>
-                  </div>
-                </div>
+          {/* Desktop: what you can do here */}
+          <section className="hidden sm:block mt-16" aria-labelledby="what-title">
+            <h2 id="what-title" className="font-subhead font-semibold mb-5">{t('landing.what.title')}</h2>
+            <div className="grid grid-cols-3 gap-4">
+              {([
+                ['/report', HeartHandshake, 'landing.what.report', 'landing.what.reportBody'],
+                ['/track', Search, 'landing.what.track', 'landing.what.trackBody'],
+                ['/rights', Scale, 'landing.what.rights', 'landing.what.rightsBody'],
+              ] as const).map(([to, Icon, k, b]) => (
+                <Link key={to} to={to} className="group rounded-[20px] bg-card border border-border p-5 shadow-card transition-colors hover:bg-primary-soft">
+                  <Icon className="w-6 h-6 text-accent mb-3" aria-hidden />
+                  <p className="font-subhead text-base font-semibold text-foreground">{t(k)}</p>
+                  <p className="text-sm text-muted-foreground">{t(b)}</p>
+                  <ArrowRight className="mt-3 w-4 h-4 text-foreground rtl:-scale-x-100" aria-hidden />
+                </Link>
+              ))}
+            </div>
+          </section>
 
-                {featuredSection && sectionPreview && FeaturedSectionIcon && (
-                  <div className="min-h-[9.5rem]" aria-live="polite" aria-atomic="true">
-                    <div className="flex items-center gap-5">
-                      <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[20px] bg-primary-soft text-foreground sm:h-24 sm:w-24">
-                        <FeaturedSectionIcon className="h-10 w-10 sm:h-12 sm:w-12" strokeWidth={2} aria-hidden="true" />
-                      </span>
-                      <h2 className="font-subhead text-2xl font-semibold leading-snug sm:text-3xl">{t(sectionPreview.labelKey)}</h2>
-                    </div>
-                  </div>
-                )}
+          {/* Mobile tab: rights */}
+          <section className={cn(tab === 'rights' ? 'block' : 'hidden', 'sm:hidden')} aria-labelledby="m-rights-title">
+            <h2 id="m-rights-title" className="font-subhead font-semibold mb-4">{t('rights.nav')}</h2>
+            <ul className="space-y-3">
+              {RIGHTS_SECTIONS.map((sec) => {
+                const pv = RIGHTS_SECTION_PREVIEW[sec]; const Icon = pv.icon;
+                return (
+                  <li key={sec}>
+                    <Link to={`/rights#section-${sec}`} className="flex min-h-16 items-center gap-4 rounded-[20px] bg-card border border-border p-4 shadow-card transition-colors hover:bg-primary-soft">
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-soft"><Icon className="w-6 h-6 text-foreground" aria-hidden /></span>
+                      <span className="flex-1 font-subhead text-base font-semibold text-foreground">{t(pv.labelKey)}</span>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground rtl:-scale-x-100" aria-hidden />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            <Link to="/rights" className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-accent">
+              {t('landing.arrested.all').replace('{n}', String(RIGHTS.length))} <ArrowRight className="w-4 h-4 rtl:-scale-x-100" aria-hidden />
+            </Link>
+          </section>
 
-                <div className="flex items-center justify-between gap-4 mt-3">
-                  <span className="text-xs text-muted-foreground tabular-nums">{rightsSectionIndex + 1} / {RIGHTS_SECTIONS.length}</span>
-                   <Link to="/rights" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-foreground hover:text-muted-foreground transition-colors">
-                    {t('landing.rightsPreview.all')} <ArrowRight className="w-4 h-4 rtl:-scale-x-100" />
-                  </Link>
-                </div>
-              </article>
-
-
-              <article className={cn(show('more'), "rounded-[20px] bg-card border border-border p-5 shadow-card hover-lift")}>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
-                      <Users className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-display text-2xl font-medium text-primary tabular-nums leading-none">
-                        <CountUp to={stats.registered_users} />
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t('landing.stats.registered')}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
-                      <Eye className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-display text-2xl font-medium text-primary tabular-nums leading-none">
-                        <CountUp to={stats.unique_visitors} />
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t('landing.stats.visitors')}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-primary-soft flex items-center justify-center shrink-0">
-                      <MousePointerClick className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-display text-2xl font-medium text-primary tabular-nums leading-none">
-                        <CountUp to={stats.total_visits} />
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t('landing.stats.visits')}</p>
-                    </div>
-                  </div>
-                </div>
-              </article>
-
-              <article className={cn(show('help'), "sm:col-span-3 rounded-[20px] bg-card border border-border p-5 sm:p-6 shadow-card hover-lift")}>
-                <h2 className="font-subhead text-lg font-semibold text-foreground mb-3">{t('landing.help.title')}</h2>
+          {/* Hotlines: mobile tab, desktop grid */}
+          <section className={cn(show('help'), 'sm:mt-16')} aria-labelledby="hl-title">
+            <h2 id="hl-title" className="font-subhead font-semibold mb-4">{t('landing.help.title')}</h2>
+            {([
+              ['landing.hl.swing', SWING_LINES],
+              ['landing.hl.public', HOTLINES.map((h) => ({ number: h.number, labelKey: h.labelKey }))],
+            ] as const).map(([gk, rows]) => (
+              <div key={gk} className="mb-5">
+                <h3 className="text-xs font-semibold text-muted-foreground mb-2">{t(gk)}</h3>
                 <ul className="grid gap-2 sm:grid-cols-2">
-                  {HOTLINES.map((h) => (
-                    <li key={h.number} className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background px-3.5 py-2.5">
-                      <span className="min-w-0 text-sm text-muted-foreground leading-snug">{t(h.labelKey)}</span>
-                      <a
-                        href={`tel:${h.number}`}
-                        className="shrink-0 font-display text-lg font-semibold tabular-nums text-primary underline-offset-4 hover:underline"
-                      >
-                        {h.number}
+                  {rows.map((h) => (
+                    <li key={h.number}>
+                      <a href={`tel:${h.number.replace(/-/g, '')}`} aria-label={`${t('landing.hl.call')} ${t(h.labelKey)} ${h.number}`}
+                        className="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-2.5 shadow-card transition-colors hover:bg-primary-soft">
+                        <span className="min-w-0 text-sm text-foreground">{t(h.labelKey)}</span>
+                        <span className="inline-flex shrink-0 items-center gap-2 font-mono text-xl font-semibold tabular-nums text-foreground">
+                          {h.number} <Phone className="w-4 h-4 text-accent" aria-hidden />
+                        </span>
                       </a>
                     </li>
                   ))}
                 </ul>
-                <p className="mt-3 text-xs text-muted-foreground">{t('landing.help.hours')}</p>
-              </article>
-            </section>
-          <footer className={cn(show('more'), "sm:hidden mt-4 text-center text-xs text-muted-foreground")}>
-            <PartnerBar className="mb-4 text-start" />
-            © มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) · <Link to="/privacy" className="hover:text-foreground">{t('landing.footer')}</Link>
-          </footer>
+              </div>
+            ))}
+            <p className="text-xs text-muted-foreground">{t('landing.help.hours')}</p>
+          </section>
+
+          {/* Mobile tab: more */}
+          <section className={cn(tab === 'more' ? 'block' : 'hidden', 'sm:hidden space-y-3')}>
+            <Link to={signedIn ? '/me' : '/signin'} className="flex min-h-14 items-center justify-between rounded-2xl border border-border bg-card px-4 font-semibold text-foreground shadow-card">
+              {signedIn ? t('cl.nav.account') : t('cl.nav.signin')} <ArrowRight className="w-4 h-4 rtl:-scale-x-100" aria-hidden />
+            </Link>
+            <Link to="/admin/login" className="flex min-h-14 items-center justify-between rounded-2xl border border-border bg-card px-4 text-foreground shadow-card">
+              <span className="inline-flex items-center gap-2"><Lock className="w-4 h-4" aria-hidden /> {t('nav.staff')}</span> <ArrowRight className="w-4 h-4 rtl:-scale-x-100" aria-hidden />
+            </Link>
+            <div className="flex items-center gap-3">
+              <LanguageToggle />
+              <button type="button" onClick={toggleWave} aria-pressed={waveOn}
+                aria-label={waveOn ? t('landing.wave.off') : t('landing.wave.on')}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground transition-colors">
+                {waveOn ? <AudioWaveform className="w-4 h-4" /> : <AudioLines className="w-4 h-4" />}
+              </button>
+            </div>
+            <Link to="/privacy" className="inline-flex min-h-11 items-center text-sm font-semibold text-accent">{t('landing.footer')}</Link>
+            <PartnerBar className="text-start" />
+            <p className="text-xs text-muted-foreground">© มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)</p>
+          </section>
         </main>
       </div>
 
-      <footer className="hidden sm:block max-w-5xl mx-auto px-5 py-8 text-center text-xs text-muted-foreground">
+      <footer className="hidden sm:block max-w-[1120px] mx-auto px-6 pt-16 pb-8 text-center text-xs text-muted-foreground">
         <PartnerBar className="mb-6 text-start" />
         © มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) · <Link to="/privacy" className="hover:text-foreground">{t('landing.footer')}</Link>
       </footer>
