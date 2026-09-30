@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Loader2, Search, MessageCircleQuestion, Send, ShieldCheck, Inbox, MessagesSquare, CheckCircle2 } from 'lucide-react';
+import { Loader2, Search, MessageCircleQuestion, Send, ChevronDown, ArrowRight, Inbox, MessagesSquare, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
 import { StatusBadge } from '@/components/screening/StatusBadge';
@@ -9,6 +9,7 @@ import { VoiceRecorder } from '@/components/VoiceRecorder';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
 import type { CaseStatus } from '@/lib/screening';
@@ -25,6 +26,13 @@ const toStatus = (s: string): CaseStatus =>
     : s === 'cancelled' ? 'cancelled' : 'received';
 
 const FN = 'track-case';
+
+/** Normalise typed/pasted codes: uppercase, drop spaces, auto "SW-" prefix. */
+const formatCode = (v: string) => {
+  let raw = v.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (raw.startsWith('SW')) raw = raw.slice(2);
+  return raw ? `SW-${raw}` : '';
+};
 
 interface TrackData {
   case_code: string;
@@ -61,22 +69,26 @@ function StatsChart() {
   const max = Math.max(1, ...(stats ? rows.map((r) => stats[r.key]) : [1]));
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-card">
-      <h2 className="font-subhead text-sm font-semibold">{t('track.stats.title')}</h2>
-      <div className="space-y-2.5">
+    <Collapsible className="rounded-2xl border border-border bg-card shadow-card">
+      <CollapsibleTrigger className="group flex w-full min-h-12 items-center justify-between gap-2 px-4 py-2 text-start rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <h2 className="font-subhead text-sm font-semibold">{t('track.stats.title')}</h2>
+        <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" aria-hidden />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+      <div className="space-y-2.5 px-4 pb-4">
         {rows.map((r, i) => {
           const n = stats?.[r.key] ?? 0;
           return (
             <div key={r.key} className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+              <div className="flex items-center justify-between text-sm">
+                <span className="inline-flex items-center gap-1.5 text-foreground">
                   <r.icon className="h-3.5 w-3.5" /> {r.label}
                 </span>
                 <span className="font-mono font-semibold tabular-nums">
-                  {stats ? n : '—'} <span className="font-normal text-muted-foreground">{t('track.stats.unit')}</span>
+                  {stats ? n : '-'} <span className="font-normal text-muted-foreground">{t('track.stats.unit')}</span>
                 </span>
               </div>
-              <div className="h-2.5 rounded-full bg-primary-soft overflow-hidden">
+              <div className="h-2.5 rounded-full bg-primary-soft overflow-hidden" role="img" aria-label={`${r.label}: ${stats ? n : '-'} ${t('track.stats.unit')}`}>
                 <div
                   className={`h-full rounded-full ${r.bar} transition-all duration-700 ease-out`}
                   style={{ width: stats ? `${Math.max(4, (n / max) * 100)}%` : '4%', transitionDelay: `${i * 120}ms` }}
@@ -86,14 +98,15 @@ function StatsChart() {
           );
         })}
       </div>
-    </section>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
 export default function Track() {
   const { t } = useI18n();
   const [params] = useSearchParams();
-  const [code, setCode] = useState((params.get('code') || '').toUpperCase());
+  const [code, setCode] = useState(formatCode(params.get('code') || ''));
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<TrackData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -109,14 +122,14 @@ export default function Track() {
       if (fnErr) throw fnErr;
       if ((d as { error?: string })?.error === 'not_found' || !d) {
         setData(null);
-        setError(t('track.notfound'));
+        setError(t('track.notfoundHint'));
       } else {
         setData(d as TrackData);
         setAnswers({});
       }
     } catch {
       setData(null);
-      setError(t('track.notfound'));
+      setError(t('track.notfoundHint'));
     } finally {
       setLoading(false);
     }
@@ -171,32 +184,39 @@ export default function Track() {
           <p className="text-sm text-muted-foreground">{t('track.subtitle')}</p>
         </header>
 
-        <StatsChart />
-
-        <div className="flex gap-2">
-          <Input
-            value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="SW-XXXXXXXX"
-            className="font-mono tracking-widest h-12 rounded-xl text-base"
-            maxLength={20}
-            onKeyDown={(e) => e.key === 'Enter' && void lookup(code)}
-            aria-label={t('track.title')}
-          />
-          <Button variant="action" size="lg" className="h-12 rounded-xl px-5" onClick={() => void lookup(code)} disabled={loading || !code.trim()}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Search className="w-4 h-4 me-1.5" />{t('track.search.button')}</>}
-          </Button>
+        <div className="space-y-2">
+          <label htmlFor="track-code" className="block text-sm font-semibold">{t('track.codeLabel')}</label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              id="track-code"
+              value={code}
+              onChange={(e) => setCode(formatCode(e.target.value))}
+              placeholder="SW-XXXXXXXX"
+              inputMode="text"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              className="font-mono uppercase tracking-widest h-12 rounded-xl text-base"
+              maxLength={24}
+              onKeyDown={(e) => e.key === 'Enter' && void lookup(code)}
+              aria-invalid={!!error}
+              aria-describedby="track-error"
+            />
+            <Button variant="action" size="lg" className="h-12 w-full sm:w-auto rounded-xl px-5" onClick={() => void lookup(code)} disabled={loading || code.length < 4}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Search className="w-4 h-4 me-1.5" />{t('track.search.button')}</>}
+            </Button>
+          </div>
+          <p id="track-error" aria-live="polite" className="min-h-5 text-sm font-medium text-destructive">{error ?? ''}</p>
         </div>
 
-        {error && <p className="text-sm text-destructive text-center py-3 animate-fade-in">{error}</p>}
-
-        {!data && !error && !loading && (
-          <div className="py-2 text-center animate-fade-in">
-            <span className="mx-auto flex h-24 w-24 items-center justify-center rounded-[20px] border border-border bg-accent-soft text-accent">
-              <ShieldCheck className="h-10 w-10" />
-            </span>
-          </div>
+        {!data && (
+          <p className="text-sm text-muted-foreground">
+            {t('track.recoverHint')}{' '}
+            <Link to="/recover" className="inline-flex min-h-11 items-center font-semibold text-accent underline underline-offset-4">{t('track.recoverLink')}</Link>
+          </p>
         )}
+
+        <StatsChart />
 
         {data && (
           <div className="space-y-5 animate-fade-in">
@@ -204,14 +224,23 @@ export default function Track() {
               <div>
                 <p className="font-mono text-sm font-semibold tracking-wider">{data.case_code}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {data.area ?? '—'} · {t('track.savedAt')} {formatDateTime(data.created_at)}
+                  {data.area ?? '-'} · {t('track.savedAt')} {formatDateTime(data.created_at)}
                 </p>
               </div>
               <StatusBadge value={toStatus(data.cancelled ? 'cancelled' : data.status)} />
             </div>
             {data.cancelled && (
-              <p className="text-xs text-center text-muted-foreground">{t('track.cancelled')}</p>
+              <p className="text-sm text-center text-muted-foreground">{t('track.cancelled')}</p>
             )}
+            {(() => {
+              const st = toStatus(data.cancelled ? 'cancelled' : data.status);
+              return (
+                <div className="flex items-start gap-3 rounded-2xl border border-accent/30 bg-accent-soft p-4">
+                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-accent rtl:-scale-x-100" aria-hidden />
+                  <p className="text-sm leading-relaxed"><span className="font-semibold">{t('track.nextTitle')}:</span> {t(`track.next.${st}`)}</p>
+                </div>
+              );
+            })()}
 
             {data.files && (data.files.audio.length > 0 || data.files.photos.length > 0) && (
               <div className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-card">
@@ -288,11 +317,9 @@ export default function Track() {
                 {data.timeline.map((tItem, i) => (
                   <li key={i} className="ms-4 animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
                     <span className="absolute -start-[7px] mt-1 w-3 h-3 rounded-full bg-accent border-2 border-background animate-pop" style={{ animationDelay: `${i * 80 + 150}ms` }} />
-                    <p className="text-sm font-medium">
-                      <StatusBadge value={toStatus(tItem.status)} />
-                    </p>
-                    {tItem.note && <p className="text-xs text-muted-foreground mt-0.5">{tItem.note}</p>}
-                    <p className="text-xs text-muted-foreground">{formatDateTime(tItem.created_at)}</p>
+                    <p className="font-mono text-xs text-muted-foreground">{formatDateTime(tItem.created_at)}</p>
+                    <div className="mt-1"><StatusBadge value={toStatus(tItem.status)} /></div>
+                    {tItem.note && <p className="text-sm text-foreground mt-1">{tItem.note}</p>}
                   </li>
                 ))}
               </ol>
@@ -301,8 +328,8 @@ export default function Track() {
         )}
 
         <div className="text-center">
-          <Link to="/" className="text-xs text-accent underline underline-offset-4">
-            ← {t('common.back')}
+          <Link to="/" className="inline-flex min-h-11 items-center text-sm text-accent underline underline-offset-4">
+            {t('common.back')}
           </Link>
         </div>
       </div>
