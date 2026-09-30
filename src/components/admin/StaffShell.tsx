@@ -138,19 +138,27 @@ export function StaffShell({ children, title, context, actions }: {
       </aside>
 
       <div className="min-w-0 flex-1 pb-[calc(64px+env(safe-area-inset-bottom))] lg:pb-0">
-        <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-          <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
-            <BrandMark className="h-9 w-9 shrink-0 lg:hidden" />
-            <div className="min-w-0 flex-1">
-              {title && <h1 className="font-subhead text-xl font-semibold leading-snug sm:text-2xl text-balance">{title}</h1>}
-              {context && <p className="text-sm text-muted-foreground">{context}</p>}
+        {title || actions ? (
+          <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+            <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
+              <BrandMark className="h-9 w-9 shrink-0 lg:hidden" />
+              <div className="min-w-0 flex-1">
+                {title && <h1 className="font-subhead text-xl font-semibold leading-snug sm:text-2xl text-balance">{title}</h1>}
+                {context && <p className="text-sm text-muted-foreground">{context}</p>}
+              </div>
+              {actions && <div className="hidden sm:flex items-center gap-2">{actions}</div>}
+              <QuickExitSlot />
             </div>
-            {actions && <div className="hidden sm:flex items-center gap-2">{actions}</div>}
+            {actions && <div className="flex flex-wrap items-center gap-2 px-4 pb-3 sm:hidden">{actions}</div>}
+          </header>
+        ) : (
+          // Pages with their own header: only a small phone row for Quick Exit.
+          <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2 sm:hidden">
+            <BrandMark className="h-9 w-9 shrink-0" />
             <QuickExitSlot />
           </div>
-          {actions && <div className="flex flex-wrap items-center gap-2 px-4 pb-3 sm:hidden">{actions}</div>}
-        </header>
-        <main className="mx-auto max-w-6xl px-4 py-5 sm:px-6">{children}</main>
+        )}
+        {title || actions ? <main className="mx-auto max-w-6xl px-4 py-5 sm:px-6">{children}</main> : <main>{children}</main>}
       </div>
 
       <nav
