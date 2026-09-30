@@ -66,16 +66,15 @@ export function QuickExit({ wipeDraft = true }: { wipeDraft?: boolean }) {
     <button
       type="button"
       onClick={() => void escape(wipeDraft)}
-      aria-label={t('guard.quickExitAria')}
       aria-describedby="sw-qe-hint"
       className={cn(
         'sw-quick-exit inline-flex items-center justify-center gap-1.5 rounded-full bg-danger text-danger-foreground font-semibold shadow-elegant transition-[background-color,transform] duration-150 ease-out hover:bg-danger/90 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-        slot ? 'relative z-[60] h-10 min-w-11 px-3 text-sm shrink-0' : 'sw-quick-exit-float fixed z-50 h-10 min-w-11 px-3 text-sm sm:h-12 sm:px-4',
+        slot ? 'relative z-[60] h-11 min-w-11 px-3 text-sm shrink-0' : 'sw-quick-exit-float fixed z-50 h-11 min-w-11 px-3 text-sm sm:h-12 sm:px-4',
       )}
     >
       <X className="h-4 w-4 shrink-0" aria-hidden />
       <span>{t('guard.quickExit')}</span>
-      <span id="sw-qe-hint" className="sr-only">{t('guard.quickExitHint')}</span>
+      <span id="sw-qe-hint" className="sr-only">{t('guard.quickExitAria')}. {t('guard.quickExitHint')}</span>
     </button>
   );
 

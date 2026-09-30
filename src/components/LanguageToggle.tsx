@@ -23,9 +23,9 @@ export const LanguageToggle = forwardRef<HTMLButtonElement, { className?: string
         <button
           ref={ref}
           type="button"
-          aria-label="Language / ภาษา"
+          aria-label={`${current?.short ?? lang.toUpperCase()}, Language / ภาษา`}
           className={cn(
-            'inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-primary-soft hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            'inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-primary-soft hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
             className,
           )}
         >

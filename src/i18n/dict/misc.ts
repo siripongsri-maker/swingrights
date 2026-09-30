@@ -7,6 +7,7 @@ import type { Entry } from '../index';
  * USER-FACING: all 5 languages (th/en/my/km/lo) required for every key.
  */
 export const MISC_DICT: Record<string, Entry> = {
+  'recover.refresh': { th: 'โหลดรายการใหม่', en: 'Refresh list', my: 'စာရင်းကို ပြန်လည်ဖွင့်ရန်', km: 'ផ្ទុកបញ្ជីឡើងវិញ', lo: 'ໂຫຼດລາຍການໃໝ່' },
   // ---------- Track polish ----------
   'track.codeLabel': { th: 'รหัสเคส', en: 'Case code', my: 'အမှုကုတ်', km: 'លេខកូដករណី', lo: 'ລະຫັດເຄສ' },
   'track.notfoundHint': { th: 'ไม่พบรหัสนี้ ลองเช็กตัวอักษรอีกครั้ง', en: 'Code not found. Please check the letters again.', my: 'ဤကုတ်ကို မတွေ့ပါ။ စာလုံးများကို ပြန်စစ်ပါ။', km: 'រកមិនឃើញលេខកូដនេះ។ សូមពិនិត្យអក្សរម្តងទៀត។', lo: 'ບໍ່ພົບລະຫັດນີ້. ລອງກວດຕົວອັກສອນອີກຄັ້ງ.' },
@@ -94,8 +95,8 @@ export const MISC_DICT: Record<string, Entry> = {
     my: 'ဤစက်တွင် နောက်ထပ် {n} ခု တွေ့ရှိသည်', km: 'រកឃើញធាតុបន្ថែម {n} នៅលើឧបករណ៍នេះ', lo: 'ພົບຂໍ້ມູນຄ້າງເພີ່ມ {n} ລາຍການ',
   },
   'recover.sentSuccess': {
-    th: 'ส่งเคสสำเร็จ — รหัส {code}', en: 'Case sent successfully — code {code}',
-    my: 'အမှုပို့ခြင်းအောင်မြင်ပါသည် — ကုတ် {code}', km: 'ផ្ញើករណីបានជោគជ័យ — កូដ {code}', lo: 'ສົ່ງເຄສສຳເລັດ — ລະຫັດ {code}',
+    th: 'ส่งเคสสำเร็จ, รหัส {code}', en: 'Case sent successfully, code {code}',
+    my: 'အမှုပို့ခြင်းအောင်မြင်ပါသည်, ကုတ် {code}', km: 'ផ្ញើករណីបានជោគជ័យ, កូដ {code}', lo: 'ສົ່ງເຄສສຳເລັດ, ລະຫັດ {code}',
   },
   'recover.sendOneFailed': {
     th: 'ส่งไม่สำเร็จ', en: 'Failed to send',

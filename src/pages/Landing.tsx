@@ -315,7 +315,7 @@ export default function Landing() {
 
       <footer className="hidden sm:block max-w-[1120px] mx-auto px-6 pt-16 pb-8 text-center text-xs text-muted-foreground">
         <PartnerBar className="mb-6 text-start" />
-        © มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) · <Link to="/privacy" className="hover:text-foreground">{t('landing.footer')}</Link>
+        © มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) · <Link to="/privacy" className="inline-flex min-h-11 items-center hover:text-foreground">{t('landing.footer')}</Link>
       </footer>
 
       <nav className="sw-bottom-nav sm:hidden relative z-10 shrink-0 border-t border-border bg-card/95 backdrop-blur grid grid-cols-4 pb-[env(safe-area-inset-bottom)]" aria-label={t('home.menu')}>

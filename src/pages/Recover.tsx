@@ -70,13 +70,13 @@ export default function Recover() {
       </div>
 
       <div className="px-4 flex gap-2 pb-4">
-        <Button variant="action" onClick={sendAll} disabled={!items.length || !!busy} className="flex-1 h-10 text-xs">
+        <Button variant="action" onClick={sendAll} disabled={!items.length || !!busy} className="flex-1 h-11 text-sm">
           <UploadCloud className="w-4 h-4" /> {t('recover.sendAll')}
         </Button>
-        <Button onClick={downloadLocalCasesJson} variant="outline" disabled={!items.length} className="h-10 rounded-xl text-xs">
+        <Button onClick={downloadLocalCasesJson} variant="outline" disabled={!items.length} className="h-11 rounded-xl text-sm">
           <Download className="w-4 h-4" /> {t('recover.backupJson')}
         </Button>
-        <Button onClick={refresh} variant="outline" className="h-10 rounded-xl px-3">
+        <Button onClick={refresh} variant="outline" size="icon" aria-label={t('recover.refresh')} className="shrink-0 rounded-xl">
           <RefreshCw className="w-4 h-4" />
         </Button>
       </div>
@@ -110,10 +110,10 @@ export default function Recover() {
             </p>
             {it.error && <p className="text-[11px] text-destructive mt-1 break-words">{t('recover.errorPrefix', { msg: t(it.error) })}</p>}
             <div className="flex gap-2 mt-3">
-              <Button variant="action" onClick={() => sendOne(it.id)} disabled={!!busy} className="flex-1 h-10 text-xs">
+              <Button variant="action" onClick={() => sendOne(it.id)} disabled={!!busy} className="flex-1 h-11 text-sm">
                 {busy === it.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><UploadCloud className="w-3.5 h-3.5" /> {t('recover.sendToSystem')}</>}
               </Button>
-              <Button onClick={() => remove(it.id)} variant="outline" disabled={!!busy} className="h-9 rounded-lg text-xs">
+              <Button onClick={() => remove(it.id)} variant="outline" disabled={!!busy} className="h-11 rounded-lg text-sm">
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>
