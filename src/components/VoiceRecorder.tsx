@@ -177,7 +177,7 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
           {recording && transcript && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{transcript}</p>}
         </div>
         {audioUrl && !recording && (
-          <Button type="button" size="sm" variant="ghost" className="ms-auto text-xs" onClick={reset}>
+          <Button type="button" size="sm" variant="ghost" className="ms-auto min-h-11 text-sm" onClick={reset}>
             <RotateCcw className="w-3.5 h-3.5 me-1" /> {t('common.rerecord')}
           </Button>
         )}
