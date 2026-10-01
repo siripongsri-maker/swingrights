@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Loader2, Search, MessageCircleQuestion, Send, ChevronDown, ArrowRight, Inbox, MessagesSquare, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
@@ -106,7 +106,10 @@ function StatsChart() {
 export default function Track() {
   const { t } = useI18n();
   const [params] = useSearchParams();
-  const [code, setCode] = useState(formatCode(params.get('code') || ''));
+  // Code handed over from the report success screen via router state (kept out of the URL)
+  const stateCode = (useLocation().state as { code?: string } | null)?.code || '';
+  const initialCode = params.get('code') || stateCode;
+  const [code, setCode] = useState(formatCode(initialCode));
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<TrackData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -136,7 +139,7 @@ export default function Track() {
   };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (params.get('code')) void lookup(params.get('code')!); }, []);
+  useEffect(() => { if (initialCode) void lookup(initialCode); }, []);
 
   const sendAnswer = async (qid: string) => {
     const a = answers[qid];
