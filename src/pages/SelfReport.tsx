@@ -1046,7 +1046,7 @@ export default function SelfReport() {
               )}
               <p className="text-xs text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
               <div className="grid gap-1.5">
-                <Button asChild size="lg" variant="action" className="rounded-xl"><Link to="/track">{t('report.success.track')}</Link></Button>
+                <Button asChild size="lg" variant="action" className="rounded-xl"><Link to="/track" state={{ code: caseCode }}>{t('report.success.track')}</Link></Button>
                 <Button asChild size="sm" variant="outline" className="rounded-xl"><Link to="/report" onClick={() => window.location.reload()}>{t('report.success.new')}</Link></Button>
               </div>
               <PartnerBar className="mt-4 text-start" />
