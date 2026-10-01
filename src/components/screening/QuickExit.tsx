@@ -20,7 +20,7 @@ async function escape(wipeDraft: boolean) {
 
 /** Place inside a page header. On phones the Quick Exit button moves into this spot. */
 export function QuickExitSlot({ className }: { className?: string }) {
-  return <div data-qe-slot className={cn('flex sm:hidden empty:hidden', className)} />;
+  return <div data-qe-slot className={cn('flex sm:hidden min-h-11 min-w-11', className)} />;
 }
 
 /** Finds a visible header slot (phones only). Re-checks when the page changes. */
@@ -38,7 +38,15 @@ function useHeaderSlot() {
     mq.addEventListener('change', find);
     return () => { obs.disconnect(); mq.removeEventListener('change', find); };
   }, []);
-  return slot;
+  // When the header scrolls off screen, fall back to the fixed pill so it is always reachable
+  const [inView, setInView] = useState(true);
+  useEffect(() => {
+    if (!slot) { setInView(true); return; }
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.6 });
+    io.observe(slot);
+    return () => io.disconnect();
+  }, [slot]);
+  return slot && inView ? slot : null;
 }
 
 /**
