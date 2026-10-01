@@ -38,7 +38,15 @@ function useHeaderSlot() {
     mq.addEventListener('change', find);
     return () => { obs.disconnect(); mq.removeEventListener('change', find); };
   }, []);
-  return slot;
+  // When the header scrolls off screen, fall back to the fixed pill so it is always reachable
+  const [inView, setInView] = useState(true);
+  useEffect(() => {
+    if (!slot) { setInView(true); return; }
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.6 });
+    io.observe(slot);
+    return () => io.disconnect();
+  }, [slot]);
+  return slot && inView ? slot : null;
 }
 
 /**
