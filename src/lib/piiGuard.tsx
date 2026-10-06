@@ -24,7 +24,7 @@ export function detectPii(...texts: (string | null | undefined)[]): boolean {
 /** Small helper line shown under every free-text field. */
 export function PiiHint({ className = '' }: { className?: string }) {
   const { t } = useI18n();
-  return <p className={`text-[11px] text-muted-foreground mt-1 ${className}`}>{t('pii.hint')}</p>;
+  return <p className={`text-xs leading-relaxed text-muted-foreground mt-1 ${className}`}>{t('pii.hint')}</p>;
 }
 
 /**
@@ -55,7 +55,7 @@ export function usePiiGuard() {
       <AlertDialogContent className="max-w-sm rounded-2xl">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-primary" /> {t('pii.dialog.title')}
+            <ShieldAlert className="w-5 h-5 shrink-0 text-primary" aria-hidden /> {t('pii.dialog.title')}
           </AlertDialogTitle>
           <AlertDialogDescription>{t('pii.dialog.body')}</AlertDialogDescription>
         </AlertDialogHeader>

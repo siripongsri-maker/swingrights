@@ -1,9 +1,10 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, createContext, useContext, useLayoutEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Inbox, FolderOpen, Users, BarChart3, Search, FileText, UserCog, Building2, History, ShieldCheck,
-  Settings, LogOut, Menu, HeartHandshake, type LucideIcon,
+  Settings, LogOut, Menu, HeartHandshake, AlertTriangle, RotateCw, type LucideIcon,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAccess, useRoleLabels } from '@/hooks/useAccess';
@@ -12,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { BrandMark } from '@/components/BrandLogo';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { QuickExitSlot } from '@/components/screening/QuickExit';
+import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 interface Item { to: string; label: string; icon: LucideIcon; count?: number; end?: boolean }
@@ -119,46 +121,98 @@ function NavBody({ onPick }: { onPick?: () => void }) {
   );
 }
 
-/** Staff area frame: sidebar on >=1024px, bottom nav + sheet menu below. */
-export function StaffShell({ children, title, context, actions, bare }: {
-  children: ReactNode; title?: string; context?: string; actions?: ReactNode; bare?: boolean;
-}) {
+type ShellProps = {
+  children: ReactNode; title?: string; context?: ReactNode; actions?: ReactNode; bare?: boolean;
+};
+
+/**
+ * Set by the outer shell so a page can render its own <StaffShell title=...> while App.tsx
+ * already wraps the route in <StaffShell>: the inner one only fills the outer top bar.
+ */
+interface ShellHost { claim: (on: boolean) => void; headEl: HTMLElement | null; actionsEl: HTMLElement | null }
+const ShellHostContext = createContext<ShellHost | null>(null);
+
+function ShellTitle({ title, context }: { title?: string; context?: ReactNode }) {
+  return (
+    <>
+      {title && <h1 className="font-subhead text-xl font-semibold leading-snug sm:text-2xl text-balance">{title}</h1>}
+      {context && <p className="text-sm text-muted-foreground">{context}</p>}
+    </>
+  );
+}
+
+/**
+ * Staff area frame: sidebar on >=1024px, bottom nav + sheet menu below.
+ * The top bar holds the page title, one line of context, page actions and Quick Exit (every width).
+ * Nesting is safe: an inner <StaffShell title=...> renders into the outer one's top bar.
+ */
+export function StaffShell(props: ShellProps) {
+  const host = useContext(ShellHostContext);
+  return host ? <NestedShell host={host} {...props} /> : <RootShell {...props} />;
+}
+
+function NestedShell({ host, children, title, context, actions }: ShellProps & { host: ShellHost }) {
+  const hasHead = !!(title || context || actions);
+  const { claim } = host;
+  useLayoutEffect(() => {
+    if (!hasHead) return;
+    claim(true);
+    return () => claim(false);
+  }, [hasHead, claim]);
+  return (
+    <>
+      {hasHead && host.headEl && createPortal(<ShellTitle title={title} context={context} />, host.headEl)}
+      {actions && host.actionsEl && createPortal(actions, host.actionsEl)}
+      {children}
+    </>
+  );
+}
+
+function RootShell({ children, title, context, actions, bare }: ShellProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const [claimed, setClaimed] = useState(false);
+  const [headEl, setHeadEl] = useState<HTMLDivElement | null>(null);
+  const [actionsEl, setActionsEl] = useState<HTMLDivElement | null>(null);
+  const host = useMemo<ShellHost>(() => ({ claim: setClaimed, headEl, actionsEl }), [headEl, actionsEl]);
+  const titled = !!(title || context || actions) || claimed;
   const bottom = [
     { to: '/admin', label: t('staff.nav.queue'), icon: Inbox, end: true },
     { to: '/admin/cases', label: t('staff.nav.cases'), icon: FolderOpen },
     { to: '/admin/partner-search', label: t('staff.nav.referral'), icon: HeartHandshake },
   ];
   return (
+    <ShellHostContext.Provider value={host}>
     <div className="min-h-dvh bg-background lg:flex">
       <aside className="hidden lg:flex lg:w-[248px] lg:shrink-0 lg:flex-col bg-sidebar text-sidebar-foreground sticky top-0 h-dvh p-4">
         <NavBody />
       </aside>
 
       <div className="min-w-0 flex-1 pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-24">
-        {title || actions ? (
+        {titled ? (
           <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-            <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
+            {/* One row: brand (below lg), title, actions, Quick Exit. On phones the actions wrap to a
+                second row and Quick Exit stays top-right. Actions render once (no duplicate dialogs). */}
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
               <BrandMark className="h-9 w-9 shrink-0 lg:hidden" />
-              <div className="min-w-0 flex-1">
-                {title && <h1 className="font-subhead text-xl font-semibold leading-snug sm:text-2xl text-balance">{title}</h1>}
-                {context && <p className="text-sm text-muted-foreground">{context}</p>}
+              <div ref={setHeadEl} className="min-w-0 flex-1">
+                {(title || context) && <ShellTitle title={title} context={context} />}
               </div>
-              {actions && <div className="hidden sm:flex items-center gap-2">{actions}</div>}
-              <QuickExitSlot />
+              <div ref={setActionsEl} className="order-last flex basis-full flex-wrap items-center gap-2 empty:hidden sm:order-none sm:basis-auto">
+                {actions}
+              </div>
+              <QuickExitSlot always />
             </div>
-            {actions && <div className="flex flex-wrap items-center gap-2 px-4 pb-3 sm:hidden">{actions}</div>}
           </header>
         ) : bare ? null : (
-          // Pages with their own header: only a small phone row for Quick Exit.
+          // Untitled pages: a small phone row for Quick Exit (it floats from 640px).
           <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-2 sm:hidden">
             <BrandMark className="h-9 w-9 shrink-0" />
             <QuickExitSlot />
           </div>
         )}
-        {title || actions ? <main className="mx-auto max-w-6xl px-4 py-5 sm:px-6">{children}</main> : <div>{children}</div>}
+        {bare ? <div>{children}</div> : <main className={cn(titled && 'mx-auto max-w-6xl px-4 py-5 sm:px-6')}>{children}</main>}
       </div>
 
       <nav
@@ -183,12 +237,36 @@ export function StaffShell({ children, title, context, actions, bare }: {
               <Menu className="h-5 w-5" aria-hidden /> <span>{t('staff.nav.menu')}</span>
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[300px] max-w-[85vw] border-sidebar-border bg-sidebar p-4 text-sidebar-foreground" key={pathname}>
+          {/* Built-in top row: Quick Exit at the start (tappable above the overlay), 44px close at the end */}
+          <SheetContent
+            side="left"
+            closeLabel={t('staff.nav.close')}
+            aria-describedby={undefined}
+            className="flex w-[300px] max-w-[85vw] flex-col border-sidebar-border bg-sidebar p-4 text-sidebar-foreground"
+            key={pathname}
+          >
             <SheetHeader className="sr-only"><SheetTitle>{t('staff.nav.menu')}</SheetTitle></SheetHeader>
-            <NavBody onPick={() => setOpen(false)} />
+            <div className="min-h-0 flex-1"><NavBody onPick={() => setOpen(false)} /></div>
           </SheetContent>
         </Sheet>
       </nav>
+    </div>
+    </ShellHostContext.Provider>
+  );
+}
+
+/** Load failure in a staff list or panel: says so plainly (not "nothing found") and offers a retry. */
+export function StaffLoadError({ onRetry, className }: { onRetry: () => void; className?: string }) {
+  const { t } = useI18n();
+  return (
+    <div role="alert" className={cn('flex flex-col gap-3 rounded-2xl border border-destructive/40 bg-sevRed-bg p-4 text-sevRed-fg sm:flex-row sm:items-center', className)}>
+      <p className="flex flex-1 items-center gap-2 text-sm font-medium">
+        <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden />
+        {t('staff.loadError')}
+      </p>
+      <Button type="button" variant="outline" className="h-11 bg-card" onClick={onRetry}>
+        <RotateCw aria-hidden /> {t('staff.retry')}
+      </Button>
     </div>
   );
 }

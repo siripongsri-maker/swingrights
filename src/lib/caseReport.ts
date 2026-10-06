@@ -70,6 +70,9 @@ export interface CaseReportData {
   document_drafts?: Record<string, unknown>;
 }
 
+/** AI risk level as a Thai word, same scale as case severity (ต่ำ / ปานกลาง / สูง) */
+const AI_LEVEL_TH: Record<string, string> = { low: 'ต่ำ', medium: 'ปานกลาง', high: 'สูง' };
+
 /** เอกสารส่งต่อรายเคส (OSCC / ตำรวจ / ทนาย) — พิมพ์เป็น PDF ผ่านเบราว์เซอร์ */
 export function printCaseReport(c: CaseReportData) {
   const p = c.profile || {};
@@ -88,7 +91,7 @@ export function printCaseReport(c: CaseReportData) {
   ${PRINT_FONTS_LINK}
   <style>${BASE_CSS}${PRINT_THEME_CSS}${printCaseCodeCss(c.case_code)}</style></head><body>
   <img class="brand" src="${lockupImg}" alt="SWING RIGHTS" />
-  <h1>มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation) — รายงานเคส (เอกสารส่งต่อ)</h1>
+  <h1>มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation): รายงานเคส (เอกสารส่งต่อ)</h1>
   <div class="sub">รหัสเคส <strong>${esc(c.case_code)}</strong> · รับเรื่อง ${new Date(c.created_at).toLocaleString('th-TH')} · ออกเอกสาร ${new Date().toLocaleString('th-TH')}</div>
 
   <div class="section"><h2>ข้อมูลเคส</h2><table>
@@ -115,13 +118,13 @@ export function printCaseReport(c: CaseReportData) {
   <div class="section"><h2>แบบคัดกรองมาตรฐาน</h2><table>
     <tr><th>2Q (ซึมเศร้า)</th><td>${s.q2Positive === undefined ? '-' : s.q2Positive ? 'ผิดปกติ' : 'ปกติ'}</td></tr>
     <tr><th>9Q คะแนนรวม</th><td>${esc(q9)}</td></tr>
-    <tr><th>ความเสี่ยงทำร้ายตนเอง (9Q ข้อ 9)</th><td>${c.suicide_risk ? 'พบ — ดำเนินการ safety planning + สายด่วน 1323' : 'ไม่พบ'}</td></tr>
-    <tr><th>NRM (ค้ามนุษย์)</th><td>${s.nrmPositive === undefined ? '-' : s.nrmPositive ? 'เข้าข่าย — ส่งต่อทีมสหวิชาชีพ' : 'ยังไม่เข้าเกณฑ์'}${s.nrmUnder18 ? ' · ผู้เยาว์ต่ำกว่า 18 ปี' : ''}</td></tr>
+    <tr><th>ความเสี่ยงทำร้ายตนเอง (9Q ข้อ 9)</th><td>${c.suicide_risk ? 'พบ ดำเนินการ safety planning และสายด่วน 1323' : 'ไม่พบ'}</td></tr>
+    <tr><th>NRM (ค้ามนุษย์)</th><td>${s.nrmPositive === undefined ? '-' : s.nrmPositive ? 'เข้าข่าย ส่งต่อทีมสหวิชาชีพ' : 'ยังไม่เข้าเกณฑ์'}${s.nrmUnder18 ? ' · ผู้เยาว์ต่ำกว่า 18 ปี' : ''}</td></tr>
   </table></div>
 
-  ${c.ai_result ? `<div class="section"><h2>ความเห็นเบื้องต้นจากระบบ AI (เจ้าหน้าที่ทบทวนแล้ว${c.ai_reviewed ? '' : ' — ยังไม่ทบทวน'})</h2>
+  ${c.ai_result ? `<div class="section"><h2>ความเห็นเบื้องต้นจากระบบ AI (${c.ai_reviewed ? 'เจ้าหน้าที่ทบทวนแล้ว' : 'เจ้าหน้าที่ยังไม่ทบทวน'})</h2>
     <table>
-      <tr><th>คะแนนความเสี่ยง</th><td>${esc(c.ai_result.riskScore)} / 100 (${esc(c.ai_result.riskLevel)})</td></tr>
+      <tr><th>คะแนนความเสี่ยง</th><td>${esc(c.ai_result.riskScore)} / 100 (${esc(AI_LEVEL_TH[c.ai_result.riskLevel] ?? c.ai_result.riskLevel)})</td></tr>
       <tr><th>สรุปสถานการณ์</th><td>${esc(c.ai_result.summary)}</td></tr>
       <tr><th>ประเภทการละเมิด</th><td>${esc((c.ai_result.violationTags || []).map((t: any) => t.label).join(' · '))}</td></tr>
       <tr><th>ข้อเสนอแนะ</th><td>${(c.ai_result.recommendations || []).map((r: string) => `• ${esc(r)}`).join('<br/>')}</td></tr>

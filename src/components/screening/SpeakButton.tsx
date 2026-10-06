@@ -41,14 +41,15 @@ export function SpeakButton({ text, className, label }: { text: string; classNam
     <button
       type="button"
       onClick={toggle}
-      aria-label={label ?? t('common.listen') ?? 'Listen'}
+      aria-label={label ?? t('common.listen')}
+      aria-pressed={speaking}
       className={cn(
         'shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition active:scale-95',
         speaking ? 'bg-destructive text-destructive-foreground animate-pulse' : 'bg-primary text-primary-foreground',
         className,
       )}
     >
-      {speaking ? <Square className="w-5 h-5" /> : <Volume2 className="w-6 h-6" />}
+      {speaking ? <Square className="w-5 h-5" aria-hidden /> : <Volume2 className="w-6 h-6" aria-hidden />}
     </button>
   );
 }

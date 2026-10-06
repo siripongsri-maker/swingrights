@@ -737,7 +737,7 @@ function VoiceStep({ onNext }: { onNext: () => void }) {
               <Sparkles className="w-3.5 h-3.5 text-accent-foreground" />
             </div>
             <div className="max-w-[88%] bg-card border border-accent/40 rounded-[20px] rounded-tl-lg px-3.5 py-2.5 shadow-card">
-              <span className="text-[9px] font-medium text-accent tracking-widest">{t('followup.aiAsks')}</span>
+              <span className="text-xs font-medium text-accent">{t('followup.aiAsks')}</span>
               <p className="text-[17px] leading-[26px]">{fq}</p>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <SpeakButton text={fq} />
@@ -873,10 +873,10 @@ function QuestionBubble({ q, index, current }: { q: (typeof QUESTIONS)[number]; 
         <ClipboardList className="w-3.5 h-3.5 text-primary-foreground" />
       </div>
       <div className="max-w-[88%] bg-card border border-border rounded-[20px] rounded-tl-lg px-3.5 py-2.5 shadow-card">
-        <div className="flex items-center gap-1.5 mb-1">
-          <span className="text-[9px] font-medium text-primary tracking-widest">{t('intake.voice.questionNumber', { n: index + 1 })}</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary-soft text-foreground">{t(q.cat as any)}</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-sevYellow-bg text-sevYellow-fg">{q.frame}</span>
+        <div className="flex flex-wrap items-center gap-1.5 mb-1">
+          <span className="text-xs font-medium text-primary">{t('intake.voice.questionNumber', { n: index + 1 })}</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-primary-soft text-foreground">{t(q.cat as any)}</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-sevYellow-bg text-sevYellow-fg">{q.frame}</span>
         </div>
         <p className="text-[17px] leading-[26px]">{t(q.main as any)}</p>
         {current && (
@@ -966,8 +966,8 @@ function AssessStep({ onNext }: { onNext: () => void }) {
               : 'bg-sevRed-bg border-destructive text-sevRed-fg'
               : 'bg-card border-border text-muted-foreground';
             return (
-              <button key={s} onClick={() => set('severity', s)} className={`flex-1 py-2.5 rounded-lg border text-xs font-medium transition flex items-center justify-center gap-1.5 ${cls}`}>
-                <span className={`w-2 h-2 rounded-full ${s === 'green' ? 'bg-success' : s === 'yellow' ? 'bg-warning' : 'bg-danger'}`} />
+              <button key={s} type="button" aria-pressed={active} onClick={() => set('severity', s)} className={`flex-1 min-h-11 py-2.5 rounded-lg border text-sm font-medium transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${cls}`}>
+                <span className={`w-2 h-2 rounded-full ${s === 'green' ? 'bg-success' : s === 'yellow' ? 'bg-warning' : 'bg-danger'}`} aria-hidden />
                 {t(`intake.severity.${s}` as any)}
               </button>
             );
@@ -1126,7 +1126,7 @@ function AIStep({ onNext }: { onNext: () => void }) {
         <p className="text-xs text-muted-foreground mb-2">{t('intake.ai.riskLevel')}</p>
         <div className="flex items-center gap-2.5">
           <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-            <div className={`h-full rounded-full transition-all duration-1000 ${fillCls}`} style={{ width: `${r.riskScore}%` }} />
+            <div className={`h-full rounded-full ${fillCls}`} style={{ width: `${r.riskScore}%` }} />
           </div>
           <span className="text-sm font-medium tabular-nums">{r.riskScore}</span>
         </div>
@@ -1364,7 +1364,8 @@ function SignatureStep({ onNext }: { onNext: () => void }) {
   };
 
 
-  const sevText = intake.severity ? SEV_LABEL[intake.severity] : '-';
+  // On screen: the severity word in the UI language (SEV_LABEL is the Thai wording for print)
+  const sevText = intake.severity ? t(`intake.severity.${intake.severity}`) : '-';
 
   return (
     <>
@@ -1515,7 +1516,7 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
 
       {/* {t('intake.confirmed.caseSummary')} */}
       <div className="text-left mb-4">
-        <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase mb-2">{t('intake.confirmed.caseSummary')}</p>
+        <p className="text-xs font-semibold text-muted-foreground mb-2">{t('intake.confirmed.caseSummary')}</p>
         <SummaryBlock title={t('intake.confirmed.blockClient')}>
           <Row k={t('intake.row.name')} v={intake.victim.name || '-'} />
           <Row k={t('intake.row.kpGender')} v={`${intake.profile.kp} · ${intake.profile.gender}`} />
@@ -1523,7 +1524,7 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
         </SummaryBlock>
         <SummaryBlock title={t('intake.confirmed.blockAssessment')}>
           <Row k={t('intake.confirmed.rowViolationType')} v={(intake.violationDetails.length ? intake.violationDetails : intake.profile.initialViolationTypes).join(', ') || '-'} />
-          <Row k={t('intake.row.severity')} v={intake.severity ? SEV_LABEL[intake.severity] : '-'} />
+          <Row k={t('intake.row.severity')} v={intake.severity ? t(`intake.severity.${intake.severity}`) : '-'} />
           <Row k={t('intake.confirmed.rowScore')} v={t('intake.confirmed.scorePoints', { score: intake.screening.q9.reduce((a, b) => a + b, 0), nrm: nrmPositive(intake.screening.nrm, intake.screening.nrmUnder18) ? t('intake.confirmed.nrmYes') : t('intake.confirmed.nrmNo') })} />
           <Row k={t('intake.confirmed.rowReferral')} v={intake.referrals.join(' · ') || t('intake.referral.notSelected')} />
         </SummaryBlock>
@@ -1531,7 +1532,7 @@ function ConfirmedStep({ onReset }: { onReset: () => void }) {
 
       {/* เอกสารสำหรับดำเนินเคสต่อ */}
       <div className="text-left mb-4">
-        <p className="text-xs font-medium text-muted-foreground tracking-widest uppercase mb-2">{t('intake.confirmed.docsTitle')}</p>
+        <p className="text-xs font-semibold text-muted-foreground mb-2">{t('intake.confirmed.docsTitle')}</p>
         <div className="grid grid-cols-2 gap-2">
           {DOC_KINDS.map((dk) => (
             <button

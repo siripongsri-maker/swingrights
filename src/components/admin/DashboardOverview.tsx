@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useI18n } from '@/i18n';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Loader2, Clock, ShieldAlert, HeartHandshake, Users, TrendingUp, Bot, ChevronRight } from 'lucide-react';
+import { StaffLoadError } from '@/components/admin/StaffShell';
 
 type Map = Record<string, number>;
 interface Overview {
@@ -53,7 +54,11 @@ export function DashboardOverview({ branch, onOpenCase }: { branch: string | nul
   const rows = (m: Map | undefined, f: (k: string) => string = un) =>
     Object.entries(m ?? {}).map(([k, v]) => ({ key: k, label: f(k), value: v })).sort((a, b) => b.value - a.value);
 
-  if (q.isLoading || !s) return <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>;
+  // Severity as words (ต่ำ / ปานกลาง / สูง); the RPC keys stay green / yellow / red
+  const sevLabel = (k: string) => (k === 'green' || k === 'yellow' || k === 'red' ? t(`severity.${k}`) : t('staff.sev.none'));
+
+  if (q.isError) return <StaffLoadError onRetry={() => void q.refetch()} />;
+  if (q.isLoading || !s) return <div className="py-12 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>;
 
   const pct = s.sla_total > 0 ? Math.round((s.sla_met / s.sla_total) * 100) : null;
   const ok = pct !== null && pct >= 90;
@@ -61,11 +66,11 @@ export function DashboardOverview({ branch, onOpenCase }: { branch: string | nul
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-muted-foreground">{t('ops.range')}</span>
+      <div className="flex items-center gap-2 flex-wrap" role="group" aria-label={t('ops.range')}>
+        <span className="text-xs text-muted-foreground" aria-hidden>{t('ops.range')}</span>
         {[7, 30, 90, 365].map((d) => (
           <button key={d} type="button" aria-pressed={days === d} onClick={() => setDays(d)}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${days === d ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border text-muted-foreground'}`}>
+            className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${days === d ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border text-foreground hover:bg-primary-soft'}`}>
             {t(`ops.range.${d}`)}
           </button>
         ))}
@@ -86,7 +91,7 @@ export function DashboardOverview({ branch, onOpenCase }: { branch: string | nul
           <div>
             <p className="text-xs text-muted-foreground">{t('ops.slaRate')}</p>
             <p className={`text-4xl font-display tabular-nums mt-1 ${pct === null ? 'text-muted-foreground' : ok ? 'text-primary' : 'text-destructive'}`}>
-              {pct === null ? '—' : `${pct}%`} <span className="text-base text-muted-foreground">{s.sla_met} / {s.sla_total}</span>
+              {pct === null ? '-' : `${pct}%`} <span className="text-base text-muted-foreground">{s.sla_met} / {s.sla_total}</span>
             </p>
             <div className="h-2 rounded-full bg-muted mt-2 overflow-hidden relative">
               <div className={`h-full ${ok ? 'bg-primary' : 'bg-destructive'}`} style={{ width: `${pct ?? 0}%` }} />
@@ -140,7 +145,7 @@ export function DashboardOverview({ branch, onOpenCase }: { branch: string | nul
           </div>
           <Bars title={t('ops.byOccupation')} data={rows(s.by_occupation)} empty={t('sys.none')} />
           <Bars title={t('dash.chart.byStatus')} data={rows(s.by_status, (k) => t(`status.${k}`))} empty={t('sys.none')} />
-          <Bars title={t('dash.chart.bySeverity')} data={rows(s.by_severity)} empty={t('sys.none')} />
+          <Bars title={t('dash.chart.bySeverity')} data={rows(s.by_severity, sevLabel)} empty={t('sys.none')} />
           {branch === null && <Bars title={t('dash.chart.byBranch')} data={rows(s.by_branch)} empty={t('sys.none')} />}
         </div>
       </Section>
@@ -164,14 +169,15 @@ export function DashboardOverview({ branch, onOpenCase }: { branch: string | nul
             </DialogTitle>
           </DialogHeader>
           <div className="flex-1 min-h-0 overflow-y-auto -mx-6 px-6 space-y-1.5 pb-2">
-            {pickQ.isLoading && <div className="py-8 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>}
+            {pickQ.isLoading && <div className="py-8 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>}
+            {pickQ.isError && <StaffLoadError onRetry={() => void pickQ.refetch()} />}
             {pickQ.data && pickQ.data.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center">{t('sys.none')}</p>}
             {pickQ.data?.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => { setPick(null); onOpenCase?.(c.id); }}
-                className="w-full flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-start hover:border-primary/50 transition"
+                className="w-full min-h-11 flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 text-start hover:border-primary/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <span className="font-mono text-xs font-semibold text-primary">{c.case_code}</span>
                 <span className="text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString('th-TH')}</span>
@@ -189,7 +195,7 @@ export function DashboardOverview({ branch, onOpenCase }: { branch: string | nul
 function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
     <section className="bg-card border border-border rounded-[20px] p-4 sm:p-5 shadow-card">
-      <h3 className="font-subhead text-sm font-semibold flex items-center gap-2 mb-3 text-foreground"><span className="text-primary">{icon}</span>{title}</h3>
+      <h2 className="font-subhead text-sm font-semibold flex items-center gap-2 mb-3 text-foreground"><span className="text-primary" aria-hidden>{icon}</span>{title}</h2>
       {children}
     </section>
   );
@@ -223,7 +229,7 @@ function Bars({ title, data, empty, onPick }: { title: string; data: { key: stri
               </>
             );
             return onPick ? (
-              <button key={d.key} type="button" onClick={() => onPick(d.key)} className="w-full flex items-center gap-2 rounded-md px-1 -mx-1 py-0.5 hover:bg-muted/60 transition text-start">
+              <button key={d.key} type="button" onClick={() => onPick(d.key)} className="w-full min-h-11 flex items-center gap-2 rounded-md px-1 -mx-1 py-2 hover:bg-muted/60 transition-colors text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 {inner}
               </button>
             ) : (

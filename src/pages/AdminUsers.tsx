@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRoleLabels, ASSIGNABLE_ROLES, type AppRole } from '@/hooks/useAccess';
-import { ArrowLeft, Loader2, UserPlus, KeyRound, Ban, RotateCcw, Users } from 'lucide-react';
+import { Loader2, UserPlus, KeyRound, Ban, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
-import { BrandMark } from '@/components/BrandLogo';
-import { LanguageToggle } from '@/components/LanguageToggle';
+import { StaffShell, StaffLoadError } from '@/components/admin/StaffShell';
 
 interface StaffUser {
   id: string;
@@ -33,7 +31,6 @@ async function callAdmin(payload: Record<string, unknown>) {
 export default function AdminUsers() {
   const { t } = useI18n();
   const ROLE_LABEL = useRoleLabels();
-  const navigate = useNavigate();
   const qc = useQueryClient();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -85,38 +82,21 @@ export default function AdminUsers() {
   });
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="bg-primary-deep text-primary-foreground">
-        <div className="max-w-5xl mx-auto px-5 py-4 flex items-center gap-3">
-          <Button size="sm" variant="outline" onClick={() => navigate('/admin')}
-            className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80">
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div className="flex items-center gap-2">
-            <BrandMark className="h-9 w-9" />
-            <div>
-              <p className="font-medium">{t('users.header.title')}</p>
-              <p className="text-xs text-sidebar-foreground/60">{t('users.header.subtitle')}</p>
-            </div>
-          </div>
-          <LanguageToggle className="ml-auto border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-foreground" />
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-4 sm:px-5 py-6 space-y-6">
-        <section className="bg-card border border-border rounded-xl p-4">
-          <p className="text-sm font-medium mb-3 flex items-center gap-2"><UserPlus className="w-4 h-4 text-primary" /> {t('users.invite.title')}</p>
+    <StaffShell title={t('users.header.title')} context={t('users.header.subtitle')}>
+      <div className="max-w-5xl space-y-6">
+        <section className="bg-card border border-border rounded-2xl p-4 shadow-card">
+          <h2 className="font-subhead text-base font-semibold mb-3 flex items-center gap-2"><UserPlus className="w-4 h-4 text-primary" aria-hidden /> {t('users.invite.title')}</h2>
           <div className="grid gap-2 sm:grid-cols-[1.4fr_1fr_1fr_auto]">
-            <Input placeholder={t('users.invite.emailPlaceholder')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <Input placeholder={t('users.invite.namePlaceholder')} value={name} onChange={(e) => setName(e.target.value)} />
+            <Input placeholder={t('users.invite.emailPlaceholder')} aria-label={t('users.invite.emailPlaceholder')} type="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input placeholder={t('users.invite.namePlaceholder')} aria-label={t('users.invite.namePlaceholder')} autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} />
             <Select value={role} onValueChange={(v) => setRole(v as AppRole)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-11" aria-label={t('sys.col.roles')}><SelectValue /></SelectTrigger>
               <SelectContent>
                 {ASSIGNABLE_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Button onClick={() => invite.mutate()} disabled={!email || invite.isPending}>
-              {invite.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t('users.invite.send')}
+            <Button variant="action" onClick={() => invite.mutate()} disabled={!email || invite.isPending}>
+              {invite.isPending && <Loader2 className="w-4 h-4 animate-spin" aria-hidden />} {t('users.invite.send')}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
@@ -137,7 +117,7 @@ export default function AdminUsers() {
                     {u.requested_at && <p className="text-xs text-muted-foreground font-mono">{new Date(u.requested_at).toLocaleString()}</p>}
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="action" disabled={decide.isPending} onClick={() => decide.mutate({ action: 'approve', user_id: u.id })}>
+                    <Button size="sm" disabled={decide.isPending} onClick={() => decide.mutate({ action: 'approve', user_id: u.id })}>
                       {t('users.pending.approve')}
                     </Button>
                     <Button size="sm" variant="outline" className="text-destructive" disabled={decide.isPending} onClick={() => decide.mutate({ action: 'reject', user_id: u.id })}>
@@ -154,8 +134,8 @@ export default function AdminUsers() {
           <div className="px-4 py-3 border-b border-border text-sm font-medium">
             {t('users.list.title')} {usersQ.data ? `(${otherUsers.length})` : ''}
           </div>
-          {usersQ.isLoading && <div className="p-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
-          {usersQ.error && <div className="p-6 text-sm text-destructive">{(usersQ.error as Error).message}</div>}
+          {usersQ.isLoading && <div className="p-6 flex justify-center" role="status"><Loader2 className="w-5 h-5 animate-spin text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>}
+          {usersQ.isError && <StaffLoadError className="m-4" onRetry={() => void usersQ.refetch()} />}
           <div className="divide-y divide-border">
             {otherUsers.map((u) => (
               <div key={u.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -169,7 +149,7 @@ export default function AdminUsers() {
                   value={u.roles[0] ?? ''}
                   onValueChange={(v) => setRoleM.mutate({ user_id: u.id, role: v as AppRole })}
                 >
-                  <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder={t('users.role.placeholder')} /></SelectTrigger>
+                  <SelectTrigger className="h-11 w-full sm:w-44" aria-label={`${t('sys.col.roles')}: ${u.display_name || u.email || ''}`}><SelectValue placeholder={t('users.role.placeholder')} /></SelectTrigger>
                   <SelectContent>
                     {ASSIGNABLE_ROLES.map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}
                   </SelectContent>
@@ -194,7 +174,7 @@ export default function AdminUsers() {
             ))}
           </div>
         </section>
-      </main>
-    </div>
+      </div>
+    </StaffShell>
   );
 }

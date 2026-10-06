@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Copy, FileText, Loader2, Plus, Share2, Sparkles, ShieldCheck } from 'lucide-react';
+import { Check, Copy, FileText, Loader2, Plus, Share2, Sparkles, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -138,9 +138,9 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
     r.outcome === 'pending' && r.token_expires_at && new Date(r.token_expires_at) < new Date() ? 'no_response' : r.outcome;
 
   return (
-    <section className="bg-card border border-border rounded-xl p-5 shadow-card">
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <p className="text-xs font-medium text-muted-foreground">{t('ref.historyTitle')}</p>
+    <section className="bg-card border border-border rounded-2xl p-5 shadow-card">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 className="font-subhead text-base font-semibold flex items-center gap-2">{t('ref.historyTitle')}</h2>
         {canEdit && <Button size="sm" variant="outline" className="h-11 text-xs" onClick={() => setOpen(true)}><Share2 className="w-3.5 h-3.5" /> {t('ref.button')}</Button>}
       </div>
       {history.length === 0 ? (
@@ -177,7 +177,7 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
             <div className="space-y-2">
               <p className="text-xs text-muted-foreground">{t('ref.linkLabel')}</p>
               <div className="flex gap-2">
-                <input readOnly value={link} className="flex-1 h-9 rounded-md border border-border bg-muted/40 px-2 text-xs font-mono" />
+                <input readOnly value={link} aria-label={t('ref.linkLabel')} className="min-w-0 flex-1 h-11 rounded-md border border-border bg-muted/40 px-2 text-xs font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                 <Button size="sm" onClick={() => { void navigator.clipboard.writeText(link); toast.success(t('ref.copied')); }}><Copy className="w-3.5 h-3.5" /> {t('ref.copy')}</Button>
               </div>
             </div>
@@ -186,9 +186,9 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
               <div className="max-h-64 overflow-y-auto space-y-2">
                 {filtered.length === 0 && <p className="text-xs text-muted-foreground py-4 text-center">{t('ref.noPartners')}</p>}
                 {filtered.map((p) => (
-                  <button key={p.id} type="button" onClick={() => setPartnerId(p.id)}
-                    className={`w-full text-start border rounded-lg p-3 text-sm transition ${partnerId === p.id ? 'border-primary bg-primary-soft' : 'border-border hover:border-primary'}`}>
-                    <p className="font-medium text-[13px]">{p.name}</p>
+                  <button key={p.id} type="button" onClick={() => setPartnerId(p.id)} aria-pressed={partnerId === p.id}
+                    className={`w-full text-start border rounded-lg p-3 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${partnerId === p.id ? 'border-primary bg-primary-soft' :'border-border hover:border-primary'}`}>
+                    <p className="font-medium text-[13px] flex items-center gap-1.5">{partnerId === p.id && <Check className="w-4 h-4 shrink-0" aria-hidden />}{p.name}</p>
                     <p className="text-xs text-muted-foreground">{[p.district, p.province].filter(Boolean).join(' · ')}</p>
                     {Array.isArray(p.services) && p.services.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">{p.services.map((s, i) => <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded-full">{s}</span>)}</div>
@@ -202,14 +202,15 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
                   <input value={newPlace} onChange={(e) => setNewPlace(e.target.value)} maxLength={200}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void addPlace(); } }}
                     placeholder={t('ref.addPlacePlaceholder')}
-                    className="flex-1 h-9 rounded-md border border-border bg-background px-2 text-sm" />
+                    aria-label={t('ref.addPlaceLabel')}
+                    className="min-w-0 flex-1 h-11 rounded-md border border-border bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
                   <Button size="sm" variant="outline" disabled={!newPlace.trim() || adding} onClick={() => void addPlace()}>
                     {adding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />} {t('ref.addPlaceBtn')}
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">{t('ref.addPlaceHint')}</p>
               </div>
-              {!showAll && <button type="button" className="text-xs text-primary underline" onClick={() => setShowAll(true)}>{t('ref.showAll')}</button>}
+              {!showAll && <button type="button" className="inline-flex min-h-11 items-center rounded-md text-xs text-primary underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setShowAll(true)}>{t('ref.showAll')}</button>}
               <div className="space-y-1">
                 <p className="text-xs font-medium flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-primary" /> {t('ref.summaryLabel')}</p>
                 <Textarea value={summary} onChange={(e) => setSummary(e.target.value)} maxLength={4000} className="min-h-[110px] text-sm" />

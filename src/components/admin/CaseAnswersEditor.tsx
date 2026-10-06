@@ -60,7 +60,7 @@ export function CaseAnswersEditor({ caseId, answers, canEdit, audioSigned, staff
   const followups = answers.filter((a) => a.cat === 'self_followup').length;
 
   return (
-    <section className="bg-card border border-border rounded-xl p-5 shadow-card">
+    <section className="bg-card border border-border rounded-2xl p-5 shadow-card">
       <div className="flex items-center justify-between gap-2 mb-3">
         <p className="text-xs font-medium text-muted-foreground">{t('dash.detail.interviewLog')}</p>
         {canEdit && !adding && (
@@ -99,7 +99,7 @@ export function CaseAnswersEditor({ caseId, answers, canEdit, audioSigned, staff
               ) : (
                 <p className="text-sm bg-muted/40 border border-border rounded-md p-2 whitespace-pre-wrap">{a.transcript || t('dash.detail.noAnswer')}</p>
               )}
-              {audioSigned[i] && <audio src={audioSigned[i]} controls className="w-full mt-2 h-9" />}
+              {audioSigned[i] && <audio src={audioSigned[i]} controls className="w-full mt-2 h-11" />}
               {staffObs?.[i] && <p className="text-xs text-sevYellow-fg mt-1.5">{t('dash.detail.staffNote', { note: staffObs[i] })}</p>}
               {(a.edited_at || a.added_by) && (
                 <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
@@ -109,9 +109,10 @@ export function CaseAnswersEditor({ caseId, answers, canEdit, audioSigned, staff
               )}
               {hist.length > 0 && (
                 <div className="mt-1">
-                  <button type="button" className="text-xs text-primary inline-flex items-center gap-1 underline-offset-2 hover:underline"
+                  <button type="button" className="inline-flex min-h-11 items-center gap-1 rounded-md text-xs text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-expanded={openHist === i}
                     onClick={() => setOpenHist(openHist === i ? null : i)}>
-                    <History className="w-3 h-3" />{t('dash.ans.history', { n: hist.length })}
+                    <History className="w-3 h-3" aria-hidden />{t('dash.ans.history', { n: hist.length })}
                   </button>
                   {openHist === i && (
                     <ol className="mt-2 space-y-2 border-s border-border ps-3">

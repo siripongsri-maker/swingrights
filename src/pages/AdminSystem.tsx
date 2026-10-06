@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ArrowLeft, Download, Loader2 } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { useI18n } from '@/i18n';
 import SwingModelPanel from '@/components/admin/SwingModelPanel';
+import { StaffShell, StaffLoadError } from '@/components/admin/StaffShell';
+import { useRoleLabels, type AppRole } from '@/hooks/useAccess';
 
 interface StaffRow { id: string; name: string | null; status: string; roles: string[]; assigned_open: number; views_30d: number; exports_30d: number; last_login: string | null }
 interface ReporterRow { id: string; name: string | null; gender: string | null; provider: string | null; has_emergency: boolean; cases: number; created_at: string; last_login: string | null }
@@ -17,7 +18,7 @@ const KINDS = ['all', 'view', 'export', 'change', 'ai'] as const;
 
 export default function AdminSystem() {
   const { t, lang } = useI18n();
-  const navigate = useNavigate();
+  const roleLabels = useRoleLabels();
   const locale = lang === 'th' ? 'th-TH' : 'en-GB';
   const fmt = (d: string | null) => (d ? new Date(d).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' }) : t('sys.never'));
   const [kind, setKind] = useState<(typeof KINDS)[number]>('all');
@@ -51,22 +52,12 @@ export default function AdminSystem() {
 
   const u = usersQ.data;
   const maxV = Math.max(...(u?.visits_daily ?? []).map((d) => d.visits), 1);
-  const loading = <div className="py-10 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>;
+  const spinner = <div className="py-10 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>;
+  // Users overview tabs: spinner while loading, a real error with retry if the RPC fails
+  const loading = usersQ.isError ? <StaffLoadError onRetry={() => void usersQ.refetch()} /> : spinner;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-sidebar text-sidebar-foreground">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
-          <Button size="sm" variant="ghost" onClick={() => navigate('/admin')} className="text-sidebar-foreground hover:bg-sidebar-accent">
-            <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" />
-          </Button>
-          <div>
-            <h1 className="font-display text-lg">{t('sys.title')}</h1>
-            <p className="text-xs opacity-80">{t('sys.subtitle')}</p>
-          </div>
-        </div>
-      </header>
-      <main className="max-w-6xl mx-auto px-4 py-6">
+    <StaffShell title={t('sys.title')} context={t('sys.subtitle')}>
         <Tabs defaultValue="staff">
           <TabsList className="mb-4 flex-wrap h-auto">
             <TabsTrigger value="staff">{t('sys.tab.staff')}</TabsTrigger>
@@ -79,7 +70,7 @@ export default function AdminSystem() {
           <TabsContent value="staff">
             {!u ? loading : (
               <Table head={[t('sys.col.name'), t('sys.col.roles'), t('sys.col.status'), t('sys.col.open'), t('sys.col.views'), t('sys.col.exports'), t('sys.col.lastLogin')]}
-                rows={u.staff.map((s) => [s.name ?? '—', s.roles.join(', ') || '—', s.status, s.assigned_open, s.views_30d, s.exports_30d, fmt(s.last_login)])}
+                rows={u.staff.map((s) => [s.name ?? '-', s.roles.map((r) => roleLabels[r as AppRole] ?? r).join(', ') || '-', s.status, s.assigned_open, s.views_30d, s.exports_30d, fmt(s.last_login)])}
                 empty={t('sys.none')} />
             )}
           </TabsContent>
@@ -89,7 +80,7 @@ export default function AdminSystem() {
               <>
                 <p className="text-sm mb-3">{t('sys.reportersCount')}: <span className="font-mono font-semibold">{u.reporters.length}</span></p>
                 <Table head={[t('sys.col.name'), t('sys.col.gender'), t('sys.col.method'), t('sys.col.cases'), t('sys.col.emergency'), t('sys.col.signup'), t('sys.col.lastLogin')]}
-                  rows={u.reporters.map((r) => [r.name ?? '—', r.gender ? t(`report.about.gender.${r.gender}`) : '—', r.provider ?? '—', r.cases, r.has_emergency ? '✓' : '—', fmt(r.created_at), fmt(r.last_login)])}
+                  rows={u.reporters.map((r) => [r.name ?? '-', r.gender ? t(`report.about.gender.${r.gender}`) : '-', r.provider ?? '-', r.cases, r.has_emergency ? '✓' : '-', fmt(r.created_at), fmt(r.last_login)])}
                   empty={t('sys.none')} />
               </>
             )}
@@ -125,27 +116,28 @@ export default function AdminSystem() {
 
           <TabsContent value="logs">
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              {KINDS.map((k) => (
-                <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium ${kind === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border text-muted-foreground'}`}>
-                  {t(`sys.log.${k}`)}
-                </button>
-              ))}
+              <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t('sys.col.type')}>
+                {KINDS.map((k) => (
+                  <button key={k} type="button" aria-pressed={kind === k} onClick={() => setKind(k)}
+                    className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${kind === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border text-foreground hover:bg-primary-soft'}`}>
+                    {t(`sys.log.${k}`)}
+                  </button>
+                ))}
+              </div>
               <Button size="sm" variant="outline" className="ms-auto" onClick={downloadLog} disabled={!logQ.data?.length}>
-                <Download className="w-3.5 h-3.5" /> {t('sys.log.csv')}
+                <Download className="w-3.5 h-3.5" aria-hidden /> {t('sys.log.csv')}
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mb-2">{t('sys.log.note')}</p>
-            {logQ.isLoading ? loading : (
+            {logQ.isError ? <StaffLoadError onRetry={() => void logQ.refetch()} /> : logQ.isLoading ? spinner : (
               <Table head={[t('sys.col.time'), t('sys.col.type'), t('sys.col.action'), t('sys.col.case'), t('sys.col.actor'), t('sys.col.detail')]}
-                rows={(logQ.data ?? []).map((r) => [fmt(r.at), t(`sys.log.${r.kind}`), r.action, r.case_code ?? '—', r.actor ?? '—', r.detail ?? ''])}
+                rows={(logQ.data ?? []).map((r) => [fmt(r.at), t(`sys.log.${r.kind}`), r.action, r.case_code ?? '-', r.actor ?? '-', r.detail ?? ''])}
                 empty={t('sys.none')} mono={[3]} />
             )}
           </TabsContent>
           <TabsContent value="model"><SwingModelPanel /></TabsContent>
         </Tabs>
-      </main>
-    </div>
+    </StaffShell>
   );
 }
 
@@ -162,9 +154,9 @@ function Table({ head, rows, empty, mono = [] }: { head: string[]; rows: (string
   if (!rows.length) return <p className="text-sm text-muted-foreground py-6 text-center bg-card border border-border rounded-[20px]">{empty}</p>;
   return (
     <div className="overflow-x-auto bg-card border border-border rounded-[20px]">
-      <table className="w-full text-xs">
-        <thead className="bg-muted/50 text-muted-foreground">
-          <tr>{head.map((h) => <th key={h} className="text-start font-medium px-3 py-2 whitespace-nowrap">{h}</th>)}</tr>
+      <table className="w-full text-sm">
+        <thead className="bg-muted/50 text-xs text-muted-foreground">
+          <tr>{head.map((h) => <th key={h} scope="col" className="text-start font-semibold px-3 py-2 whitespace-nowrap">{h}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (

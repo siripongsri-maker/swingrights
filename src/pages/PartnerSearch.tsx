@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Copy, Loader2, MapPin, Phone, Search, Share2 } from 'lucide-react';
+import { Copy, Loader2, MapPin, Phone, Search, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { supabase } from '@/integrations/supabase/client';
 import { useAccess } from '@/hooks/useAccess';
 import { useI18n } from '@/i18n';
-import { BrandMark } from '@/components/BrandLogo';
-import { LanguageToggle } from '@/components/LanguageToggle';
+import { StaffShell, StaffLoadError } from '@/components/admin/StaffShell';
 import { cn } from '@/lib/utils';
 import { provinceDistanceKm } from '@/lib/provinceGeo';
 import { loadThaiGeo, resolveAreaCoords, distKm } from '@/lib/thaiGeo';
@@ -58,7 +57,7 @@ export default function PartnerSearch() {
   const [busy, setBusy] = useState(false);
   const [link, setLink] = useState<string | null>(null);
 
-  const { data: partners = [], isLoading } = useQuery({
+  const { data: partners = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['partner-search'],
     enabled: isStaff,
     queryFn: async () => {
@@ -72,7 +71,7 @@ export default function PartnerSearch() {
     },
   });
 
-  const { data: cases = [] } = useQuery({
+  const { data: cases = [], isError: casesError, refetch: refetchCases } = useQuery({
     queryKey: ['partner-search-cases'],
     enabled: isStaff,
     queryFn: async () => {
@@ -176,7 +175,7 @@ export default function PartnerSearch() {
         sub: [
           [p.district, p.province].filter(Boolean).join(' · ') || t('psearch.badgeNational'),
           d !== null ? (d === 0 ? t('psearch.distanceHere') : t('psearch.distance', { km: d.toLocaleString('th-TH') })) : '',
-        ].filter(Boolean).join(' — '),
+        ].filter(Boolean).join(' · '),
       });
     }
     return list;
@@ -203,39 +202,30 @@ export default function PartnerSearch() {
 
   const closeDialog = () => { setReferPartner(null); setCaseId(null); setNote(''); setLink(null); };
 
-  if (loading || isLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  const shell = (body: React.ReactNode) => (
+    <StaffShell title={t('psearch.title')} context={t('psearch.subtitle')}>{body}</StaffShell>
+  );
+  if (loading || (isStaff && isLoading)) {
+    return shell(<div className="py-12 text-center" role="status"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>);
   }
   if (!isStaff) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">{t('partners.adminOnly')}</div>;
+    return shell(<p className="py-12 text-center text-sm text-muted-foreground">{t('partners.adminOnly')}</p>);
   }
+  if (isError) return shell(<StaffLoadError onRetry={() => void refetch()} />);
 
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-primary-deep text-primary-foreground sticky top-0 z-30 shadow-elegant">
-        <div className="max-w-4xl mx-auto px-5 py-4 flex items-center gap-3">
-          <Link to="/admin" className="w-10 h-10 rounded-full bg-sidebar-accent hover:bg-sidebar-accent/80 flex items-center justify-center transition">
-            <ArrowLeft className="w-5 h-5 rtl:-scale-x-100" />
-          </Link>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-display text-lg leading-tight">{t('psearch.title')}</h1>
-            <p className="text-xs opacity-80">{t('psearch.subtitle')}</p>
-          </div>
-          <LanguageToggle />
-          <BrandMark className="w-9 h-9" />
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-5 py-6 space-y-4">
+  return shell(
+    <>
+      <div className="max-w-4xl space-y-4">
+        {casesError && <StaffLoadError onRetry={() => void refetchCases()} />}
         <div className="bg-primary-soft border border-primary/30 rounded-xl p-4 space-y-2">
-          <p className="text-sm font-medium flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary" /> {t('psearch.focusCase')}</p>
+          <label htmlFor="psearch-focus" className="text-sm font-medium flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary" aria-hidden /> {t('psearch.focusCase')}</label>
           <Select value={focusId ?? 'none'} onValueChange={(v) => { const n = new URLSearchParams(params); if (v === 'none') n.delete('case'); else n.set('case', v); setParams(n, { replace: true }); }}>
-            <SelectTrigger className="bg-card"><SelectValue /></SelectTrigger>
+            <SelectTrigger id="psearch-focus" className="h-11 bg-card"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">{t('psearch.focusNone')}</SelectItem>
               {cases.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
-                  {c.case_code} · {c.profile?.province || '—'} · {new Date(c.created_at).toLocaleDateString('th-TH')}
+                  {c.case_code} · {c.profile?.province || '-'} · {new Date(c.created_at).toLocaleDateString('th-TH')}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -246,8 +236,8 @@ export default function PartnerSearch() {
                 {focusProv ? t('psearch.caseArea', { area: [focusDist, focusProv].filter(Boolean).join(' · ') }) : t('psearch.caseNoArea')}
               </p>
               {focusProv && (
-                <label className="flex items-center gap-2 text-xs cursor-pointer">
-                  <input type="checkbox" checked={nearOnly} onChange={(e) => setNearOnly(e.target.checked)} className="w-4 h-4 accent-primary" />
+                <label className="flex min-h-11 items-center gap-3 text-sm cursor-pointer">
+                  <input type="checkbox" checked={nearOnly} onChange={(e) => setNearOnly(e.target.checked)} className="w-5 h-5 accent-primary" />
                   {t('psearch.nearOnly')}
                 </label>
               )}
@@ -256,26 +246,26 @@ export default function PartnerSearch() {
         </div>
         <div className="bg-card border border-border rounded-xl p-4 shadow-card space-y-3">
           <div className="relative">
-            <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('psearch.searchPlaceholder')} className="ps-9" maxLength={100} />
+            <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('psearch.searchPlaceholder')} aria-label={t('psearch.searchPlaceholder')} className="h-11 ps-9" maxLength={100} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <Select value={orgType} onValueChange={setOrgType}>
-              <SelectTrigger><SelectValue placeholder={t('psearch.filterType')} /></SelectTrigger>
+              <SelectTrigger className="h-11" aria-label={t('psearch.filterType')}><SelectValue placeholder={t('psearch.filterType')} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('psearch.allTypes')}</SelectItem>
                 {ORG_TYPE_KEYS.map((v) => <SelectItem key={v} value={v}>{t(`partners.orgType.${v}`)}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={province} onValueChange={setProvince}>
-              <SelectTrigger><SelectValue placeholder={t('psearch.filterProvince')} /></SelectTrigger>
+              <SelectTrigger className="h-11" aria-label={t('psearch.filterProvince')}><SelectValue placeholder={t('psearch.filterProvince')} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('psearch.allProvinces')}</SelectItem>
                 {provinces.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={service} onValueChange={setService}>
-              <SelectTrigger><SelectValue placeholder={t('psearch.filterService')} /></SelectTrigger>
+              <SelectTrigger className="h-11" aria-label={t('psearch.filterService')}><SelectValue placeholder={t('psearch.filterService')} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('psearch.allServices')}</SelectItem>
                 {services.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
@@ -308,7 +298,7 @@ export default function PartnerSearch() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
-                    <MapPin className="w-3 h-3" /> {[p.district, p.province].filter(Boolean).join(' · ') || '—'}
+                    <MapPin className="w-3 h-3" aria-hidden /> {[p.district, p.province].filter(Boolean).join(' · ') || '-'}
                     {p.phone && <span className="inline-flex items-center gap-1 ms-2"><Phone className="w-3 h-3" /> {p.phone}</span>}
                     {focus && focusProv && distanceKm(p) !== null && (
                       <span className="inline-flex items-center gap-1 ms-2 text-primary font-medium">
@@ -331,7 +321,7 @@ export default function PartnerSearch() {
             ))}
           </ul>
         )}
-      </main>
+      </div>
 
       <Dialog open={!!referPartner} onOpenChange={(v) => { if (!v) closeDialog(); }}>
         <DialogContent className="max-w-md">
@@ -341,9 +331,9 @@ export default function PartnerSearch() {
           </DialogHeader>
           {link ? (
             <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">{t('ref.linkLabel')}</p>
+              <label htmlFor="psearch-link" className="block text-xs text-muted-foreground">{t('ref.linkLabel')}</label>
               <div className="flex gap-2">
-                <input readOnly value={link} className="flex-1 h-9 rounded-md border border-border bg-muted/40 px-2 text-xs font-mono" />
+                <input id="psearch-link" readOnly value={link} onFocus={(e) => e.currentTarget.select()} className="min-w-0 flex-1 h-11 rounded-md border border-border bg-muted/40 px-2 text-xs font-mono" />
                 <Button size="sm" onClick={() => { void navigator.clipboard.writeText(link); toast.success(t('ref.copied')); }}>
                   <Copy className="w-3.5 h-3.5" /> {t('ref.copy')}
                 </Button>
@@ -353,19 +343,19 @@ export default function PartnerSearch() {
           ) : (
             <div className="space-y-3">
               <div className="space-y-1">
-                <p className="text-xs font-medium">{t('psearch.pickCase')}</p>
+                <label htmlFor="psearch-pick-case" className="block text-sm font-medium">{t('psearch.pickCase')}</label>
                 <Select value={caseId ?? ''} onValueChange={setCaseId}>
-                  <SelectTrigger><SelectValue placeholder={t('psearch.pickCasePlaceholder')} /></SelectTrigger>
+                  <SelectTrigger id="psearch-pick-case" className="h-11"><SelectValue placeholder={t('psearch.pickCasePlaceholder')} /></SelectTrigger>
                   <SelectContent>
                     {cases.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
-                        {c.case_code} · {c.status} · {new Date(c.created_at).toLocaleDateString('th-TH')}
+                        {c.case_code} · {t(`status.${c.status}`)} · {new Date(c.created_at).toLocaleDateString('th-TH')}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} placeholder={t('ref.notePlaceholder')} className="min-h-[70px] text-sm" />
+              <Textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={2000} placeholder={t('ref.notePlaceholder')} aria-label={t('ref.notePlaceholder')} className="min-h-[70px] text-sm" />
               <p className="text-xs text-muted-foreground">{t('psearch.quickNote')}</p>
             </div>
           )}
@@ -379,6 +369,6 @@ export default function PartnerSearch() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>,
   );
 }

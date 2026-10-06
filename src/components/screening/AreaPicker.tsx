@@ -11,6 +11,9 @@ import { useI18n } from '@/i18n';
 import { toast } from 'sonner';
 
 
+/** Small action buttons that may wrap (long my/km/lo labels) instead of running out of the card. */
+const WRAP_BTN = 'h-auto min-h-11 max-w-full whitespace-normal text-start text-xs';
+
 export interface AreaValue {
   province: string;
   district: string;
@@ -82,15 +85,16 @@ function Combo({
               placeholder={`${t('common.search')} ${label}... (TH/EN)`}
               value={search}
               onValueChange={setSearch}
+              className={cn('text-base md:text-sm', search && 'pe-10')}
             />
             {search && (
               <button
                 type="button"
                 aria-label={t('area.clearSearch')}
                 onClick={() => setSearch('')}
-                className="absolute end-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                className="absolute end-0 top-1/2 -translate-y-1/2 inline-flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-primary-soft hover:text-foreground"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" aria-hidden />
               </button>
             )}
           </div>
@@ -110,14 +114,14 @@ function Combo({
                   >
                     <Check className={cn('me-2 h-4 w-4', value === o.v ? 'opacity-100' : 'opacity-0')} />
                     <span className="flex-1"><Hi text={primary} q={search} /></span>
-                    {secondary && <span className="text-[11px] text-muted-foreground ms-2"><Hi text={secondary} q={search} /></span>}
+                    {secondary && <span className="text-xs text-muted-foreground ms-2"><Hi text={secondary} q={search} /></span>}
                     {o.zip && (
-                      <span className="ms-2 shrink-0 rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] leading-none text-secondary-foreground">
+                      <span className="ms-2 shrink-0 rounded bg-secondary px-1.5 py-0.5 font-mono text-xs leading-none text-secondary-foreground">
                         {o.zip}
                       </span>
                     )}
                     {reason && (
-                      <span className="ms-2 shrink-0 rounded-full border border-border px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
+                      <span className="ms-2 shrink-0 rounded-full border border-border px-2 py-0.5 text-xs font-medium text-muted-foreground">
                         {t(`area.match.${reason}`)}
                       </span>
                     )}
@@ -220,7 +224,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
           type="button"
           size="sm"
           variant={enFirst ? 'secondary' : 'outline'}
-          className="text-xs"
+          className={WRAP_BTN}
           aria-pressed={enFirst}
           onClick={() => setEnFirst((s) => !s)}
         >
@@ -239,7 +243,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
             type="button"
             size="sm"
             variant="secondary"
-            className="mt-2 text-xs h-7"
+            className={cn(WRAP_BTN, 'mt-2')}
             onClick={() => setOpenProvince(true)}
           >
             {t('area.trySearch')}
@@ -262,7 +266,8 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
             autoOpen={openProvince}
             onSelect={(v) => { setGeoError(null); setOpenProvince(false); onChange({ ...value, province: v, district: '', subdistrict: '', zip: '' }); }}
           />
-          <div className="grid grid-cols-2 gap-2.5">
+          {/* stacked on phones so "อำเภอ/เขต" and "ตำบล/แขวง" are not cut off */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <Combo
               label={t('area.district')}
               value={value.district}
@@ -287,22 +292,22 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
       )}
 
       {(value.province || value.zip) && (
-        <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-          <MapPin className="w-3 h-3" />
+        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <MapPin className="w-3.5 h-3.5 shrink-0" aria-hidden />
           {formatArea(value.province, value.district, value.subdistrict, lang)} {value.zip && `· ${value.zip}`}
         </p>
       )}
 
       <div className="flex items-center gap-2 flex-wrap">
-        <Button type="button" size="sm" variant="secondary" onClick={() => setShowMap((s) => !s)} className="text-xs">
-          <MapPin className="w-3.5 h-3.5 me-1" /> {showMap ? t('area.hideMap') : t('area.pin')}
+        <Button type="button" size="sm" variant="secondary" onClick={() => setShowMap((s) => !s)} className={WRAP_BTN}>
+          <MapPin className="w-3.5 h-3.5" aria-hidden /> {showMap ? t('area.hideMap') : t('area.pin')}
         </Button>
         {showMap && (
           <Button
             type="button"
             size="sm"
             variant="outline"
-            className="text-xs"
+            className={WRAP_BTN}
             onClick={() => {
               if (!navigator.geolocation) {
                 setGeoError('unsupported');
@@ -316,12 +321,12 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
               );
             }}
           >
-            <LocateFixed className="w-3.5 h-3.5 me-1" /> {t('area.myLocation')}
+            <LocateFixed className="w-3.5 h-3.5" aria-hidden /> {t('area.myLocation')}
           </Button>
         )}
         {value.geo && (
-          <Button type="button" size="sm" variant="ghost" className="text-xs text-muted-foreground" onClick={() => onChange({ ...value, geo: null })}>
-            <X className="w-3.5 h-3.5 me-1" /> {t('area.clearPin')}
+          <Button type="button" size="sm" variant="ghost" className={cn(WRAP_BTN, 'text-muted-foreground')} onClick={() => onChange({ ...value, geo: null })}>
+            <X className="w-3.5 h-3.5" aria-hidden /> {t('area.clearPin')}
           </Button>
         )}
       </div>
@@ -329,7 +334,7 @@ export function AreaPicker({ value, onChange }: { value: AreaValue; onChange: (v
       {showMap && (
         <div className="space-y-1.5">
           <MapPicker value={value.geo ?? null} center={center} onChange={setPin} />
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             {value.geo ? `${t('area.coordsLabel')}: ${value.geo.lat}, ${value.geo.lng} (${t('area.coordsHint')})` : t('area.tapToPin')}
           </p>
         </div>

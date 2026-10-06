@@ -33,6 +33,7 @@ export default {
         "accent-soft": "hsl(var(--accent-soft))",
         "accent-deep": "hsl(var(--accent-deep))",
         highlight: { DEFAULT: "hsl(var(--highlight))", soft: "hsl(var(--highlight-soft))" },
+        wave: "hsl(var(--wave))",
         popover: { DEFAULT: "hsl(var(--popover))", foreground: "hsl(var(--popover-foreground))" },
         card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
         success: { DEFAULT: "hsl(var(--success))", foreground: "hsl(var(--success-foreground))" },
@@ -57,13 +58,14 @@ export default {
         md: "calc(var(--radius) - 4px)",
         sm: "calc(var(--radius) - 8px)",
       },
+      // Opacity only (Prompt 1E: no width/height animation). Radix still waits for animationend.
       keyframes: {
-        "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
-        "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
+        "accordion-down": { from: { opacity: "0" }, to: { opacity: "1" } },
+        "accordion-up": { from: { opacity: "1" }, to: { opacity: "0" } },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        "accordion-down": "accordion-down 0.15s ease-out",
+        "accordion-up": "accordion-up 0.15s ease-out",
       },
     },
   },

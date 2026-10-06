@@ -34,6 +34,12 @@ export const PROJECT_REPORT_DICT: Record<string, Entry> = {
   'prep.trafficking': { th: 'สงสัยการค้ามนุษย์', en: 'Suspected trafficking' },
   'prep.byGroup': { th: 'ตามกลุ่มผู้รับบริการ', en: 'By client group' },
   'prep.bySeverity': { th: 'ตามระดับความรุนแรง', en: 'By severity' },
+  // Severity as words (stored values stay green / yellow / red)
+  'prep.sev.green': { th: 'ต่ำ', en: 'Low', my: 'နိမ့်', km: 'ទាប', lo: 'ຕ່ຳ' },
+  'prep.sev.yellow': { th: 'ปานกลาง', en: 'Medium', my: 'အလယ်အလတ်', km: 'មធ្យម', lo: 'ປານກາງ' },
+  'prep.sev.red': { th: 'สูง', en: 'High', my: 'မြင့်', km: 'ខ្ពស់', lo: 'ສູງ' },
+  'prep.sev.unset': { th: 'ยังไม่ประเมิน', en: 'Not assessed', my: 'မအကဲဖြတ်ရသေး', km: 'មិនទាន់វាយតម្លៃ', lo: 'ຍັງບໍ່ປະເມີນ' },
+  'prep.sev.unspecified': { th: 'ยังไม่ประเมิน', en: 'Not assessed', my: 'မအကဲဖြတ်ရသေး', km: 'មិនទាន់វាយតម្លៃ', lo: 'ຍັງບໍ່ປະເມີນ' },
   'prep.none': { th: 'ไม่มีข้อมูล', en: 'No data' },
   'prep.note': {
     th: 'ข้อมูลไม่ระบุตัวตน แสดงเฉพาะจำนวน ตัวเลขที่ต่ำกว่า 3 แสดงเป็น "<3" เพื่อปกป้องกลุ่มเล็ก',

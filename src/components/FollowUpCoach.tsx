@@ -76,16 +76,16 @@ export function FollowUpCoach({ text, context = '', className, trigger, onQuesti
 
   return (
     <div className={cn('rounded-xl border border-border bg-muted/40 p-2.5 space-y-2', className)} aria-live="polite">
-      <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-        <Lightbulb className="w-3.5 h-3.5 text-primary" /> {t('followup.title')}
-        {loading && <Loader2 className="w-3 h-3 animate-spin ms-auto" />}
+      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <Lightbulb className="w-3.5 h-3.5 shrink-0 text-primary" aria-hidden /> {t('followup.title')}
+        {loading && <Loader2 className="w-3 h-3 animate-spin ms-auto" aria-hidden />}
       </div>
       <div className="flex flex-wrap gap-1">
         {FOLLOWUP_SLOTS.map((s) => {
           const ok = covered.includes(s);
           return (
-            <span key={s} className={cn('text-[10px] px-2 py-0.5 rounded-full inline-flex items-center gap-1', ok ? 'bg-sevGreen-bg text-sevGreen-fg' : 'bg-background text-muted-foreground border border-border')}>
-              {ok && <Check className="w-2.5 h-2.5" />}{t(`followup.slot.${s}`)}
+            <span key={s} className={cn('text-xs px-2 py-0.5 rounded-full inline-flex items-center gap-1', ok ? 'bg-sevGreen-bg text-sevGreen-fg' : 'bg-background text-muted-foreground border border-border')}>
+              {ok && <Check className="w-3 h-3" aria-hidden />}{t(`followup.slot.${s}`)}
             </span>
           );
         })}
@@ -95,7 +95,7 @@ export function FollowUpCoach({ text, context = '', className, trigger, onQuesti
       ) : question && !onQuestion ? (
         <div className="flex items-start gap-2 rounded-lg bg-card border border-border p-2">
           <p className="text-sm flex-1">{question}</p>
-          <SpeakButton text={question} className="shrink-0" />
+          <SpeakButton text={question} label={t('report.listenMsg')} className="shrink-0" />
         </div>
       ) : null}
     </div>

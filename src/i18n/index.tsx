@@ -49,6 +49,8 @@ import { CLIENT_DICT } from './dict/client';
 import { DOCUMENTS_DICT } from './dict/documents';
 import { RIGHTS_DICT } from './dict/rights';
 import { STAFF_DICT } from './dict/staff';
+import { UI_DICT } from './dict/ui';
+import { CASE_DETAIL_DICT } from './dict/caseDetail';
 
 const BASE_DICT: Dict = {
   // ---------- Common ----------
@@ -96,6 +98,11 @@ const BASE_DICT: Dict = {
     th: 'ฟังเสียงที่อัดไว้', en: 'Listen to the recording',
     my: 'သွင်းထားသောအသံ နားထောင်မည်', km: 'ស្តាប់សំឡេងដែលបានថត', lo: 'ຟັງສຽງທີ່ອັດໄວ້',
   },
+  // Organisation name (saved case-code card, copyright lines). Proper name: Thai, or English in other languages.
+  'common.orgName': {
+    th: 'มูลนิธิเพื่อนพนักงานบริการ', en: 'SWING Foundation (Service Workers in Group)',
+    my: 'SWING Foundation (Service Workers in Group)', km: 'SWING Foundation (Service Workers in Group)', lo: 'SWING Foundation (Service Workers in Group)',
+  },
 
   // ---------- Landing ----------
   'landing.badge': { th: 'RIGHTS & VIOLATION TOOL', en: 'RIGHTS & VIOLATION TOOL', my: 'အခွင့်အရေးနှင့် အခွင့်အရေးချိုးဖောက်မှုဆိုင်ရာ ကိရိယာ', km: 'ឧបករណ៍សម្រាប់សិទ្ធិ និងការរំលោភសិទ្ធិ', lo: 'ເຄື່ອງມືດ້ານສິດ ແລະ ການລະເມີດສິດ' },
@@ -124,7 +131,7 @@ const BASE_DICT: Dict = {
   'landing.what.rightsBody': { th: 'สิทธิของคุณ ถ้าถูกจับหรือถูกควบคุมตัว', en: 'Your rights if you are arrested or held', my: 'ဖမ်းဆီး သို့မဟုတ် ထိန်းသိမ်းခံရလျှင် သင့်အခွင့်အရေး', km: 'សិទ្ធិរបស់អ្នក បើត្រូវចាប់ ឬឃុំខ្លួន', lo: 'ສິດຂອງທ່ານ ຖ້າຖືກຈັບ ຫຼື ຖືກຄວບຄຸມຕົວ' },
   'landing.hl.swing': { th: 'สวิง', en: 'SWING', my: 'SWING', km: 'SWING', lo: 'SWING' },
   'landing.hl.silom': { th: 'สวิง สาขาสีลม', en: 'SWING Silom', my: 'SWING ဆီလုံ', km: 'SWING ស៊ីឡុម', lo: 'SWING ສີລົມ' },
-  'landing.hl.pattaya': { th: 'สวิง สาขาพัทยา', en: 'SWING Pattaya', my: 'SWING ပတ္တရား', km: 'SWING ប៉ាតាយ៉ា', lo: 'SWING ພັດທະຍາ' },
+  'landing.hl.pattaya': { th: 'สวิง สาขาพัทยา', en: 'SWING Pattaya', my: 'SWING ပတ္တယား', km: 'SWING ប៉ាតាយ៉ា', lo: 'SWING ພັດທະຍາ' },
   'landing.hl.public': { th: 'สายด่วนอื่น ๆ', en: 'Other hotlines', my: 'အခြား ဟော့လိုင်းများ', km: 'ខ្សែទូរស័ព្ទបន្ទាន់ផ្សេងទៀត', lo: 'ສາຍດ່ວນອື່ນໆ' },
   'landing.hl.call': { th: 'โทร', en: 'Call', my: 'ခေါ်ဆိုရန်', km: 'ហៅ', lo: 'ໂທ' },
   'landing.title1': {
@@ -133,14 +140,14 @@ const BASE_DICT: Dict = {
   },
   'landing.title2': {
     th: 'สำหรับเสียงที่ถูกละเมิด', en: 'for voices that were harmed',
-    my: 'နှိပ်စက်ခံရသောံများအတွက်', km: 'សម្រាប់សំឡេងដែលត្រូវបានរំលោភ', lo: 'ສຳລັບສຽງທີ່ຖືກລະເມີດ',
+    my: 'ချိုးဖောက်ခံရသော အသံများအတွက်', km: 'សម្រាប់សំឡេងដែលត្រូវបានរំលោភ', lo: 'ສຳລັບສຽງທີ່ຖືກລະເມີດ',
   },
   'landing.subtitle': {
-    th: 'เล่าเรื่องด้วยเสียงของคุณเอง ทีละคำถาม ไม่เร่งรัด — ระบบจะช่วยประเมินความเสี่ยงและส่งต่อความช่วยเหลือให้อัตโนมัติ',
-    en: 'Tell your story in your own voice, one question at a time, at your own pace — we help assess risk and route you to support.',
-    my: 'သင့်အသံကိုယ်တိုင်ဖြင့် တစ်မေးခွန်းချင်း ပြောပြပါ — စနစ်က အန္တရာယ်အဆင့်ကို ဆန်းစစ်ပြီး အကူအညီရရှိရန် ဆက်သွယ်ပေးပါမည်',
-    km: 'ប្រាប់រឿងរបស់អ្នកដោយសំឡេងខ្លួនឯង ម្តងមួយសំណួរ — ប្រព័ន្ធនឹងវាយតម្លៃហានិភ័យ និងផ្តល់ជំនួយដោយស្វ័យប្រវត្តិ',
-    lo: 'ເລົ່າເລື່ອງດ້ວຍສຽງຂອງທ່ານເອງ ທີລະຄຳຖາມ — ລະບົບຈະປະເມີນຄວາມສ່ຽງ ແລະ ສົ່ງຕໍ່ຄວາມຊ່ວຍເຫຼືອໃຫ້ອັດຕະໂນມັດ',
+    th: 'เล่าเรื่องด้วยเสียงของคุณเอง ทีละคำถาม ไม่เร่งรัด ระบบจะช่วยประเมินความเสี่ยงและส่งต่อความช่วยเหลือให้อัตโนมัติ',
+    en: 'Tell your story in your own voice, one question at a time, at your own pace. We help assess risk and route you to support.',
+    my: 'သင့်အသံကိုယ်တိုင်ဖြင့် တစ်မေးခွန်းချင်း ပြောပြပါ။ စနစ်က အန္တရာယ်အဆင့်ကို ဆန်းစစ်ပြီး အကူအညီရရှိရန် ဆက်သွယ်ပေးပါမည်',
+    km: 'ប្រាប់រឿងរបស់អ្នកដោយសំឡេងខ្លួនឯង ម្តងមួយសំណួរ។ ប្រព័ន្ធនឹងវាយតម្លៃហានិភ័យ និងផ្តល់ជំនួយដោយស្វ័យប្រវត្តិ',
+    lo: 'ເລົ່າເລື່ອງດ້ວຍສຽງຂອງທ່ານເອງ ທີລະຄຳຖາມ ລະບົບຈະປະເມີນຄວາມສ່ຽງ ແລະ ສົ່ງຕໍ່ຄວາມຊ່ວຍເຫຼືອໃຫ້ອັດຕະໂນມັດ',
   },
   'landing.cta.start': {
     th: 'เริ่มเล่าเรื่องของคุณ', en: 'Start your story',
@@ -160,10 +167,10 @@ const BASE_DICT: Dict = {
   },
   'landing.card1.body': {
     th: 'ทีละคำถาม เหมือนคุยกับคนที่รับฟัง หยุดพักเมื่อไหร่ก็ได้ ระบบเก็บฉบับร่างไว้ให้ ไม่ต้องเล่าซ้ำ',
-    en: 'One question at a time, like talking to someone who listens. Pause anytime — your draft is saved, so you never repeat yourself.',
-    my: 'တစ်မေးခွန်းချင်း နားထောင်ပေးသူနှင့် စကားပြောသလို — အချိန်မရွေး ခဏရပ်နိုင်သည် မူကြမ်းကို အလိုအလျောက် သိမ်းထားသည်',
-    km: 'ម្តងមួយសំណួរ ដូចនិយាយជាមួយអ្នកស្តាប់ — ផ្អាកពេលណាក៏បាន សេចក្តីព្រាងត្រូវបានរក្សាទុក',
-    lo: 'ທີລະຄຳຖາມ ເຫມືອນຄຸຍກັບຜູ້ທີ່ຮັບຟັງ — ຢຸດພັກໄດ້ທຸກເມື່ອ ສະບັບຮ່າງຖືກເກັບໄວ້ໃຫ້',
+    en: 'One question at a time, like talking to someone who listens. Pause anytime. Your draft is saved, so you never repeat yourself.',
+    my: 'တစ်မေးခွန်းချင်း နားထောင်ပေးသူနှင့် စကားပြောသလို။ အချိန်မရွေး ခဏရပ်နိုင်သည် မူကြမ်းကို အလိုအလျောက် သိမ်းထားသည်',
+    km: 'ម្តងមួយសំណួរ ដូចនិយាយជាមួយអ្នកស្តាប់។ ផ្អាកពេលណាក៏បាន សេចក្តីព្រាងត្រូវបានរក្សាទុក',
+    lo: 'ທີລະຄຳຖາມ ເຫມືອນຄຸຍກັບຜູ້ທີ່ຮັບຟັງ ຢຸດພັກໄດ້ທຸກເມື່ອ ສະບັບຮ່າງຖືກເກັບໄວ້ໃຫ້',
   },
   'landing.rightsPreview.title': {
     th: 'สิทธิของผู้ต้องหา', en: 'Rights of the Accused',
@@ -246,19 +253,24 @@ const BASE_DICT: Dict = {
   },
   'landing.help.hl.trafficking': {
     th: 'สายด่วนป้องกันการค้ามนุษย์', en: 'Anti-trafficking hotline',
-    my: 'လူးကုန်ကူးမှုတိုက်ဖျက်ရေး ဟော့လိုင်း', km: 'ខ្សែទូរស័ព្ទប្រឆាំងជួញដូរមនុស្ស', lo: 'ສາຍດ່ວນປ້ອງກັນການຄ້າມະນຸດ',
+    my: 'လူကုန်ကူးမှုတိုက်ဖျက်ရေး ဟော့လိုင်း', km: 'ខ្សែទូរស័ព្ទប្រឆាំងជួញដូរមនុស្ស', lo: 'ສາຍດ່ວນປ້ອງກັນການຄ້າມະນຸດ',
   },
   'landing.footer': {
     th: 'นโยบายความเป็นส่วนตัว (PDPA)', en: 'Privacy policy (PDPA)',
     my: 'ကိုယ်ရေးကိုယ်တာ မူဝါဒ (PDPA)', km: 'គោលការណ៍ភាពឯកជន (PDPA)', lo: 'ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ (PDPA)',
   },
-  'landing.wave.off': {
-    th: 'ปิดแอนิเมชันพื้นหลัง', en: 'Turn off background animation',
-    my: 'နောက်ခံ animation ပိတ်ရန်', km: 'បិទចលនាផ្ទៃខាងក្រោយ', lo: 'ປິດແອນິເມຊັນພື້ນຫຼັງ',
+  // The sound-wave toggle now uses ui.wave.show (src/i18n/dict/ui.ts) with aria-pressed.
+  'landing.copyright': {
+    th: '© มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)', en: '© SWING Foundation',
+    my: '© SWING Foundation', km: '© SWING Foundation', lo: '© SWING Foundation',
   },
-  'landing.wave.on': {
-    th: 'เปิดแอนิเมชันพื้นหลัง', en: 'Turn on background animation',
-    my: 'နောက်ခံ animation ဖွင့်ရန်', km: 'បើកចលនាផ្ទៃខាងក្រោយ', lo: 'ເປີດແອນິເມຊັນພື້ນຫຼັງ',
+  // Shown under the Thai-only rights titles on the desktop landing card when lang is not th
+  'landing.arrested.thaiOnly': {
+    th: 'ตอนนี้ข้อความสิทธิมีเป็นภาษาไทย ทีมสวิงช่วยอธิบายเป็นภาษาของคุณได้',
+    en: 'These rights are in Thai for now. The SWING team can explain them in your language.',
+    my: 'ဤအခွင့်အရေးများကို ယခုလောလောဆယ် ထိုင်းဘာသာဖြင့်သာ ရေးထားပါသည်။ SWING အဖွဲ့က သင့်ဘာသာစကားဖြင့် ရှင်းပြပေးနိုင်ပါသည်။',
+    km: 'សិទ្ធិទាំងនេះមានតែជាភាសាថៃសម្រាប់ពេលនេះ។ ក្រុម SWING អាចពន្យល់ជាភាសារបស់អ្នកបាន។',
+    lo: 'ສິດເຫຼົ່ານີ້ມີແຕ່ພາສາໄທໃນຕອນນີ້. ທີມ SWING ສາມາດອະທິບາຍເປັນພາສາຂອງທ່ານໄດ້.',
   },
   'landing.footer.recover': {
     th: 'กู้เคสค้างในเครื่อง', en: 'Recover drafts on this device',
@@ -272,8 +284,8 @@ const BASE_DICT: Dict = {
     my: 'အမှုအခြေအနေ စစ်ဆေးပါ', km: 'ពិនិត្យស្ថានភាពករណី', lo: 'ກວດສອບສະຖານະເຄສ',
   },
   'track.subtitle': {
-    th: 'กรอกเลขอ้างอิงที่ได้รับ', en: 'Enter the reference code you received',
-    my: 'ရရှိထားသော ကုတ်နံပါတ် ထည့်ပါ', km: 'បញ្ចូលលេខកូដដែលអ្នកទទួលបាន', lo: 'ໃສ່ລະຫັດອ້າງອີງທີ່ໄດ້ຮັບ',
+    th: 'กรอกรหัสเคสที่ได้ตอนส่งเรื่อง', en: 'Enter the case code you got when you sent your report',
+    my: 'တိုင်ကြားချက်ပို့စဉ်က ရရှိခဲ့သော အမှုကုတ်ကို ထည့်ပါ', km: 'បញ្ចូលលេខកូដករណីដែលអ្នកបានទទួលពេលផ្ញើរបាយការណ៍', lo: 'ໃສ່ລະຫັດເຄສທີ່ໄດ້ຮັບຕອນສົ່ງເລື່ອງ',
   },
   'track.notfound': {
     th: 'ไม่พบเคสที่มีเลขอ้างอิงนี้', en: 'No case found with this reference code',
@@ -309,8 +321,8 @@ const BASE_DICT: Dict = {
     my: 'အဖြေပေးပြီး', km: 'បានឆ្លើយរួច', lo: 'ຕອບແລ້ວ',
   },
   'track.answer.thanks': {
-    th: 'ได้รับคำตอบแล้ว ขอบคุณ', en: 'Answer received — thank you',
-    my: 'အဖြေရရှိပါပြီ — ကျေးဇူးတင်ပါသည်', km: 'បានទទួលចម្លើយហើយ — អរគុណ', lo: 'ໄດ້ຮັບຄຳຕອບແລ້ວ — ຂອບໃຈ',
+    th: 'ได้รับคำตอบแล้ว ขอบคุณ', en: 'Answer received. Thank you',
+    my: 'အဖြေရရှိပါပြီ။ ကျေးဇူးတင်ပါသည်', km: 'បានទទួលចម្លើយហើយ។ អរគុណ', lo: 'ໄດ້ຮັບຄຳຕອບແລ້ວ. ຂອບໃຈ',
   },
   'track.answer.error': {
     th: 'ส่งคำตอบไม่สำเร็จ ลองอีกครั้ง', en: 'Could not send the answer, please try again',
@@ -349,10 +361,10 @@ const BASE_DICT: Dict = {
   },
   'report.subtitle': {
     th: 'ไม่ต้องสมัครสมาชิกค่ะ จะพูดหรือพิมพ์ก็ได้ ใช้ภาษาไหนก็ได้ และทุกอย่างเป็นความลับ',
-    en: 'No sign-up needed — speak or type, in any language. Your information stays confidential.',
-    my: 'အကောင့်မလိုပါ — မည်သည့်ဘာသာစကားဖြင့်မဆို ပြော သို့မဟုတ် ရိုက်နိုင်သည် သင့်အချက်အလက်များ လျှို့ဝှက်ထားပါမည်',
-    km: 'មិនត្រូវការគណនី — និយាយ ឬវាយ ជាភាសាណាក៏បាន ព័ត៌មានរបស់អ្នកត្រូវបានរក្សាទុកជាការសម្ងាត់',
-    lo: 'ບໍ່ຕ້ອງສະໝັກ — ເວົ້າ ຫຼື ພິມ ພາສາໃດກໍໄດ້ ຂໍ້ມູນຂອງທ່ານເປັນຄວາມລັບ',
+    en: 'No sign-up needed. Speak or type, in any language. Your information stays confidential.',
+    my: 'အကောင့်မလိုပါ။ မည်သည့်ဘာသာစကားဖြင့်မဆို ပြော သို့မဟုတ် ရိုက်နိုင်သည် သင့်အချက်အလက်များ လျှို့ဝှက်ထားပါမည်',
+    km: 'មិនត្រូវការគណនី។ និយាយ ឬវាយ ជាភាសាណាក៏បាន ព័ត៌មានរបស់អ្នកត្រូវបានរក្សាទុកជាការសម្ងាត់',
+    lo: 'ບໍ່ຕ້ອງສະໝັກ. ເວົ້າ ຫຼື ພິມ ພາສາໃດກໍໄດ້ ຂໍ້ມູນຂອງທ່ານເປັນຄວາມລັບ',
   },
   'report.consent.title': {
     th: 'การยินยอมให้เก็บข้อมูล (PDPA)', en: 'Consent to store your data (PDPA)',
@@ -376,14 +388,14 @@ const BASE_DICT: Dict = {
   'report.about.hint': {
     th: 'ข้อมูลนี้ช่วยให้เราหาความช่วยเหลือที่เหมาะกับคุณได้ ถ้าไม่สะดวกตอบ ข้ามไปได้เลยค่ะ',
     en: 'This helps us find the right support for you. If you would rather not answer, feel free to skip.',
-    my: 'သင့်နှင့် ကိုက်ညီသော အကူအညီ ရရန်သာ အသုံးပြုပါမည် — မဖြည့်လည်းရ',
-    km: 'ប្រើដើម្បីភ្ជាប់អ្នកទៅកាន់ជំនួយដែលសមស្រប — មិនបង្ខំ អាចរំលងបាន',
-    lo: 'ໃຊ້ເພື່ອເຊື່ອມທ່ານກັບຄວາມຊ່ວຍເຫຼືອທີ່ເໝາະສົມ — ບໍ່ບັງຄັບ ຂ້າມໄດ້',
+    my: 'သင့်နှင့် ကိုက်ညီသော အကူအညီ ရရန်သာ အသုံးပြုပါမည်။ မဖြည့်လည်းရ',
+    km: 'ប្រើដើម្បីភ្ជាប់អ្នកទៅកាន់ជំនួយដែលសមស្រប។ មិនបង្ខំ អាចរំលងបាន',
+    lo: 'ໃຊ້ເພື່ອເຊື່ອມທ່ານກັບຄວາມຊ່ວຍເຫຼືອທີ່ເໝາະສົມ. ບໍ່ບັງຄັບ ຂ້າມໄດ້',
   },
   'report.about.nationality': { th: 'สัญชาติ', en: 'Nationality', my: 'နိုင်ငံသား', km: 'សញ្ជាតិ', lo: 'ສັນຊາດ' },
   'report.about.nationalityPh': {
     th: 'เช่น ไทย, พม่า, เขมร, ลาว…', en: 'e.g. Thai, Burmese, Khmer, Lao…',
-    my: 'ဥပမာ — ထိုင်း, မြန်မာ, ခမာ, လာအို…', km: 'ឧ. ថៃ, ភូមា, ខ្មែរ, ឡាវ…', lo: 'ຕົວຢ່າງ ໄທ, ມຽນມາ, ກຳປູເຈຍ, ລາວ…',
+    my: 'ဥပမာ ထိုင်း, မြန်မာ, ခမာ, လာအို…', km: 'ឧ. ថៃ, ភូមា, ខ្មែរ, ឡាវ…', lo: 'ຕົວຢ່າງ ໄທ, ມຽນມາ, ກຳປູເຈຍ, ລາວ…',
   },
   'report.about.gender': { th: 'เพศ', en: 'Gender', my: 'ကျား/မ', km: 'ភេទ', lo: 'ເພດ' },
   'report.about.gender.male': { th: 'ชาย', en: 'Male', my: 'ကျား', km: 'ប្រុស', lo: 'ຊາຍ' },
@@ -395,7 +407,7 @@ const BASE_DICT: Dict = {
   'report.about.occupation': { th: 'อาชีพ (ถ้าอยากบอก)', en: 'Occupation (optional)', my: 'အလုပ်အကိုင် (မပြောလည်းရ)', km: 'មុខរបរ (ស្រេចចិត្ត)', lo: 'ອາຊີບ (ຖ້າຕ້ອງການ)' },
   'report.about.occupationPh': {
     th: 'เช่น ร้านนวด, บาร์, ฟรีแลนซ์, โรงงาน…', en: 'e.g. massage shop, bar, freelance, factory…',
-    my: 'ဥပမာ — အနှိပ်ဆိုင်, ဘားများ, အလုပ်အကိုင်အမျိုးမျိုး…', km: 'ឧ. ហាងម៉ាស្សា, បារ, រោងចក្រ…', lo: 'ຕົວຢ່າງ ຮ້ານນວດ, ບາ, ໂຮງງານ…',
+    my: 'ဥပမာ အနှိပ်ဆိုင်, ဘားများ, အလုပ်အကိုင်အမျိုးမျိုး…', km: 'ឧ. ហាងម៉ាស្សា, បារ, រោងចក្រ…', lo: 'ຕົວຢ່າງ ຮ້ານນວດ, ບາ, ໂຮງງານ…',
   },
   'report.story.title': {
     th: 'เล่าเรื่องของคุณ', en: 'Tell us what happened',
@@ -403,10 +415,10 @@ const BASE_DICT: Dict = {
   },
   'report.story.hint': {
     th: 'กดไมค์แล้วเล่าให้เราฟังได้เลย หรือจะพิมพ์ในช่องด้านล่างก็ได้ ใช้ภาษาที่คุณถนัดได้เลยค่ะ',
-    en: 'Tap the mic and speak, or type below — in whichever language you prefer.',
-    my: 'မိုက်ကို နှိပ်ပြီး ပြောပါ သို့မဟုတ် အောက်တွင်ရိုက်ပါ — သင်အဆင်ပြေသော ဘာသာစကားဖြင့်',
-    km: 'ចុចមីក្រូហ្វូនហើយនិយាយ ឬវាយខាងក្រោម — ជាភាសាដែលអ្នកពូកែ',
-    lo: 'ກົດໄມແລ້ວເວົ້າ ຫຼື ພິມຂ້າງລຸ່ມ — ດ້ວຍພາສາທີ່ທ່ານຖະໜັດ',
+    en: 'Tap the mic and speak, or type below, in whichever language you prefer.',
+    my: 'မိုက်ကို နှိပ်ပြီး ပြောပါ သို့မဟုတ် အောက်တွင်ရိုက်ပါ၊ သင်အဆင်ပြေသော ဘာသာစကားဖြင့်',
+    km: 'ចុចមីក្រូហ្វូនហើយនិយាយ ឬវាយខាងក្រោម ជាភាសាដែលអ្នកពូកែ',
+    lo: 'ກົດໄມແລ້ວເວົ້າ ຫຼື ພິມຂ້າງລຸ່ມ ດ້ວຍພາສາທີ່ທ່ານຖະໜັດ',
   },
   'report.story.placeholder': {
     th: 'พิมพ์เรื่องของคุณที่นี่...', en: 'Type your story here...',
@@ -465,19 +477,19 @@ const BASE_DICT: Dict = {
   },
   'report.contact.hint': {
     th: 'ขอเบอร์โทรที่ติดต่อได้จริงนะคะ เจ้าหน้าที่จะโทรกลับไปช่วยประสานหน่วยงานให้ ถ้าไม่มีเบอร์ เราจะส่งเรื่องไม่ได้ค่ะ',
-    en: 'A real phone number is required so staff can call you back and connect you with help — the report cannot be sent without it.',
-    my: 'ဝန်ထမ်းများ ပြန်ဆက်သွယ်နိုင်ရန် ဖုန်းနံပါတ်အစစ် ဖြည့်ရန် လိုအပ်သည် — မဖြည့်ပါက ပို့၍မရပါ',
-    km: 'ត្រូវបញ្ចូលលេខទូរស័ព្ទពិត ដើម្បីឱ្យបុគ្គលិកទាក់ទងអ្នកវិញ — បើមិនបញ្ចូល មិនអាចផ្ញើបានទេ',
-    lo: 'ຕ້ອງໃສ່ເບີໂທລະສັບແທ້ ເພື່ອໃຫ້ເຈົ້າໜ້າທີ່ໂທກັບ — ຖ້າບໍ່ໃສ່ຈະສົ່ງບໍ່ໄດ້',
+    en: 'A real phone number is required so staff can call you back and connect you with help. The report cannot be sent without it.',
+    my: 'ဝန်ထမ်းများ ပြန်ဆက်သွယ်နိုင်ရန် ဖုန်းနံပါတ်အစစ် ဖြည့်ရန် လိုအပ်သည်။ မဖြည့်ပါက ပို့၍မရပါ',
+    km: 'ត្រូវបញ្ចូលលេខទូរស័ព្ទពិត ដើម្បីឱ្យបុគ្គលិកទាក់ទងអ្នកវិញ។ បើមិនបញ្ចូល មិនអាចផ្ញើបានទេ',
+    lo: 'ຕ້ອງໃສ່ເບີໂທລະສັບແທ້ ເພື່ອໃຫ້ເຈົ້າໜ້າທີ່ໂທກັບ. ຖ້າບໍ່ໃສ່ຈະສົ່ງບໍ່ໄດ້',
   },
   'report.contact.name': { th: 'ชื่อหรือชื่อเล่น', en: 'Name or nickname', my: 'နာမည် သို့မဟုတ် အမည်ဝှက်', km: 'ឈ្មោះ ឬឈ្មោះហៅក្រៅ', lo: 'ຊື່ ຫຼື ຊື່ຫຼິ້ນ' },
   'report.contact.phone': { th: 'เบอร์โทรศัพท์ (จำเป็น)', en: 'Phone number (required)', my: 'ဖုန်းနံပါတ် (လိုအပ်)', km: 'លេខទូរស័ព្ទ (ចាំបាច់)', lo: 'ເບີໂທລະສັບ (ຈຳເປັນ)' },
   'report.contact.confirmPhone': {
     th: 'เราใส่เบอร์จากตอนลงทะเบียนไว้ให้แล้ว ตอนนี้ยังโทรหาเบอร์นี้ได้อยู่ไหมคะ',
-    en: 'We filled in the number from your registration — please confirm we can reach you at this number now.',
-    my: 'မှတ်ပုံတင်ထားသော ဖုန်းနံပါတ်ကို ဖြည့်ပေးထားပါသည် — ယခုဤနံပါတ်တွင် ဆက်သွယ်နိုင်ပါသလား အတည်ပြုပါ။',
-    km: 'ប្រព័ន្ធបានបំពេញលេខពីការចុះឈ្មោះរបស់អ្នក — សូមបញ្ជាក់ថាយើងអាចទាក់ទងអ្នកតាមលេខនេះបានឥឡូវនេះ។',
-    lo: 'ລະບົບໄດ້ຕື່ມເບີຈາກການລົງທະບຽນໃຫ້ແລ້ວ — ກະລຸນາຢືນຢັນວ່າສາມາດຕິດຕໍ່ທ່ານໄດ້ທີ່ເບີນີ້ໃນຕອນນີ້',
+    en: 'We filled in the number from your registration. Please confirm we can reach you at this number now.',
+    my: 'မှတ်ပုံတင်ထားသော ဖုန်းနံပါတ်ကို ဖြည့်ပေးထားပါသည်။ ယခုဤနံပါတ်တွင် ဆက်သွယ်နိုင်ပါသလား အတည်ပြုပါ။',
+    km: 'ប្រព័ន្ធបានបំពេញលេខពីការចុះឈ្មោះរបស់អ្នក។ សូមបញ្ជាក់ថាយើងអាចទាក់ទងអ្នកតាមលេខនេះបានឥឡូវនេះ។',
+    lo: 'ລະບົບໄດ້ຕື່ມເບີຈາກການລົງທະບຽນໃຫ້ແລ້ວ. ກະລຸນາຢືນຢັນວ່າສາມາດຕິດຕໍ່ທ່ານໄດ້ທີ່ເບີນີ້ໃນຕອນນີ້',
   },
   'report.contact.useThis': { th: 'ใช่ ใช้เบอร์นี้', en: 'Yes, use this number', my: 'မှန်ပါတယ် ဤနံပါတ်ကို သုံးပါ', km: 'បាទ/ចាស ប្រើលេខនេះ', lo: 'ແມ່ນແລ້ວ ໃຊ້ເບີນີ້' },
   'report.contact.changePhone': { th: 'เปลี่ยนเบอร์', en: 'Change number', my: 'နံပါတ်ပြောင်းရန်', km: 'ប្តូរលេខ', lo: 'ປ່ຽນເບີ' },
@@ -502,10 +514,10 @@ const BASE_DICT: Dict = {
   },
   'report.success.hint': {
     th: 'จดหรือถ่ายรูปรหัสนี้เก็บไว้นะคะ ใช้ดูว่าเรื่องไปถึงไหน และตอบคำถามจากเจ้าหน้าที่ได้ตลอดค่ะ',
-    en: 'Write down or photograph this code — use it anytime to check status and answer follow-up questions from staff.',
-    my: 'ဤကုတ်ကို ချရေးထားပါ သို့မဟုတ် ဓာတ်ပုံရိုက်ထားပါ — အခြေအနေစစ်ရန်နှင့် ဝန်ထမ်းမေးခွန်းများကို အဖြေပေးရန် အသုံးပြုပါ',
-    km: 'សរសេរ ឬថតរូបលេខកូដនេះទុក — ប្រើវាដើម្បីពិនិត្យស្ថានភាព និងឆ្លើយសំណួរបុគ្គលិក',
-    lo: 'ຈົດ ຫຼື ຖ່າຍຮູບລະຫັດນີ້ໄວ້ — ໃຊ້ກວດສະຖານະ ແລະ ຕອບຄຳຖາມຂອງພະນັກງານໄດ້ທຸກເມື່ອ',
+    en: 'Write down or photograph this code. Use it anytime to check status and answer follow-up questions from staff.',
+    my: 'ဤကုတ်ကို ချရေးထားပါ သို့မဟုတ် ဓာတ်ပုံရိုက်ထားပါ။ အခြေအနေစစ်ရန်နှင့် ဝန်ထမ်းမေးခွန်းများကို အဖြေပေးရန် အသုံးပြုပါ',
+    km: 'សរសេរ ឬថតរូបលេខកូដនេះទុក។ ប្រើវាដើម្បីពិនិត្យស្ថានភាព និងឆ្លើយសំណួរបុគ្គលិក',
+    lo: 'ຈົດ ຫຼື ຖ່າຍຮູບລະຫັດນີ້ໄວ້. ໃຊ້ກວດສະຖານະ ແລະ ຕອບຄຳຖາມຂອງພະນັກງານໄດ້ທຸກເມື່ອ',
   },
   'report.success.saveImage': {
     th: 'บันทึกรูปรหัสเคส', en: 'Save code as image',
@@ -513,10 +525,10 @@ const BASE_DICT: Dict = {
   },
   'report.success.shotNote': {
     th: 'หรือแคปหน้าจอนี้เก็บไว้ได้เลยค่ะ รหัสนี้สำคัญมาก ใช้ติดตามเคสและตอบคำถามเจ้าหน้าที่ภายหลัง',
-    en: 'Or take a screenshot of this screen — this code is important for tracking your case and answering staff questions later.',
-    my: 'သို့မဟုတ် ဤမျက်နှာပြင်ကို screenshot ရိုက်ထားပါ — ဤကုတ်သည် အမှုခြေရာခံခြင်းနှင့် ဝန်ထမ်းမေးခွန်းများဖြေရန် အရေးကြီးပါသည်',
-    km: 'ឬថតអេក្រង់នេះទុក — លេខកូដនេះសំខាន់ណាស់សម្រាប់តាមដានករណី និងឆ្លើយសំណួរបុគ្គលិកនៅពេលក្រោយ',
-    lo: 'ຫຼື ແຄັບໜ້າຈໍນີ້ໄວ້ໄດ້ເລີຍ — ລະຫັດນີ້ສຳຄັນຫຼາຍ ໃຊ້ຕິດຕາມເຄສ ແລະ ຕອບຄຳຖາມພະນັກງານພາຍຫຼັງ',
+    en: 'Or take a screenshot of this screen. This code is important for tracking your case and answering staff questions later.',
+    my: 'သို့မဟုတ် ဤမျက်နှာပြင်ကို screenshot ရိုက်ထားပါ။ ဤကုတ်သည် အမှုခြေရာခံခြင်းနှင့် ဝန်ထမ်းမေးခွန်းများဖြေရန် အရေးကြီးပါသည်',
+    km: 'ឬថតអេក្រង់នេះទុក។ លេខកូដនេះសំខាន់ណាស់សម្រាប់តាមដានករណី និងឆ្លើយសំណួរបុគ្គលិកនៅពេលក្រោយ',
+    lo: 'ຫຼື ແຄັບໜ້າຈໍນີ້ໄວ້ໄດ້ເລີຍ. ລະຫັດນີ້ສຳຄັນຫຼາຍ ໃຊ້ຕິດຕາມເຄສ ແລະ ຕອບຄຳຖາມພະນັກງານພາຍຫຼັງ',
   },
   'report.success.track': {
     th: 'ติดตามสถานะเคส', en: 'Track my case',
@@ -528,14 +540,56 @@ const BASE_DICT: Dict = {
   },
   'report.error': {
     th: 'ส่งไม่สำเร็จค่ะ แต่เราเก็บเรื่องไว้ในเครื่องให้แล้ว ลองส่งใหม่ได้ที่หน้ากู้เคสนะคะ',
-    en: 'Submission failed — a copy is saved on this device; you can resend it from the recover page.',
-    my: 'တင်သွင်းမှု မအောင်မြင်ပါ — မိတ္တူကို ဤစက်တွင် သိမ်းထားပါပြီ နောက်မှ ပြန်ပို့နိုင်သည်',
-    km: 'ដាក់ស្នើមិនបាន — ច្បាប់ចម្លងត្រូវបានរក្សាទុកក្នុងឧបករណ៍នេះ អ្នកអាចផ្ញើម្តងទៀតបាន',
-    lo: 'ສົ່ງບໍ່ສຳເລັດ — ສຳເນົາຖືກເກັບໄວ້ໃນອຸປະກອນນີ້ ສາມາດສົ່ງໃໝ່ໄດ້ຈາກຫນ້າກູ້ເຄສ',
+    en: 'Submission failed. A copy is saved on this device, and you can resend it from the recover page.',
+    my: 'တင်သွင်းမှု မအောင်မြင်ပါ။ မိတ္တူကို ဤစက်တွင် သိမ်းထားပါပြီ နောက်မှ ပြန်ပို့နိုင်သည်',
+    km: 'ដាក់ស្នើមិនបាន។ ច្បាប់ចម្លងត្រូវបានរក្សាទុកក្នុងឧបករណ៍នេះ អ្នកអាចផ្ញើម្តងទៀតបាន',
+    lo: 'ສົ່ງບໍ່ສຳເລັດ. ສຳເນົາຖືກເກັບໄວ້ໃນອຸປະກອນນີ້ ສາມາດສົ່ງໃໝ່ໄດ້ຈາກຫນ້າກູ້ເຄສ',
   },
   'report.photo.add': {
     th: 'แนบรูปได้ถ้ามี ไม่เกิน 3 รูปค่ะ', en: 'Attach photos (optional, max 3)',
     my: 'ဓာတ်ပုံများ ပူးတွဲပါ (မဖြည့်လည်းရ ၃ ပုံအထိ)', km: 'ភ្ជាប់រូបភាព (មិនបង្ខំ អតិបរមា ៣)', lo: 'ແນບຮູບພາບ (ບໍ່ບັງຄັບ ສູງສຸດ 3 ຮູບ)',
+  },
+  // Remove button on an attached photo (screen-reader label)
+  'report.photo.remove': {
+    th: 'ลบรูปที่ {n}', en: 'Remove photo {n}',
+    my: 'ဓာတ်ပုံ {n} ကို ဖယ်ရန်', km: 'លុបរូបថតទី {n}', lo: 'ລຶບຮູບທີ {n}',
+  },
+  // Reporter's own chat bubble after attaching photos
+  'report.chat.photos.added': {
+    th: 'แนบรูป {n} รูป', en: 'Attached {n} photo(s)',
+    my: 'ဓာတ်ပုံ {n} ပုံ ပူးတွဲထားသည်', km: 'បានភ្ជាប់រូបថត {n}', lo: 'ແນບຮູບ {n} ຮູບ',
+  },
+  // Shown when copying the case code is blocked (e.g. in-app browsers)
+  'report.success.copyFallback': {
+    th: 'กดค้างที่รหัสเพื่อคัดลอก', en: 'Press and hold the code to copy it',
+    my: 'ကူးယူရန် ကုတ်ကို ဖိထားပါ', km: 'ចុចលេខកូដឱ្យយូរ ដើម្បីចម្លង', lo: 'ກົດຄ້າງທີ່ລະຫັດເພື່ອສຳເນົາ',
+  },
+  // Screen-reader text for the bot "typing" dots
+  'report.chat.typing': {
+    th: 'กำลังพิมพ์คำถามถัดไป', en: 'Writing the next question',
+    my: 'နောက်မေးခွန်းကို ရေးနေသည်', km: 'កំពុងសរសេរសំណួរបន្ទាប់', lo: 'ກຳລັງພິມຄຳຖາມຕໍ່ໄປ',
+  },
+  // Header back button: confirm before leaving a report that is not sent yet
+  'report.leave.title': {
+    th: 'ออกจากหน้านี้ไหม', en: 'Leave this page?',
+    my: 'ဤစာမျက်နှာမှ ထွက်မလား', km: 'ចាកចេញពីទំព័រនេះឬ?', lo: 'ອອກຈາກໜ້ານີ້ບໍ?',
+  },
+  'report.leave.body': {
+    th: 'เรื่องของคุณยังไม่ได้ส่งนะคะ ถ้าออกตอนนี้ สิ่งที่ตอบไว้ในหน้านี้จะหายไปค่ะ',
+    en: 'Your report is not sent yet. If you leave now, your answers on this page will be lost.',
+    my: 'သင့်အစီရင်ခံစာကို မပို့ရသေးပါ။ ယခုထွက်လျှင် ဤစာမျက်နှာရှိ အဖြေများ ပျောက်သွားပါမည်။',
+    km: 'របាយការណ៍របស់អ្នកមិនទាន់បានផ្ញើទេ។ បើចាកចេញឥឡូវ ចម្លើយនៅទំព័រនេះនឹងបាត់។',
+    lo: 'ເລື່ອງຂອງທ່ານຍັງບໍ່ໄດ້ສົ່ງ. ຖ້າອອກຕອນນີ້ ຄຳຕອບໃນໜ້ານີ້ຈະຫາຍໄປ.',
+  },
+  'report.leave.stay': {
+    th: 'อยู่ต่อ', en: 'Stay', my: 'ဆက်နေမည်', km: 'នៅបន្ត', lo: 'ຢູ່ຕໍ່',
+  },
+  'report.leave.go': {
+    th: 'ออกจากหน้านี้', en: 'Leave', my: 'ထွက်မည်', km: 'ចាកចេញ', lo: 'ອອກຈາກໜ້ານີ້',
+  },
+  // sr-only marker next to the "Tell the whole story" toggle once something is written
+  'report.fullStory.added': {
+    th: 'เขียนไว้แล้ว', en: 'written', my: 'ရေးထားပြီး', km: 'បានសរសេរហើយ', lo: 'ຂຽນໄວ້ແລ້ວ',
   },
 
   // ---------- Area picker ----------
@@ -625,22 +679,22 @@ const BASE_DICT: Dict = {
   // ---------- Self report chat ----------
   'report.chat.greet': {
     th: 'สวัสดีค่ะ เราเป็นผู้ช่วยรับเรื่องของมูลนิธิเพื่อนพนักงานบริการ หรือ SWING นะคะ เดี๋ยวจะค่อย ๆ ถามทีละข้อ เหมือนคุยแชตกัน จะพูดหรือพิมพ์ตอบก็ได้ ไม่ต้องสมัครสมาชิก และทุกอย่างเป็นความลับค่ะ',
-    en: "Hello — I'm the SWING Foundation intake assistant. I'll ask one question at a time, just like a chat. Answer by voice or by typing. No sign-up, and everything is confidential.",
-    my: 'မင်္ဂလာပါ — ကျွန်မက SWING ဖောင်ဒေးရှင်းမှ လက်ခံရေးအကူအဖြစ် ဖြစ်ပါတယ် ချက်ပ်လို တစ်မေးခွန်းချင်း မေးပါမယ် အသံဖြင့်သော်လည်းကောင်း ရိုက်ဖြင့်သော်လည်းကောင်း ဖြေနိုင်ပါတယ်',
-    km: 'សួស្តី — ខ្ញុំជាជំនួយការទទួលរឿងរបស់មូលនិធិ SWING ខ្ញុំនឹងសួរម្តងមួយសំណួរដូចជាការជជែក អ្នកអាចឆ្លើយដោយសំឡេង ឬវាយបាន គ្មានការចុះឈ្មោះ និងសម្ងាត់ទាំងស្រុង',
-    lo: 'ສະບາຍດີ — ຂ້ອຍເປັນຜູ້ຊ່ວຍຮັບເລື່ອງຂອງມູນນິທິ SWING ຈະຖາມທີລະຄຳຖາມເຫມືອນຄຸຍໃນແຊັດ ຕອບດ້ວຍສຽງ ຫຼື ພິມກໍ່ໄດ້ ບໍ່ຕ້ອງສະໝັກ ແລະ ເປັນຄວາມລັບ',
+    en: "Hello, I'm the SWING Foundation intake assistant. I'll ask one question at a time, just like a chat. Answer by voice or by typing. No sign-up, and everything is confidential.",
+    my: 'မင်္ဂလာပါ။ ကျွန်မက SWING ဖောင်ဒေးရှင်းမှ လက်ခံရေးအကူအဖြစ် ဖြစ်ပါတယ် ချက်ပ်လို တစ်မေးခွန်းချင်း မေးပါမယ် အသံဖြင့်သော်လည်းကောင်း ရိုက်ဖြင့်သော်လည်းကောင်း ဖြေနိုင်ပါတယ်',
+    km: 'សួស្តី។ ខ្ញុំជាជំនួយការទទួលរឿងរបស់មូលនិធិ SWING ខ្ញុំនឹងសួរម្តងមួយសំណួរដូចជាការជជែក អ្នកអាចឆ្លើយដោយសំឡេង ឬវាយបាន គ្មានការចុះឈ្មោះ និងសម្ងាត់ទាំងស្រុង',
+    lo: 'ສະບາຍດີ, ຂ້ອຍເປັນຜູ້ຊ່ວຍຮັບເລື່ອງຂອງມູນນິທິ SWING ຈະຖາມທີລະຄຳຖາມເຫມືອນຄຸຍໃນແຊັດ ຕອບດ້ວຍສຽງ ຫຼື ພິມກໍ່ໄດ້ ບໍ່ຕ້ອງສະໝັກ ແລະ ເປັນຄວາມລັບ',
   },
   'report.chat.send': { th: 'ส่ง', en: 'Send', my: 'ပို့မည်', km: 'ផ្ញើ', lo: 'ສົ່ງ' },
   'report.chat.skip': { th: 'ข้าม', en: 'Skip', my: 'ကျော်မည်', km: 'រំលង', lo: 'ຂ້າມ' },
   'report.fullStory.title': { th: 'เล่าเรื่องทั้งหมด', en: 'Tell the whole story', my: 'ဖြစ်ရပ်တစ်ခုလုံး ပြောပြပါ', km: 'រៀបរាប់រឿងទាំងមូល', lo: 'ເລົ່າເລື່ອງທັງໝົດ' },
   'report.fullStory.open': { th: 'เปิดเขียน', en: 'Open', my: 'ဖွင့်ရန်', km: 'បើក', lo: 'ເປີດ' },
   'report.fullStory.close': { th: 'ย่อ', en: 'Hide', my: 'ပိတ်ရန်', km: 'បិទ', lo: 'ຫຍໍ້' },
-  'report.fullStory.hint': { th: 'เขียนหรือแก้เรื่องตรงนี้ได้ตลอดเลยค่ะ จนกว่าจะกดส่ง', en: 'Write or edit your story any time — before or after the AI questions — until you submit.', my: 'AI မေးခွန်းများ မတိုင်မီ သို့မဟုတ် ပြီးနောက် မပို့မချင်း အချိန်မရွေး ရေး/ပြင်နိုင်သည်။', km: 'អាចសរសេរ ឬកែរឿងបានគ្រប់ពេល មុន ឬក្រោយសំណួរ AI រហូតដល់ផ្ញើ។', lo: 'ຂຽນ ຫຼື ແກ້ໄຂເລື່ອງໄດ້ຕະຫຼອດ ທັງກ່ອນ ແລະ ຫຼັງຄຳຖາມ AI ຈົນກວ່າຈະສົ່ງ.' },
+  'report.fullStory.hint': { th: 'เขียนหรือแก้เรื่องตรงนี้ได้ตลอดเลยค่ะ จนกว่าจะกดส่ง', en: 'Write or edit your story any time, before or after the AI questions, until you submit.', my: 'AI မေးခွန်းများ မတိုင်မီ သို့မဟုတ် ပြီးနောက် မပို့မချင်း အချိန်မရွေး ရေး/ပြင်နိုင်သည်။', km: 'អាចសរសេរ ឬកែរឿងបានគ្រប់ពេល មុន ឬក្រោយសំណួរ AI រហូតដល់ផ្ញើ។', lo: 'ຂຽນ ຫຼື ແກ້ໄຂເລື່ອງໄດ້ຕະຫຼອດ ທັງກ່ອນ ແລະ ຫຼັງຄຳຖາມ AI ຈົນກວ່າຈະສົ່ງ.' },
   'report.fullStory.placeholder': { th: 'เกิดอะไรขึ้น เมื่อไร ที่ไหน ใครเกี่ยวข้อง...', en: 'What happened, when, where, who was involved...', my: 'ဘာဖြစ်ခဲ့သလဲ၊ ဘယ်အချိန်၊ ဘယ်နေရာ၊ ဘယ်သူ...', km: 'មានអ្វីកើតឡើង ពេលណា នៅឯណា អ្នកណាពាក់ព័ន្ធ...', lo: 'ເກີດຫຍັງຂຶ້ນ ເມື່ອໃດ ຢູ່ໃສ ໃຜກ່ຽວຂ້ອງ...' },
   'report.chat.confirm': { th: 'ยืนยัน', en: 'Confirm', my: 'အတည်ပြုမည်', km: 'បញ្ជាក់', lo: 'ຢືນຢັນ' },
   'report.chat.start': {
-    th: 'ยินยอมและเริ่มเล่า', en: 'I agree — start',
-    my: 'သဘောတူပြီး စတင်ပါမည်', km: 'យល់ព្រម — ចាប់ផ្តើម', lo: 'ຍິນຍອມ ແລະ ເລີ່ມເລົ່າ',
+    th: 'ยินยอมและเริ่มเล่า', en: 'I agree, start',
+    my: 'သဘောတူပြီး စတင်ပါမည်', km: 'យល់ព្រម ចាប់ផ្តើម', lo: 'ຍິນຍອມ ແລະ ເລີ່ມເລົ່າ',
   },
   'train.title': { th: 'บันทึกคำถาม AI สำหรับฝึกโมเดล SWING Rights', en: 'AI question log for SWING Rights training', my: 'SWING Rights လေ့ကျင့်ရန် AI မေးခွန်းမှတ်တမ်း', km: 'កំណត់ត្រាសំណួរ AI សម្រាប់បណ្តុះបណ្តាល SWING Rights', lo: 'ບັນທຶກຄຳຖາມ AI ສຳລັບຝຶກ SWING Rights' },
   'train.hint': { th: 'ผู้แจ้งยินยอมแล้ว ข้อมูลไม่ระบุตัวตน ให้คะแนนคำถามที่ AI ถามต่อ เพื่อใช้ฝึกเฉพาะโมเดลของ SWING Rights', en: 'Reporter opted in; de-identified. Rate each AI follow-up to train only the SWING Rights model.', my: 'တိုင်ကြားသူ သဘောတူထားသည်။ AI နောက်ဆက်မေးခွန်းတိုင်းကို အဆင့်သတ်မှတ်ပါ။', km: 'អ្នករាយការណ៍បានយល់ព្រម។ សូមវាយតម្លៃសំណួរតាមដានរបស់ AI នីមួយៗ។', lo: 'ຜູ້ແຈ້ງຍິນຍອມແລ້ວ. ໃຫ້ຄະແນນຄຳຖາມທີ່ AI ຖາມຕໍ່.' },
@@ -680,10 +734,10 @@ const BASE_DICT: Dict = {
   // ---------- Self report: sequential probing questions ----------
   'report.probe.intro': {
     th: 'ขอถามเพิ่มอีก 5 ข้อสั้น ๆ นะคะ เจ้าหน้าที่จะได้ช่วยคุณได้ตรงจุด ข้อไหนไม่อยากตอบ กดข้ามได้เลยค่ะ',
-    en: 'A few short follow-up questions, one at a time (5 total), so staff can help you precisely — tap "Skip" on any you don\'t want to answer.',
-    my: 'ဝန်ထမ်းများ အတိအကျ ကူညီနိုင်ရန် မေးခွန်းတိုလေးများ တစ်ခုချင်းစီ (စုစုပေါင်း ၅ ခု) — မဖြေချင်ပါက "ကျော်မည်" နှိပ်ပါ',
-    km: 'សំណួរបន្ថែមខ្លីៗ ម្តងមួយ (សរុប ៥) ដើម្បីឱ្យបុគ្គលិកជួយអ្នកបានត្រឹមត្រូវ — ចុច "រំលង" បើមិនចង់ឆ្លើយ',
-    lo: 'ຂໍຖາມລາຍລະອຽດເພີ່ມທີລະຂໍ້ ສັ້ນໆ 5 ຂໍ້ ເພື່ອໃຫ້ເຈົ້າໜ້າທີ່ຊ່ວຍເຫຼືອທ່ານໄດ້ຕົງຈຸດ — ຂໍ້ໃດບໍ່ຢາກຕອບ ກົດ "ຂ້າມ" ໄດ້ເລີຍ',
+    en: 'A few short follow-up questions, one at a time (5 total), so staff can help you precisely. Tap "Skip" on any you don\'t want to answer.',
+    my: 'ဝန်ထမ်းများ အတိအကျ ကူညီနိုင်ရန် မေးခွန်းတိုလေးများ တစ်ခုချင်းစီ (စုစုပေါင်း ၅ ခု)။ မဖြေချင်ပါက "ကျော်မည်" နှိပ်ပါ',
+    km: 'សំណួរបន្ថែមខ្លីៗ ម្តងមួយ (សរុប ៥) ដើម្បីឱ្យបុគ្គលិកជួយអ្នកបានត្រឹមត្រូវ។ ចុច "រំលង" បើមិនចង់ឆ្លើយ',
+    lo: 'ຂໍຖາມລາຍລະອຽດເພີ່ມທີລະຂໍ້ ສັ້ນໆ 5 ຂໍ້ ເພື່ອໃຫ້ເຈົ້າໜ້າທີ່ຊ່ວຍເຫຼືອທ່ານໄດ້ຕົງຈຸດ. ຂໍ້ໃດບໍ່ຢາກຕອບ ກົດ "ຂ້າມ" ໄດ້ເລີຍ',
   },
   'report.probe.count': {
     th: 'คำถามข้อ {i}/{n}', en: 'Question {i} of {n}',
@@ -705,8 +759,8 @@ const BASE_DICT: Dict = {
   },
   'report.probe.who.q': {
     th: 'มีใครเกี่ยวข้องบ้างคะ ไม่ต้องบอกชื่อจริงนะคะ เรียกแบบทั่วไปก็ได้ เช่น นายจ้าง หรือลูกค้า',
-    en: 'Who was involved? (General terms are fine — no real names needed)',
-    my: 'ဘယ်သူများ ပါဝင်ခဲ့သလဲ? (အမည်စစ် မလိုပါ — အထွေထွေ ခေါ်ဝေါ်နိုင်သည်)',
+    en: 'Who was involved? (General terms are fine, no real names needed)',
+    my: 'ဘယ်သူများ ပါဝင်ခဲ့သလဲ? (အမည်စစ် မလိုပါ၊ အထွေထွေ ခေါ်ဝေါ်နိုင်သည်)',
     km: 'មានអ្នកណាពាក់ព័ន្ធខ្លះ? (ប្រើពាក្យទូទៅបាន មិនបាច់ឈ្មោះពិត)',
     lo: 'ມີໃຜກ່ຽວຂ້ອງກັບເຫດການນີ້ແດ່? (ໃຊ້ຄຳເອີ້ນທົ່ວໄປໄດ້ ບໍ່ຕ້ອງລະບຸຊື່ຈິງ)',
   },
@@ -731,10 +785,10 @@ const BASE_DICT: Dict = {
   },
   'report.probe.safety.alert': {
     th: 'ถ้าตอนนี้คุณกำลังอยู่ในอันตราย โทรได้ทันทีเลยนะคะ 191 เหตุด่วนเหตุร้าย, 1300 ศูนย์ช่วยเหลือสตรีและครอบครัว, หรือ 1323 สายด่วนสุขภาพจิต เปิดตลอด 24 ชั่วโมง เราจะแจ้งเจ้าหน้าที่ว่าเรื่องนี้ด่วนให้ค่ะ',
-    en: '⚠️ If you are in danger now, call 191 (emergency), 1300 (women & family helpline) or 1323 (mental health hotline) immediately, 24/7 — this case will be flagged as urgent for staff.',
-    my: '⚠️ အခု အန္တရာယ်ရှိနေပါက 191 (အရေးပေါ်)၊ 1300 (မိသားစု အကူအညီ) သို့မဟုတ် 1323 (စိတ်ကျန်းမာရေး) ကို ချက်ချင်း ခေါ်ပါ — ဤအမှုကို အရေးပေါ်အဖြစ် ဝန်ထမ်းများအား အသိပေးပါမည်',
-    km: '⚠️ បើអ្នកកំពុងមានគ្រោះថ្នាក់ ហៅ 191 (បន្ទាន់) 1300 (ជួយស្រ្តីនិងគ្រួសារ) ឬ 1323 (សុខភាពផ្លូវចិត្ត) ភ្លាមៗ 24 ម៉ោង — ករណីនេះនឹងត្រូវកំណត់ជាបន្ទាន់ដល់បុគ្គលិក',
-    lo: '⚠️ ຖ້າທ່ານກຳລັງຢູ່ໃນອັນຕະລາຍ ໂທ 191 (ເຫດສຸກເສີນ), 1300 (ສູນຊ່ວຍເຫຼືອແມ່ຍິງ ແລະ ຄອບຄົວ) ຫຼື 1323 (ສາຍດ່ວນສຸຂະພາບຈິດ) ໄດ້ທັນທີ ຕະຫຼອດ 24 ຊົ່ວໂມງ — ເຄສນີ້ຈະຖືກແຈ້ງເປັນເລື່ອງດ່ວນໃຫ້ເຈົ້າໜ້າທີ່',
+    en: '⚠️ If you are in danger now, call 191 (emergency), 1300 (women & family helpline) or 1323 (mental health hotline) immediately, 24/7. This case will be flagged as urgent for staff.',
+    my: '⚠️ အခု အန္တရာယ်ရှိနေပါက 191 (အရေးပေါ်)၊ 1300 (မိသားစု အကူအညီ) သို့မဟုတ် 1323 (စိတ်ကျန်းမာရေး) ကို ချက်ချင်း ခေါ်ပါ။ ဤအမှုကို အရေးပေါ်အဖြစ် ဝန်ထမ်းများအား အသိပေးပါမည်',
+    km: '⚠️ បើអ្នកកំពុងមានគ្រោះថ្នាក់ ហៅ 191 (បន្ទាន់) 1300 (ជួយស្រ្តីនិងគ្រួសារ) ឬ 1323 (សុខភាពផ្លូវចិត្ត) ភ្លាមៗ 24 ម៉ោង។ ករណីនេះនឹងត្រូវកំណត់ជាបន្ទាន់ដល់បុគ្គលិក',
+    lo: '⚠️ ຖ້າທ່ານກຳລັງຢູ່ໃນອັນຕະລາຍ ໂທ 191 (ເຫດສຸກເສີນ), 1300 (ສູນຊ່ວຍເຫຼືອແມ່ຍິງ ແລະ ຄອບຄົວ) ຫຼື 1323 (ສາຍດ່ວນສຸຂະພາບຈິດ) ໄດ້ທັນທີ ຕະຫຼອດ 24 ຊົ່ວໂມງ. ເຄສນີ້ຈະຖືກແຈ້ງເປັນເລື່ອງດ່ວນໃຫ້ເຈົ້າໜ້າທີ່',
   },
   'report.probe.needs.q': {
     th: 'ตอนนี้อยากให้เราช่วยเรื่องอะไรมากที่สุดคะ เช่น หาที่พักปลอดภัย ปรึกษากฎหมาย ค่ารักษา หรือไปแจ้งความ',
@@ -796,10 +850,10 @@ const BASE_DICT: Dict = {
   },
   'report.success.urgent': {
     th: 'เราแจ้งเจ้าหน้าที่แล้วว่าเรื่องนี้ด่วน เพราะคุณบอกว่ายังไม่ปลอดภัยค่ะ',
-    en: '🚨 Flagged as urgent because you said you are not safe.',
-    my: '🚨 မလုံခြုံကြောင်း ဖော်ပြထားသောကြောင့် အရေးပေါ်အဖြစ် မှတ်သားပြီးပါပြီ',
-    km: '🚨 បានកំណត់ជាបន្ទាន់ ព្រោះអ្នកបានបញ្ជាក់ថាមិនសុវត្ថិភាព',
-    lo: '🚨 ໝາຍເປັນເຄສດ່ວນແລ້ວ ເພາະທ່ານລະບຸວ່າຍັງບໍ່ປອດໄພ',
+    en: 'Flagged as urgent because you said you are not safe.',
+    my: 'မလုံခြုံကြောင်း ဖော်ပြထားသောကြောင့် အရေးပေါ်အဖြစ် မှတ်သားပြီးပါပြီ',
+    km: 'បានកំណត់ជាបន្ទាន់ ព្រោះអ្នកបានបញ្ជាក់ថាមិនសុវត្ថិភាព',
+    lo: 'ໝາຍເປັນເຄສດ່ວນແລ້ວ ເພາະທ່ານລະບຸວ່າຍັງບໍ່ປອດໄພ',
   },
   'report.success.answered': {
     th: 'ตอบคำถามเพิ่มเติมแล้ว {n} จาก 5 ข้อ', en: 'Answered {n} of 5 follow-up questions',
@@ -863,6 +917,8 @@ export const DICT: Dict = {
   ...CLIENT_DICT,
   ...DOCUMENTS_DICT,
   ...RIGHTS_DICT,
+  ...UI_DICT,
+  ...CASE_DETAIL_DICT,
 };
 
 export function I18nProvider({ children }: { children: ReactNode }) {

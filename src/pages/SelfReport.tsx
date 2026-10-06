@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useId, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { rememberReportCode } from '@/lib/myReports';
 import { supabase as sbAuth } from '@/integrations/supabase/client';
-import { ChevronDown, ChevronLeft, Building2, Camera, Check, Copy, Download, Loader2, MapPin, Paperclip, Phone, SendHorizonal, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, Camera, Check, Copy, Download, Loader2, MapPin, MessageSquare, Paperclip, SendHorizonal, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { PhoneShell } from '@/components/screening/PhoneShell';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -12,8 +12,13 @@ import { AreaPicker, type AreaValue } from '@/components/screening/AreaPicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Illus } from '@/components/Illus';
 import { supabase } from '@/integrations/supabase/client';
-import { useI18n } from '@/i18n';
+import { useI18n, SPEECH_LOCALE } from '@/i18n';
 import { formatArea } from '@/lib/thaiGeo';
 import { stripImageMetadata } from '@/lib/exif';
 import { saveLocalCase, deleteLocalCase } from '@/lib/localCases';
@@ -55,7 +60,7 @@ const NRM_ITEMS: ScreenItem[] = [
 ];
 
 /** Draw a shareable case-code card (brand colors) and download it as PNG. */
-function downloadCodeCard(code: string, labels: { title: string; code: string; track: string; note: string }) {
+function downloadCodeCard(code: string, labels: { title: string; code: string; track: string; note: string; org: string; locale: string }) {
   const W = 1080, H = 1350;
   const cv = document.createElement('canvas');
   cv.width = W; cv.height = H;
@@ -73,7 +78,7 @@ function downloadCodeCard(code: string, labels: { title: string; code: string; t
   ctx.fillText('SWING RIGHTS', W / 2, 110);
   ctx.font = '400 34px "Bai Jamjuree", sans-serif';
   ctx.fillStyle = '#F0F9F9';
-  ctx.fillText('มูลนิธิเพื่อนพนักงานบริการ', W / 2, 170);
+  ctx.fillText(labels.org, W / 2, 170);
   // card
   const cx = 90, cy = 300, cw = W - 180, ch = 620;
   ctx.fillStyle = '#FFFFFF';
@@ -112,7 +117,7 @@ function downloadCodeCard(code: string, labels: { title: string; code: string; t
   }
   if (line) { ctx.fillText(line, W / 2, ny); ny += 50; }
   ctx.font = '400 30px "IBM Plex Mono", monospace';
-  ctx.fillText(new Date().toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' }), W / 2, ny + 20);
+  ctx.fillText(new Date().toLocaleString(labels.locale, { dateStyle: 'long', timeStyle: 'short' }), W / 2, ny + 20);
   // footer band
   ctx.fillStyle = '#CC0099';
   ctx.fillRect(0, H - 120, W, 120);
@@ -159,6 +164,9 @@ interface Partner {
 
 export default function SelfReport() {
   const { lang, t } = useI18n();
+  const navigate = useNavigate();
+  // ids that tie visible labels to their fields
+  const fid = useId();
 
   // ---- chat state ----
   const [msgs, setMsgs] = useState<ChatMsg[]>([]);
@@ -167,6 +175,8 @@ export default function SelfReport() {
   const idRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const bootedRef = useRef(false);
+  // header back button: ask first when the report has answers that are not sent yet
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   // ---- form state ----
   const [audio, setAudio] = useState<Blob | null>(null);
@@ -229,7 +239,7 @@ export default function SelfReport() {
   };
 
   const screenQuestion = (it: ScreenItem) =>
-    it.group === 'q9' ? `${t('rscreen.q9.lead')} — ${t(`rscreen.q.${it.id}`)}` : t(`rscreen.q.${it.id}`);
+    it.group === 'q9' ? `${t('rscreen.q9.lead')}\n${t(`rscreen.q.${it.id}`)}` : t(`rscreen.q.${it.id}`);
 
   const askNextScreen = () => {
     const it = screenQueue.current.shift();
@@ -410,15 +420,36 @@ export default function SelfReport() {
   }, []);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    const box = scrollRef.current;
+    if (!box) return;
+    const behavior: ScrollBehavior = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    const items = box.querySelectorAll<HTMLElement>('[data-msg-id]');
+    const last = items.length ? items[items.length - 1] : null;
+    // A tall bot message (consent card, success screen with the case code) is shown from its
+    // top, so its title and the code stay in view. Everything else scrolls to the newest line.
+    if (!typing && last && last.dataset.msgRole === 'bot' && last.offsetHeight > box.clientHeight * 0.8) {
+      box.scrollTo({ top: Math.max(0, last.offsetTop - 12), behavior });
+      return;
+    }
+    box.scrollTo({ top: box.scrollHeight, behavior });
   }, [msgs, typing]);
+
+  // Keyboard and screen-reader focus: when the answered widget disappears (focus falls back to
+  // <body>), move focus to the newest open question without scrolling or opening the keyboard.
+  useEffect(() => {
+    const active = document.activeElement;
+    if (active && active !== document.body) return;
+    const open = scrollRef.current?.querySelectorAll<HTMLElement>('[data-msg-focus]');
+    const el = open && open.length ? open[open.length - 1] : null;
+    el?.focus({ preventScroll: true });
+  }, [msgs]);
 
   // ---- stage transitions ----
   const agreeConsent = (msgId: number) => {
     resolveWidget(msgId);
     push({ role: 'user', text: t('report.chat.agreed') });
     setStage('about');
-    botSay({ text: `${t('report.about.title')} — ${t('report.about.hint')}`, widget: 'about' });
+    botSay({ text: `${t('report.about.title')}\n${t('report.about.hint')}`, widget: 'about' });
   };
 
   const finishAbout = (msgId: number) => {
@@ -431,7 +462,7 @@ export default function SelfReport() {
     push({ role: 'user', text: parts.length ? parts.join(' · ') : t('report.chat.skipped') });
     // ask province/area first so follow-ups and referral matching know where the person is
     setStage('area');
-    botSay({ text: `${t('report.area.title')} — ${t('report.area.hint')}`, widget: 'area' });
+    botSay({ text: `${t('report.area.title')}\n${t('report.area.hint')}`, widget: 'area' });
   };
 
   const sendStory = () => {
@@ -454,7 +485,7 @@ export default function SelfReport() {
     push({
       role: 'user',
       text: types.length
-        ? types.map((k) => t(`report.type.${k}`)).join(' · ') + (other ? ` — ${other}` : '')
+        ? types.map((k) => t(`report.type.${k}`)).join(' · ') + (other ? `: ${other}` : '')
         : t('report.chat.skipped'),
     });
     // move into the sequential probing interview — skip questions already answered in the story
@@ -470,7 +501,7 @@ export default function SelfReport() {
   };
 
   const probeQuestionText = (i: number) =>
-    `${t('report.probe.count', { i: i + 1, n: PROBE_IDS.length })} — ${t(`report.probe.${PROBE_IDS[i]}.q`)}`;
+    `${t('report.probe.count', { i: i + 1, n: PROBE_IDS.length })}\n${t(`report.probe.${PROBE_IDS[i]}.q`)}`;
 
   /** Answer (or skip) the current probe question, then ask the next one. */
   const answerProbe = (msgId: number, answer: { text: string; blob: Blob | null } | null) => {
@@ -527,10 +558,10 @@ export default function SelfReport() {
     resolveWidget(msgId);
     push({
       role: 'user',
-      text: photos.length ? `${t('report.photo.add').split('(')[0].trim()} ${photos.length} ${t('report.chat.photos.unit')}` : t('report.chat.skipped'),
+      text: photos.length ? t('report.chat.photos.added', { n: photos.length }) : t('report.chat.skipped'),
     });
     setStage('contact');
-    botSay({ text: `${t('report.contact.title')} — ${t('report.contact.hint')}`, widget: 'contact' });
+    botSay({ text: `${t('report.contact.title')}\n${t('report.contact.hint')}`, widget: 'contact' });
   };
 
   const finishArea = (msgId: number, skip: boolean) => {
@@ -540,7 +571,7 @@ export default function SelfReport() {
     push({ role: 'user', text: hasArea ? label : t('report.chat.skipped') });
     if (hasArea) heardRef.current.push(`Province/area where the person is (already answered, do not ask again): ${area.province}${area.district ? ` / ${area.district}` : ''}`);
     setStage('story');
-    botSay({ text: `${t('report.story.title')} — ${t('report.story.hint')}` });
+    botSay({ text: `${t('report.story.title')}\n${t('report.story.hint')}` });
   };
 
   // ---- referral partners: matched for staff only; reporter sees next steps ----
@@ -717,35 +748,66 @@ export default function SelfReport() {
   const answeredProbeCount = PROBE_IDS.filter((q) => probeAnswers[q]?.text).length;
 
   const consentMsg = msgs.find((x) => x.widget === 'consent' && !x.resolved);
+  // The open follow-up question is answered in the bottom composer, not inside the bubble.
+  const activeProbe = msgs.find((x) => x.widget === 'probe' && !x.resolved);
+  const lastBotText = [...msgs].reverse().find((x) => x.role === 'bot' && x.text)?.text ?? '';
+  const inProgress = stage !== 'done' && msgs.some((x) => x.role === 'user');
+  const leavePage = () => navigate('/');
+
+  /** What the listen button reads: the consent card also reads its three summary lines. */
+  const speakTextFor = (m: ChatMsg) =>
+    m.widget === 'consent'
+      ? [m.text, ...(['What', 'Use', 'Who'] as const).map((k) => `${t(`report.consent.sum${k}L`)}: ${t(`report.consent.sum${k}`)}`)].join('\n')
+      : m.text ?? '';
+
+  /** Copy the case code; in-app browsers often block the clipboard, so say how to copy by hand. */
+  const copyCode = (code: string) => {
+    const fallback = () => toast(t('report.success.copyFallback'));
+    let done: Promise<void> | undefined;
+    try { done = navigator.clipboard?.writeText(code); } catch { done = undefined; }
+    if (!done) { fallback(); return; }
+    done.then(() => toast.success(t('report.success.copied')), fallback);
+  };
+
+  // Paired buttons stack on phones and may wrap long my/km/lo labels.
+  const pairBtn = 'h-auto min-h-11 whitespace-normal text-balance rounded-xl';
 
   // ---- render one message ----
   const renderMsg = (m: ChatMsg) => {
     const isBot = m.role === 'bot';
+    // Open widgets and the success card use the whole row, so fields, button pairs and the case code fit.
+    const wide = (!!m.widget && !m.resolved) || m.widget === 'success';
+    const focusable = isBot && !!m.widget && !m.resolved && m.widget !== 'success';
     return (
-      <div key={m.id} className={cn('flex items-start gap-2 animate-fade-in', isBot ? '' : 'flex-row-reverse')}>
+      <div key={m.id} data-msg-id={m.id} data-msg-role={m.role} className={cn('flex items-start gap-2 animate-fade-in', isBot ? '' : 'flex-row-reverse')}>
         {isBot && (
           <span className="w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0 mt-1" aria-hidden>
             <BrandMark className="h-5 w-5" />
           </span>
         )}
         <div
+          tabIndex={focusable ? -1 : undefined}
+          data-msg-focus={focusable ? '' : undefined}
           className={cn(
-            'relative max-w-[85%] rounded-2xl p-3 text-base leading-[1.7] shadow-sm',
+            'relative rounded-2xl p-3 text-base leading-[1.7] shadow-sm',
+            wide ? 'flex-1 min-w-0' : 'max-w-[85%]',
             isBot ? 'bg-card border border-border text-foreground rounded-ss-md' : 'bg-accent-soft text-foreground rounded-se-md',
-            isBot && m.text && 'pe-14',
+            focusable && 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           )}
         >
           {m.text && (
             <>
-              <p className="whitespace-pre-line">{m.text}</p>
-              {isBot && <SpeakButton text={m.text} label={t('report.listenMsg')} className="absolute top-1 end-1 w-11 h-11 [&_svg]:w-4 [&_svg]:h-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />}
+              {/* only the text makes room for the 44px listen button, widgets below use the full width */}
+              <p className={cn('whitespace-pre-line', isBot && 'pe-12 min-h-10')}>{m.text}</p>
+              {isBot && <SpeakButton text={speakTextFor(m)} label={t('report.listenMsg')} className="absolute top-1 end-1 w-11 h-11 [&_svg]:w-4 [&_svg]:h-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />}
             </>
           )}
-          {m.audioUrl && <audio src={m.audioUrl} controls className="w-full h-9 mt-2" />}
+          {m.audioUrl && <audio src={m.audioUrl} controls aria-label={t('common.listen')} className="w-full h-9 mt-2" />}
 
           {/* ---------- interactive widgets ---------- */}
           {m.widget === 'consent' && !m.resolved && (
             <>
+              <Illus name="care" eager className="mx-auto mt-1 mb-1 h-20 w-auto" />
               <ul className="mt-2 space-y-1.5">
                 {(['What', 'Use', 'Who'] as const).map((k) => (
                   <li key={k} className="flex items-start gap-2">
@@ -777,11 +839,11 @@ export default function SelfReport() {
           {m.widget === 'about' && !m.resolved && (
             <div className="mt-2.5 space-y-2.5">
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">{t('report.about.nationality')}</p>
-                <Input value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder={t('report.about.nationalityPh')} maxLength={60} className="bg-card h-9 text-sm" />
+                <label htmlFor={`${fid}-nat`} className="block text-sm font-medium text-muted-foreground mb-1">{t('report.about.nationality')}</label>
+                <Input id={`${fid}-nat`} value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder={t('report.about.nationalityPh')} maxLength={60} className="bg-card h-11 text-base" />
               </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">{t('report.about.gender')}</p>
+              <div role="group" aria-labelledby={`${fid}-gender`}>
+                <p id={`${fid}-gender`} className="text-sm font-medium text-muted-foreground mb-1">{t('report.about.gender')}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {(['male', 'female', 'diverse', 'unspecified'] as const).map((g) => (
                     <button
@@ -800,12 +862,12 @@ export default function SelfReport() {
                 </div>
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">{t('report.about.age')}</p>
-                <Input value={age} onChange={(e) => setAge(e.target.value.replace(/[^\d]/g, '').slice(0, 3))} placeholder={t('report.about.agePh')} inputMode="numeric" className="bg-card h-9 text-sm w-28" />
+                <label htmlFor={`${fid}-age`} className="block text-sm font-medium text-muted-foreground mb-1">{t('report.about.age')}</label>
+                <Input id={`${fid}-age`} value={age} onChange={(e) => setAge(e.target.value.replace(/[^\d]/g, '').slice(0, 3))} placeholder={t('report.about.agePh')} inputMode="numeric" className="bg-card h-11 text-base w-28" />
               </div>
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">{t('report.about.occupation')}</p>
-                <Input value={occupation} onChange={(e) => setOccupation(e.target.value)} placeholder={t('report.about.occupationPh')} maxLength={60} className="bg-card h-9 text-sm" />
+                <label htmlFor={`${fid}-occ`} className="block text-sm font-medium text-muted-foreground mb-1">{t('report.about.occupation')}</label>
+                <Input id={`${fid}-occ`} value={occupation} onChange={(e) => setOccupation(e.target.value)} placeholder={t('report.about.occupationPh')} maxLength={60} className="bg-card h-11 text-base" />
               </div>
               <Button size="sm" className="w-full rounded-xl" onClick={() => finishAbout(m.id)}>
                 {nationality.trim() || gender || age.trim() || occupation.trim() ? t('report.chat.confirm') : t('report.chat.skip')}
@@ -836,8 +898,9 @@ export default function SelfReport() {
                   value={otherText}
                   onChange={(e) => setOtherText(e.target.value)}
                   placeholder={t('report.type.otherPh')}
+                  aria-label={t('report.type.other')}
                   maxLength={200}
-                  className="h-9 text-sm rounded-xl"
+                  className="h-11 text-base rounded-xl"
                 />
               )}
               <Button size="sm" className="w-full rounded-xl" onClick={() => confirmTypes(m.id)}>
@@ -846,54 +909,29 @@ export default function SelfReport() {
             </div>
           )}
 
-          {m.widget === 'probe' && !m.resolved && (
-            <div className="mt-2.5 space-y-2.5">
-              {/* quick choices for the safety question */}
-              {currentProbeId === 'safety' && !fuActive && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {SAFETY_CHOICES.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => answerProbe(m.id, { text: t(`report.probe.safety.${c}`), blob: probeBlob })}
-                      className={cn(
-                        'min-h-12 rounded-xl border px-3 py-2 text-sm font-medium text-start transition active:scale-95',
-                        c === 'unsafe' ? 'border-destructive/50 text-destructive bg-card' : 'border-border bg-card text-muted-foreground',
-                      )}
-                    >
-                      {t(`report.probe.safety.${c}`)}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <VoiceRecorder
-                key={`probe-${m.id}-${probeIdx}`}
-                compact
-                onChange={(b, tx) => { setProbeBlob(b); setProbeTranscript(tx); }}
-              />
-              <div className="flex items-center gap-2">
-                <Input
-                  value={probeDraft}
-                  onChange={(e) => setProbeDraft(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') sendProbeAnswer(m.id); }}
-                  placeholder={probeTranscript || t('report.chat.input.placeholder')}
-                  maxLength={2000}
-                  className="bg-card h-9 text-sm flex-1"
-                />
-                <Button size="sm" className="rounded-xl" disabled={!probeDraft.trim() && !probeTranscript.trim() && !probeBlob} onClick={() => sendProbeAnswer(m.id)} aria-label={t('report.chat.send')}>
-                  <SendHorizonal className="w-4 h-4 rtl:-scale-x-100" />
-                </Button>
-              </div>
-              <Button size="sm" variant="ghost" className="w-full text-xs text-muted-foreground" onClick={() => answerProbe(m.id, null)}>
-                {t('report.chat.skip')}
-              </Button>
+          {/* quick choices for the safety question; typed/voice answers use the bottom composer */}
+          {m.widget === 'probe' && !m.resolved && currentProbeId === 'safety' && !fuActive && (
+            <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {SAFETY_CHOICES.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => answerProbe(m.id, { text: t(`report.probe.safety.${c}`), blob: probeBlob })}
+                  className={cn(
+                    'min-h-12 rounded-xl border px-3 py-2 text-sm font-medium text-start transition active:scale-95',
+                    c === 'unsafe' ? 'border-destructive/50 text-destructive bg-card' : 'border-border bg-card text-muted-foreground',
+                  )}
+                >
+                  {t(`report.probe.safety.${c}`)}
+                </button>
+              ))}
             </div>
           )}
 
           {m.widget === 'screenIntro' && !m.resolved && m.section && (
-            <div className="mt-2.5 flex gap-2">
-              <Button size="sm" className="flex-1 rounded-xl" onClick={() => answerScreenIntro(m.id, m.section!, true)}>{t('rscreen.start')}</Button>
-              <Button size="sm" variant="outline" className="flex-1 rounded-xl" onClick={() => answerScreenIntro(m.id, m.section!, false)}>{t('rscreen.skip')}</Button>
+            <div className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <Button size="sm" className={pairBtn} onClick={() => answerScreenIntro(m.id, m.section!, true)}>{t('rscreen.start')}</Button>
+              <Button size="sm" variant="outline" className={pairBtn} onClick={() => answerScreenIntro(m.id, m.section!, false)}>{t('rscreen.skip')}</Button>
             </div>
           )}
 
@@ -912,9 +950,9 @@ export default function SelfReport() {
                     </button>
                   ))}
                 </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" className="flex-1 text-xs text-muted-foreground" onClick={() => answerScreenItem(m.id, it, null, t('rscreen.noAnswer'))}>{t('rscreen.noAnswer')}</Button>
-                  <Button size="sm" variant="ghost" className="flex-1 text-xs text-muted-foreground" onClick={() => answerScreenItem(m.id, it, 'stop', t('rscreen.stop'))}>{t('rscreen.stop')}</Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button size="sm" variant="ghost" className={cn(pairBtn, 'text-sm font-medium text-muted-foreground')} onClick={() => answerScreenItem(m.id, it, null, t('rscreen.noAnswer'))}>{t('rscreen.noAnswer')}</Button>
+                  <Button size="sm" variant="ghost" className={cn(pairBtn, 'text-sm font-medium text-muted-foreground')} onClick={() => answerScreenItem(m.id, it, 'stop', t('rscreen.stop'))}>{t('rscreen.stop')}</Button>
                 </div>
               </div>
             );
@@ -922,19 +960,23 @@ export default function SelfReport() {
 
           {m.widget === 'photos' && !m.resolved && (
             <div className="mt-2.5 space-y-2.5">
-              <label className="flex items-center gap-2 text-xs font-medium cursor-pointer rounded-xl border border-dashed border-border bg-card px-3 py-2.5">
-                <Paperclip className="w-4 h-4 text-muted-foreground" /> {t('report.photo.add')}
-                <input type="file" accept="image/*" capture="environment" multiple className="hidden"
+              {/* No capture attribute: people often attach an existing screenshot; the picker still offers the camera. */}
+              <label className="relative flex min-h-11 items-center gap-2 text-sm font-medium cursor-pointer rounded-xl border border-dashed border-border bg-card px-3 py-2.5 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                <Paperclip className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden /> {t('report.photo.add')}
+                <input type="file" accept="image/*" multiple className="sr-only"
                   onChange={(e) => { void addPhotos(e.target.files); e.target.value = ''; }} />
               </label>
               {photos.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-4 flex-wrap pt-2">
                   {photos.map((p, i) => (
-                    <div key={i} className="relative">
-                      <img src={p.url} alt="" className="w-14 h-14 rounded-lg object-cover border border-border" />
-                      <button type="button" aria-label="remove" onClick={() => setPhotos((prev) => prev.filter((_, j) => j !== i))}
-                        className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center">
-                        <X className="w-3 h-3" />
+                    <div key={p.url} className="relative">
+                      <img src={p.url} alt={t('track.files.photo', { n: i + 1 })} className="w-14 h-14 rounded-lg object-cover border border-border" />
+                      {/* 44px hit area around a small visible dot */}
+                      <button type="button" aria-label={t('report.photo.remove', { n: i + 1 })} onClick={() => setPhotos((prev) => prev.filter((_, j) => j !== i))}
+                        className="absolute -top-4 -end-4 w-11 h-11 flex items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        <span className="w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-sm">
+                          <X className="w-3.5 h-3.5" aria-hidden />
+                        </span>
                       </button>
                     </div>
                   ))}
@@ -949,11 +991,11 @@ export default function SelfReport() {
           {m.widget === 'area' && !m.resolved && (
             <div className="mt-2.5 space-y-2.5 bg-card rounded-xl p-2.5 border border-border">
               <AreaPicker value={area} onChange={setArea} />
-              <div className="flex gap-2">
-                <Button size="sm" className="flex-1 rounded-xl" disabled={!area.province} onClick={() => finishArea(m.id, false)}>
-                  <MapPin className="w-3.5 h-3.5 me-1" /> {t('report.chat.confirm')}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Button size="sm" className={pairBtn} disabled={!area.province} onClick={() => finishArea(m.id, false)}>
+                  <MapPin className="w-3.5 h-3.5" aria-hidden /> {t('report.chat.confirm')}
                 </Button>
-                <Button size="sm" variant="outline" className="rounded-xl" onClick={() => finishArea(m.id, true)}>
+                <Button size="sm" variant="outline" className={pairBtn} onClick={() => finishArea(m.id, true)}>
                   {t('report.chat.skip')}
                 </Button>
               </div>
@@ -962,13 +1004,13 @@ export default function SelfReport() {
 
           {m.widget === 'contact' && !m.resolved && profilePhone && contact !== profilePhone && (
             <div className="mt-2.5 space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
-              <p className="text-xs text-muted-foreground">{t('report.contact.confirmPhone')}</p>
+              <p className="text-sm text-muted-foreground">{t('report.contact.confirmPhone')}</p>
               <p className="font-mono text-base font-bold tracking-wide text-foreground" dir="ltr">{profilePhone}</p>
-              <div className="flex gap-2">
-                <Button size="sm" className="flex-1 rounded-xl" disabled={submitting} onClick={() => void startPartners(m.id, profilePhone)}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Button size="sm" className={pairBtn} disabled={submitting} onClick={() => void startPartners(m.id, profilePhone)}>
                   {t('report.contact.useThis')}
                 </Button>
-                <Button size="sm" variant="outline" className="flex-1 rounded-xl" onClick={() => { setProfilePhone(null); setContact(''); }}>
+                <Button size="sm" variant="outline" className={pairBtn} onClick={() => { setProfilePhone(null); setContact(''); }}>
                   {t('report.contact.changePhone')}
                 </Button>
               </div>
@@ -976,14 +1018,22 @@ export default function SelfReport() {
           )}
 
           {m.widget === 'contact' && !m.resolved && (!profilePhone || contact === profilePhone) && (
-            <div className="mt-2.5 space-y-2">
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('report.contact.name')} maxLength={120} className="bg-card h-9 text-sm" />
-              <Input
-                value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t('report.contact.phone')}
-                type="tel" inputMode="tel" autoComplete="tel" required aria-required="true" aria-invalid={!!contact && !phoneOk}
-                maxLength={20} className="bg-card h-9 text-sm"
-              />
-              {contact && !phoneOk && <p className="text-xs text-destructive">{t('report.contact.phoneInvalid')}</p>}
+            <div className="mt-2.5 space-y-2.5">
+              <div>
+                <label htmlFor={`${fid}-name`} className="block text-sm font-medium text-muted-foreground mb-1">{t('report.contact.name')}</label>
+                <Input id={`${fid}-name`} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('report.contact.name')} maxLength={120} className="bg-card h-11 text-base" />
+              </div>
+              <div>
+                <label htmlFor={`${fid}-phone`} className="block text-sm font-medium text-muted-foreground mb-1">{t('report.contact.phone')}</label>
+                <Input
+                  id={`${fid}-phone`}
+                  value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t('report.contact.phone')}
+                  type="tel" inputMode="tel" autoComplete="tel" required aria-required="true" aria-invalid={!!contact && !phoneOk}
+                  aria-describedby={contact && !phoneOk ? `${fid}-phone-err` : undefined}
+                  maxLength={20} className="bg-card h-11 text-base"
+                />
+              </div>
+              {contact && !phoneOk && <p id={`${fid}-phone-err`} className="text-sm text-destructive">{t('report.contact.phoneInvalid')}</p>}
               <Button size="sm" className="w-full rounded-xl" disabled={submitting || !phoneOk} onClick={() => void startPartners(m.id)}>
                 {t('report.chat.confirm')}
               </Button>
@@ -992,63 +1042,71 @@ export default function SelfReport() {
 
           {m.widget === 'partners' && !m.resolved && (
             <div className="mt-2.5 space-y-2">
-              <Button size="sm" className="w-full rounded-xl" disabled={submitting} onClick={() => void submit(m.id)}>
-                {submitting ? <><Loader2 className="w-3.5 h-3.5 me-1 animate-spin" />{t('report.submitting')}</> : t('report.submit')}
+              {/* sending the report is the one main action on this step */}
+              <Button variant="action" size="lg" className="w-full rounded-xl" disabled={submitting} aria-busy={submitting} onClick={() => void submit(m.id)}>
+                {submitting ? <><Loader2 className="w-4 h-4 animate-spin" aria-hidden />{t('report.submitting')}</> : t('report.submit')}
               </Button>
             </div>
           )}
 
           {m.widget === 'success' && caseCode && (
             <div className="mt-3 space-y-3 text-center">
-              <BrandMark className="mx-auto h-20 w-20" />
+              <Illus name="group" eager className="mx-auto w-full max-w-[200px]" />
               <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-3">
                 <p className="text-sm text-muted-foreground mb-1">{t('report.success.code')}</p>
-                <p className="font-mono text-[28px] leading-tight font-bold tracking-wider text-primary break-all" dir="ltr">{caseCode}</p>
+                {/* one line on every phone; long-press selects the whole code when copying is blocked */}
+                <p className="font-mono text-[28px] max-[359px]:text-2xl max-[359px]:tracking-wide leading-tight font-bold tracking-wider text-primary whitespace-nowrap tabular-nums select-all" dir="ltr">{caseCode}</p>
                 <p className="mt-1 text-sm text-foreground">{t('report.success.keep')}</p>
-                <Button
-                  size="lg" className="mt-2 w-full rounded-xl"
-                  onClick={() => { void navigator.clipboard?.writeText(caseCode); toast.success(t('report.success.copied')); }}
-                >
-                  <Copy className="w-4 h-4 me-1.5" /> {t('report.success.copy')}
+                <Button size="lg" className="mt-2 w-full rounded-xl" onClick={() => copyCode(caseCode)}>
+                  <Copy className="w-4 h-4" aria-hidden /> {t('report.success.copy')}
                 </Button>
                 <Button
-                  size="sm" variant="outline" className="mt-1.5 w-full rounded-xl text-xs"
+                  size="sm" variant="outline" className={cn(pairBtn, 'mt-2 w-full')}
                   onClick={() => downloadCodeCard(caseCode, {
                     title: t('report.title'),
                     code: t('report.success.code'),
                     track: t('report.success.track'),
                     note: t('report.success.shotNote'),
+                    org: t('common.orgName'),
+                    locale: SPEECH_LOCALE[lang],
                   })}
                 >
-                  <Download className="w-3.5 h-3.5 me-1.5" /> {t('report.success.saveImage')}
+                  <Download className="w-4 h-4" aria-hidden /> {t('report.success.saveImage')}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed flex items-start gap-1.5 text-start">
-                <Camera className="w-3.5 h-3.5 mt-0.5 shrink-0 text-accent" />
+              {/* the one main (magenta) action on this screen, right under the code */}
+              <Button asChild size="lg" variant="action" className="w-full rounded-xl"><Link to="/track" state={{ code: caseCode }}>{t('report.success.track')}</Link></Button>
+              <p className="text-sm text-muted-foreground leading-relaxed flex items-start gap-1.5 text-start">
+                <Camera className="w-4 h-4 mt-1 shrink-0 text-primary" aria-hidden />
                 {t('report.success.shotNote')}
               </p>
               {/* recap: what was collected + where the case goes next */}
               <div className="rounded-xl border border-border bg-card p-3 text-start text-xs space-y-1">
                 <p className="font-semibold text-xs">{t('report.success.summary')}</p>
-                {area.province && <p>📍 {formatArea(area.province, area.district, area.subdistrict, lang)}</p>}
-                <p>{types.map((k) => t(`report.type.${k}`)).join(' · ')}</p>
-                <p>💬 {t('report.success.answered', { n: answeredProbeCount })}</p>
+                {area.province && (
+                  <p className="flex items-start gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" aria-hidden />
+                    {formatArea(area.province, area.district, area.subdistrict, lang)}
+                  </p>
+                )}
+                {types.length > 0 && <p>{types.map((k) => t(`report.type.${k}`)).join(' · ')}</p>}
+                <p className="flex items-start gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" aria-hidden />
+                  {t('report.success.answered', { n: answeredProbeCount })}
+                </p>
                 {safetyRisk && <p className="text-destructive font-medium">{t('report.success.urgent')}</p>}
                 <p className="pt-1 mt-1 border-t border-border font-medium">{t('report.success.forward')}</p>
-                <p>→ {t('report.partners.title')}</p>
+                <p>{t('report.partners.title')}</p>
               </div>
               {!signedIn && (
-                <div className="rounded-xl border-2 border-accent/40 bg-accent/5 p-3 text-start space-y-2">
+                <div className="rounded-xl border border-border bg-muted/40 p-3 text-start space-y-2">
                   <p className="font-semibold text-sm">{t('cl.prompt.title')}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{t('cl.prompt.body')}</p>
-                  <Button asChild size="sm" variant="action" className="w-full rounded-xl"><Link to="/signin">{t('cl.prompt.cta')}</Link></Button>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{t('cl.prompt.body')}</p>
+                  <Button asChild size="sm" variant="outline" className={cn(pairBtn, 'w-full')}><Link to="/signin">{t('cl.prompt.cta')}</Link></Button>
                 </div>
               )}
-              <p className="text-xs text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
-              <div className="grid gap-1.5">
-                <Button asChild size="lg" variant="action" className="rounded-xl"><Link to="/track" state={{ code: caseCode }}>{t('report.success.track')}</Link></Button>
-                <Button asChild size="sm" variant="outline" className="rounded-xl"><Link to="/report" onClick={() => window.location.reload()}>{t('report.success.new')}</Link></Button>
-              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">{t('report.success.hint')}</p>
+              <Button asChild size="sm" variant="outline" className={cn(pairBtn, 'w-full')}><Link to="/report" onClick={() => window.location.reload()}>{t('report.success.new')}</Link></Button>
               <PartnerBar className="mt-4 text-start" />
             </div>
           )}
@@ -1060,10 +1118,23 @@ export default function SelfReport() {
   return (
     <>
       {piiGuard.dialog}
-    <PhoneShell contained={false} title={t('report.title')} onClose={() => { window.location.href = '/'; }} trailing={<LanguageToggle />}>
-      <div className="flex flex-col h-[calc(100dvh-9rem)] max-h-[46rem]">
+      <AlertDialog open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('report.leave.title')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('report.leave.body')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('report.leave.stay')}</AlertDialogCancel>
+            <AlertDialogAction onClick={leavePage}>{t('report.leave.go')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    <PhoneShell contained={false} title={t('report.title')} onBack={() => (inProgress ? setLeaveOpen(true) : leavePage())} trailing={<LanguageToggle />}>
+      {/* 640-767px: the floating Quick Exit pill (bottom-right) would sit over the send button, so the card ends higher */}
+      <div className="flex flex-col h-[calc(100dvh-9rem)] sm:max-md:h-[calc(100dvh-13rem)] max-h-[46rem]">
         {/* progress */}
-        <div className="px-4 pt-3 pb-1">
+        <div className="shrink-0 px-4 pt-3 pb-1">
           <div className="flex gap-1.5" aria-hidden>
             {STAGE_ORDER.map((s, i) => (
               <span key={s} className={cn('h-1.5 flex-1 rounded-full transition-colors', i <= stageIdx ? 'bg-accent' : 'bg-muted')} />
@@ -1075,42 +1146,56 @@ export default function SelfReport() {
         </div>
 
         {/* chat thread */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        <div ref={scrollRef} className="relative flex-1 min-h-28 overflow-y-auto px-4 py-3 space-y-3">
           {msgs.map(renderMsg)}
           {typing && (
             <div className="flex items-end gap-2 animate-fade-in">
-              <span className="w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0">
+              <span className="w-7 h-7 rounded-full bg-primary-soft text-primary flex items-center justify-center shrink-0" aria-hidden>
                 <BrandMark className="h-5 w-5" />
               </span>
-              <span className="rounded-2xl rounded-es-md bg-muted/70 px-4 py-3 flex gap-1">
+              <span role="status" className="rounded-2xl rounded-es-md bg-muted/70 px-4 py-3 flex gap-1">
+                <span className="sr-only">{t('report.chat.typing')}</span>
                 {[0, 1, 2].map((i) => (
-                  <span key={i} className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                  <span key={i} aria-hidden className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 animate-bounce motion-reduce:animate-none" style={{ animationDelay: `${i * 0.15}s` }} />
                 ))}
               </span>
             </div>
           )}
         </div>
+        {/* Screen readers hear each new question once (the thread itself is not a live region,
+            so widget buttons and bullets are not read out every time). */}
+        <p className="sr-only" aria-live="polite">{lastBotText}</p>
 
-        {/* full-story free text — available before and after follow-ups, until submit */}
+        {/* full-story free text, available before and after follow-ups, until submit */}
         {stage !== 'consent' && stage !== 'done' && (
-          <div className="border-t border-border bg-card/95 px-3 py-2">
+          <div className="flex min-h-0 flex-col border-t border-border bg-card/95 px-3 py-1">
             <button
               type="button"
               onClick={() => setStoryOpen((o) => !o)}
               aria-expanded={storyOpen}
-              className="w-full flex items-center justify-between text-start text-sm font-semibold text-foreground py-1"
+              aria-controls={storyOpen ? `${fid}-story` : undefined}
+              className="w-full min-h-11 shrink-0 flex items-center justify-between gap-2 rounded-lg text-start text-sm font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <span>{t('report.fullStory.title')}{fullStory.trim() ? ' ✓' : ''}</span>
+              <span className="inline-flex items-center gap-1.5">
+                {t('report.fullStory.title')}
+                {fullStory.trim() && (
+                  <>
+                    <Check className="w-4 h-4 shrink-0 text-primary" aria-hidden />
+                    <span className="sr-only">{t('report.fullStory.added')}</span>
+                  </>
+                )}
+              </span>
               <span className="text-xs text-primary">{storyOpen ? t('report.fullStory.close') : t('report.fullStory.open')}</span>
             </button>
             {storyOpen && (
-              <div className="space-y-1.5 pt-1">
-                <p className="text-xs text-muted-foreground">{t('report.fullStory.hint')}</p>
+              <div id={`${fid}-story`} className="min-h-0 max-h-[40dvh] overflow-y-auto space-y-1.5 pb-2">
+                <p className="text-sm text-muted-foreground">{t('report.fullStory.hint')}</p>
                 <textarea
                   value={fullStory}
                   onChange={(e) => setFullStory(e.target.value)}
                   rows={5}
                   maxLength={5000}
+                  aria-label={t('report.fullStory.title')}
                   placeholder={t('report.fullStory.placeholder')}
                   className="w-full resize-y rounded-xl border border-border bg-background px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-ring"
                 />
@@ -1121,20 +1206,24 @@ export default function SelfReport() {
           </div>
         )}
 
-        {/* composer — active while answering the story question */}
+        {/* composer, active while answering the story question */}
         {stage === 'story' && !fuActive && (
-          <div className="border-t border-border bg-card/95 backdrop-blur px-3 py-3 space-y-2.5">
-            <VoiceRecorder compact followUp onChange={(b, tx) => { setAudio(b); setTranscript(tx); }} />
-            <PiiHint className="mt-0" />
-            <div className="flex items-end gap-2">
+          <div className="flex min-h-0 flex-col gap-2.5 border-t border-border bg-card/95 backdrop-blur px-3 py-3">
+            {/* recorder, transcript and tips scroll (and shrink) on their own so the send row always stays visible */}
+            <div className="min-h-0 max-h-[38dvh] overflow-y-auto space-y-2.5">
+              <VoiceRecorder compact followUp onChange={(b, tx) => { setAudio(b); setTranscript(tx); }} />
+              <PiiHint className="mt-0" />
+            </div>
+            <div className="flex shrink-0 items-end gap-2">
               <textarea
                 value={draftText}
                 onChange={(e) => setDraftText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (canSendStory) sendStory(); } }}
-                placeholder={transcript || t('report.chat.input.placeholder')}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); if (canSendStory) sendStory(); } }}
+                placeholder={t('report.chat.input.placeholder')}
+                aria-label={t('report.chat.input.placeholder')}
                 rows={2}
                 maxLength={5000}
-                className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <Button
                 size="icon"
@@ -1143,22 +1232,58 @@ export default function SelfReport() {
                 aria-label={t('report.chat.send')}
                 onClick={sendStory}
               >
-                <SendHorizonal className="w-5 h-5 rtl:-scale-x-100" />
+                <SendHorizonal className="w-5 h-5 rtl:-scale-x-100" aria-hidden />
               </Button>
             </div>
           </div>
         )}
 
+        {/* composer for the open follow-up question (fixed and AI questions) */}
+        {activeProbe && (
+          <div className="flex min-h-0 flex-col gap-2 border-t border-border bg-card/95 backdrop-blur px-3 py-3">
+            <div className="min-h-0 max-h-[38dvh] overflow-y-auto">
+              <VoiceRecorder
+                key={`probe-${activeProbe.id}-${probeIdx}`}
+                compact
+                onChange={(b, tx) => { setProbeBlob(b); setProbeTranscript(tx); }}
+              />
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Input
+                value={probeDraft}
+                onChange={(e) => setProbeDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) sendProbeAnswer(activeProbe.id); }}
+                placeholder={t('report.chat.input.placeholder')}
+                aria-label={t('report.chat.input.placeholder')}
+                maxLength={2000}
+                className="bg-background h-11 text-base md:text-sm flex-1 rounded-xl"
+              />
+              <Button
+                size="icon"
+                className="w-11 h-11 rounded-full shrink-0"
+                disabled={!probeDraft.trim() && !probeTranscript.trim() && !probeBlob}
+                aria-label={t('report.chat.send')}
+                onClick={() => sendProbeAnswer(activeProbe.id)}
+              >
+                <SendHorizonal className="w-5 h-5 rtl:-scale-x-100" aria-hidden />
+              </Button>
+            </div>
+            <Button size="sm" variant="ghost" className="w-full shrink-0 text-sm text-muted-foreground" onClick={() => answerProbe(activeProbe.id, null)}>
+              {t('report.chat.skip')}
+            </Button>
+          </div>
+        )}
+
         {/* back link for pre-chat */}
         {stage === 'consent' && (
-          <div className="border-t border-border bg-card px-4 py-2.5 space-y-2">
+          <div className="shrink-0 border-t border-border bg-card px-4 py-2.5 space-y-2">
             {consentMsg && (
               <Button variant="action" size="lg" className="w-full rounded-xl" onClick={() => agreeConsent(consentMsg.id)}>
-                <Check className="w-4 h-4 me-1" /> {t('report.chat.start')}
+                <Check className="w-4 h-4" aria-hidden /> {t('report.chat.start')}
               </Button>
             )}
             <Button asChild variant="ghost" className="min-h-11 text-sm -ms-2">
-              <Link to="/"><ChevronLeft className="w-4 h-4 me-1 rtl:-scale-x-100" />{t('common.back')}</Link>
+              <Link to="/"><ChevronLeft className="w-4 h-4 rtl:-scale-x-100" aria-hidden />{t('common.back')}</Link>
             </Button>
           </div>
         )}

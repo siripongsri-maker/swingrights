@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, CheckCircle2, Loader2, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
+import { useRoleLabels, type AppRole } from '@/hooks/useAccess';
+import { StaffShell, StaffLoadError } from '@/components/admin/StaffShell';
 
 type Row = {
   user_id: string; name_masked: string | null; status: string; roles: string[];
@@ -18,7 +19,7 @@ const DAY = 86_400_000;
 
 export default function AccessReview() {
   const { t, lang } = useI18n();
-  const navigate = useNavigate();
+  const roleLabels = useRoleLabels();
   const qc = useQueryClient();
   const [month, setMonth] = useState(thisMonth());
   const [saving, setSaving] = useState(false);
@@ -57,35 +58,29 @@ export default function AccessReview() {
 
   const inactive = (r: Row) => !r.last_activity || Date.now() - new Date(r.last_activity).getTime() > 30 * DAY;
 
+  const reviewedLine = reviewQ.data
+    ? t('areview.reviewedAt', { date: new Date(reviewQ.data.reviewed_at).toLocaleString(locale) })
+    : t('areview.notReviewed');
+
   return (
-    <div className="min-h-screen bg-background">
-      <main className="max-w-5xl mx-auto px-4 py-6 space-y-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>
-          <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" /> {t('areview.back')}
-        </Button>
+    <StaffShell title={t('areview.title')} context={reviewQ.isSuccess ? reviewedLine : undefined}>
+      <div className="max-w-5xl space-y-4">
         <div className="bg-card border border-border rounded-xl p-4 shadow-card flex flex-wrap items-end gap-3">
-          <div className="flex-1 min-w-[200px]">
-            <h1 className="font-display text-xl font-medium">{t('areview.title')}</h1>
-            <p className="text-xs text-muted-foreground mt-1">
-              {reviewQ.data
-                ? t('areview.reviewedAt', { date: new Date(reviewQ.data.reviewed_at).toLocaleString(locale) })
-                : t('areview.notReviewed')}
-            </p>
-          </div>
-          <label className="text-xs space-y-1">
-            <span className="text-muted-foreground">{t('areview.month')}</span>
-            <Input type="month" value={month} max={thisMonth()} onChange={(e) => e.target.value && setMonth(e.target.value)} />
+          <label className="text-sm space-y-1 flex-1 min-w-[200px] sm:flex-none">
+            <span className="block text-muted-foreground">{t('areview.month')}</span>
+            <Input className="h-11" type="month" value={month} max={thisMonth()} onChange={(e) => e.target.value && setMonth(e.target.value)} />
           </label>
-           <Button variant="action" onClick={markReviewed} disabled={saving || rowsQ.isLoading}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />} {t('areview.markReviewed')}
+          <Button variant="action" onClick={markReviewed} disabled={saving || rowsQ.isLoading}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <CheckCircle2 className="w-4 h-4" aria-hidden />} {t('areview.markReviewed')}
           </Button>
         </div>
+        {reviewQ.isError && <StaffLoadError onRetry={() => void reviewQ.refetch()} />}
 
         <div className="bg-card border border-border rounded-[20px] shadow-card overflow-x-auto">
           {rowsQ.isLoading ? (
-            <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
-          ) : rowsQ.error ? (
-            <p className="p-6 text-sm text-destructive">{t('areview.error')}</p>
+            <div className="p-8 flex justify-center" role="status"><Loader2 className="w-5 h-5 animate-spin text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>
+          ) : rowsQ.isError ? (
+            <StaffLoadError className="m-4" onRetry={() => void rowsQ.refetch()} />
           ) : (rowsQ.data?.length ?? 0) === 0 ? (
             <p className="p-6 text-sm text-muted-foreground">{t('areview.empty')}</p>
           ) : (
@@ -105,17 +100,17 @@ export default function AccessReview() {
                   return (
                     <tr key={r.user_id} className={`border-t border-border ${idle ? 'bg-warning/10' : ''}`}>
                       <td className="p-3">
-                        <div className="font-medium">{r.name_masked || '—'}</div>
+                        <div className="font-medium">{r.name_masked || '-'}</div>
                         <div className="flex gap-1 mt-0.5 flex-wrap">
                           {idle && (
-                            <span className="inline-flex items-center gap-1 text-xs text-warning">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-sevYellow-fg">
                               <AlertTriangle className="w-3 h-3" /> {t('areview.inactive')}
                             </span>
                           )}
                           {r.status === 'suspended' && <span className="text-xs text-muted-foreground">· {t('areview.suspended')}</span>}
                         </div>
                       </td>
-                      <td className="p-3 text-xs">{r.roles.join(', ') || '—'}</td>
+                      <td className="p-3 text-sm">{r.roles.map((x) => roleLabels[x as AppRole] ?? x).join(', ') || '-'}</td>
                       <td className="p-3 text-end tabular-nums">{r.case_views}</td>
                       <td className="p-3 text-end tabular-nums">{r.exports}</td>
                       <td className="p-3 text-xs">{r.last_login ? new Date(r.last_login).toLocaleDateString(locale) : t('areview.never')}</td>
@@ -126,7 +121,7 @@ export default function AccessReview() {
             </table>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </StaffShell>
   );
 }

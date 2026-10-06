@@ -12,7 +12,9 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { SosButton } from '@/components/SosButton';
 import { linkDeviceReports } from '@/lib/myReports';
-import { useI18n } from '@/i18n';
+import { useI18n, type Lang } from '@/i18n';
+
+const DATE_LOCALE: Record<Lang, string> = { th: 'th-TH', en: 'en-GB', my: 'my-MM', km: 'km-KH', lo: 'lo-LA' };
 
 type Profile = {
   first_name: string; last_name: string; phone: string; address: string;
@@ -77,7 +79,8 @@ export default function MyAccount() {
   };
 
   const signOut = async () => { await supabase.auth.signOut(); navigate('/'); };
-  const locale = lang === 'th' ? 'th-TH' : 'en-GB';
+  // Date format follows the UI language (Thai keeps the Buddhist-era year)
+  const locale = DATE_LOCALE[lang];
 
   const field = (k: keyof Profile, label: string, type = 'text', auto?: string) => (
     <div className="space-y-1.5">
@@ -88,17 +91,21 @@ export default function MyAccount() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Below 640px the wordmark and the sign-out label hide so the row fits in 360px */}
       <header className="max-w-2xl mx-auto px-5 pt-6 flex items-center justify-between gap-3">
-        <BrandHeader />
+        <BrandHeader className="max-sm:[&>span]:hidden" />
         <div className="flex items-center gap-2">
           <QuickExitSlot />
           <LanguageToggle />
-          <Button variant="ghost" size="sm" onClick={signOut}><LogOut className="w-4 h-4" /> {t('cl.signout')}</Button>
+          <Button variant="ghost" size="sm" onClick={signOut} className="min-w-11 max-sm:px-0">
+            <LogOut className="w-4 h-4" aria-hidden />
+            <span className="sr-only sm:not-sr-only">{t('cl.signout')}</span>
+          </Button>
         </div>
       </header>
       <main className="max-w-2xl mx-auto px-5 py-6 space-y-5">
-        <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" /> {t('cl.back')}
+        <Link to="/" className="inline-flex min-h-11 items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" aria-hidden /> {t('cl.back')}
         </Link>
         <h1 className="font-display text-3xl font-bold">{t('cl.acc.title')}</h1>
         <p className="font-mono text-xs text-muted-foreground">{email}</p>

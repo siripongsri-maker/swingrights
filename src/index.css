@@ -23,6 +23,7 @@
     --accent-deep: 315 100% 32%;
     --highlight: 0 1% 83%;
     --highlight-soft: 313 62% 80%;
+    --wave: 60 1% 83%;
     --secondary: 180 33% 92%;
     --secondary-foreground: 60 2% 8%;
     --muted: 180 33% 92%;
@@ -70,7 +71,7 @@
     --primary-soft: 180 13% 21%; --primary-deep: 0 0% 100%; --primary-glow: 180 17% 91%;
     --accent: 315 81% 68%; --accent-foreground: 180 21% 7%;
     --accent-soft: 317 61% 15%; --accent-deep: 314 82% 78%;
-    --highlight: 180 13% 21%; --highlight-soft: 312 36% 26%;
+    --highlight: 180 13% 21%; --highlight-soft: 312 36% 26%; --wave: 180 13% 21%;
     --secondary: 180 23% 5%; --secondary-foreground: 180 24% 96%;
     --muted: 180 23% 5%; --muted-foreground: 180 9% 68%;
     --destructive: 358 87% 76%; --destructive-foreground: 180 21% 7%;
@@ -102,7 +103,7 @@
   .text-balance { text-wrap: balance; }
   .animate-fade-in { animation: fadeIn 0.35s ease both; }
   .animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
-  .hover-lift { @apply transition-all duration-300; }
+  .hover-lift { transition: transform 200ms ease-out, box-shadow 200ms ease-out; }
   .hover-lift:hover { transform: translateY(-2px); box-shadow: var(--shadow-elegant); }
 }
 
@@ -138,9 +139,10 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
   .animate-floaty, .animate-drift, .animate-sway, .animate-pulse-ring { animation: none; }
 }
 
+/* Project report prints only itself; every other page (rights, referral letter) prints as is */
 @media print {
-  body * { visibility: hidden; }
-  #project-report, #project-report * { visibility: visible; }
+  body:has(#project-report) * { visibility: hidden; }
+  body:has(#project-report) #project-report, body:has(#project-report) #project-report * { visibility: visible; }
   #project-report { position: absolute; inset: 0; margin: 0; box-shadow: none; border: 0; }
   @page { size: A4; margin: 12mm; }
 }
@@ -150,68 +152,56 @@ h2, h3, h4 { font-family: 'Bai Jamjuree', 'Noto Sans Thai', sans-serif; letter-s
   @page { size: A4; margin: 18mm 15mm;
     @bottom-right { content: "หน้า " counter(page) " / " counter(pages); font: 8pt 'IBM Plex Mono', monospace; color: #5B6168; } }
   html, body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  header, nav, .no-print, [data-quick-exit], button { display: none !important; }
+  header, nav, .no-print, [data-quick-exit], [data-qe-slot], .sw-soft-wave, button { display: none !important; }
   .shadow-card, .shadow-lg, .shadow-md { box-shadow: none !important; }
   table { break-inside: auto; } tr, section, .break-inside-avoid { break-inside: avoid; }
   thead { display: table-header-group; }
   h2, h3 { break-after: avoid; }
 }
 
-/* Sound wave: calm brand motif, bottom 35vh only, settles after ~8s */
-@keyframes wave-bounce {
-  0%, 100% { transform: scaleY(0.3); }
-  50% { transform: scaleY(1); }
+/* Soft sound-wave band (<SoftWave />): 3px rounded bars mirrored around the centre line,
+   --wave grey at the ends warming to --highlight-soft pink in the middle (per-bar --mix),
+   each bar fading to 35% at its tips. Breathes for 8s (2 x 4s) and then rests. */
+@keyframes sw-soft-breathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.82); }
 }
-@keyframes wave-flow {
-  0% { background-position: 0% 0; }
-  100% { background-position: 300% 0; }
-}
-.sw-wave {
-  position: fixed;
-  inset-inline: 0;
-  bottom: 0;
-  height: 35vh;
-  max-height: 35vh;
-  z-index: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 0.35rem;
-  padding: 0 0.5rem;
-  pointer-events: none;
-  opacity: 0.10;
-}
-.sw-wave-bar {
+.sw-soft-wave-bar {
+  position: relative;
   display: block;
-  flex: 1 1 0;
-  max-width: 14px;
+  flex: 0 0 3px;
+  width: 3px;
   border-radius: 999px;
-  transform-origin: bottom;
-  background: linear-gradient(90deg,
-    hsl(var(--accent) / 0.25),
-    hsl(var(--accent)),
-    hsl(var(--highlight-soft)),
-    hsl(var(--accent) / 0.25));
-  background-size: 300% 100%;
-  animation:
-    wave-bounce 2s ease-in-out 4 forwards,
-    wave-flow 8s linear 1 forwards;
+  background: hsl(var(--wave));
+  -webkit-mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.35), rgb(0 0 0) 50%, rgb(0 0 0 / 0.35));
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.35), rgb(0 0 0) 50%, rgb(0 0 0 / 0.35));
+  transform-origin: center;
+  animation: sw-soft-breathe 4s ease-in-out 2 both;
+}
+.sw-soft-wave-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: hsl(var(--highlight-soft));
+  opacity: var(--mix, 0);
 }
 @media (prefers-reduced-motion: reduce) {
-  .sw-wave-bar { animation: none; }
-}
-@media (max-width: 639px) {
-  .sw-wave { gap: 0.4rem; padding: 0 0.4rem; opacity: 0.08; }
-  .sw-wave-bar { max-width: 22px; }
-  .sw-wave-bar:nth-child(even) { display: none; }
+  .sw-soft-wave-bar { animation: none; }
 }
 
-/* Fixed-layer system: bottom bars publish their height, Quick Exit clears them */
+/* Fixed-layer system: bottom bars publish their height, Quick Exit and toasts clear them.
+   Layers: page sticky bars z-30, bottom navs z-40, Radix overlays/sheets z-50, Quick Exit pill
+   z-50 (z-[100] while an overlay is open), popovers z-[1200], toasts on top (lifted clear). */
 :root { --bottom-nav-h: 0px; --action-bar-h: 0px; }
 body:has(.sw-action-bar) { --action-bar-h: 76px; }
 @media (max-width: 639px) {
   body:has(.sw-bottom-nav) { --bottom-nav-h: 64px; }
   .sw-quick-exit-float { top: calc(0.625rem + env(safe-area-inset-top)); inset-inline-end: 0.75rem; }
+}
+/* Staff bottom nav stays up to 1023px (lg:hidden); public bottom navs are phone-only */
+@media (min-width: 640px) and (max-width: 1023px) {
+  body[data-area='admin']:has(.sw-bottom-nav) { --bottom-nav-h: 64px; }
 }
 @media (min-width: 640px) {
   .sw-quick-exit-float {
@@ -220,14 +210,20 @@ body:has(.sw-action-bar) { --action-bar-h: 76px; }
   }
 }
 .sw-pad-action-bar { padding-bottom: calc(var(--action-bar-h) + 1.5rem + env(safe-area-inset-bottom)); }
+/* Add to a sticky bar that sits under the phone's top-right corner: while Quick Exit floats
+   there (its header slot scrolled away), the bar's end makes room for the pill. */
+@media (max-width: 639px) {
+  html[data-qe-float] .sw-qe-clear { padding-inline-end: 9.5rem; }
+}
 
-/* Thai-safe type scale, public screens only */
+/* Thai-safe type scale, public screens only. :where() keeps specificity at a bare element,
+   so size/leading utilities on a heading (text-2xl, leading-snug) still win. */
 body[data-area="public"] { font-size: 16px; line-height: 1.7; }
-body[data-area="public"] h1 { font-size: 28px; line-height: 1.3; text-wrap: balance; }
-body[data-area="public"] h2 { font-size: 22px; line-height: 1.35; text-wrap: balance; }
-body[data-area="public"] h3, body[data-area="public"] h4 { text-wrap: balance; }
+:where(body[data-area="public"]) h1 { font-size: 28px; line-height: 1.3; text-wrap: balance; }
+:where(body[data-area="public"]) h2 { font-size: 22px; line-height: 1.35; text-wrap: balance; }
+:where(body[data-area="public"]) :is(h3, h4) { text-wrap: balance; }
 @media (min-width: 640px) {
-  body[data-area="public"] h1 { font-size: 44px; line-height: 1.2; }
+  :where(body[data-area="public"]) h1 { font-size: 44px; line-height: 1.2; }
 }
 body[data-area="public"] .text-sm { line-height: 1.6; }
 body[data-area="public"] .text-xs { line-height: 1.5; }

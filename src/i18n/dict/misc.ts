@@ -2,8 +2,8 @@ import type { Entry } from '../index';
 
 /**
  * User-facing misc pages & shared components
- * (Recover.tsx, ResetPassword.tsx, ErrorBoundary.tsx, ProtectedRoute.tsx,
- * QuickExit.tsx, SeverityBadge.tsx, lib/localCases.ts, lib/resubmit.ts).
+ * (Track.tsx, Recover.tsx, ResetPassword.tsx, ErrorBoundary.tsx, ProtectedRoute.tsx,
+ * QuickExit.tsx, SeverityBadge.tsx, RouteSeo.tsx, lib/localCases.ts, lib/resubmit.ts).
  * USER-FACING: all 5 languages (th/en/my/km/lo) required for every key.
  */
 export const MISC_DICT: Record<string, Entry> = {
@@ -11,6 +11,9 @@ export const MISC_DICT: Record<string, Entry> = {
   // ---------- Track polish ----------
   'track.codeLabel': { th: 'รหัสเคส', en: 'Case code', my: 'အမှုကုတ်', km: 'លេខកូដករណី', lo: 'ລະຫັດເຄສ' },
   'track.notfoundHint': { th: 'ไม่พบรหัสนี้ ลองเช็กตัวอักษรอีกครั้ง', en: 'Code not found. Please check the letters again.', my: 'ဤကုတ်ကို မတွေ့ပါ။ စာလုံးများကို ပြန်စစ်ပါ။', km: 'រកមិនឃើញលេខកូដនេះ។ សូមពិនិត្យអក្សរម្តងទៀត។', lo: 'ບໍ່ພົບລະຫັດນີ້. ລອງກວດຕົວອັກສອນອີກຄັ້ງ.' },
+  'track.codeHint': { th: 'ตัวอย่าง SW-XXXXXXXX ใส่แค่ตัวเลขและตัวอักษรหลัง SW- ก็ได้', en: 'Example: SW-XXXXXXXX. You can type only the part after SW-.', my: 'ဥပမာ SW-XXXXXXXX။ SW- နောက်က အပိုင်းကိုသာ ရိုက်ထည့်လည်း ရပါသည်။', km: 'ឧទាហរណ៍ SW-XXXXXXXX។ អ្នកអាចវាយតែផ្នែកនៅក្រោយ SW- ក៏បាន។', lo: 'ຕົວຢ່າງ SW-XXXXXXXX. ໃສ່ແຕ່ຕົວເລກ ແລະ ຕົວອັກສອນຫຼັງ SW- ກໍໄດ້.' },
+  'track.tooMany': { th: 'ค้นหาหลายครั้งเกินไป รอประมาณ 10 นาทีแล้วลองใหม่', en: 'Too many tries. Please wait about 10 minutes and try again.', my: 'ရှာဖွေမှု အကြိမ်များလွန်းနေပါသည်။ ၁၀ မိနစ်ခန့် စောင့်ပြီး ထပ်ကြိုးစားပါ။', km: 'ស្វែងរកច្រើនដងពេក។ សូមរង់ចាំប្រហែល 10 នាទី រួចព្យាយាមម្តងទៀត។', lo: 'ຄົ້ນຫາຫຼາຍເທື່ອເກີນໄປ. ລໍຖ້າປະມານ 10 ນາທີ ແລ້ວລອງໃໝ່.' },
+  'track.lookupFailed': { th: 'เชื่อมต่อไม่ได้ ลองเช็กอินเทอร์เน็ตแล้วกดค้นหาอีกครั้ง', en: 'Could not connect. Check your internet and try again.', my: 'ချိတ်ဆက်၍ မရပါ။ အင်တာနက်ကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။', km: 'មិនអាចភ្ជាប់បានទេ។ សូមពិនិត្យអ៊ីនធឺណិត ហើយព្យាយាមម្តងទៀត។', lo: 'ເຊື່ອມຕໍ່ບໍ່ໄດ້. ລອງກວດອິນເຕີເນັດ ແລ້ວກົດຄົ້ນຫາອີກຄັ້ງ.' },
   'track.recoverHint': { th: 'ส่งเรื่องไม่สำเร็จ หรือกรอกค้างไว้?', en: 'Report failed to send, or left unfinished?', my: 'တင်မရခဲ့ သို့မဟုတ် မပြီးသေးဘူးလား?', km: 'ផ្ញើមិនបាន ឬបំពេញមិនទាន់ចប់?', lo: 'ສົ່ງເລື່ອງບໍ່ສຳເລັດ ຫຼື ກອກຄ້າງໄວ້?' },
   'track.recoverLink': { th: 'ดูที่หน้ากู้คืน', en: 'See the recover page', my: 'ပြန်ယူရန် စာမျက်နှာကို ကြည့်ပါ', km: 'មើលទំព័រស្តារ', lo: 'ເບິ່ງທີ່ໜ້າກູ້ຄືນ' },
   'track.nextTitle': { th: 'ขั้นต่อไป', en: 'Next step', my: 'နောက်တစ်ဆင့်', km: 'ជំហានបន្ទាប់', lo: 'ຂັ້ນຕໍ່ໄປ' },
@@ -109,6 +112,22 @@ export const MISC_DICT: Record<string, Entry> = {
   'recover.deleted': {
     th: 'ลบข้อมูลในเครื่องแล้ว', en: 'Local data deleted',
     my: 'စက်ထဲမှ ဒေတာ ဖျက်ပြီးပါပြီ', km: 'បានលុបទិន្នន័យក្នុងឧបករណ៍', lo: 'ລຶບຂໍ້ມູນໃນອຸປະກອນແລ້ວ',
+  },
+  'recover.delete': {
+    th: 'ลบเรื่องนี้ออกจากเครื่อง', en: 'Delete from this device',
+    my: 'ဤစက်ထဲမှ ဖျက်ရန်', km: 'លុបចេញពីឧបករណ៍នេះ', lo: 'ລຶບອອກຈາກອຸປະກອນນີ້',
+  },
+  'recover.deleteConfirmTitle': {
+    th: 'ลบเรื่องนี้ออกจากเครื่องไหม', en: 'Delete this from your device?',
+    my: 'ဤအကြောင်းအရာကို သင့်စက်ထဲမှ ဖျက်မလား။', km: 'លុបរឿងនេះចេញពីឧបករណ៍របស់អ្នកឬ?', lo: 'ລຶບເລື່ອງນີ້ອອກຈາກອຸປະກອນບໍ?',
+  },
+  'recover.deleteConfirmBody': {
+    th: 'ลบแล้วกู้คืนไม่ได้ ถ้ายังไม่ได้ส่ง เรื่องนี้จะหายไป', en: 'This cannot be undone. If it was not sent, it will be lost.',
+    my: 'ဖျက်ပြီးပါက ပြန်ယူ၍ မရပါ။ မပို့ရသေးပါက ဤအကြောင်းအရာ ပျောက်သွားပါမည်။', km: 'លុបហើយមិនអាចស្តារវិញបានទេ។ បើមិនទាន់បានផ្ញើ រឿងនេះនឹងបាត់។', lo: 'ລຶບແລ້ວກູ້ຄືນບໍ່ໄດ້. ຖ້າຍັງບໍ່ໄດ້ສົ່ງ ເລື່ອງນີ້ຈະຫາຍໄປ.',
+  },
+  'recover.cancel': {
+    th: 'ยกเลิก', en: 'Cancel',
+    my: 'မဖျက်တော့ပါ', km: 'បោះបង់', lo: 'ຍົກເລີກ',
   },
 
   // ---------- Vault (localCases.ts describe()) ----------
@@ -247,5 +266,104 @@ export const MISC_DICT: Record<string, Entry> = {
   'severity.red': {
     th: 'สูง', en: 'High',
     my: 'မြင့်', km: 'ខ្ពស់', lo: 'ສູງ',
+  },
+
+  // ---------- Page titles and meta descriptions (RouteSeo.tsx) ----------
+  // Titles use " | " as the separator. Public wording: "arrested" / "detained" (ถูกจับ / ถูกควบคุมตัว).
+  'seo.home.title': {
+    th: 'SWING RIGHTS | แจ้งเหตุและติดตามความช่วยเหลือ', en: 'SWING RIGHTS | Report and track support',
+    my: 'SWING RIGHTS | တိုင်ကြားပြီး အကူအညီကို ခြေရာခံပါ', km: 'SWING RIGHTS | រាយការណ៍ និងតាមដានជំនួយ', lo: 'SWING RIGHTS | ແຈ້ງເຫດ ແລະ ຕິດຕາມຄວາມຊ່ວຍເຫຼືອ',
+  },
+  'seo.home.desc': {
+    th: 'พื้นที่ปลอดภัยสำหรับพนักงานบริการ แจ้งเหตุ รู้สิทธิ และติดตามความช่วยเหลือจากมูลนิธิเพื่อนพนักงานบริการ (SWING)',
+    en: 'A safe space to report rights violations, know your rights and track support from SWING Foundation.',
+    my: 'အခွင့်အရေးချိုးဖောက်မှုကို တိုင်ကြားရန်၊ သင့်အခွင့်အရေးများကို သိရှိရန်နှင့် SWING ဖောင်ဒေးရှင်း၏ အကူအညီကို ခြေရာခံရန် လုံခြုံသောနေရာ။',
+    km: 'កន្លែងសុវត្ថិភាពសម្រាប់រាយការណ៍ការរំលោភសិទ្ធិ ស្គាល់សិទ្ធិរបស់អ្នក និងតាមដានជំនួយពីមូលនិធិ SWING។',
+    lo: 'ພື້ນທີ່ປອດໄພສຳລັບແຈ້ງການລະເມີດສິດ, ຮູ້ສິດຂອງທ່ານ ແລະ ຕິດຕາມຄວາມຊ່ວຍເຫຼືອຈາກມູນນິທິ SWING.',
+  },
+  'seo.report.title': {
+    th: 'แจ้งเรื่องด้วยตนเอง | SWING RIGHTS', en: 'Report a rights violation | SWING RIGHTS',
+    my: 'အခွင့်အရေးချိုးဖောက်မှုကို တိုင်ကြားရန် | SWING RIGHTS', km: 'រាយការណ៍ការរំលោភសិទ្ធិ | SWING RIGHTS', lo: 'ລາຍງານການລະເມີດສິດ | SWING RIGHTS',
+  },
+  'seo.report.desc': {
+    th: 'แจ้งเหตุละเมิดสิทธิได้ด้วยตนเอง พิมพ์หรือพูดได้หลายภาษา ไม่ต้องลงทะเบียน ข้อมูลเก็บเป็นความลับตาม PDPA',
+    en: 'Report a rights violation confidentially by typing or speaking. No account is required, and support is available from SWING Foundation.',
+    my: 'မြန်မာဘာသာဖြင့် စာရိုက်၍ဖြစ်စေ အသံဖြင့်ဖြစ်စေ လျှို့ဝှက်စွာ တိုင်ကြားနိုင်ပါသည်။ အကောင့်ဖွင့်ရန် မလိုအပ်ပါ။',
+    km: 'រាយការណ៍ការរំលោភសិទ្ធិជាភាសាខ្មែរ ដោយវាយអត្ថបទ ឬនិយាយដោយសម្ងាត់។ មិនចាំបាច់ចុះឈ្មោះទេ។',
+    lo: 'ລາຍງານການລະເມີດສິດເປັນພາສາລາວ ດ້ວຍການພິມ ຫຼື ເວົ້າຢ່າງເປັນຄວາມລັບ ໂດຍບໍ່ຕ້ອງລົງທະບຽນ.',
+  },
+  'seo.track.title': {
+    th: 'ติดตามสถานะเรื่อง | SWING RIGHTS', en: 'Track your case | SWING RIGHTS',
+    my: 'အမှုအခြေအနေ စစ်ဆေးရန် | SWING RIGHTS', km: 'តាមដានករណីរបស់អ្នក | SWING RIGHTS', lo: 'ຕິດຕາມສະຖານະເລື່ອງ | SWING RIGHTS',
+  },
+  'seo.track.desc': {
+    th: 'ใช้รหัสเคสเพื่อติดตามสถานะเรื่องที่แจ้งไว้กับ SWING และตอบคำถามจากเจ้าหน้าที่ได้อย่างปลอดภัย',
+    en: 'Use your case code to check the status of your report to SWING and answer questions from staff safely.',
+    my: 'သင့်အမှုကုတ်ဖြင့် SWING သို့ တိုင်ကြားထားသော အကြောင်းအရာ၏ အခြေအနေကို စစ်ဆေးပြီး ဝန်ထမ်းများ၏ မေးခွန်းများကို လုံခြုံစွာ ဖြေဆိုနိုင်ပါသည်။',
+    km: 'ប្រើលេខកូដករណីរបស់អ្នក ដើម្បីតាមដានស្ថានភាពរឿងដែលបានរាយការណ៍ទៅ SWING និងឆ្លើយសំណួររបស់បុគ្គលិកដោយសុវត្ថិភាព។',
+    lo: 'ໃຊ້ລະຫັດເຄສເພື່ອຕິດຕາມສະຖານະເລື່ອງທີ່ແຈ້ງໄວ້ກັບ SWING ແລະ ຕອບຄຳຖາມຈາກພະນັກງານໄດ້ຢ່າງປອດໄພ.',
+  },
+  'seo.rights.title': {
+    th: 'รู้สิทธิของคุณ | SWING RIGHTS', en: 'Know your rights | SWING RIGHTS',
+    my: 'သင့်အခွင့်အရေးများကို သိထားပါ | SWING RIGHTS', km: 'ស្គាល់សិទ្ធិរបស់អ្នក | SWING RIGHTS', lo: 'ຮູ້ສິດຂອງທ່ານ | SWING RIGHTS',
+  },
+  'seo.rights.desc': {
+    th: 'สิทธิพื้นฐานของคุณถ้าถูกจับหรือถูกควบคุมตัว อ่านเก็บไว้ก่อน และโทรหา SWING ได้จากหน้านี้',
+    en: 'Your basic rights if you are arrested or detained. Read them now, and call SWING from this page.',
+    my: 'ဖမ်းဆီးခံရလျှင် သို့မဟုတ် ထိန်းသိမ်းခံရလျှင် သင့်အခြေခံအခွင့်အရေးများ။ ကြိုတင်ဖတ်ထားပြီး ဤစာမျက်နှာမှ SWING ကို ဖုန်းဆက်နိုင်ပါသည်။',
+    km: 'សិទ្ធិមូលដ្ឋានរបស់អ្នក ប្រសិនបើអ្នកត្រូវបានចាប់ខ្លួន ឬឃុំខ្លួន។ អានទុកជាមុន ហើយទូរស័ព្ទទៅ SWING ពីទំព័រនេះ។',
+    lo: 'ສິດພື້ນຖານຂອງທ່ານ ຖ້າຖືກຈັບ ຫຼື ຖືກຄວບຄຸມຕົວ. ອ່ານໄວ້ກ່ອນ ແລະ ໂທຫາ SWING ໄດ້ຈາກໜ້ານີ້.',
+  },
+  'seo.privacy.title': {
+    th: 'นโยบายความเป็นส่วนตัว | SWING RIGHTS', en: 'Privacy policy | SWING RIGHTS',
+    my: 'ကိုယ်ရေးအချက်အလက် မူဝါဒ | SWING RIGHTS', km: 'គោលការណ៍ឯកជនភាព | SWING RIGHTS', lo: 'ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ | SWING RIGHTS',
+  },
+  'seo.privacy.desc': {
+    th: 'วิธีที่มูลนิธิเพื่อนพนักงานบริการเก็บ ใช้ และคุ้มครองข้อมูลส่วนบุคคลของคุณตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล',
+    en: "How SWING Foundation collects, uses and protects your personal data under Thailand's Personal Data Protection Act (PDPA).",
+    my: 'SWING ဖောင်ဒေးရှင်းက သင့်ကိုယ်ရေးအချက်အလက်များကို ထိုင်းနိုင်ငံ ကိုယ်ရေးအချက်အလက် ကာကွယ်ရေးဥပဒေ (PDPA) အတိုင်း စုဆောင်း၊ အသုံးပြုပြီး ကာကွယ်ပုံ။',
+    km: 'របៀបដែលមូលនិធិ SWING ប្រមូល ប្រើប្រាស់ និងការពារទិន្នន័យផ្ទាល់ខ្លួនរបស់អ្នក តាមច្បាប់ការពារទិន្នន័យផ្ទាល់ខ្លួនរបស់ថៃ (PDPA)។',
+    lo: 'ວິທີທີ່ມູນນິທິ SWING ເກັບ, ໃຊ້ ແລະ ປົກປ້ອງຂໍ້ມູນສ່ວນບຸກຄົນຂອງທ່ານ ຕາມກົດໝາຍຄຸ້ມຄອງຂໍ້ມູນສ່ວນບຸກຄົນຂອງໄທ (PDPA).',
+  },
+  'seo.signin.title': {
+    th: 'เข้าสู่ระบบ | SWING RIGHTS', en: 'Sign in | SWING RIGHTS',
+    my: 'အကောင့်ဝင်ရန် | SWING RIGHTS', km: 'ចូលគណនី | SWING RIGHTS', lo: 'ເຂົ້າສູ່ລະບົບ | SWING RIGHTS',
+  },
+  'seo.signin.desc': {
+    th: 'เข้าสู่ระบบหรือสมัครบัญชีผู้แจ้งเพื่อติดตามเคสของคุณและใช้ปุ่ม SOS ติดต่อเจ้าหน้าที่ SWING',
+    en: 'Sign in or create a reporter account to follow your cases and use the SOS button to reach SWING staff.',
+    my: 'သင့်အမှုများကို ခြေရာခံရန်နှင့် SOS ခလုတ်ဖြင့် SWING ဝန်ထမ်းများကို ဆက်သွယ်ရန် အကောင့်ဝင်ပါ သို့မဟုတ် အကောင့်ဖွင့်ပါ။',
+    km: 'ចូលគណនី ឬបង្កើតគណនីអ្នករាយការណ៍ ដើម្បីតាមដានករណីរបស់អ្នក និងប្រើប៊ូតុង SOS ទាក់ទងបុគ្គលិក SWING។',
+    lo: 'ເຂົ້າສູ່ລະບົບ ຫຼື ສ້າງບັນຊີຜູ້ແຈ້ງ ເພື່ອຕິດຕາມເຄສຂອງທ່ານ ແລະ ໃຊ້ປຸ່ມ SOS ຕິດຕໍ່ພະນັກງານ SWING.',
+  },
+  'seo.recover.title': {
+    th: 'กู้เรื่องที่ค้างในเครื่อง | SWING RIGHTS', en: 'Recover saved reports | SWING RIGHTS',
+    my: 'သိမ်းထားသော တိုင်ကြားချက်များ ပြန်ယူရန် | SWING RIGHTS', km: 'ស្តាររបាយការណ៍ដែលបានរក្សាទុក | SWING RIGHTS', lo: 'ກູ້ເລື່ອງທີ່ຄ້າງໃນອຸປະກອນ | SWING RIGHTS',
+  },
+  'seo.recover.desc': {
+    th: 'ส่งเรื่องที่กรอกค้างไว้หรือส่งไม่สำเร็จจากเครื่องนี้อีกครั้ง',
+    en: 'Resend reports that were left unfinished or failed to send from this device.',
+    my: 'ဤစက်မှ မပြီးသေးသော သို့မဟုတ် ပို့မရခဲ့သော တိုင်ကြားချက်များကို ပြန်ပို့ပါ။',
+    km: 'ផ្ញើរបាយការណ៍ដែលមិនទាន់បំពេញចប់ ឬផ្ញើមិនបាន ពីឧបករណ៍នេះម្តងទៀត។',
+    lo: 'ສົ່ງເລື່ອງທີ່ກອກຄ້າງໄວ້ ຫຼື ສົ່ງບໍ່ສຳເລັດຈາກອຸປະກອນນີ້ອີກຄັ້ງ.',
+  },
+  'seo.intake.title': {
+    th: 'รับเรื่องโดยเจ้าหน้าที่ | SWING Foundation', en: 'Staff intake | SWING Foundation',
+    my: 'ဝန်ထမ်း လက်ခံမှတ်တမ်း | SWING Foundation', km: 'ការទទួលរឿងដោយបុគ្គលិក | SWING Foundation', lo: 'ຮັບເລື່ອງໂດຍພະນັກງານ | SWING Foundation',
+  },
+  'seo.intake.desc': {
+    th: 'แบบฟอร์มรับเรื่องสำหรับเจ้าหน้าที่มูลนิธิเพื่อนพนักงานบริการ บันทึกเสียง ประเมิน และส่งต่อความช่วยเหลือ',
+    en: 'Intake form for SWING Foundation staff: record, assess and refer for support.',
+    my: 'SWING ဖောင်ဒေးရှင်း ဝန်ထမ်းများအတွက် လက်ခံပုံစံ။ အသံသွင်း၊ အကဲဖြတ်ပြီး အကူအညီသို့ လွှဲပို့ပါ။',
+    km: 'ទម្រង់ទទួលរឿងសម្រាប់បុគ្គលិកមូលនិធិ SWING៖ ថតសំឡេង វាយតម្លៃ និងបញ្ជូនបន្តដើម្បីជំនួយ។',
+    lo: 'ແບບຟອມຮັບເລື່ອງສຳລັບພະນັກງານມູນນິທິ SWING: ບັນທຶກສຽງ, ປະເມີນ ແລະ ສົ່ງຕໍ່ຄວາມຊ່ວຍເຫຼືອ.',
+  },
+  'seo.fallback.title': { th: 'SWING RIGHTS', en: 'SWING RIGHTS', my: 'SWING RIGHTS', km: 'SWING RIGHTS', lo: 'SWING RIGHTS' },
+  'seo.fallback.desc': {
+    th: 'พื้นที่ปลอดภัยสำหรับแจ้งเหตุ รู้สิทธิ และติดตามความช่วยเหลือจาก SWING',
+    en: 'A safe space to report, know your rights and track support from SWING.',
+    my: 'SWING ထံ တိုင်ကြားရန်၊ အခွင့်အရေးများ သိရှိရန်နှင့် အကူအညီကို ခြေရာခံရန် လုံခြုံသောနေရာ။',
+    km: 'កន្លែងសុវត្ថិភាពសម្រាប់រាយការណ៍ ស្គាល់សិទ្ធិ និងតាមដានជំនួយពី SWING។',
+    lo: 'ພື້ນທີ່ປອດໄພສຳລັບແຈ້ງເຫດ, ຮູ້ສິດ ແລະ ຕິດຕາມຄວາມຊ່ວຍເຫຼືອຈາກ SWING.',
   },
 };

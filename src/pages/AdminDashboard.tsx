@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/screening/StatusBadge';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
-import { CaseStatus, STATUS_LABEL, BRANCHES } from '@/lib/screening';
+import { CaseStatus, STATUS_LABEL, SEV_LABEL, BRANCHES, VIOLATION_TYPES, type Severity } from '@/lib/screening';
 import { q9Level } from '@/lib/screeningTools';
 import { printCaseReport, logExport, AI_DISCLAIMER, type CaseReportData } from '@/lib/caseReport';
 import { useCaseAlerts, type CaseAlert } from '@/hooks/useCaseAlerts';
@@ -33,7 +33,7 @@ import { BrandMark } from '@/components/BrandLogo';
 import { CaseAnswersEditor } from '@/components/admin/CaseAnswersEditor';
 import { CaseTrainingSamples } from '@/components/admin/CaseTrainingSamples';
 import { DashboardOverview } from '@/components/admin/DashboardOverview';
-import { StaffShell } from '@/components/admin/StaffShell';
+import { StaffShell, StaffLoadError } from '@/components/admin/StaffShell';
 import { CaseDetail } from '@/components/admin/CaseDetail';
 import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -114,10 +114,12 @@ const isFollowOverdue = (c: { follow_up_at: string | null; status: CaseStatus })
 const isHigh = (c: QueueRow) => c.severity === 'red' || c.suicide_risk;
 const isNrm = (c: QueueRow) => !!(c.ai_result?.trafficking_suspected || c.profile?.trafficking_suspected
   || (Array.isArray(c.profile?.special_tests) && c.profile.special_tests.includes('nrm')));
+// Staff intake stores the Thai label, self-report stores the id: show both as the same id (display only).
+const toTypeId = (x: string) => VIOLATION_TYPES.find((v) => v.label === x)?.id ?? x;
 const typesOf = (c: QueueRow): string[] => Array.from(new Set([
   ...(Array.isArray(c.violation_types) ? c.violation_types : []),
   ...(Array.isArray(c.profile?.initialViolationTypes) ? c.profile.initialViolationTypes : []),
-]));
+].map(toTypeId)));
 
 /** Urgency: unanswered first (most overdue / least time left), then answered by follow-up date. */
 function urgencySort(a: QueueRow, b: QueueRow) {
@@ -134,11 +136,17 @@ function SlaPill({ c }: { c: { created_at: string; first_response_at: string | n
   const base = 'inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums';
   if (c.first_response_at) return <span className={cn(base, 'bg-muted text-muted-foreground')}><Check className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.done')}</span>;
   const left = hoursLeft(c.created_at);
-  if (left <= 0) return <span className={cn(base, 'bg-destructive text-destructive-foreground')}><AlertTriangle className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.over', { h: Math.floor(-left) })}</span>;
+  if (left <= 0) return <span className={cn(base, 'bg-destructive text-destructive-foreground')}><AlertTriangle className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.over', { h: Math.max(1, Math.ceil(-left)) })}</span>;
   const h = Math.ceil(left);
   return left < 6
     ? <span className={cn(base, 'bg-sevYellow-bg text-sevYellow-fg')}><Clock className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.left', { h })}</span>
     : <span className={cn(base, 'bg-sevGreen-bg text-sevGreen-fg')}><Clock className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.left', { h })}</span>;
+}
+
+/** Violation type id (or a legacy free-text label) as words in the current language. */
+function useTypeLabel() {
+  const { t } = useI18n();
+  return (id: string) => { const v = t(`report.type.${id}`); return v === `report.type.${id}` ? id : v; };
 }
 
 function SevCell({ v }: { v: QueueRow['severity'] }) {
@@ -169,7 +177,9 @@ function Flags({ c }: { c: QueueRow }) {
 export default function AdminDashboard() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
+  const typeLabel = useTypeLabel();
   const { id: routeCaseId } = useParams();
   const qc = useQueryClient();
   const [authorized, setAuthorized] = useState(false);
@@ -178,7 +188,9 @@ export default function AdminDashboard() {
   const view: StaffView = pathname.startsWith('/admin/cases') ? 'cases'
     : pathname.startsWith('/admin/caseload') ? 'caseload'
     : pathname.startsWith('/admin/overview') ? 'overview' : 'queue';
-  const openCase = (id: string) => navigate(`/admin/case/${id}`);
+  // `from` lets the case page label its back link with the list it came from
+  const caseState = { from: pathname };
+  const openCase = (id: string) => navigate(`/admin/case/${id}`, { state: caseState });
 
   // filters (server-side)
   const [status, setStatus] = useState<'all' | CaseStatus>('all');
@@ -287,6 +299,9 @@ export default function AdminDashboard() {
         .from('case_alerts')
         .select(sel('id, case_id, case_code, branch, level, kind, acknowledged_at, created_at'))
         .is('acknowledged_at', null)
+        // Only the kinds the banner shows. new_case rows are never acknowledged, so without this
+        // filter they push unacknowledged high-risk and self-harm alerts out of the newest 20.
+        .in('kind', ['high_risk', 'suicide_risk'])
         .order('created_at', { ascending: false })
         .limit(20)
         .returns<CaseAlert[]>();
@@ -329,7 +344,8 @@ export default function AdminDashboard() {
   const stats = statsQ.data;
   const totalPages = Math.max(1, Math.ceil((casesQ.data?.count ?? 0) / PAGE_SIZE));
 
-  const highAlerts = (alertsQ.data ?? []).filter((a) => a.kind !== 'new_case');
+  // SLA-warning and unassigned reminders keep their own toasts; the banner is high risk and self-harm only
+  const highAlerts = (alertsQ.data ?? []).filter((a) => a.kind === 'high_risk' || a.kind === 'suicide_risk');
   const alertIds = new Set(highAlerts.map((a) => a.case_id).filter(Boolean) as string[]);
 
   const chipTest: Record<QueueChip, (c: QueueRow) => boolean> = {
@@ -369,7 +385,8 @@ export default function AdminDashboard() {
     const lines = [headers.join(',')];
     rows.forEach((c: any) => {
       lines.push([
-        c.case_code, new Date(c.created_at).toLocaleString('th-TH'), STATUS_LABEL[c.status as CaseStatus], c.severity || '',
+        c.case_code, new Date(c.created_at).toLocaleString('th-TH'), STATUS_LABEL[c.status as CaseStatus],
+        c.severity ? (SEV_LABEL[c.severity as Severity] ?? c.severity) : '',
         c.profile?.branch || '', c.profile?.kp || '', c.profile?.gender || '', c.profile?.age || '',
         c.victim?.name_masked || '', c.profile?.incidentPlace || '',
         c.has_violation ? t('dash.csv.yes') : t('dash.csv.no'), (c.violation_details || []).join(' | '),
@@ -399,7 +416,8 @@ export default function AdminDashboard() {
           caseId={routeCaseId}
           staff={staffQ.data ?? []}
           staffName={staffName}
-          onBack={() => (window.history.length > 1 ? navigate(-1) : navigate('/admin'))}
+          // history.length also counts other sites' entries; location.key is 'default' on a fresh tab
+          onBack={() => (location.key !== 'default' ? navigate(-1) : navigate('/admin'))}
           onChanged={invalidateCase}
         />
       </StaffShell>
@@ -507,7 +525,9 @@ export default function AdminDashboard() {
           </div>
 
           {queueQ.isLoading ? (
-            <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>
+            <div className="py-12 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>
+          ) : queueQ.isError ? (
+            <StaffLoadError onRetry={() => void queueQ.refetch()} />
           ) : queueRows.length === 0 ? (
             <p className="text-sm text-center text-muted-foreground py-12">{t('staff.queueEmpty')}</p>
           ) : (
@@ -525,9 +545,9 @@ export default function AdminDashboard() {
                     {queueRows.map((c) => (
                       <tr key={c.id} className="border-t border-border h-16 align-middle hover:bg-primary-soft/40">
                         <td className="px-3"><SlaPill c={c} /></td>
-                        <td className="px-3"><Link to={`/admin/case/${c.id}`} className="inline-flex min-h-11 items-center whitespace-nowrap font-mono font-semibold text-accent underline-offset-4 hover:underline">{c.case_code}</Link></td>
+                        <td className="px-3"><Link to={`/admin/case/${c.id}`} state={caseState} className="inline-flex min-h-11 items-center whitespace-nowrap font-mono font-semibold text-accent underline-offset-4 hover:underline">{c.case_code}</Link></td>
                         <td className="px-3 whitespace-nowrap"><SevCell v={c.severity} /></td>
-                        <td className="px-3 text-sm">{typesOf(c).map((x) => t(`report.type.${x}`)).join(', ') || '-'}</td>
+                        <td className="px-3 text-sm">{typesOf(c).map(typeLabel).join(', ') || '-'}</td>
                         <td className="px-3"><Flags c={c} /></td>
                         <td className="px-3 text-sm">{c.profile?.province || c.profile?.branch || '-'}</td>
                         <td className="px-3"><Owner c={c} name={staffName(c.assigned_to)} canClaim={access.canEdit} onClaim={() => claim.mutate(c.id)} busy={claim.isPending} /></td>
@@ -540,12 +560,12 @@ export default function AdminDashboard() {
                 {queueRows.map((c) => (
                   <li key={c.id} className="rounded-2xl border border-border bg-card p-4 shadow-card space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Link to={`/admin/case/${c.id}`} className="inline-flex min-h-11 items-center font-mono text-base font-semibold text-accent underline underline-offset-4">{c.case_code}</Link>
+                      <Link to={`/admin/case/${c.id}`} state={caseState} className="inline-flex min-h-11 items-center font-mono text-base font-semibold text-accent underline underline-offset-4">{c.case_code}</Link>
                       <SlaPill c={c} />
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <SevCell v={c.severity} />
-                      <span className="text-sm text-muted-foreground">{typesOf(c).map((x) => t(`report.type.${x}`)).join(', ')}</span>
+                      <span className="text-sm text-muted-foreground">{typesOf(c).map(typeLabel).join(', ')}</span>
                     </div>
                     <Flags c={c} />
                     <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
@@ -601,7 +621,9 @@ export default function AdminDashboard() {
           </div>
 
           {casesQ.isLoading ? (
-            <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>
+            <div className="py-12 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>
+          ) : casesQ.isError ? (
+            <StaffLoadError onRetry={() => void casesQ.refetch()} />
           ) : (casesQ.data?.rows.length ?? 0) === 0 ? (
             <p className="text-sm text-center text-muted-foreground py-12">{t('dash.cases.noneFound')}</p>
           ) : (
@@ -610,7 +632,7 @@ export default function AdminDashboard() {
                 const overdue = isFollowOverdue(c);
                 return (
                   <li key={c.id}>
-                    <Link to={`/admin/case/${c.id}`}
+                    <Link to={`/admin/case/${c.id}`} state={caseState}
                       className="block w-full min-h-16 text-start bg-card border border-border rounded-2xl p-4 hover:border-primary transition-colors shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <span className="font-mono text-sm font-semibold">{c.case_code}</span>
@@ -639,14 +661,18 @@ export default function AdminDashboard() {
               {t('dash.cases.pageInfo', { n: casesQ.data?.count ?? 0, page: page + 1, total: totalPages })}
             </span>
             <div className="flex gap-2">
-              <Button size="icon" variant="outline" aria-label="Previous page" disabled={page === 0} onClick={() => setPage((p) => p - 1)}><ChevronLeft className="w-4 h-4 rtl:-scale-x-100" /></Button>
-              <Button size="icon" variant="outline" aria-label="Next page" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}><ChevronRight className="w-4 h-4 rtl:-scale-x-100" /></Button>
+              <Button size="icon" variant="outline" aria-label={t('staff.page.prev')} disabled={page === 0} onClick={() => setPage((p) => p - 1)}><ChevronLeft className="w-4 h-4 rtl:-scale-x-100" aria-hidden /></Button>
+              <Button size="icon" variant="outline" aria-label={t('staff.page.next')} disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}><ChevronRight className="w-4 h-4 rtl:-scale-x-100" aria-hidden /></Button>
             </div>
           </div>
         </div>
       )}
 
-      {view === 'caseload' && (
+      {view === 'caseload' && statsQ.isError && <StaffLoadError onRetry={() => void statsQ.refetch()} />}
+      {view === 'caseload' && statsQ.isLoading && (
+        <div className="py-12 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>
+      )}
+      {view === 'caseload' && statsQ.isSuccess && (
         <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
           <h2 className="font-subhead text-lg font-semibold mb-3">{t('dash.caseload.title')}</h2>
           <ul className="divide-y divide-border">

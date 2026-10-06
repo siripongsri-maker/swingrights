@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Mic, Square, RotateCcw, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { FollowUpCoach } from '@/components/FollowUpCoach';
 import { Button } from '@/components/ui/button';
@@ -89,8 +90,8 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
         try { rec.start(); recogRef.current = rec; } catch { /* noop */ }
       }
     } catch {
-      // caller shows its own toast via aria / surrounding UI
-      alert(t('common.micError'));
+      // A toast, not alert(): a native alert freezes the page, so Quick Exit could not be tapped.
+      toast.error(t('common.micError'));
     }
   };
 
@@ -149,7 +150,7 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
               'w-14 h-14',
             )}
           >
-            <Mic className="w-6 h-6" />
+            <Mic className="w-6 h-6" aria-hidden />
           </button>
         ) : (
           <button
@@ -161,7 +162,7 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
               'w-14 h-14',
             )}
           >
-            <Square className="w-6 h-6 fill-current" />
+            <Square className="w-6 h-6 fill-current" aria-hidden />
           </button>
         )}
         <div className="min-w-0">
@@ -178,11 +179,11 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
         </div>
         {audioUrl && !recording && (
           <Button type="button" size="sm" variant="ghost" className="ms-auto min-h-11 text-sm" onClick={reset}>
-            <RotateCcw className="w-3.5 h-3.5 me-1" /> {t('common.rerecord')}
+            <RotateCcw className="w-3.5 h-3.5" aria-hidden /> {t('common.rerecord')}
           </Button>
         )}
       </div>
-      {audioUrl && !recording && <audio src={audioUrl} controls className="w-full h-9" />}
+      {audioUrl && !recording && <audio src={audioUrl} controls aria-label={t('common.listen')} className="w-full h-9" />}
       {!recording && (transcript || audioUrl) && (
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground block" htmlFor={tid}>{t('voice.editTranscript')}</label>
@@ -192,11 +193,11 @@ export function VoiceRecorder({ onChange, className, compact, followUp, followUp
               value={transcript}
               onChange={(e) => { setTranscript(e.target.value); onChange(blobRef.current, e.target.value); }}
               placeholder={t('voice.transcriptPlaceholder')}
-              className="text-sm min-h-[60px]"
+              className="text-base md:text-sm min-h-[60px]"
             />
             {transcript && (
               <Button type="button" size="icon" variant="ghost" className="shrink-0" aria-label={t('voice.clearTranscript')} onClick={() => { setTranscript(''); onChange(blobRef.current, ''); }}>
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" aria-hidden />
               </Button>
             )}
           </div>

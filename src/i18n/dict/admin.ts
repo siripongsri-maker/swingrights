@@ -30,7 +30,7 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'users.pending.title': { th: 'คำขอสมัครเจ้าหน้าที่ที่รออนุมัติ', en: 'Staff sign-up requests awaiting approval' },
   'users.pending.approve': { th: 'อนุมัติ (ผู้ดูแลเคส)', en: 'Approve (caseworker)' },
   'users.pending.reject': { th: 'ปฏิเสธ', en: 'Reject' },
-  'users.pending.approved': { th: 'อนุมัติแล้ว เจ้าหน้าที่เข้าดูเคสได้ทันที', en: 'Approved — they can now open cases' },
+  'users.pending.approved': { th: 'อนุมัติแล้ว เจ้าหน้าที่เข้าดูเคสได้ทันที', en: 'Approved. They can open cases now.', my: 'အတည်ပြုပြီးပါပြီ။ ယခု အမှုများကို ဖွင့်ကြည့်နိုင်ပါပြီ။', km: 'បានអនុម័ត។ ឥឡូវនេះពួកគេអាចបើកមើលករណីបាន។', lo: 'ອະນຸມັດແລ້ວ ພະນັກງານເຂົ້າເບິ່ງເຄສໄດ້ທັນທີ' },
   'users.pending.rejected': { th: 'ปฏิเสธคำขอแล้ว', en: 'Request rejected' },
   'users.list.pending': { th: 'รออนุมัติ', en: 'Pending approval' },
   'users.list.rejected': { th: 'ถูกปฏิเสธ', en: 'Rejected' },
@@ -41,8 +41,8 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'staffsignup.note': { th: 'สาขา / ตำแหน่ง / ผู้รับรอง (ช่วยให้แอดมินอนุมัติเร็วขึ้น)', en: 'Branch / position / who can vouch for you' },
   'staffsignup.submit': { th: 'ส่งคำขอสมัคร', en: 'Submit request' },
   'staffsignup.sent': { th: 'ส่งลิงก์ยืนยันไปที่อีเมลแล้ว กดยืนยัน แล้วเข้าสู่ระบบเจ้าหน้าที่เพื่อส่งคำขอให้แอดมิน', en: 'Confirmation link sent. Confirm your email, then sign in to send your request to an admin.' },
-  'staffsignup.haveAccount': { th: 'มีบัญชีแล้ว? เข้าสู่ระบบเจ้าหน้าที่', en: 'Already have an account? Staff sign in' },
-  'staffsignup.link': { th: 'ยังไม่มีบัญชีเจ้าหน้าที่? สมัครที่นี่', en: 'No staff account yet? Sign up' },
+  'staffsignup.haveAccount': { th: 'มีบัญชีแล้ว? เข้าสู่ระบบเจ้าหน้าที่', en: 'Already have an account? Staff sign in', my: 'အကောင့်ရှိပြီးပြီလား။ ဝန်ထမ်း ဝင်ရောက်ရန်', km: 'មានគណនីរួចហើយ? ចូលប្រព័ន្ធបុគ្គលិក', lo: 'ມີບັນຊີແລ້ວບໍ? ເຂົ້າສູ່ລະບົບພະນັກງານ' },
+  'staffsignup.link': { th: 'ยังไม่มีบัญชีเจ้าหน้าที่? สมัครที่นี่', en: 'No staff account yet? Sign up', my: 'ဝန်ထမ်းအကောင့် မရှိသေးဘူးလား။ ဤနေရာတွင် စာရင်းသွင်းပါ', km: 'មិនទាន់មានគណនីបុគ្គលិក? ចុះឈ្មោះនៅទីនេះ', lo: 'ຍັງບໍ່ມີບັນຊີພະນັກງານບໍ? ສະໝັກທີ່ນີ້' },
   'staffsignup.pendingTitle': { th: 'รอแอดมินอนุมัติ', en: 'Waiting for admin approval' },
   'staffsignup.pendingBody': { th: 'ส่งคำขอสมัครเจ้าหน้าที่แล้ว เมื่อแอดมินอนุมัติ คุณจะเข้าดูเคสได้ทันที (เข้าสู่ระบบใหม่อีกครั้ง)', en: 'Your staff request was sent. Once an admin approves it you can open cases (sign in again).' },
   'staffsignup.rejectedBody': { th: 'คำขอสมัครเจ้าหน้าที่ถูกปฏิเสธ หากคิดว่าผิดพลาด โปรดติดต่อแอดมิน', en: 'Your staff request was rejected. Contact an admin if this is a mistake.' },
@@ -59,7 +59,7 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'partners.orgType.hotline': { th: 'สายด่วน', en: 'Hotline' },
   'partners.orgType.other': { th: 'อื่น ๆ', en: 'Other' },
   'partners.header.title': { th: 'หน่วยงานรับส่งต่อ', en: 'Referral partners' },
-  'partners.header.subtitle': { th: 'เครือข่ายช่วยเหลือรายพื้นที่ — ใช้แนะนำในรายละเอียดเคส', en: 'Local support network — used for recommendations in case details' },
+  'partners.header.subtitle': { th: 'เครือข่ายช่วยเหลือรายพื้นที่ ใช้แนะนำในหน้าเคส', en: 'Local support network, suggested on each case page', my: 'ဒေသအလိုက် အကူအညီကွန်ရက်၊ အမှုစာမျက်နှာတွင် အကြံပြုသည်', km: 'បណ្ដាញជំនួយតាមតំបន់ ដែលណែនាំនៅលើទំព័រករណី', lo: 'ເຄືອຂ່າຍຊ່ວຍເຫຼືອຕາມພື້ນທີ່ ໃຊ້ແນະນຳໃນໜ້າເຄສ' },
   'partners.add': { th: 'เพิ่มหน่วยงาน', en: 'Add partner' },
   'partners.add.title': { th: 'เพิ่มหน่วยงานรับส่งต่อ', en: 'Add referral partner' },
   'partners.form.namePlaceholder': { th: 'ชื่อหน่วยงาน *', en: 'Organization name *' },
@@ -88,8 +88,11 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'partners.enable': { th: 'เปิดใช้งาน', en: 'Enable' },
   'partners.delete': { th: 'ลบ', en: 'Delete' },
   'partners.empty': {
-    th: 'ยังไม่มีหน่วยงานในระบบ — กด "เพิ่มหน่วยงาน" เพื่อเริ่มสร้างเครือข่ายรายพื้นที่',
-    en: 'No partners yet — click "Add partner" to start building your local network',
+    th: 'ยังไม่มีหน่วยงานในระบบ กด "เพิ่มหน่วยงาน" เพื่อเริ่มสร้างเครือข่ายรายพื้นที่',
+    en: 'No partners yet. Press "Add partner" to start building your local network.',
+    my: 'အဖွဲ့အစည်း မရှိသေးပါ။ ဒေသတွင်း ကွန်ရက် စတင်တည်ဆောက်ရန် "Add partner" ကို နှိပ်ပါ။',
+    km: 'មិនទាន់មានដៃគូទេ។ ចុច "Add partner" ដើម្បីចាប់ផ្ដើមកសាងបណ្ដាញតាមតំបន់។',
+    lo: 'ຍັງບໍ່ມີໜ່ວຍງານໃນລະບົບ ກົດ "Add partner" ເພື່ອເລີ່ມສ້າງເຄືອຂ່າຍຕາມພື້ນທີ່',
   },
 
   // ---------- access.* (roles) ----------
@@ -101,9 +104,19 @@ export const ADMIN_DICT: Record<string, Entry> = {
 
   // ---------- access.* (idle logout / alerts) ----------
   'access.idle.loggedOut': { th: 'ออกจากระบบอัตโนมัติเนื่องจากไม่มีการใช้งาน', en: 'Logged out automatically due to inactivity', my: "အသုံးပြုမှုမရှိသောကြောင့် အလိုအလျောက် အကောင့်မှ ထွက်လိုက်ပါပြီ", km: "បានចាកចេញពីគណនីដោយស្វ័យប្រវត្តិ ដោយសារគ្មានសកម្មភាព", lo: "ອອກຈາກລະບົບອັດຕະໂນມັດແລ້ວ ເນື່ອງຈາກບໍ່ມີການໃຊ້ງານ",},
-  'access.idle.warning': { th: 'ไม่มีการใช้งาน — ระบบจะออกจากระบบใน 1 นาที', en: 'No activity — you will be logged out in 1 minute', my: "အသုံးပြုမှုမရှိပါ — 1 မိနစ်အတွင်း အကောင့်မှ အလိုအလျောက် ထွက်မည်", km: "គ្មានសកម្មភាព — អ្នកនឹងត្រូវបានចាកចេញពីគណនីក្នុងរយៈពេល 1 នាទី", lo: "ບໍ່ມີການໃຊ້ງານ — ທ່ານຈະຖືກອອກຈາກລະບົບໃນອີກ 1 ນາທີ",},
+  'access.idle.warning': { th: 'ไม่มีการใช้งาน ระบบจะออกจากระบบใน 1 นาที', en: 'No activity. You will be signed out in 1 minute.', my: "အသုံးပြုမှုမရှိပါ။ 1 မိနစ်အတွင်း အကောင့်မှ အလိုအလျောက် ထွက်မည်", km: "គ្មានសកម្មភាព។ អ្នកនឹងត្រូវបានចាកចេញពីគណនីក្នុងរយៈពេល 1 នាទី", lo: "ບໍ່ມີການໃຊ້ງານ ທ່ານຈະຖືກອອກຈາກລະບົບໃນອີກ 1 ນາທີ",},
   'access.alerts.unspecifiedArea': { th: 'ไม่ระบุพื้นที่', en: 'unspecified area', my: "မသတ်မှတ်ထားသော ဧရိယာ", km: "តំបន់ដែលមិនបានបញ្ជាក់", lo: "ພື້ນທີ່ທີ່ບໍ່ໄດ້ລະບຸ",},
   'access.alerts.levelPrefix': { th: 'ระดับ {level}', en: 'level {level}', my: "အဆင့် {level}", km: "កម្រិត {level}", lo: "ລະດັບ {level}",},
-  'access.alerts.selfHarmRisk': { th: '🚨 เคสเสี่ยงทำร้ายตนเอง — {msg}', en: '🚨 Self-harm risk case — {msg}', my: "🚨 မိမိကိုယ်ကို ထိခိုက်စေနိုင်သည့် အန္တရာယ်ရှိသော အမှုကိစ္စ — {msg}", km: "🚨 ករណីមានហានិភ័យធ្វើបាបខ្លួនឯង — {msg}", lo: "🚨 ກໍລະນີທີ່ມີຄວາມສ່ຽງຕໍ່ການທຳຮ້າຍຕົນເອງ — {msg}",},
-  'access.alerts.highRisk': { th: '⚠️ เคสความเสี่ยงสูง — {msg}', en: '⚠️ High-risk case — {msg}', my: "⚠️ အန္တရာယ်မြင့်မားသော အမှုကိစ္စ — {msg}", km: "⚠️ ករណីមានហានិភ័យខ្ពស់ — {msg}", lo: "⚠️ ກໍລະນີທີ່ມີຄວາມສ່ຽງສູງ — {msg}",},
+  'access.alerts.selfHarmRisk': { th: '🚨 เคสเสี่ยงทำร้ายตนเอง: {msg}', en: '🚨 Self-harm risk case: {msg}', my: "🚨 မိမိကိုယ်ကို ထိခိုက်စေနိုင်သည့် အန္တရာယ်ရှိသော အမှုကိစ္စ: {msg}", km: "🚨 ករណីមានហានិភ័យធ្វើបាបខ្លួនឯង: {msg}", lo: "🚨 ກໍລະນີທີ່ມີຄວາມສ່ຽງຕໍ່ການທຳຮ້າຍຕົນເອງ: {msg}",},
+  'access.alerts.highRisk': { th: '⚠️ เคสความเสี่ยงสูง: {msg}', en: '⚠️ High-risk case: {msg}', my: "⚠️ အန္တရာယ်မြင့်မားသော အမှုကိစ္စ: {msg}", km: "⚠️ ករណីមានហានិភ័យខ្ពស់: {msg}", lo: "⚠️ ກໍລະນີທີ່ມີຄວາມສ່ຽງສູງ: {msg}",},
+
+  // ---------- staff login (/admin/login). login.notice overrides the older key in i18n/index.tsx ----------
+  'login.subtitle': { th: 'มูลนิธิเพื่อนพนักงานบริการ · สำหรับเจ้าหน้าที่', en: 'SWING Foundation · for staff', my: 'SWING ဖောင်ဒေးရှင်း · ဝန်ထမ်းများအတွက်', km: 'មូលនិធិ SWING · សម្រាប់បុគ្គលិក', lo: 'ມູນລະນິທິ SWING · ສຳລັບພະນັກງານ' },
+  'login.notice': {
+    th: 'ระบบนี้เก็บข้อมูลที่อ่อนไหวสูงของผู้แจ้ง บัญชีเจ้าหน้าที่ใหม่ต้องรอผู้ดูแลระบบอนุมัติก่อนเข้าดูเคส และแนะนำให้เปิดการยืนยันตัวตนสองชั้น (TOTP) ทุกบัญชี',
+    en: 'This system holds highly sensitive information shared by reporters. New staff accounts need admin approval before they can open cases, and two-factor authentication (TOTP) is strongly recommended.',
+    my: 'ဤစနစ်တွင် တိုင်ကြားသူများ၏ အလွန်အရေးကြီးသော အချက်အလက်များ ရှိသည်။ ဝန်ထမ်းအကောင့်အသစ်များသည် အမှုများ မဖွင့်မီ စီမံခန့်ခွဲသူ၏ အတည်ပြုချက် လိုအပ်သည်။ အဆင့်နှစ်ဆင့် အတည်ပြုခြင်း (TOTP) ဖွင့်ထားရန် အကြံပြုပါသည်။',
+    km: 'ប្រព័ន្ធនេះរក្សាទុកព័ត៌មានរសើបខ្ពស់របស់អ្នករាយការណ៍។ គណនីបុគ្គលិកថ្មីត្រូវរង់ចាំអ្នកគ្រប់គ្រងអនុម័ត មុននឹងបើកមើលករណី ហើយយើងណែនាំឱ្យបើកការផ្ទៀងផ្ទាត់ពីរជាន់ (TOTP)។',
+    lo: 'ລະບົບນີ້ເກັບຂໍ້ມູນທີ່ອ່ອນໄຫວສູງຂອງຜູ້ແຈ້ງ ບັນຊີພະນັກງານໃໝ່ຕ້ອງລໍຖ້າຜູ້ດູແລລະບົບອະນຸມັດກ່ອນເຂົ້າເບິ່ງເຄສ ແລະ ແນະນຳໃຫ້ເປີດການຢືນຢັນຕົວຕົນສອງຊັ້ນ (TOTP)',
+  },
 };

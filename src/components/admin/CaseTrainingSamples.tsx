@@ -36,9 +36,9 @@ export function CaseTrainingSamples({ caseId }: { caseId: string }) {
   ] as const;
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 space-y-3">
+    <section className="rounded-2xl border border-border bg-card p-5 shadow-card space-y-3">
       <div>
-        <h3 className="font-subhead text-sm flex items-center gap-1.5"><GraduationCap className="w-4 h-4 text-primary" />{t('train.title')}</h3>
+        <h2 className="font-subhead text-base font-semibold flex items-center gap-2"><GraduationCap className="w-4 h-4 text-primary" aria-hidden />{t('train.title')}</h2>
         <p className="text-xs text-muted-foreground mt-0.5">{t('train.hint')}</p>
         <p className="text-xs font-mono text-primary mt-1">{t('train.progress').replace('{n}', String(data.filter((x) => x.followup && x.staff_rating).length)).replace('{total}', String(data.filter((x) => x.followup).length))}</p>
       </div>
