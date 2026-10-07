@@ -1,5 +1,5 @@
 import { PRINT_THEME_CSS, PRINT_FONTS_LINK, printCaseCodeCss } from './printTheme';
-// เอกสารนำส่งดำเนินเคส — บันทึกแจ้งความ / บันทึกข้อความ / บันทึกส่งตัว / บันทึกให้การช่วยเหลือ
+// เอกสารนำส่งดำเนินเคส: บันทึกแจ้งความ / บันทึกข้อความ / บันทึกส่งตัว / บันทึกให้การช่วยเหลือ
 // พิมพ์เป็น PDF ผ่านหน้าต่างพิมพ์ของเบราว์เซอร์ และบันทึก log การ export ทุกครั้ง
 import { SEV_LABEL } from '@/lib/screening';
 import { q9Level, nrmPositive } from '@/lib/screeningTools';
@@ -107,9 +107,9 @@ function openDoc(title: string, bodyHtml: string, d: DocInput, format: string) {
   ${PRINT_FONTS_LINK}
   <style>${DOC_CSS}${PRINT_THEME_CSS}${printCaseCodeCss(d.caseCode)}</style></head><body>
   <div class="org"><div class="headtext"><div class="name">มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)</div>
-   <div class="en">SERVICE WORKERS IN GROUP FOUNDATION — เอกสารลับ สำหรับหน่วยงานที่เกี่ยวข้องเท่านั้น</div></div><img src="${lockupImg}" alt="SWING RIGHTS" /></div>
+   <div class="en">SERVICE WORKERS IN GROUP FOUNDATION · เอกสารลับ สำหรับหน่วยงานที่เกี่ยวข้องเท่านั้น</div></div><img src="${lockupImg}" alt="SWING RIGHTS" /></div>
   ${bodyHtml}
-  <div class="footer">รหัสเคส ${esc(d.caseCode || '—')} · ออกเอกสารเมื่อ ${thaiDateTime()} · เอกสารลับตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 — ห้ามเปิดเผยโดยไม่ได้รับความยินยอม</div>
+  <div class="footer">รหัสเคส ${esc(d.caseCode || '—')} · ออกเอกสารเมื่อ ${thaiDateTime()} · เอกสารลับตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 ห้ามเปิดเผยโดยไม่ได้รับความยินยอม</div>
   <script>window.onload = () => setTimeout(() => window.print(), 400);</script>
   </body></html>`;
   const w = window.open('', '_blank');
@@ -162,10 +162,10 @@ const screeningTable = (d: DocInput) => {
   const s = d.screening || {};
   const q9 = typeof s.q9Total === 'number' ? `${s.q9Total} คะแนน (${q9Level(s.q9Total).label})` : '-';
   return `<table>
-    <tr><th>2Q ซึมเศร้า</th><td>${s.q2Positive === undefined ? '-' : s.q2Positive ? 'ผิดปกติ — ประเมิน 9Q ต่อ' : 'ปกติ'}</td></tr>
+    <tr><th>2Q ซึมเศร้า</th><td>${s.q2Positive === undefined ? '-' : s.q2Positive ? 'ผิดปกติ ประเมิน 9Q ต่อ' : 'ปกติ'}</td></tr>
     <tr><th>9Q คะแนนรวม</th><td>${esc(q9)}</td></tr>
-    <tr><th>ความเสี่ยงทำร้ายตนเอง (ข้อ 9)</th><td>${(s.suicidalItem ?? 0) > 0 ? 'พบ — ทำ safety planning และประสานสายด่วน 1323 แล้ว' : 'ไม่พบ'}</td></tr>
-    <tr><th>NRM ค้ามนุษย์</th><td>${s.nrmPositive === undefined ? '-' : s.nrmPositive ? 'เข้าข่ายผู้เสียหาย — ส่งต่อทีมสหวิชาชีพ/OSCC' : 'ยังไม่เข้าเกณฑ์'}${s.nrmUnder18 ? ' · ผู้เยาว์อายุต่ำกว่า 18 ปี' : ''}</td></tr>
+    <tr><th>ความเสี่ยงทำร้ายตนเอง (ข้อ 9)</th><td>${(s.suicidalItem ?? 0) > 0 ? 'พบ ทำ safety planning และประสานสายด่วน 1323 แล้ว' : 'ไม่พบ'}</td></tr>
+    <tr><th>NRM ค้ามนุษย์</th><td>${s.nrmPositive === undefined ? '-' : s.nrmPositive ? 'เข้าข่ายผู้เสียหาย ส่งต่อทีมสหวิชาชีพ/OSCC' : 'ยังไม่เข้าเกณฑ์'}${s.nrmUnder18 ? ' · ผู้เยาว์อายุต่ำกว่า 18 ปี' : ''}</td></tr>
   </table>`;
 };
 
@@ -178,7 +178,7 @@ function complaintHtml(d: DocInput) {
   const draft = d.documentDraft;
   return `
   <h1>บันทึกข้อมูลเพื่อใช้ประกอบการแจ้งความร้องทุกข์</h1>
-  <div class="docno">(เพื่อประกอบการยื่นต่อพนักงานสอบสวน — โปรดตรวจสอบรายละเอียด ณ สถานีตำรวจอีกครั้ง)</div>
+  <div class="docno">(เพื่อประกอบการยื่นต่อพนักงานสอบสวน โปรดตรวจสอบรายละเอียดกับพนักงานสอบสวนอีกครั้ง)</div>
 
   <div class="meta">
     <p><strong>เขียนที่:</strong> ${esc(p.province || p.branch)} &nbsp;&nbsp; <strong>วันที่:</strong> ${thaiDate()}</p>
@@ -217,7 +217,7 @@ function complaintHtml(d: DocInput) {
     <p>${esc(draft?.actions)}</p>
   </div>
 
-  <p class="warn"><strong>หมายเหตุ:</strong> เอกสารนี้จัดทำจากบันทึกการสัมภาษณ์ของมูลนิธิเพื่อนพนักงานบริการเท่านั้น ไม่ใช่บันทึกการแจ้งความอย่างเป็นทางการ — ผู้แจ้งต้องลงลายมือชื่อต่อหน้าพนักงานสอบสวน ณ สถานีตำรวจที่มีเขตอำนาจ</p>
+  <p class="warn"><strong>หมายเหตุ:</strong> เอกสารนี้จัดทำจากบันทึกการสัมภาษณ์ของมูลนิธิเพื่อนพนักงานบริการเท่านั้น ไม่ใช่บันทึกการแจ้งความอย่างเป็นทางการ ผู้แจ้งต้องลงลายมือชื่อต่อหน้าพนักงานสอบสวนที่มีเขตอำนาจ</p>
 
   ${blankSig('ผู้แจ้งความ', 'พนักงานสอบสวนผู้รับแจ้ง')}`;
 }
@@ -229,7 +229,7 @@ function statementHtml(d: DocInput) {
 
   return `
   <h1>บันทึกการให้ข้อมูลของผู้รับบริการ</h1>
-  <div class="docno">Statement Record — จัดทำโดยเจ้าหน้าที่มูลนิธิเพื่อนพนักงานบริการ</div>
+  <div class="docno">Statement Record: จัดทำโดยเจ้าหน้าที่มูลนิธิเพื่อนพนักงานบริการ</div>
 
   <div class="meta">
     <p><strong>วัน-เวลาที่บันทึก:</strong> ${thaiDateTime(d.createdAt)} &nbsp;&nbsp; <strong>สถานที่:</strong> พื้นที่บริการ ${esc(p.province || p.branch)}</p>
@@ -253,7 +253,7 @@ function referralHtml(d: DocInput) {
   const draft = d.documentDraft;
   return `
   <h1>หนังสือส่งต่อเพื่อรับการช่วยเหลือ</h1>
-  <div class="docno">Referral Record — ส่งต่อระหว่างหน่วยงาน</div>
+  <div class="docno">Referral Record: ส่งต่อระหว่างหน่วยงาน</div>
 
   <div class="meta">
     <p><strong>วันที่ส่งต่อ:</strong> ${thaiDate()} &nbsp;&nbsp; <strong>จาก:</strong> มูลนิธิเพื่อนพนักงานบริการ (เจ้าหน้าที่: ${esc(d.signatureStaffName || '-')})</p>
@@ -290,11 +290,11 @@ function assistanceHtml(d: DocInput) {
   const draft = d.documentDraft;
   const suicidal = (s.suicidalItem ?? 0) > 0;
   const did = (cond: boolean, label: string, detail?: string) =>
-    `<li class="${cond ? '' : 'no'}">${label}${cond && detail ? ` — ${esc(detail)}` : ''}</li>`;
+    `<li class="${cond ? '' : 'no'}">${label}${cond && detail ? `: ${esc(detail)}` : ''}</li>`;
 
   return `
   <h1>บันทึกการให้ความช่วยเหลือผู้รับบริการ</h1>
-  <div class="docno">Assistance Record — มูลนิธิเพื่อนพนักงานบริการ</div>
+  <div class="docno">Assistance Record: มูลนิธิเพื่อนพนักงานบริการ</div>
 
   <div class="meta">
     <p><strong>วันที่ให้ความช่วยเหลือ:</strong> ${thaiDate(d.createdAt)} &nbsp;&nbsp; <strong>พื้นที่:</strong> ${esc(d.profile?.province || d.profile?.branch)}</p>
@@ -332,7 +332,7 @@ function assistanceHtml(d: DocInput) {
   ${sigBlock(d, 'ผู้รับบริการ', 'เจ้าหน้าที่ผู้ให้ความช่วยเหลือ')}`;
 }
 
-/** พิมพ์เอกสารตามประเภท — คืน true เมื่อเปิดหน้าต่างพิมพ์สำเร็จ */
+/** พิมพ์เอกสารตามประเภท คืน true เมื่อเปิดหน้าต่างพิมพ์สำเร็จ */
 export function printCaseDocument(kind: DocKind, d: DocInput) {
   if (!d.documentDraft?.reviewed_at) {
     return false;

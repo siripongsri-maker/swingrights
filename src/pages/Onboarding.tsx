@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BrandHeader } from '@/components/BrandLogo';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { linkDeviceReports } from '@/lib/myReports';
 import { useI18n } from '@/i18n';
 
@@ -90,9 +91,13 @@ export default function Onboarding() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="max-w-md mx-auto px-5 pt-6 flex items-center justify-between">
-        <BrandHeader />
-        <LanguageToggle />
+      <header className="max-w-md mx-auto px-5 pt-6 flex items-center justify-between gap-2">
+        {/* Wordmark hides on phones so brand, Quick Exit and language fit in one row at 360px */}
+        <BrandHeader className="max-sm:[&>span]:hidden" />
+        <div className="flex items-center gap-2">
+          <QuickExitSlot />
+          <LanguageToggle />
+        </div>
       </header>
       <main className="max-w-md mx-auto px-5 py-8 space-y-5">
         <div>
@@ -111,14 +116,14 @@ export default function Onboarding() {
               {field('first_name', t('cl.f.first'), 'text', 'given-name')}
               {field('last_name', t('cl.f.last'), 'text', 'family-name')}
               <div className="space-y-1.5">
-                <Label>{t('cl.f.gender')}</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <Label id="ob-gender-label">{t('cl.f.gender')}</Label>
+                <div className="grid grid-cols-2 gap-2" role="group" aria-labelledby="ob-gender-label">
                   {GENDERS.map((g) => {
                     const label = t(`ob.gender.${g}`);
                     const on = p.gender === label;
                     return (
-                      <button key={g} type="button" onClick={() => setP({ ...p, gender: label })}
-                        className={`min-h-11 rounded-xl border px-3 text-sm transition-colors ${on ? 'border-primary bg-primary/10 text-primary font-semibold' : 'border-border hover:border-primary/50'}`}>
+                      <button key={g} type="button" aria-pressed={on} onClick={() => setP({ ...p, gender: label })}
+                        className={`min-h-11 rounded-xl border px-3 text-sm transition-colors ${on ? 'border-2 border-primary bg-primary/10 text-primary font-semibold' : 'border-border hover:border-primary/50'}`}>
                         {label}
                       </button>
                     );

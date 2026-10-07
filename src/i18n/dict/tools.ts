@@ -6,7 +6,7 @@ import type { Entry } from '../index';
  */
 export const TOOLS_DICT: Record<string, Entry> = {
   // ---------- 2Q ----------
-  'tools.q2.title': { th: 'แบบคัดกรองโรคซึมเศร้า 2 คำถาม (2Q / PHQ-2)', en: 'Depression Screening — 2 Questions (2Q / PHQ-2)' },
+  'tools.q2.title': { th: 'แบบคัดกรองโรคซึมเศร้า 2 คำถาม (2Q / PHQ-2)', en: 'Depression Screening, 2 Questions (2Q / PHQ-2)', my: 'စိတ်ကျရောဂါ ကနဦးစစ်ဆေးမှု မေးခွန်း 2 ခု (2Q / PHQ-2)', km: 'ការពិនិត្យបឋមជំងឺធ្លាក់ទឹកចិត្ត 2 សំណួរ (2Q / PHQ-2)', lo: 'ແບບຄັດກອງພະຍາດຊຶມເສົ້າ 2 ຄຳຖາມ (2Q / PHQ-2)' },
   'tools.q2.subtitle': {
     th: 'กรมสุขภาพจิต · ตอบ "มี" ข้อใดข้อหนึ่ง ให้ทำ 9Q ต่อ',
     en: 'Dept. of Mental Health · If "yes" to either item, proceed to 9Q',
@@ -14,7 +14,7 @@ export const TOOLS_DICT: Record<string, Entry> = {
   'tools.q2.yes': { th: 'มี', en: 'Yes' },
   'tools.q2.no': { th: 'ไม่มี', en: 'No' },
   'tools.q2.resultLabel': { th: 'ผล 2Q', en: '2Q result' },
-  'tools.q2.abnormal': { th: 'ผิดปกติ — ให้ทำแบบประเมิน 9Q ต่อ', en: 'Positive — proceed to 9Q assessment' },
+  'tools.q2.abnormal': { th: 'ผิดปกติ ให้ทำแบบประเมิน 9Q ต่อ', en: 'Positive: proceed to 9Q assessment', my: 'ပုံမှန်မဟုတ်ပါ။ 9Q အကဲဖြတ်မှုကို ဆက်လုပ်ပါ', km: 'វិជ្ជមាន។ បន្តធ្វើការវាយតម្លៃ 9Q', lo: 'ຜິດປົກກະຕິ ໃຫ້ເຮັດແບບປະເມີນ 9Q ຕໍ່' },
   'tools.q2.normal': { th: 'ปกติ', en: 'Negative' },
   'tools.q.q2_1': {
     th: 'ใน 2 สัปดาห์ที่ผ่านมา รวมวันนี้ ท่านรู้สึกหดหู่ เศร้า หรือท้อแท้สิ้นหวังหรือไม่',
@@ -26,7 +26,7 @@ export const TOOLS_DICT: Record<string, Entry> = {
   },
 
   // ---------- 9Q ----------
-  'tools.q9.title': { th: 'แบบประเมินโรคซึมเศร้า 9 คำถาม (9Q / PHQ-9)', en: 'Depression Assessment — 9 Questions (9Q / PHQ-9)' },
+  'tools.q9.title': { th: 'แบบประเมินโรคซึมเศร้า 9 คำถาม (9Q / PHQ-9)', en: 'Depression Assessment, 9 Questions (9Q / PHQ-9)', my: 'စိတ်ကျရောဂါ အကဲဖြတ်မှု မေးခွန်း 9 ခု (9Q / PHQ-9)', km: 'ការវាយតម្លៃជំងឺធ្លាក់ទឹកចិត្ត 9 សំណួរ (9Q / PHQ-9)', lo: 'ແບບປະເມີນພະຍາດຊຶມເສົ້າ 9 ຄຳຖາມ (9Q / PHQ-9)' },
   'tools.q9.subtitle': {
     th: 'ใน 2 สัปดาห์ที่ผ่านมา รวมวันนี้ ท่านมีอาการเหล่านี้บ่อยแค่ไหน',
     en: 'Over the past 2 weeks, including today, how often have you been bothered by the following?',
@@ -64,8 +64,11 @@ export const TOOLS_DICT: Record<string, Entry> = {
 
   // ---------- Escalation ----------
   'tools.escalation.title': {
-    th: 'พบความเสี่ยงการทำร้ายตนเอง — ต้องดำเนินการทันที',
-    en: 'Self-harm risk detected — immediate action required',
+    th: 'พบความเสี่ยงการทำร้ายตนเอง ต้องดำเนินการทันที',
+    en: 'Self-harm risk detected: immediate action required',
+    my: 'မိမိကိုယ်ကို ထိခိုက်စေနိုင်သော အန္တရာယ် တွေ့ရှိသည်။ ချက်ချင်း ဆောင်ရွက်ရန် လိုအပ်သည်',
+    km: 'រកឃើញហានិភ័យនៃការធ្វើបាបខ្លួនឯង។ ត្រូវចាត់វិធានការភ្លាមៗ',
+    lo: 'ພົບຄວາມສ່ຽງການທຳຮ້າຍຕົນເອງ ຕ້ອງດຳເນີນການທັນທີ',
   },
   'tools.escalation.call': { th: 'โทร', en: 'Call' },
   'tools.escalation.hotlineName': { th: 'สายด่วนสุขภาพจิต 1323', en: 'Mental Health Hotline 1323' },
@@ -98,7 +101,10 @@ export const TOOLS_DICT: Record<string, Entry> = {
   // ---------- NRM ----------
   'tools.nrm.title': {
     th: 'แบบคัดแยกผู้เสียหายจากการค้ามนุษย์ (NRM)',
-    en: 'National Referral Mechanism — Trafficking Screening (NRM)',
+    en: 'National Referral Mechanism: Trafficking Screening (NRM)',
+    my: 'လူကုန်ကူးမှု ခံရသူ ခွဲခြားစိစစ်ခြင်း (NRM)',
+    km: 'ការពិនិត្យបឋមអ្នករងផលប៉ះពាល់ពីការជួញដូរមនុស្ស (NRM)',
+    lo: 'ແບບຄັດແຍກຜູ້ເສຍຫາຍຈາກການຄ້າມະນຸດ (NRM)',
   },
   'tools.nrm.subtitle': {
     th: 'เข้าเกณฑ์เมื่อพบตัวบ่งชี้ครบทั้ง 3 ด้าน (หรือ 2 ด้านหากอายุต่ำกว่า 18 ปี)',
@@ -151,8 +157,11 @@ export const TOOLS_DICT: Record<string, Entry> = {
   'tools.nrm.under18': { th: 'ผู้เสียหายอายุต่ำกว่า 18 ปี', en: 'Person affected is under 18 years old' },
   'tools.nrm.resultLabel': { th: 'ผล NRM', en: 'NRM result' },
   'tools.nrm.positive': {
-    th: 'เข้าข่ายผู้เสียหายจากการค้ามนุษย์ — ส่งต่อทีมสหวิชาชีพ/OSCC',
-    en: 'Meets criteria for a person affected by trafficking — refer to multidisciplinary team/OSCC',
+    th: 'เข้าข่ายผู้เสียหายจากการค้ามนุษย์ ส่งต่อทีมสหวิชาชีพ/OSCC',
+    en: 'Meets criteria for a person affected by trafficking: refer to multidisciplinary team/OSCC',
+    my: 'လူကုန်ကူးမှု ခံရသူအဖြစ် သတ်မှတ်ချက်နှင့် ကိုက်ညီသည်။ ဘက်စုံပညာရှင်အဖွဲ့/OSCC သို့ လွှဲပြောင်းပါ',
+    km: 'ត្រូវតាមលក្ខណៈវិនិច្ឆ័យអ្នករងផលប៉ះពាល់ពីការជួញដូរមនុស្ស។ បញ្ជូនទៅក្រុមពហុវិជ្ជាជីវៈ/OSCC',
+    lo: 'ເຂົ້າຂ່າຍຜູ້ເສຍຫາຍຈາກການຄ້າມະນຸດ ສົ່ງຕໍ່ທີມສະຫະວິຊາຊີບ/OSCC',
   },
   'tools.nrm.negative': { th: 'ยังไม่เข้าเกณฑ์เบื้องต้น', en: 'Does not yet meet the preliminary criteria' },
   'tools.nrm.minorNote': {

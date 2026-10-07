@@ -78,4 +78,12 @@ export const STAFF_DICT: Record<string, Entry> = {
   'staff.queueEmpty': e('ไม่มีเคสในคิวนี้', 'No cases in this queue', 'ဤတန်းစီတွင် အမှုမရှိ', 'គ្មានករណីក្នុងជួរនេះ', 'ບໍ່ມີເຄສໃນຄິວນີ້'),
   'staff.searchCode': e('ค้นหารหัสเคส', 'Search case code', 'အမှုကုတ် ရှာရန်', 'ស្វែងរកលេខកូដករណី', 'ຊອກຫາລະຫັດເຄສ'),
   'staff.sev.none': e('ยังไม่ประเมิน', 'Not assessed', 'မအကဲဖြတ်ရသေး', 'មិនទាន់វាយតម្លៃ', 'ຍັງບໍ່ປະເມີນ'),
+  // UI polish 2026-10: menu close, load errors, pagination, case-history back link
+  'staff.nav.close': e('ปิดเมนู', 'Close menu', 'မီနူး ပိတ်ရန်', 'បិទម៉ឺនុយ', 'ປິດເມນູ'),
+  'staff.loadError': e('โหลดข้อมูลไม่สำเร็จ ตรวจสอบสัญญาณแล้วลองอีกครั้ง', "Couldn't load this. Check your connection and try again.", 'ဒေတာ မဖွင့်နိုင်ပါ။ အင်တာနက်ကို စစ်ပြီး ထပ်ကြိုးစားပါ။', 'មិនអាចផ្ទុកទិន្នន័យបានទេ។ សូមពិនិត្យការតភ្ជាប់ ហើយសាកល្បងម្ដងទៀត។', 'ໂຫຼດຂໍ້ມູນບໍ່ສຳເລັດ ກວດສອບສັນຍານແລ້ວລອງໃໝ່ອີກຄັ້ງ'),
+  'staff.retry': e('ลองอีกครั้ง', 'Try again', 'ထပ်ကြိုးစားရန်', 'សាកល្បងម្ដងទៀត', 'ລອງໃໝ່ອີກຄັ້ງ'),
+  'staff.page.prev': e('หน้าก่อน', 'Previous page', 'ယခင် စာမျက်နှာ', 'ទំព័រមុន', 'ໜ້າກ່ອນ'),
+  'staff.page.next': e('หน้าถัดไป', 'Next page', 'နောက် စာမျက်နှာ', 'ទំព័របន្ទាប់', 'ໜ້າຖັດໄປ'),
+  'staff.hist.backToCase': e('กลับไปที่เคส', 'Back to the case', 'အမှုသို့ ပြန်သွားရန်', 'ត្រឡប់ទៅករណី', 'ກັບໄປທີ່ເຄສ'),
+  'staff.hist.created': e('รับเรื่องเมื่อ {date}', 'Received {date}', '{date} တွင် လက်ခံခဲ့သည်', 'បានទទួលនៅ {date}', 'ຮັບເລື່ອງເມື່ອ {date}'),
 };

@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -49,21 +50,43 @@ const sheetVariants = cva(
 
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {}
+    VariantProps<typeof sheetVariants> {
+  /** Screen-reader name of the close button. Defaults to "ปิด / Close" in the current language. */
+  closeLabel?: string;
+  /** Leave out the built-in close button (only when the sheet renders its own). */
+  hideClose?: boolean;
+  /** Set false to leave out the built-in Quick Exit spot (it then floats above the overlay). */
+  quickExit?: boolean;
+}
+
+/** 44px close target that keeps the sheet's own text colour (works on light and dark sheets). */
+const closeButtonClass =
+  "ms-auto inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full opacity-80 transition-opacity duration-150 ease-out hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none";
 
 const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
-  ({ side = "right", className, children, ...props }, ref) => (
-    <SheetPortal>
-      <SheetOverlay />
-      <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
-        {children}
-        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-secondary hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
-        </SheetPrimitive.Close>
-      </SheetPrimitive.Content>
-    </SheetPortal>
-  ),
+  ({ side = "right", className, children, closeLabel, hideClose = false, quickExit = true, ...props }, ref) => {
+    const { t } = useI18n();
+    return (
+      <SheetPortal>
+        <SheetOverlay />
+        <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
+          {(quickExit || !hideClose) && (
+            // Top bar: Quick Exit moves into this spot while the sheet is open, close sits at the end
+            <div className="-mx-2 -mt-2 mb-3 flex min-h-11 items-center gap-2">
+              {quickExit && <div data-qe-slot="always" className="flex min-h-11 min-w-11 shrink-0 items-center" />}
+              {!hideClose && (
+                <SheetPrimitive.Close className={closeButtonClass}>
+                  <X className="h-5 w-5" aria-hidden />
+                  <span className="sr-only">{closeLabel ?? t("ui.close")}</span>
+                </SheetPrimitive.Close>
+              )}
+            </div>
+          )}
+          {children}
+        </SheetPrimitive.Content>
+      </SheetPortal>
+    );
+  },
 );
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
@@ -73,7 +96,7 @@ const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
 SheetHeader.displayName = "SheetHeader";
 
 const SheetFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)} {...props} />
+  <div className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)} {...props} />
 );
 SheetFooter.displayName = "SheetFooter";
 

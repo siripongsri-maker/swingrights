@@ -1,39 +1,41 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
-import { useI18n, type Lang } from "@/i18n";
+import { DICT, useI18n, type Lang } from "@/i18n";
 
 const BASE = "https://swingrights.app";
 
-type Meta = { title: string; description: string; noindex?: boolean };
+/** Each route's text lives in the i18n dict as seo.<id>.title / seo.<id>.desc (dict/misc.ts). */
+type Page = { id: string; noindex?: boolean };
 
-const PAGES: Record<string, Meta> = {
-  "/": { title: "SWING RIGHTS — แจ้งเหตุและติดตามความช่วยเหลือ", description: "พื้นที่ปลอดภัยสำหรับพนักงานบริการ แจ้งเหตุ รู้สิทธิ และติดตามความช่วยเหลือจากมูลนิธิเพื่อนพนักงานบริการ (SWING)" },
-  "/report": { title: "แจ้งเรื่องด้วยตนเอง — SWING RIGHTS", description: "แจ้งเหตุละเมิดสิทธิได้ด้วยตนเอง พิมพ์หรือพูดได้หลายภาษา ไม่ต้องลงทะเบียน ข้อมูลเก็บเป็นความลับตาม PDPA" },
-  "/track": { title: "ติดตามสถานะเรื่อง — SWING RIGHTS", description: "ใช้รหัสเคสเพื่อติดตามสถานะเรื่องที่แจ้งไว้กับ SWING และตอบคำถามจากเจ้าหน้าที่ได้อย่างปลอดภัย" },
-  "/rights": { title: "รู้สิทธิของคุณ — SWING RIGHTS", description: "สิทธิพื้นฐานของพนักงานบริการ ถ้าถูกตำรวจจับ ถูกละเมิด หรือต้องการความช่วยเหลือ พร้อมเบอร์สายด่วน 24 ชั่วโมง" },
-  "/privacy": { title: "นโยบายความเป็นส่วนตัว — SWING RIGHTS", description: "วิธีที่มูลนิธิเพื่อนพนักงานบริการเก็บ ใช้ และคุ้มครองข้อมูลส่วนบุคคลของคุณตาม พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล" },
-  "/signin": { title: "เข้าสู่ระบบ — SWING RIGHTS", description: "เข้าสู่ระบบหรือสมัครบัญชีผู้แจ้งเพื่อติดตามเคสของคุณและใช้ปุ่ม SOS ติดต่อเจ้าหน้าที่ SWING", noindex: true },
-  "/intake": { title: "รับเรื่องโดยเจ้าหน้าที่ — SWING Foundation", description: "แบบฟอร์มรับเรื่องสำหรับเจ้าหน้าที่มูลนิธิเพื่อนพนักงานบริการ บันทึกเสียง ประเมิน และส่งต่อความช่วยเหลือ", noindex: true },
-};
-
-const REPORT_META: Record<Lang, Meta> = {
-  th: PAGES["/report"],
-  en: { title: "Report a rights violation — SWING RIGHTS", description: "Report a rights violation confidentially by typing or speaking. No account is required, and support is available from SWING Foundation." },
-  my: { title: "အခွင့်အရေးချိုးဖောက်မှုကို တိုင်ကြားရန် — SWING RIGHTS", description: "မြန်မာဘာသာဖြင့် စာရိုက်၍ဖြစ်စေ အသံဖြင့်ဖြစ်စေ လျှို့ဝှက်စွာ တိုင်ကြားနိုင်ပါသည်။ အကောင့်ဖွင့်ရန် မလိုအပ်ပါ။" },
-  km: { title: "រាយការណ៍ការរំលោភសិទ្ធិ — SWING RIGHTS", description: "រាយការណ៍ការរំលោភសិទ្ធិជាភាសាខ្មែរ ដោយវាយអត្ថបទ ឬនិយាយដោយសម្ងាត់។ មិនចាំបាច់ចុះឈ្មោះទេ។" },
-  lo: { title: "ລາຍງານການລະເມີດສິດ — SWING RIGHTS", description: "ລາຍງານການລະເມີດສິດເປັນພາສາລາວ ດ້ວຍການພິມ ຫຼື ເວົ້າຢ່າງເປັນຄວາມລັບ ໂດຍບໍ່ຕ້ອງລົງທະບຽນ." },
+const PAGES: Record<string, Page> = {
+  "/": { id: "home" },
+  "/report": { id: "report" },
+  "/track": { id: "track" },
+  "/rights": { id: "rights" },
+  "/privacy": { id: "privacy" },
+  "/signin": { id: "signin", noindex: true },
+  "/recover": { id: "recover", noindex: true },
+  "/intake": { id: "intake", noindex: true },
 };
 
 const REPORT_PATH: Record<Lang, string> = { th: "/report", en: "/report/en", my: "/report/my", km: "/report/km", lo: "/report/lo" };
 
-const FALLBACK: Meta = { title: "SWING RIGHTS", description: "พื้นที่ปลอดภัยสำหรับแจ้งเหตุ รู้สิทธิ และติดตามความช่วยเหลือจาก SWING", noindex: true };
+const FALLBACK: Page = { id: "fallback", noindex: true };
+
+/** Dict text in one given language (a /report/:lang page keeps its own language, whatever the UI is set to). */
+const pick = (key: string, l: Lang) => {
+  const e = DICT[key];
+  return e ? (e[l] ?? e.en ?? e.th) : key;
+};
 
 export function RouteSeo() {
   const { pathname } = useLocation();
   const { lang } = useI18n();
   const isReport = /^\/report(?:\/(?:en|my|km|lo))?\/?$/.test(pathname);
   const routeLang = (pathname.match(/^\/report\/(en|my|km|lo)\/?$/)?.[1] as Lang | undefined) ?? (pathname === '/report' ? 'th' : lang);
-  const meta = isReport ? REPORT_META[routeLang] : (PAGES[pathname] ?? FALLBACK);
+  const page = isReport ? PAGES["/report"] : (PAGES[pathname] ?? FALLBACK);
+  const metaLang = isReport ? routeLang : lang;
+  const meta = { title: pick(`seo.${page.id}.title`, metaLang), description: pick(`seo.${page.id}.desc`, metaLang), noindex: page.noindex };
   const url = `${BASE}${pathname}`;
   return (
     <Helmet>

@@ -10,10 +10,11 @@ export const STATUS_LABEL: Record<CaseStatus, string> = {
   cancelled: 'ยกเลิก',
 };
 
+/** Thai severity words for PDFs, documents and the CSV export (stored values stay green / yellow / red). */
 export const SEV_LABEL: Record<Severity, string> = {
-  green: 'เขียว (ไม่เร่งด่วน)',
-  yellow: 'เหลือง (ติดตามใกล้ชิด)',
-  red: 'แดง (ฉุกเฉิน)',
+  green: 'ต่ำ (ไม่เร่งด่วน)',
+  yellow: 'ปานกลาง (ติดตามใกล้ชิด)',
+  red: 'สูง (ฉุกเฉิน)',
 };
 
 export const VIOLATION_TYPES = [

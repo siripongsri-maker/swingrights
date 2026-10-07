@@ -21,7 +21,7 @@ export function SeverityBadge({ value }: { value: Severity }) {
   const { t } = useI18n();
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${map[value]}`}>
-      <span className={`w-2 h-2 rounded-full ${dot[value]}`} />
+      <span className={`w-2 h-2 shrink-0 rounded-full ${dot[value]}`} aria-hidden />
       {t(labelKey[value])}
     </span>
   );

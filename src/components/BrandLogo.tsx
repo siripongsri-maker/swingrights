@@ -1,9 +1,21 @@
-import markImg from '@/assets/brand/swing-rights-mark.png';
-import lockupImg from '@/assets/brand/swing-rights-lockup.png';
+// Small WebP copies (mark 185x240, about 13KB; lockup 480x470, about 45KB) of the large PNG
+// originals, which stay in src/assets/brand for print and design work.
+import markImg from '@/assets/brand/swing-rights-mark.webp';
+import lockupImg from '@/assets/brand/swing-rights-lockup.webp';
 import { cn } from '@/lib/utils';
 
 export function BrandMark({ className }: { className?: string }) {
-  return <img src={markImg} alt="" aria-hidden className={cn('h-8 w-8 object-contain sm:h-10 sm:w-10', className)} />;
+  return (
+    <img
+      src={markImg}
+      width={185}
+      height={240}
+      alt=""
+      aria-hidden
+      decoding="async"
+      className={cn('h-8 w-8 object-contain sm:h-10 sm:w-10', className)}
+    />
+  );
 }
 
 export function BrandWordmark({ className }: { className?: string }) {
@@ -20,5 +32,16 @@ export function BrandHeader({ className }: { className?: string }) {
 }
 
 export function BrandLockup({ className }: { className?: string }) {
-  return <img src={lockupImg} alt="SWING RIGHTS" className={cn('w-[200px] max-w-full object-contain', className)} />;
+  // Lazy: a lazy image inside display:none (the phone layout hides it) is never fetched.
+  return (
+    <img
+      src={lockupImg}
+      width={480}
+      height={470}
+      alt="SWING RIGHTS"
+      loading="lazy"
+      decoding="async"
+      className={cn('h-auto w-[200px] max-w-full object-contain', className)}
+    />
+  );
 }

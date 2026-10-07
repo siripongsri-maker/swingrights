@@ -3,8 +3,11 @@ import { useParams } from 'react-router-dom';
 import { Check, Loader2, Printer, ShieldCheck, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { supabase } from '@/integrations/supabase/client';
-import { useI18n } from '@/i18n';
+import { useI18n, type Lang } from '@/i18n';
+
+const DATE_LOCALE: Record<Lang, string> = { th: 'th-TH', en: 'en-GB', my: 'my-MM', km: 'km-KH', lo: 'lo-LA' };
 
 interface RefView {
   case_code: string; branch: string | null; violation_types: string[];
@@ -16,7 +19,8 @@ interface RefView {
 
 export default function ReferralRespond() {
   const { token = '' } = useParams();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const locale = DATE_LOCALE[lang];
   const [data, setData] = useState<RefView | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'invalid' | 'accepted' | 'declined' | 'answered'>('loading');
   const [busy, setBusy] = useState(false);
@@ -41,12 +45,17 @@ export default function ReferralRespond() {
   return (
     <div className="min-h-screen bg-background px-4 py-8">
       <div className="max-w-md mx-auto">
-        <div className="flex justify-end mb-4"><LanguageToggle /></div>
+        <div className="flex justify-end items-center gap-2 mb-4"><QuickExitSlot /><LanguageToggle /></div>
         <div className="bg-card border border-border rounded-2xl p-6 shadow-card">
           <p className="text-xs text-muted-foreground">{t('ref.page.from')}</p>
-          <h1 className="font-display text-xl font-semibold mb-4">{t('ref.page.title')}</h1>
+          <h1 className="font-display text-xl font-semibold leading-snug mb-4">{t('ref.page.title')}</h1>
 
-          {state === 'loading' && <Loader2 className="w-5 h-5 animate-spin text-primary mx-auto" />}
+          {state === 'loading' && (
+            <div role="status" className="flex justify-center">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" aria-hidden />
+              <span className="sr-only">{t('ui.loading')}</span>
+            </div>
+          )}
           {state === 'invalid' && <p className="text-sm text-destructive">{t('ref.page.invalid')}</p>}
 
           {data && state !== 'invalid' && (
@@ -57,7 +66,7 @@ export default function ReferralRespond() {
                 <dt className="text-xs text-muted-foreground">{t('ref.page.category')}</dt>
                 <dd className="flex flex-wrap gap-1.5 mt-1">
                   {data.violation_types.length ? data.violation_types.map((v, i) => (
-                    <span key={i} className="text-[11px] bg-primary-soft text-primary px-2 py-0.5 rounded-full">{v}</span>
+                    <span key={i} className="text-xs bg-primary-soft text-primary px-2 py-0.5 rounded-full">{v}</span>
                   )) : t('ref.page.unspecified')}
                 </dd>
               </div>
@@ -66,10 +75,10 @@ export default function ReferralRespond() {
               {(data.nationality || data.gender || data.age) && (
                 <div>
                   <dt className="text-xs text-muted-foreground">{t('ref.page.demographics')}</dt>
-                  <dd className="grid grid-cols-3 gap-2 mt-1">
-                    <span><span className="block text-[10px] text-muted-foreground">{t('ref.page.nationality')}</span>{data.nationality || t('ref.page.unspecified')}</span>
-                    <span><span className="block text-[10px] text-muted-foreground">{t('ref.page.gender')}</span>{data.gender || t('ref.page.unspecified')}</span>
-                    <span><span className="block text-[10px] text-muted-foreground">{t('ref.page.age')}</span>{data.age ? t('ref.page.ageValue', { age: data.age }) : t('ref.page.unspecified')}</span>
+                  <dd className="grid grid-cols-1 min-[400px]:grid-cols-3 gap-2 mt-1">
+                    <span><span className="block text-xs text-muted-foreground">{t('ref.page.nationality')}</span>{data.nationality || t('ref.page.unspecified')}</span>
+                    <span><span className="block text-xs text-muted-foreground">{t('ref.page.gender')}</span>{data.gender || t('ref.page.unspecified')}</span>
+                    <span><span className="block text-xs text-muted-foreground">{t('ref.page.age')}</span>{data.age ? t('ref.page.ageValue', { age: data.age }) : t('ref.page.unspecified')}</span>
                   </dd>
                 </div>
               )}
@@ -88,11 +97,11 @@ export default function ReferralRespond() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-subhead font-semibold text-primary">{t('ref.page.letter')}</p>
-                      <p className="text-[11px] text-muted-foreground">{t('ref.page.letterFrom')}</p>
+                      <p className="text-xs text-muted-foreground">{t('ref.page.letterFrom')}</p>
                     </div>
-                    <Button size="sm" variant="outline" className="h-8 text-xs print:hidden" onClick={() => window.print()}><Printer className="w-3.5 h-3.5" /> {t('ref.page.print')}</Button>
+                    <Button size="sm" variant="outline" className="h-auto min-h-11 whitespace-normal text-start print:hidden" onClick={() => window.print()}><Printer className="w-4 h-4" aria-hidden /> {t('ref.page.print')}</Button>
                   </div>
-                  <p className="text-xs">{t('ref.page.letterTo')} {data.partner_name ?? '—'} · <span className="font-mono">{data.case_code}</span>{data.referred_at ? ` · ${new Date(data.referred_at).toLocaleDateString('th-TH')}` : ''}</p>
+                  <p className="text-sm">{t('ref.page.letterTo')} {data.partner_name ?? t('ref.page.unspecified')} · <span className="font-mono">{data.case_code}</span>{data.referred_at ? ` · ${new Date(data.referred_at).toLocaleDateString(locale)}` : ''}</p>
                   {(['overview', 'details', 'impact', 'actions'] as const).map((k) => data.letter?.[k] ? (
                     <div key={k}>
                       <p className="text-xs font-semibold border-s-4 border-primary ps-2">{t(`ref.letter.${k}`)}</p>
@@ -103,22 +112,22 @@ export default function ReferralRespond() {
               )}
               {data.note && <div><dt className="text-xs text-muted-foreground">{t('ref.page.note')}</dt><dd className="whitespace-pre-wrap">{data.note}</dd></div>}
               {state === 'ready' && data.expires_at && (
-                <p className="text-[11px] text-muted-foreground">{t('ref.page.expires', { date: new Date(data.expires_at).toLocaleString() })}</p>
+                <p className="text-xs text-muted-foreground">{t('ref.page.expires', { date: new Date(data.expires_at).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' }) })}</p>
               )}
             </dl>
           )}
 
           {state === 'ready' && (
-            <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" disabled={busy} onClick={() => void respond('decline')}><X className="w-4 h-4" /> {t('ref.page.decline')}</Button>
-               <Button variant="action" disabled={busy} onClick={() => void respond('accept')}>{busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} {t('ref.page.accept')}</Button>
+            <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3">
+              <Button variant="outline" className="h-auto min-h-12 whitespace-normal text-balance" disabled={busy} onClick={() => void respond('decline')}><X className="w-4 h-4" aria-hidden /> {t('ref.page.decline')}</Button>
+              <Button variant="action" className="h-auto min-h-12 whitespace-normal text-balance" disabled={busy} onClick={() => void respond('accept')}>{busy ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <Check className="w-4 h-4" aria-hidden />} {t('ref.page.accept')}</Button>
             </div>
           )}
-          {state === 'accepted' && <p className="text-sm text-primary">{t('ref.page.accepted')}</p>}
-          {state === 'declined' && <p className="text-sm">{t('ref.page.declined')}</p>}
+          {state === 'accepted' && <p role="status" className="text-sm text-primary">{t('ref.page.accepted')}</p>}
+          {state === 'declined' && <p role="status" className="text-sm">{t('ref.page.declined')}</p>}
           {state === 'answered' && <p className="text-sm text-muted-foreground">{t('ref.page.alreadyAnswered')}</p>}
 
-          <p className="text-[11px] text-muted-foreground mt-6 flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" /> {t('ref.page.privacy')}</p>
+          <p className="text-xs text-muted-foreground mt-6 flex items-start gap-1.5"><ShieldCheck className="w-3.5 h-3.5 mt-0.5 shrink-0" aria-hidden /> {t('ref.page.privacy')}</p>
         </div>
       </div>
     </div>

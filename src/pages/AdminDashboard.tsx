@@ -4,39 +4,25 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/screening/StatusBadge';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
-import { CaseStatus, STATUS_LABEL, BRANCHES } from '@/lib/screening';
-import { q9Level } from '@/lib/screeningTools';
-import { printCaseReport, logExport, AI_DISCLAIMER, type CaseReportData } from '@/lib/caseReport';
+import { CaseStatus, STATUS_LABEL, SEV_LABEL, BRANCHES, VIOLATION_TYPES, type Severity } from '@/lib/screening';
+import { logExport } from '@/lib/caseReport';
 import { useCaseAlerts, type CaseAlert } from '@/hooks/useCaseAlerts';
-import { useAccess, useRoleLabels } from '@/hooks/useAccess';
+import { useAccess } from '@/hooks/useAccess';
 
 import {
-  Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin,
-  Search, ChevronLeft, ChevronRight, UserCheck, UserCog, CalendarClock, BellRing, ShieldAlert, Check,
-  MessageCircleQuestion, Send, AlertTriangle, Clock, HelpCircle, Building2, Volume2, ChevronDown, Printer, Scale, Share2, HeartHandshake, Flag, History,
+  Loader2, Plus, Download, MapPin, Search, ChevronLeft, ChevronRight, UserCheck, CalendarClock,
+  BellRing, ShieldAlert, Check, AlertTriangle, Clock, HelpCircle, Flag,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { printCaseDocument, docInputFromReport, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
-import { LanguageToggle } from '@/components/LanguageToggle';
-import { CaseReferrals } from '@/components/admin/CaseReferrals';
-import { MapPicker } from '@/components/screening/MapPicker';
-import { DocumentDraftDialog } from '@/components/admin/DocumentDraftDialog';
-import { BrandMark } from '@/components/BrandLogo';
-import { CaseAnswersEditor } from '@/components/admin/CaseAnswersEditor';
-import { CaseTrainingSamples } from '@/components/admin/CaseTrainingSamples';
 import { DashboardOverview } from '@/components/admin/DashboardOverview';
-import { StaffShell } from '@/components/admin/StaffShell';
-import { QuickExitSlot } from '@/components/screening/QuickExit';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { StaffShell, StaffLoadError } from '@/components/admin/StaffShell';
+import { CaseDetail } from '@/components/admin/CaseDetail';
 
 const PAGE_SIZE = 20;
 
@@ -44,15 +30,6 @@ const LIST_COLS =
   'id, case_code, status, severity, created_at, follow_up_at, assigned_to, suicide_risk, ai_reviewed, victim, profile, ai_result, first_response_at, pii_flag';
 const DETAIL_COLS = '*';
 const sel = (s: string): string => s;
-
-function referralLabel(value: unknown): string {
-  if (typeof value === 'string') return value;
-  if (!value || typeof value !== 'object') return '';
-  const referral = value as Record<string, unknown>;
-  return [referral.org_name, referral.phone, referral.note]
-    .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
-    .join(' · ');
-}
 
 interface CaseListRow {
   id: string;
@@ -69,18 +46,6 @@ interface CaseListRow {
   profile: any;
   ai_result: any;
   first_response_at: string | null;
-}
-
-function SlaBadge({ createdAt }: { createdAt: string }) {
-  const { t } = useI18n();
-  const elapsed = (Date.now() - new Date(createdAt).getTime()) / 3_600_000;
-  const left = 24 - elapsed;
-  if (left <= 0) {
-    return <span className="text-xs bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full tabular-nums">{t('dash.sla.overdue', { h: Math.floor(elapsed) })}</span>;
-  }
-  const h = Math.ceil(left);
-  const cls = left < 6 ? 'bg-sevYellow-bg text-sevYellow-fg' : 'bg-muted text-muted-foreground';
-  return <span className={`text-xs px-2 py-0.5 rounded-full tabular-nums ${cls}`}>{t('dash.sla.remaining', { h })}</span>;
 }
 
 interface Staff { id: string; display_name: string | null; email: string | null }
@@ -113,10 +78,12 @@ const isFollowOverdue = (c: { follow_up_at: string | null; status: CaseStatus })
 const isHigh = (c: QueueRow) => c.severity === 'red' || c.suicide_risk;
 const isNrm = (c: QueueRow) => !!(c.ai_result?.trafficking_suspected || c.profile?.trafficking_suspected
   || (Array.isArray(c.profile?.special_tests) && c.profile.special_tests.includes('nrm')));
+// Staff intake stores the Thai label, self-report stores the id: show both as the same id (display only).
+const toTypeId = (x: string) => VIOLATION_TYPES.find((v) => v.label === x)?.id ?? x;
 const typesOf = (c: QueueRow): string[] => Array.from(new Set([
   ...(Array.isArray(c.violation_types) ? c.violation_types : []),
   ...(Array.isArray(c.profile?.initialViolationTypes) ? c.profile.initialViolationTypes : []),
-]));
+].map(toTypeId)));
 
 /** Urgency: unanswered first (most overdue / least time left), then answered by follow-up date. */
 function urgencySort(a: QueueRow, b: QueueRow) {
@@ -133,11 +100,17 @@ function SlaPill({ c }: { c: { created_at: string; first_response_at: string | n
   const base = 'inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums';
   if (c.first_response_at) return <span className={cn(base, 'bg-muted text-muted-foreground')}><Check className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.done')}</span>;
   const left = hoursLeft(c.created_at);
-  if (left <= 0) return <span className={cn(base, 'bg-destructive text-destructive-foreground')}><AlertTriangle className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.over', { h: Math.floor(-left) })}</span>;
+  if (left <= 0) return <span className={cn(base, 'bg-destructive text-destructive-foreground')}><AlertTriangle className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.over', { h: Math.max(1, Math.ceil(-left)) })}</span>;
   const h = Math.ceil(left);
   return left < 6
     ? <span className={cn(base, 'bg-sevYellow-bg text-sevYellow-fg')}><Clock className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.left', { h })}</span>
     : <span className={cn(base, 'bg-sevGreen-bg text-sevGreen-fg')}><Clock className="h-3.5 w-3.5" aria-hidden />{t('staff.sla.left', { h })}</span>;
+}
+
+/** Violation type id (or a legacy free-text label) as words in the current language. */
+function useTypeLabel() {
+  const { t } = useI18n();
+  return (id: string) => { const v = t(`report.type.${id}`); return v === `report.type.${id}` ? id : v; };
 }
 
 function SevCell({ v }: { v: QueueRow['severity'] }) {
@@ -168,7 +141,9 @@ function Flags({ c }: { c: QueueRow }) {
 export default function AdminDashboard() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
+  const typeLabel = useTypeLabel();
   const { id: routeCaseId } = useParams();
   const qc = useQueryClient();
   const [authorized, setAuthorized] = useState(false);
@@ -177,7 +152,9 @@ export default function AdminDashboard() {
   const view: StaffView = pathname.startsWith('/admin/cases') ? 'cases'
     : pathname.startsWith('/admin/caseload') ? 'caseload'
     : pathname.startsWith('/admin/overview') ? 'overview' : 'queue';
-  const openCase = (id: string) => navigate(`/admin/case/${id}`);
+  // `from` lets the case page label its back link with the list it came from
+  const caseState = { from: pathname };
+  const openCase = (id: string) => navigate(`/admin/case/${id}`, { state: caseState });
 
   // filters (server-side)
   const [status, setStatus] = useState<'all' | CaseStatus>('all');
@@ -286,6 +263,9 @@ export default function AdminDashboard() {
         .from('case_alerts')
         .select(sel('id, case_id, case_code, branch, level, kind, acknowledged_at, created_at'))
         .is('acknowledged_at', null)
+        // Only the kinds the banner shows. new_case rows are never acknowledged, so without this
+        // filter they push unacknowledged high-risk and self-harm alerts out of the newest 20.
+        .in('kind', ['high_risk', 'suicide_risk'])
         .order('created_at', { ascending: false })
         .limit(20)
         .returns<CaseAlert[]>();
@@ -328,7 +308,8 @@ export default function AdminDashboard() {
   const stats = statsQ.data;
   const totalPages = Math.max(1, Math.ceil((casesQ.data?.count ?? 0) / PAGE_SIZE));
 
-  const highAlerts = (alertsQ.data ?? []).filter((a) => a.kind !== 'new_case');
+  // SLA-warning and unassigned reminders keep their own toasts; the banner is high risk and self-harm only
+  const highAlerts = (alertsQ.data ?? []).filter((a) => a.kind === 'high_risk' || a.kind === 'suicide_risk');
   const alertIds = new Set(highAlerts.map((a) => a.case_id).filter(Boolean) as string[]);
 
   const chipTest: Record<QueueChip, (c: QueueRow) => boolean> = {
@@ -368,7 +349,8 @@ export default function AdminDashboard() {
     const lines = [headers.join(',')];
     rows.forEach((c: any) => {
       lines.push([
-        c.case_code, new Date(c.created_at).toLocaleString('th-TH'), STATUS_LABEL[c.status as CaseStatus], c.severity || '',
+        c.case_code, new Date(c.created_at).toLocaleString('th-TH'), STATUS_LABEL[c.status as CaseStatus],
+        c.severity ? (SEV_LABEL[c.severity as Severity] ?? c.severity) : '',
         c.profile?.branch || '', c.profile?.kp || '', c.profile?.gender || '', c.profile?.age || '',
         c.victim?.name_masked || '', c.profile?.incidentPlace || '',
         c.has_violation ? t('dash.csv.yes') : t('dash.csv.no'), (c.violation_details || []).join(' | '),
@@ -388,7 +370,7 @@ export default function AdminDashboard() {
     toast.success(t('dash.export.csvSuccess', { n: rows.length }));
   };
 
-  if (checking) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  if (checking) return <div className="min-h-screen flex items-center justify-center" role="status"><Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>;
   if (!authorized) return null;
 
   if (routeCaseId) {
@@ -398,7 +380,8 @@ export default function AdminDashboard() {
           caseId={routeCaseId}
           staff={staffQ.data ?? []}
           staffName={staffName}
-          onBack={() => (window.history.length > 1 ? navigate(-1) : navigate('/admin'))}
+          // history.length also counts other sites' entries; location.key is 'default' on a fresh tab
+          onBack={() => (location.key !== 'default' ? navigate(-1) : navigate('/admin'))}
           onChanged={invalidateCase}
         />
       </StaffShell>
@@ -506,7 +489,9 @@ export default function AdminDashboard() {
           </div>
 
           {queueQ.isLoading ? (
-            <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>
+            <div className="py-12 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>
+          ) : queueQ.isError ? (
+            <StaffLoadError onRetry={() => void queueQ.refetch()} />
           ) : queueRows.length === 0 ? (
             <p className="text-sm text-center text-muted-foreground py-12">{t('staff.queueEmpty')}</p>
           ) : (
@@ -524,12 +509,12 @@ export default function AdminDashboard() {
                     {queueRows.map((c) => (
                       <tr key={c.id} className="border-t border-border h-16 align-middle hover:bg-primary-soft/40">
                         <td className="px-3"><SlaPill c={c} /></td>
-                        <td className="px-3"><Link to={`/admin/case/${c.id}`} className="inline-flex min-h-11 items-center whitespace-nowrap font-mono font-semibold text-accent underline-offset-4 hover:underline">{c.case_code}</Link></td>
+                        <td className="px-3"><Link to={`/admin/case/${c.id}`} state={caseState} className="inline-flex min-h-11 items-center whitespace-nowrap font-mono font-semibold text-accent underline-offset-4 hover:underline">{c.case_code}</Link></td>
                         <td className="px-3 whitespace-nowrap"><SevCell v={c.severity} /></td>
-                        <td className="px-3 text-sm">{typesOf(c).map((x) => t(`report.type.${x}`)).join(', ') || '-'}</td>
+                        <td className="px-3 text-sm">{typesOf(c).map(typeLabel).join(', ') || '-'}</td>
                         <td className="px-3"><Flags c={c} /></td>
                         <td className="px-3 text-sm">{c.profile?.province || c.profile?.branch || '-'}</td>
-                        <td className="px-3"><Owner c={c} name={staffName(c.assigned_to)} canClaim={access.canEdit} onClaim={() => claim.mutate(c.id)} busy={claim.isPending} /></td>
+                        <td className="px-3"><Owner c={c} name={staffName(c.assigned_to)} canClaim={access.canManage} onClaim={() => claim.mutate(c.id)} busy={claim.isPending} /></td>
                       </tr>
                     ))}
                   </tbody>
@@ -539,17 +524,17 @@ export default function AdminDashboard() {
                 {queueRows.map((c) => (
                   <li key={c.id} className="rounded-2xl border border-border bg-card p-4 shadow-card space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Link to={`/admin/case/${c.id}`} className="inline-flex min-h-11 items-center font-mono text-base font-semibold text-accent underline underline-offset-4">{c.case_code}</Link>
+                      <Link to={`/admin/case/${c.id}`} state={caseState} className="inline-flex min-h-11 items-center font-mono text-base font-semibold text-accent underline underline-offset-4">{c.case_code}</Link>
                       <SlaPill c={c} />
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <SevCell v={c.severity} />
-                      <span className="text-sm text-muted-foreground">{typesOf(c).map((x) => t(`report.type.${x}`)).join(', ')}</span>
+                      <span className="text-sm text-muted-foreground">{typesOf(c).map(typeLabel).join(', ')}</span>
                     </div>
                     <Flags c={c} />
                     <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                       <span className="inline-flex items-center gap-1 text-muted-foreground"><MapPin className="h-4 w-4" aria-hidden />{c.profile?.province || c.profile?.branch || '-'}</span>
-                      <Owner c={c} name={staffName(c.assigned_to)} canClaim={access.canEdit} onClaim={() => claim.mutate(c.id)} busy={claim.isPending} />
+                      <Owner c={c} name={staffName(c.assigned_to)} canClaim={access.canManage} onClaim={() => claim.mutate(c.id)} busy={claim.isPending} />
                     </div>
                   </li>
                 ))}
@@ -600,7 +585,9 @@ export default function AdminDashboard() {
           </div>
 
           {casesQ.isLoading ? (
-            <div className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>
+            <div className="py-12 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>
+          ) : casesQ.isError ? (
+            <StaffLoadError onRetry={() => void casesQ.refetch()} />
           ) : (casesQ.data?.rows.length ?? 0) === 0 ? (
             <p className="text-sm text-center text-muted-foreground py-12">{t('dash.cases.noneFound')}</p>
           ) : (
@@ -609,7 +596,7 @@ export default function AdminDashboard() {
                 const overdue = isFollowOverdue(c);
                 return (
                   <li key={c.id}>
-                    <Link to={`/admin/case/${c.id}`}
+                    <Link to={`/admin/case/${c.id}`} state={caseState}
                       className="block w-full min-h-16 text-start bg-card border border-border rounded-2xl p-4 hover:border-primary transition-colors shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <span className="font-mono text-sm font-semibold">{c.case_code}</span>
@@ -638,14 +625,18 @@ export default function AdminDashboard() {
               {t('dash.cases.pageInfo', { n: casesQ.data?.count ?? 0, page: page + 1, total: totalPages })}
             </span>
             <div className="flex gap-2">
-              <Button size="icon" variant="outline" aria-label="Previous page" disabled={page === 0} onClick={() => setPage((p) => p - 1)}><ChevronLeft className="w-4 h-4 rtl:-scale-x-100" /></Button>
-              <Button size="icon" variant="outline" aria-label="Next page" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}><ChevronRight className="w-4 h-4 rtl:-scale-x-100" /></Button>
+              <Button size="icon" variant="outline" aria-label={t('staff.page.prev')} disabled={page === 0} onClick={() => setPage((p) => p - 1)}><ChevronLeft className="w-4 h-4 rtl:-scale-x-100" aria-hidden /></Button>
+              <Button size="icon" variant="outline" aria-label={t('staff.page.next')} disabled={page + 1 >= totalPages} onClick={() => setPage((p) => p + 1)}><ChevronRight className="w-4 h-4 rtl:-scale-x-100" aria-hidden /></Button>
             </div>
           </div>
         </div>
       )}
 
-      {view === 'caseload' && (
+      {view === 'caseload' && statsQ.isError && <StaffLoadError onRetry={() => void statsQ.refetch()} />}
+      {view === 'caseload' && statsQ.isLoading && (
+        <div className="py-12 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>
+      )}
+      {view === 'caseload' && statsQ.isSuccess && (
         <div className="bg-card border border-border rounded-2xl p-5 shadow-card">
           <h2 className="font-subhead text-lg font-semibold mb-3">{t('dash.caseload.title')}</h2>
           <ul className="divide-y divide-border">
@@ -684,6 +675,11 @@ function Kpi({ label, n, tone }: { label: string; n?: number; tone?: 'danger' | 
   );
 }
 
+/**
+ * Assignee cell. The claim button writes assigned_to = me, which RLS allows only for admin/manager
+ * (a caseworker's update matches 0 rows with no error), so callers pass canClaim={access.canManage},
+ * the same rule as the case page.
+ */
 function Owner({ c, name, canClaim, onClaim, busy }: { c: QueueRow; name: string | null; canClaim: boolean; onClaim: () => void; busy: boolean }) {
   const { t } = useI18n();
   if (c.assigned_to && name) {
@@ -695,7 +691,8 @@ function Owner({ c, name, canClaim, onClaim, busy }: { c: QueueRow; name: string
     );
   }
   if (!canClaim) return <span className="text-sm text-muted-foreground">{t('dash.cases.unassigned')}</span>;
-  return <Button size="sm" variant="action" disabled={busy} onClick={onClaim}><UserCheck className="h-4 w-4" /> {t('staff.claim')}</Button>;
+  // Charcoal, not magenta: the page keeps one main action and a queue can show several of these.
+  return <Button size="sm" variant="default" disabled={busy} onClick={onClaim}><UserCheck className="h-4 w-4" /> {t('staff.claim')}</Button>;
 }
 
 
@@ -705,669 +702,6 @@ function StatCard({ num, label, tone }: { num: number; label: string; tone: 'pur
     <div className="bg-card border border-border rounded-[20px] p-4 text-center shadow-card hover-lift animate-bloom">
       <p className={`font-display text-3xl font-medium ${cls} tabular-nums`}>{num}</p>
       <p className="text-xs text-muted-foreground mt-1">{label}</p>
-    </div>
-  );
-}
-
-function ChartBlock({ title, data, noDataLabel }: { title: string; data: { label: string; value: number }[]; noDataLabel: string }) {
-  const max = Math.max(...data.map((d) => d.value), 1);
-  const visible = data.filter((d) => d.value > 0);
-  return (
-    <div className="bg-card border border-border rounded-[20px] p-5 mb-4 shadow-card animate-bloom">
-      <p className="text-xs font-medium text-muted-foreground mb-3 tracking-wide">{title}</p>
-      {visible.length === 0 ? <p className="text-xs text-muted-foreground">{noDataLabel}</p> : (
-        <div className="space-y-2">
-          {visible.map((d) => (
-            <div key={d.label} className="flex items-center gap-3">
-              <span className="text-xs w-32 truncate">{d.label}</span>
-              <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${(d.value / max) * 100}%` }} />
-              </div>
-              <span className="text-xs font-medium w-6 text-right tabular-nums">{d.value}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function CaseDetail({ caseId, staff, staffName, onBack, onChanged }: {
-  caseId: string; staff: Staff[]; staffName: (id: string | null) => string | null;
-  onBack: () => void; onChanged: () => void;
-}) {
-  const { t } = useI18n();
-  const access = useAccess();
-  const qc = useQueryClient();
-  const navigate = useNavigate();
-  const [note, setNote] = useState('');
-  const [audioSigned, setAudioSigned] = useState<Record<number, string>>({});
-  const [photoSigned, setPhotoSigned] = useState<string[]>([]);
-  const [allAudio, setAllAudio] = useState<{ url: string; label: string }[]>([]);
-  const [lightbox, setLightbox] = useState<number | null>(null);
-  // PDPA: ข้อมูลระบุตัวตนอยู่คนละตาราง ต้องกดเปิดดูและระบบจะบันทึกประวัติการเข้าดูทุกครั้ง
-  const [pii, setPii] = useState<{ reporter: any; victim: any } | null>(null);
-  const [piiLoading, setPiiLoading] = useState(false);
-  // คำถามถึงผู้รายงาน (ตอบกลับผ่านหน้า /track ด้วยรหัสเคส) + หน่วยงานรับส่งต่อรายพื้นที่
-  const [newQuestion, setNewQuestion] = useState('');
-  const [answerAudio, setAnswerAudio] = useState<Record<string, string>>({});
-  const [showMap, setShowMap] = useState(false);
-  const [documentKind, setDocumentKind] = useState<DocKind | null>(null);
-  const [documentInput, setDocumentInput] = useState<ReturnType<typeof docInputFromReport> | null>(null);
-  const [confirmStatus, setConfirmStatus] = useState<CaseStatus | null>(null);
-
-
-  const revealPii = async () => {
-    setPiiLoading(true);
-    const { data, error } = await supabase.rpc('get_case_pii' as any, { _case_id: caseId });
-    setPiiLoading(false);
-    if (error) { toast.error(t('dash.detail.piiNoAccess')); return; }
-    setPii(data as any);
-  };
-
-  const { data: c, isLoading } = useQuery({
-    queryKey: ['case', caseId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('cases').select(sel(DETAIL_COLS)).eq('id', caseId).single();
-      if (error) throw error;
-      return data as any;
-    },
-  });
-
-  const { data: questions = [] } = useQuery({
-    queryKey: ['case-questions', caseId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('case_questions' as never)
-        .select('id,question,answer_text,answer_audio_url,answered_at,created_at')
-        .eq('case_id', caseId)
-        .order('created_at');
-      return (data ?? []) as unknown as { id: string; question: string; answer_text: string | null; answer_audio_url: string | null; answered_at: string | null; created_at: string }[];
-    },
-  });
-
-  const [saving, setSaving] = useState(false);
-  const { data: timeline = [] } = useQuery({
-    queryKey: ['case-timeline', caseId],
-    queryFn: async () => {
-      const { data } = await supabase.from('case_timeline').select('status,note,created_at').eq('case_id', caseId).order('created_at', { ascending: false });
-      return (data ?? []) as { status: string; note: string | null; created_at: string }[];
-    },
-  });
-
-
-  const { data: partners = [] } = useQuery({
-    queryKey: ['case-partners', c?.profile?.province ?? null],
-    enabled: !!c,
-    queryFn: async () => {
-      const prov = c?.profile?.province || c?.profile?.branch;
-      let q = supabase.from('referral_partners' as never)
-        .select('id,name,org_type,province,district,phone,email,address,services')
-        .eq('active', true);
-      if (prov) q = q.or(`province.eq.${prov},province.is.null`);
-      const { data } = await q.order('name');
-      return (data ?? []) as unknown as { id: string; name: string; org_type: string; province: string | null; district: string | null; phone: string | null; email: string | null; address: string | null; services: string[] }[];
-    },
-  });
-
-  const askQuestion = async () => {
-    const q = newQuestion.trim();
-    if (!q) return;
-    const { data: sess } = await supabase.auth.getUser();
-    const { error } = await supabase.from('case_questions' as never)
-      .insert({ case_id: caseId, question: q.slice(0, 1000), asked_by: sess.user?.id } as never);
-    if (error) { toast.error(t('dash.detail.sendQuestionFailed')); return; }
-    setNewQuestion('');
-    toast.success(t('dash.detail.sendQuestionSuccess'));
-    qc.invalidateQueries({ queryKey: ['case-questions', caseId] });
-  };
-
-  const playAnswerAudio = async (qid: string, path: string) => {
-    if (answerAudio[qid]) return;
-    const { data } = await supabase.storage.from('case-audio').createSignedUrl(path, 300);
-    if (data?.signedUrl) setAnswerAudio((prev) => ({ ...prev, [qid]: data.signedUrl }));
-  };
-
-  useEffect(() => {
-    if (!c) return;
-    let cancelled = false;
-    (async () => {
-      // Phase 0.6 — audit every access to sensitive media, and keep links short-lived (5 นาที)
-      void supabase.rpc('log_case_access' as any, { _case_id: c.id, _action: 'view_media' });
-      const out: Record<number, string> = {};
-      const list: { url: string; label: string }[] = [];
-      const norm = (x: any) => (typeof x === 'string' ? { path: x } : x) as { path: string; qIndex?: number; question?: string };
-      const signAll = async (bucket: string, items: any[]) => {
-        const paths = (items || []).map(norm).filter((x) => x?.path);
-        if (!paths.length) return [] as (string | null)[];
-        const { data } = await supabase.storage.from(bucket).createSignedUrls(paths.map((x) => x.path), 600);
-        return paths.map((_, i) => data?.[i]?.signedUrl ?? null);
-      };
-      const audioItems = (c.audio_urls || []).map(norm);
-      const aUrls = await signAll('case-audio', c.audio_urls || []);
-      audioItems.forEach((a: any, i: number) => {
-        const url = aUrls[i]; if (!url) return;
-        if (typeof a.qIndex === 'number') out[a.qIndex] = url;
-        list.push({ url, label: a.question || t('dash.media.clip', { n: i + 1 }) });
-      });
-      const urls = (await signAll('case-photos', c.photo_urls || [])).filter(Boolean) as string[];
-      if (!cancelled) { setAudioSigned(out); setPhotoSigned(urls); setAllAudio(list); }
-    })();
-    return () => { cancelled = true; };
-  }, [c?.id]);
-
-  const patchCase = async (patch: Record<string, unknown>, msg: string) => {
-    const { error } = await supabase.from('cases').update(patch as never).eq('id', caseId);
-    if (error) { toast.error(t('dash.detail.saveFailed')); return; }
-    toast.success(msg);
-    qc.invalidateQueries({ queryKey: ['case', caseId] });
-    onChanged();
-  };
-
-  const updateStatus = async (status: CaseStatus) => {
-    const msg = note.trim().slice(0, 1000);
-    if (status === c?.status && !msg) return;
-    setSaving(true);
-    try {
-      if (status !== c?.status) {
-        const { error } = await supabase.from('cases').update({ status } as never).eq('id', caseId);
-        if (error) { toast.error(t('dash.detail.statusUpdateFailed')); return; }
-      }
-      const { error: tErr } = await supabase.from('case_timeline').insert({ case_id: caseId, status, note: msg || null } as never);
-      if (tErr) { toast.error(t('dash.detail.saveFailed')); return; }
-      setNote('');
-      toast.success(status !== c?.status ? t('dash.detail.statusUpdateSuccess') : t('dash.detail.replySent'));
-      qc.invalidateQueries({ queryKey: ['case', caseId] });
-      qc.invalidateQueries({ queryKey: ['case-timeline', caseId] });
-      onChanged();
-    } finally { setSaving(false); }
-  };
-
-
-  if (isLoading || !c) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
-
-  const s = c.screening || {};
-
-  const DOC_ICONS: Record<DocKind, React.ReactNode> = {
-    complaint: <Scale className="w-4 h-4" />,
-    statement: <FileText className="w-4 h-4" />,
-    referral: <Share2 className="w-4 h-4" />,
-    assistance: <HeartHandshake className="w-4 h-4" />,
-  };
-
-  // ดึง PII ผ่าน RPC (masked-by-default) ก่อนออกเอกสารทุกประเภท
-  const withPii = async (fn: (full: CaseReportData) => void) => {
-    const p = pii ?? (await (async () => {
-      const { data } = await supabase.rpc('get_case_pii' as any, { _case_id: caseId });
-      if (data) setPii(data as any);
-      return data as any;
-    })());
-    fn({ ...c, reporter: p?.reporter ?? null, victim: p?.victim ?? null, assignee_name: staffName(c.assigned_to) } as CaseReportData);
-  };
-
-  const reviewDocument = async (kind: DocKind) => {
-    await withPii((full) => {
-      setDocumentInput(docInputFromReport(full));
-      setDocumentKind(kind);
-    });
-  };
-
-  const card = 'bg-card border border-border rounded-2xl p-5 shadow-card';
-  const h2 = 'font-subhead text-base font-semibold mb-3 flex items-center gap-2';
-  const q9 = typeof s.q9Total === 'number' ? s.q9Total : null;
-  const tiles: { label: string; value: string; tone: 'ok' | 'watch' | 'danger' | 'none' }[] = [
-    { label: '2Q', value: s.q2Positive === undefined ? '-' : s.q2Positive ? t('dash.detail.q2Abnormal') : t('dash.detail.q2Normal'), tone: s.q2Positive === undefined ? 'none' : s.q2Positive ? 'watch' : 'ok' },
-    { label: '9Q', value: q9 === null ? '-' : `${q9} · ${q9Level(q9).label}`, tone: q9 === null ? 'none' : q9 >= 19 ? 'danger' : q9 >= 7 ? 'watch' : 'ok' },
-    { label: t('cd.selfHarm'), value: c.suicide_risk ? t('dash.detail.riskFound') : t('dash.detail.riskNotFound'), tone: c.suicide_risk ? 'danger' : 'ok' },
-    { label: 'NRM', value: (s.nrmPositive === undefined ? '-' : s.nrmPositive ? t('dash.detail.nrmTrafficking') : t('dash.detail.nrmNotYet')) + (s.nrmUnder18 ? t('dash.detail.nrmMinor') : ''), tone: s.nrmPositive === undefined ? 'none' : s.nrmPositive ? 'danger' : 'ok' },
-  ];
-  const toneCls = { ok: 'bg-sevGreen-bg text-sevGreen-fg border-transparent', watch: 'bg-sevYellow-bg text-sevYellow-fg border-transparent', danger: 'bg-sevRed-bg text-sevRed-fg border-transparent', none: 'bg-muted/50 text-muted-foreground border-border' };
-  const source = c.source || c.channel || c.profile?.source;
-
-  const pickStatus = (st: CaseStatus) => {
-    if (st === c.status) return;
-    if (st === 'completed' || st === 'cancelled') setConfirmStatus(st);
-    else void updateStatus(st);
-  };
-
-  const followValue = c.follow_up_at ? new Date(c.follow_up_at).toISOString().slice(0, 10) : '';
-  const saveFollow = (v: string) => {
-    if (v === followValue) return;
-    void patchCase({ follow_up_at: v ? new Date(v).toISOString() : null }, t('dash.detail.followUpSetToast'));
-  };
-
-  const actionCol = (
-    <div className="space-y-4 xl:sticky xl:top-44">
-      <section className={card}>
-        <h2 className={h2}>{t('cd.next')}</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-muted-foreground mb-1.5">{t('dash.detail.assignee')}</label>
-            <div className="flex flex-col gap-2">
-              <Select value={c.assigned_to ?? 'none'} onValueChange={(v) => patchCase({ assigned_to: v === 'none' ? null : v }, t('dash.detail.assignedToast'))} disabled={!access.canEdit}>
-                <SelectTrigger className="h-11" aria-label={t('dash.detail.assignee')}><SelectValue placeholder={t('dash.detail.selectStaff')} /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">{t('dash.filter.unassigned')}</SelectItem>
-                  {staff.map((st) => <SelectItem key={st.id} value={st.id}>{st.display_name || st.email}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              {access.canEdit && access.uid && c.assigned_to !== access.uid && (
-                <Button variant="outline" onClick={() => patchCase({ assigned_to: access.uid }, t('dash.detail.assignedToast'))}>
-                  <UserCheck className="w-4 h-4" /> {t('cd.claimSelf')}
-                </Button>
-              )}
-            </div>
-          </div>
-          <div>
-            <label htmlFor="cd-follow" className="block text-sm text-muted-foreground mb-1.5">{t('dash.detail.followUpDate')}</label>
-            <Input id="cd-follow" key={followValue} type="date" defaultValue={followValue} disabled={!access.canEdit}
-              onBlur={(e) => saveFollow(e.target.value)} className="h-11" />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1.5" id="cd-status-label">{t('cd.status')}</p>
-            <div role="radiogroup" aria-labelledby="cd-status-label" className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
-              {(['received', 'inprogress', 'completed', 'cancelled'] as CaseStatus[]).map((st) => (
-                <button key={st} type="button" role="radio" aria-checked={c.status === st} disabled={saving || !access.canEdit}
-                  onClick={() => pickStatus(st)}
-                  className={cn('min-h-11 rounded-lg px-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed',
-                    c.status === st ? 'bg-primary text-primary-foreground shadow-card' : 'text-foreground hover:bg-card')}>
-                  {t(`status.${st}`)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={card}>
-        <h2 className={h2}><Send className="w-4 h-4 text-accent" aria-hidden />{t('cd.msgTitle')}</h2>
-        <p className="text-sm text-muted-foreground mb-2">{t('dash.detail.replyHint')}</p>
-        <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('dash.detail.replyPlaceholder')} aria-label={t('cd.msgTitle')} className="min-h-[96px]" maxLength={1000} />
-        <Button variant="action" className="w-full mt-3" disabled={!note.trim() || saving} onClick={() => void updateStatus(c.status as CaseStatus)}>
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} {t('cd.sendMsg')}
-        </Button>
-        <button type="button" className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-accent underline underline-offset-4"
-          onClick={() => document.getElementById('cd-questions')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })}>
-          <MessageCircleQuestion className="w-4 h-4" aria-hidden /> {t('cd.askMore')}
-        </button>
-      </section>
-
-      <section className={card}>
-        <h2 className={h2}><History className="w-4 h-4" aria-hidden />{t('cd.activity')}</h2>
-        {timeline.length > 0 ? (
-          <ol className="relative ms-2 space-y-4 border-s-2 border-border">
-            {timeline.map((it, i) => (
-              <li key={i} className="ms-4">
-                <span className="absolute -start-[7px] mt-1.5 h-3 w-3 rounded-full border-2 border-card bg-accent" aria-hidden />
-                <p className="font-mono text-xs text-muted-foreground">{new Date(it.created_at).toLocaleString('th-TH')}</p>
-                <div className="mt-1"><StatusBadge value={it.status as CaseStatus} /></div>
-                {it.note && <p className="mt-1 text-sm break-words">{it.note}</p>}
-              </li>
-            ))}
-          </ol>
-        ) : <p className="text-sm text-muted-foreground">{t('dash.detail.none')}</p>}
-        <Button variant="outline" className="w-full mt-4" onClick={() => navigate(`/admin/case/${caseId}/history`)}>
-          <History className="w-4 h-4" /> {t('cd.allHistory')}
-        </Button>
-      </section>
-    </div>
-  );
-
-  return (
-    <div className="min-h-dvh bg-background">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto max-w-[1280px] px-4 py-3 sm:px-6">
-          <div className="flex items-center justify-between gap-2">
-            <button type="button" onClick={onBack} className="inline-flex min-h-11 items-center gap-1.5 rounded-lg pe-2 text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              <ArrowLeft className="w-4 h-4 rtl:-scale-x-100" aria-hidden /> {t('staff.nav.queue')}
-            </button>
-            <div className="flex items-center gap-2">
-              <Link to={`/admin/partner-search?case=${c.id}`} className="hidden sm:inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-card px-3 text-sm font-semibold hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <MapPin className="w-4 h-4" aria-hidden /> {t('psearch.nearButton')}
-              </Link>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="outline"><FileText className="w-4 h-4" /> {t('dash.detail.docsMenu')} <ChevronDown className="w-4 h-4" /></Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuItem className="min-h-11" onClick={() => void withPii((full) => printCaseReport(full))}>
-                    <Printer className="w-4 h-4" /> {t('dash.detail.fullReportPdf')}
-                  </DropdownMenuItem>
-                  {DOC_KINDS.map((dk) => (
-                    <DropdownMenuItem key={dk.key} className="min-h-11" onClick={() => void reviewDocument(dk.key)}>
-                      {DOC_ICONS[dk.key]} {dk.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <QuickExitSlot />
-            </div>
-          </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
-            <h1 className="font-mono text-[28px] font-semibold leading-tight tracking-wide">{c.case_code}</h1>
-            <StatusBadge value={c.status} />
-            {c.severity && <SeverityBadge value={c.severity} />}
-            {!c.first_response_at && <SlaPill c={c} />}
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            <span className="font-mono">{new Date(c.created_at).toLocaleString('th-TH')}</span>
-            {(c.profile?.branch || c.profile?.province) && <> · {c.profile?.branch || c.profile?.province}</>}
-            {source && <> · {String(source)}</>}
-          </p>
-          <Link to={`/admin/partner-search?case=${c.id}`} className="sm:hidden mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-accent underline underline-offset-4">
-            <MapPin className="w-4 h-4" aria-hidden /> {t('psearch.nearButton')}
-          </Link>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-[1280px] px-4 py-5 sm:px-6 space-y-4">
-        {documentKind && documentInput && (
-          <DocumentDraftDialog
-            open
-            onOpenChange={(open) => { if (!open) { setDocumentKind(null); setDocumentInput(null); } }}
-            caseId={caseId}
-            kind={documentKind}
-            input={documentInput}
-            existing={(c.document_drafts?.[documentKind] ?? null) as any}
-            onSaved={() => qc.invalidateQueries({ queryKey: ['case', caseId] })}
-          />
-        )}
-        {c.suicide_risk && (
-          <section role="alert" className="rounded-2xl border border-destructive/40 bg-sevRed-bg p-4">
-            <p className="flex items-start gap-2 font-semibold text-sevRed-fg">
-              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" aria-hidden /> {t('cd.safety')}
-            </p>
-          </section>
-        )}
-
-        <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start">
-          <div className="order-2 xl:order-1 min-w-0 space-y-4">
-            <section aria-label={t('cd.story')} className="space-y-2">
-              <h2 className="font-subhead text-lg font-semibold">{t('cd.story')}</h2>
-              <CaseAnswersEditor
-                caseId={caseId}
-                answers={Array.isArray(c.answers) ? c.answers : []}
-                canEdit={access.canEdit}
-                audioSigned={audioSigned}
-                staffObs={c.staff_observations ?? undefined}
-                staffName={(id) => staffName(id ?? null) || t('dash.staffFallback')}
-              />
-            </section>
-
-            {c.ai_result && (
-              <section className={card}>
-                <h2 className={h2}>{t('dash.detail.aiOpinion')}</h2>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden" role="img" aria-label={`${c.ai_result.riskLevel ?? ''} ${c.ai_result.riskScore}`}>
-                    <div className={`h-full ${c.ai_result.riskLevel === 'high' ? 'bg-destructive' : c.ai_result.riskLevel === 'medium' ? 'bg-warning' : 'bg-success'}`} style={{ width: `${c.ai_result.riskScore}%` }} />
-                  </div>
-                  <span className="font-mono font-semibold tabular-nums">{c.ai_result.riskScore}</span>
-                </div>
-                <p className="text-sm leading-relaxed mb-3">{c.ai_result.summary}</p>
-                <div className="flex flex-wrap gap-1.5 mb-3">
-                  {(c.ai_result.violationTags || []).map((tg: any, i: number) => <span key={i} className="text-xs bg-primary-soft text-primary px-2.5 py-1 rounded-full">{tg.label}</span>)}
-                </div>
-                {(c.ai_result.recommendations || []).length > 0 && (
-                  <ul className="text-sm space-y-1 list-disc ps-5 text-muted-foreground mb-3">
-                    {(c.ai_result.recommendations || []).map((r: string, i: number) => <li key={i}>{r}</li>)}
-                  </ul>
-                )}
-                <div className="rounded-xl border border-warning/40 bg-sevYellow-bg/60 p-3">
-                  <p className="text-sm text-sevYellow-fg">{t('cd.aiNotice')}</p>
-                  <Collapsible>
-                    <CollapsibleTrigger className="group mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-sevYellow-fg underline underline-offset-4">
-                      {t('cd.aiLimits')} <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" aria-hidden />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent><p className="pb-2 text-sm leading-relaxed text-sevYellow-fg">{AI_DISCLAIMER}</p></CollapsibleContent>
-                  </Collapsible>
-                  <Button size="sm" variant={c.ai_reviewed ? 'outline' : 'default'} className="mt-1"
-                    disabled={c.ai_reviewed}
-                    onClick={async () => {
-                      const { data: sess } = await supabase.auth.getUser();
-                      patchCase({ ai_reviewed: true, ai_reviewed_at: new Date().toISOString(), ai_reviewed_by: sess.user?.id }, t('dash.detail.aiReviewedToast'));
-                    }}>
-                    <Check className="w-4 h-4" /> {c.ai_reviewed ? t('dash.detail.aiReviewedLabel', { date: c.ai_reviewed_at ? ` · ${new Date(c.ai_reviewed_at).toLocaleDateString('th-TH')}` : '' }) : t('dash.detail.markReviewed')}
-                  </Button>
-                </div>
-              </section>
-            )}
-
-            <section className={card}>
-              <h2 className={h2}>{t('dash.detail.standardScreening')}</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {tiles.map((tl) => (
-                  <div key={tl.label} className={cn('rounded-xl border p-3', toneCls[tl.tone])}>
-                    <p className="text-xs font-semibold opacity-90">{tl.label}</p>
-                    <p className="mt-1 text-sm font-semibold leading-snug">{tl.value}</p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className={cn(card, 'space-y-4 text-sm')}>
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <h2 className="font-subhead text-base font-semibold">{t('dash.detail.relatedInfo')}</h2>
-                {!pii && (
-                  <Button size="sm" variant="outline" disabled={piiLoading} onClick={revealPii}>
-                    {piiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldAlert className="w-4 h-4" />} {t('dash.detail.revealPii')}
-                  </Button>
-                )}
-              </div>
-              {!pii && <p className="text-xs text-muted-foreground">{t('dash.detail.piiHint')}</p>}
-              <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.reporter')}</p>
-                  <p>{pii ? (pii.reporter?.name || '-') : '••••••'}</p>
-                  <p className="text-xs text-muted-foreground">{pii ? [pii.reporter?.phone, pii.reporter?.email].filter(Boolean).join(' · ') : '••••••'}</p>
-                  {pii?.reporter?.address && <p className="text-xs text-muted-foreground">{pii.reporter.address}</p>}
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.client')}</p>
-                  <p>{pii ? (pii.victim?.name || '-') : (c.victim?.name_masked || '••••••')}</p>
-                  <p className="text-xs text-muted-foreground">{c.profile?.kp} · {c.profile?.gender} · {c.profile?.age}</p>
-                  {pii?.victim?.contact && <p className="text-xs text-muted-foreground">{pii.victim.contact}</p>}
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">{t('dash.detail.area')}</p>
-                  <p>{[c.profile?.subdistrict && `ต.${c.profile.subdistrict}`, c.profile?.district && `อ.${c.profile.district}`, c.profile?.province || c.profile?.branch].filter(Boolean).join(' ')}</p>
-                  {c.profile?.geo && (
-                    <Button type="button" variant="link" size="sm" className="px-0" onClick={() => setShowMap((current) => !current)}>
-                      {showMap ? t('dash.detail.hideMap') : t('dash.detail.viewOnMap')}
-                    </Button>
-                  )}
-                </div>
-                <div><p className="text-xs text-muted-foreground mb-1">{t('dash.detail.incidentPlace')}</p><p>{c.profile?.incidentPlace || '-'}</p></div>
-              </div>
-              {showMap && c.profile?.geo && (
-                <div className="mt-4" aria-label={t('dash.detail.mapLabel')}>
-                  <MapPicker value={c.profile.geo} center={[c.profile.geo.lat, c.profile.geo.lng]} onChange={() => undefined} readOnly />
-                </div>
-              )}
-            </section>
-
-            <section className={card}>
-              <h2 className={h2}>{t('dash.detail.types')}</h2>
-              <div className="flex flex-wrap gap-2">
-                {(['body', 'mental', 'labor', 'health', 'property', 'other'] as const).map((k) => {
-                  const staffTypes: string[] = Array.isArray(c.violation_types) ? c.violation_types : [];
-                  const initTypes: string[] = Array.isArray((c.profile as any)?.initialViolationTypes) ? (c.profile as any).initialViolationTypes : [];
-                  const fromReporter = initTypes.includes(k);
-                  const fromStaff = staffTypes.includes(k);
-                  const active = fromReporter || fromStaff;
-                  return (
-                    <button
-                      key={k}
-                      type="button"
-                      disabled={!access.canEdit || fromReporter}
-                      aria-pressed={active}
-                      title={fromReporter ? t('dash.detail.typeReporter') : undefined}
-                      onClick={() => patchCase({ violation_types: fromStaff ? staffTypes.filter((x) => x !== k) : [...staffTypes, k] }, t('dash.detail.typesSaved'))}
-                      className={cn(
-                        'inline-flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-sm font-medium leading-normal transition-colors duration-150 disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                        active ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card text-foreground hover:bg-primary-soft',
-                      )}
-                    >
-                      {active && <Check className="h-4 w-4" aria-hidden />}
-                      {t(`report.type.${k}`)}
-                      {fromReporter && <span className="text-xs opacity-90">· {t('dash.detail.typeReporterShort')}</span>}
-                      {fromStaff && !fromReporter && <span className="text-xs opacity-90">· {t('dash.detail.typeStaffShort')}</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-
-            {(allAudio.length > 0 || photoSigned.length > 0) && (
-              <section className={cn(card, 'space-y-4')} aria-label={t('dash.media.title')}>
-                <h2 className="font-subhead text-base font-semibold">{t('dash.media.title')}</h2>
-                {allAudio.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">{t('dash.media.audio', { n: allAudio.length })}</p>
-                    {allAudio.map((a, i) => (
-                      <div key={i} className="rounded-xl border border-border p-2.5">
-                        <p className="text-xs text-muted-foreground mb-1 line-clamp-1">{a.label}</p>
-                        <audio src={a.url} controls preload="none" className="w-full h-11" />
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {photoSigned.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">{t('dash.detail.photos', { n: photoSigned.length })}</p>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                      {photoSigned.map((url, i) => (
-                        <button key={i} type="button" onClick={() => setLightbox(i)} className="block aspect-square rounded-lg overflow-hidden border border-border hover:opacity-90 transition-opacity">
-                          <img src={url} loading="lazy" alt={t('dash.detail.photoAlt', { n: i + 1 })} className="w-full h-full object-cover" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">{t('dash.media.note')}</p>
-              </section>
-            )}
-
-            <section className={card}>
-              <h2 className={h2}>{t('dash.detail.referrals')}</h2>
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {(c.referrals || []).map((r: unknown, i: number) => {
-                  const label = referralLabel(r);
-                  return label ? <span key={i} className="text-xs bg-primary-soft text-primary px-2.5 py-1 rounded-full">{label}</span> : null;
-                })}
-                {(!c.referrals || c.referrals.length === 0) && <span className="text-sm text-muted-foreground">{t('dash.detail.none')}</span>}
-              </div>
-              {c.referral_note && <p className="text-sm text-muted-foreground">{c.referral_note}</p>}
-            </section>
-
-            <CaseReferrals
-              caseId={caseId}
-              province={c.profile?.province ?? null}
-              violationTypes={Array.isArray(c.violation_types) ? c.violation_types : []}
-              canEdit={access.canEdit}
-            />
-
-            {partners.length > 0 && (
-              <section className={card}>
-                <h2 className={h2}><Building2 className="w-4 h-4" aria-hidden /> {t('dash.detail.localPartners', { province: c.profile?.province ? ` (${c.profile.province})` : '' })}</h2>
-                <div className="space-y-2.5">
-                  {partners.map((p) => (
-                    <div key={p.id} className="border border-border/60 rounded-xl p-3 text-sm">
-                      <p className="font-medium">{p.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {[p.district, p.province].filter(Boolean).join(' · ') || t('dash.detail.allAreas')}
-                        {p.phone ? t('dash.detail.phone', { phone: p.phone }) : ''}{p.email ? ` · ${p.email}` : ''}
-                      </p>
-                      {Array.isArray(p.services) && p.services.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          {p.services.map((sv, i) => <span key={i} className="text-xs bg-muted px-2 py-0.5 rounded-full">{sv}</span>)}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            <section id="cd-questions" className={cn(card, 'space-y-3 scroll-mt-40')}>
-              <h2 className="font-subhead text-base font-semibold flex items-center gap-2">
-                <MessageCircleQuestion className="w-4 h-4 text-accent" aria-hidden /> {t('dash.detail.askQuestionsTitle')}
-              </h2>
-              {questions.map((q) => (
-                <div key={q.id} className="border border-border/60 rounded-xl p-3 space-y-2">
-                  <p className="text-sm font-medium">{q.question}</p>
-                  <p className="font-mono text-xs text-muted-foreground">{new Date(q.created_at).toLocaleString('th-TH')}</p>
-                  {q.answer_text || q.answer_audio_url ? (
-                    <div className="bg-muted/50 rounded-lg p-2.5 space-y-1.5">
-                      <p className="text-xs font-semibold text-primary">{t('dash.detail.answerFromReporter')}</p>
-                      {q.answer_text && <p className="text-sm">{q.answer_text}</p>}
-                      {q.answer_audio_url && (
-                        answerAudio[q.id]
-                          ? <audio src={answerAudio[q.id]} controls className="w-full h-11" />
-                          : <Button size="sm" variant="outline" onClick={() => void playAnswerAudio(q.id, q.answer_audio_url!)}>
-                              <Volume2 className="w-4 h-4" /> {t('dash.detail.listenAnswer')}
-                            </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">{t('dash.detail.waitingAnswer', { code: c.case_code })}</p>
-                  )}
-                </div>
-              ))}
-              <div className="flex gap-2">
-                <Textarea
-                  value={newQuestion}
-                  onChange={(e) => setNewQuestion(e.target.value)}
-                  placeholder={t('dash.detail.questionPlaceholder')}
-                  aria-label={t('dash.detail.questionPlaceholder')}
-                  className="min-h-[44px] text-sm"
-                  maxLength={1000}
-                />
-                <Button size="icon" className="self-end shrink-0" aria-label={t('cd.askMore')} disabled={!newQuestion.trim()} onClick={() => void askQuestion()}>
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </section>
-
-            <CaseTrainingSamples caseId={caseId} />
-
-            {c.signature_staff && (
-              <section className={card}>
-                <p className="text-sm text-muted-foreground mb-2">{t('dash.detail.staffSignature', { name: c.signature_staff_name })}</p>
-                <img src={c.signature_staff} alt="signature" className="bg-card border border-border rounded-md max-h-24" />
-              </section>
-            )}
-          </div>
-
-          <aside className="order-1 xl:order-2 min-w-0" aria-label={t('cd.next')}>{actionCol}</aside>
-        </div>
-
-        {lightbox !== null && photoSigned[lightbox] && (
-          <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 bg-foreground/80 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
-            <img src={photoSigned[lightbox]} alt={t('dash.detail.photoAlt', { n: lightbox + 1 })} className="max-h-[85vh] max-w-full rounded-xl" onClick={(e) => e.stopPropagation()} />
-            <div className="absolute bottom-6 flex gap-2" onClick={(e) => e.stopPropagation()}>
-              <Button variant="secondary" size="icon" aria-label="Previous" disabled={lightbox === 0} onClick={() => setLightbox(lightbox - 1)}>‹</Button>
-              <Button variant="secondary" onClick={() => setLightbox(null)}>{t('dash.media.close')}</Button>
-              <Button variant="secondary" size="icon" aria-label="Next" disabled={lightbox >= photoSigned.length - 1} onClick={() => setLightbox(lightbox + 1)}>›</Button>
-            </div>
-          </div>
-        )}
-
-        <AlertDialog open={!!confirmStatus} onOpenChange={(o) => { if (!o) setConfirmStatus(null); }}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{confirmStatus ? t('cd.confirmTitle', { s: t(`status.${confirmStatus}`) }) : ''}</AlertDialogTitle>
-              <AlertDialogDescription>{t('cd.confirmBody')}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('dash.detail.replyPlaceholder')} aria-label={t('cd.msgTitle')} className="min-h-[88px]" maxLength={1000} />
-            <AlertDialogFooter>
-              <AlertDialogCancel className="min-h-11">{t('cd.cancel')}</AlertDialogCancel>
-              <AlertDialogAction className="min-h-11" onClick={() => { const st = confirmStatus; setConfirmStatus(null); if (st) void updateStatus(st); }}>
-                {t('cd.confirm')}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
     </div>
   );
 }

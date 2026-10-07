@@ -30,7 +30,7 @@ export const RIGHTS_DICT: Record<string, Entry> = {
   },
   'rights.section.investigation': {
     th: 'ระหว่างสอบสวนและดำเนินคดี', en: 'During investigation and prosecution',
-    my: 'စစ်ဆေးမှုနှင့် အမှုကြားနာချင်းအတွင်း', km: 'ក្នុងអំឡុងការស៊ើបអង្កេត និងដំណើរការរឿងក្តី', lo: 'ໃນລະຫວ່າງການສອບສວນ ແລະ ດຳເນີນຄະດີ',
+    my: 'စစ်ဆေးမှုနှင့် အမှုကြားနာခြင်းအတွင်း', km: 'ក្នុងអំឡុងការស៊ើបអង្កេត និងដំណើរការរឿងក្តី', lo: 'ໃນລະຫວ່າງການສອບສວນ ແລະ ດຳເນີນຄະດີ',
   },
   'rights.section.detention': {
     th: 'การดูแลตัวเองระหว่างถูกควบคุมตัว', en: 'Taking care of yourself in detention',
@@ -40,7 +40,7 @@ export const RIGHTS_DICT: Record<string, Entry> = {
   'rights.jump': { th: 'ไปที่หมวด', en: 'Jump to section', my: 'အပိုင်းသို့ သွားရန်', km: 'ទៅកាន់ផ្នែក', lo: 'ໄປທີ່ໝວດ' },
   'rights.branches': { th: 'เบอร์โทรสาขา SWING', en: 'SWING branch numbers', my: 'SWING ရုံးခွဲ ဖုန်းနံပါတ်များ', km: 'លេខទូរស័ព្ទសាខា SWING', lo: 'ເບີໂທສາຂາ SWING' },
   'rights.branch.silom': { th: 'สีลม', en: 'Silom', my: 'ဆီလုံ', km: 'ស៊ីឡុម', lo: 'ສີລົມ' },
-  'rights.branch.pattaya': { th: 'พัทยา', en: 'Pattaya', my: 'ပတ္တယား', km: 'ប៉ាតាយ៉ា', lo: 'ພັດທະຍາ' },
+  'rights.branch.pattaya': { th: 'พัทยา', en: 'Pattaya', my: 'ပတ္တရား', km: 'ប៉ាតាយ៉ា', lo: 'ພັດທະຍາ' },
   'rights.saveTitle': { th: 'พิมพ์ / บันทึกเป็นภาพ', en: 'Print / save as image', my: 'ပုံနှိပ်ရန် / ပုံအဖြစ် သိမ်းရန်', km: 'បោះពុម្ព / រក្សាទុកជារូបភាព', lo: 'ພິມ / ບັນທຶກເປັນຮູບ' },
   'rights.saveBody': { th: 'แคปหน้าจอนี้เก็บไว้ในเครื่อง เปิดดูได้แม้ไม่มีเน็ต', en: 'Take a screenshot of this page and keep it on your phone. You can open it even without internet.', my: 'ဤစာမျက်နှာကို screenshot ရိုက်ပြီး ဖုန်းထဲသိမ်းထားပါ။ အင်တာနက်မရှိလည်း ကြည့်နိုင်ပါသည်။', km: 'ថតអេក្រង់ទំព័រនេះទុកក្នុងទូរស័ព្ទ។ អាចបើកមើលបានទោះគ្មានអ៊ីនធឺណិត។', lo: 'ແຄັບໜ້າຈໍນີ້ເກັບໄວ້ໃນເຄື່ອງ. ເປີດເບິ່ງໄດ້ເຖິງວ່າບໍ່ມີເນັດ.' },
   'rights.expandAll': {
@@ -49,7 +49,7 @@ export const RIGHTS_DICT: Record<string, Entry> = {
   },
   'rights.collapseAll': {
     th: 'ย่อทั้งหมด', en: 'Collapse all',
-    my: 'အားလုံး ခေါင်းပါ', km: 'បង្រួមទាំងអស់', lo: 'ຫຍໍ້ທັງໝົດ',
+    my: 'အားလုံး ခေါက်ပါ', km: 'បង្រួមទាំងអស់', lo: 'ຫຍໍ້ທັງໝົດ',
   },
   'rights.call': {
     th: 'โทรหา SWING', en: 'Call SWING',
@@ -62,6 +62,19 @@ export const RIGHTS_DICT: Record<string, Entry> = {
   'rights.shareCopied': {
     th: 'คัดลอกลิงก์แล้ว', en: 'Link copied',
     my: 'လင့်ခ် ကူးပြီးပါပြီ', km: 'បានចម្លងតំណ', lo: 'ຄັດລອກລິ້ງແລ້ວ',
+  },
+  // Shown when neither the share sheet nor the clipboard works
+  'rights.shareManual': {
+    th: 'คัดลอกลิงก์จากแถบที่อยู่ด้านบนได้เลย', en: 'Copy the link from the address bar.',
+    my: 'အပေါ်ရှိ လိပ်စာဘားမှ လင့်ခ်ကို ကူးယူပါ။', km: 'សូមចម្លងតំណពីរបារអាសយដ្ឋានខាងលើ។', lo: 'ສຳເນົາລິ້ງຈາກແຖບທີ່ຢູ່ດ້ານເທິງໄດ້ເລີຍ.',
+  },
+  // Shown only when the UI language is not Thai: the 15 rights in src/data/rights.ts are Thai-only
+  'rights.thaiOnly': {
+    th: 'ตอนนี้เนื้อหาสิทธิด้านล่างมีเฉพาะภาษาไทย ถ้าอยากให้ช่วยอ่าน โทรหา SWING ได้เลย',
+    en: 'The rights below are in Thai for now. If you need help reading them, call SWING.',
+    my: 'အောက်ပါ အခွင့်အရေးများကို လောလောဆယ် ထိုင်းဘာသာဖြင့်သာ ရေးထားပါသည်။ ဖတ်ရန် အကူအညီလိုပါက SWING ကို ဖုန်းဆက်ပါ။',
+    km: 'សិទ្ធិខាងក្រោមមានតែជាភាសាថៃសិនសម្រាប់ពេលនេះ។ បើអ្នកត្រូវការជំនួយក្នុងការអាន សូមទូរស័ព្ទទៅ SWING។',
+    lo: 'ຕອນນີ້ເນື້ອຫາສິດຂ້າງລຸ່ມມີແຕ່ພາສາໄທ. ຖ້າຢາກໃຫ້ຊ່ວຍອ່ານ ໂທຫາ SWING ໄດ້ເລີຍ.',
   },
   'rights.disclaimer': {
     th: 'เนื้อหานี้จัดทำเพื่อให้เข้าใจง่าย ไม่ใช่คำแนะนำทางกฎหมายแทนทนายความ หากต้องการความช่วยเหลือ ติดต่อ SWING ได้ทุกกรณี',

@@ -4,22 +4,28 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n";
 
 const ToastProvider = ToastPrimitives.Provider;
 
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Viewport
-    ref={ref}
-    className={cn(
-      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
-      className,
-    )}
-    {...props}
-  />
-));
+>(({ className, ...props }, ref) => {
+  const { t } = useI18n();
+  return (
+    <ToastPrimitives.Viewport
+      ref={ref}
+      label={`${t("ui.notifications")} ({hotkey})`}
+      className={cn(
+        // Bottom of the screen, above bottom bars and (from 640px) above the Quick Exit pill; never over the header
+        "fixed inset-x-0 bottom-[calc(var(--action-bar-h,0px)+var(--bottom-nav-h,0px)+env(safe-area-inset-bottom))] z-[100] flex max-h-screen w-full flex-col p-4 sm:start-auto sm:end-0 sm:bottom-[calc(var(--action-bar-h,0px)+var(--bottom-nav-h,0px)+4rem+env(safe-area-inset-bottom))] md:max-w-[420px]",
+        className,
+      )}
+      {...props}
+    />
+  );
+});
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
 const toastVariants = cva(
@@ -63,19 +69,23 @@ ToastAction.displayName = ToastPrimitives.Action.displayName;
 const ToastClose = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Close>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Close
-    ref={ref}
-    className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity group-hover:opacity-100 group-[.destructive]:text-destructive-foreground/80 hover:text-foreground group-[.destructive]:hover:text-destructive-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-[.destructive]:focus:ring-ring group-[.destructive]:focus:ring-offset-destructive",
-      className,
-    )}
-    toast-close=""
-    {...props}
-  >
-    <X className="h-4 w-4" />
-  </ToastPrimitives.Close>
-));
+>(({ className, ...props }, ref) => {
+  const { t } = useI18n();
+  return (
+    <ToastPrimitives.Close
+      ref={ref}
+      className={cn(
+        "absolute end-1 top-1 inline-flex h-11 w-11 items-center justify-center rounded-full text-foreground/70 transition-opacity hover:text-foreground group-[.destructive]:text-destructive-foreground/80 group-[.destructive]:hover:text-destructive-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring group-[.destructive]:focus-visible:ring-offset-destructive",
+        className,
+      )}
+      toast-close=""
+      {...props}
+    >
+      <X className="h-4 w-4" aria-hidden />
+      <span className="sr-only">{t("ui.close")}</span>
+    </ToastPrimitives.Close>
+  );
+});
 ToastClose.displayName = ToastPrimitives.Close.displayName;
 
 const ToastTitle = React.forwardRef<

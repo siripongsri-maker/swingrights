@@ -14,12 +14,23 @@ export interface CaseAlert {
   created_at: string;
 }
 
-/** Realtime in-app toast — de-identified: case_code + branch + level only */
+// case_alerts.level holds the case severity (green/yellow/red) or the AI level (low/medium/high)
+const LEVEL_KEY: Record<string, string> = {
+  green: 'severity.green', low: 'severity.green',
+  yellow: 'severity.yellow', medium: 'severity.yellow',
+  red: 'severity.red', high: 'severity.red',
+};
+
+/** Realtime in-app toast, de-identified: case_code + branch + level only */
 export function useCaseAlerts(enabled: boolean, onAlert?: (a: CaseAlert) => void, onOpen?: (caseId: string) => void) {
   const { t } = useI18n();
 
   useEffect(() => {
     if (!enabled) return;
+    // Severity as a word (ต่ำ / ปานกลาง / สูง), never a colour name or a raw code
+    const levelWord = (level: string) => (LEVEL_KEY[level] ? t(LEVEL_KEY[level]) : level);
+    // Unassigned reminders carry who was notified (staff / manager) in level
+    const notifiedWho = (level: string) => (level === 'staff' || level === 'manager' ? t(`access.role.${level}`) : level);
     const channel = supabase
       .channel('case-alerts')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'case_alerts' }, (payload) => {
@@ -27,7 +38,7 @@ export function useCaseAlerts(enabled: boolean, onAlert?: (a: CaseAlert) => void
         const urgent = a.kind === 'suicide_risk';
         const area = a.branch || t('access.alerts.unspecifiedArea');
         if (a.kind === 'unassigned') {
-          toast.warning(t('areview.alert.unassigned', { code: a.case_code, area, level: a.level }), { duration: 15000 });
+          toast.warning(t('areview.alert.unassigned', { code: a.case_code, area, level: notifiedWho(a.level) }), { duration: 15000 });
           onAlert?.(a);
           return;
         }
@@ -45,7 +56,7 @@ export function useCaseAlerts(enabled: boolean, onAlert?: (a: CaseAlert) => void
           onAlert?.(a);
           return;
         }
-        const msg = `${a.case_code} · ${area} · ${t('access.alerts.levelPrefix', { level: a.level })}`;
+        const msg = `${a.case_code} · ${area} · ${t('access.alerts.levelPrefix', { level: levelWord(a.level) })}`;
         if (urgent) toast.error(t('access.alerts.selfHarmRisk', { msg }), { duration: 20000 });
         else toast.warning(t('access.alerts.highRisk', { msg }), { duration: 12000 });
         onAlert?.(a);

@@ -101,7 +101,7 @@ export function ScreeningTools({ value, onChange, showMental = true }: { value: 
           </div>
         ))}
         <div className={`text-xs mt-3 px-3 py-2 rounded-lg border ${toneCls[lvl.tone]}`}>
-          {t('tools.q9.totalLabel')}: <strong className="tabular-nums">{q9Total}</strong> — {t(`tools.level.${lvl.id}`)}
+          {t('tools.q9.totalLabel')}: <strong className="tabular-nums">{q9Total}</strong> · {t(`tools.level.${lvl.id}`)}
         </div>
       </div>
 
