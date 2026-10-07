@@ -115,7 +115,8 @@ export default function MyAccount() {
         <section className="rounded-[1.25rem] border border-border bg-card p-5 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="font-subhead text-lg font-semibold">{t('cl.cases.title')}</h2>
-            <Button asChild size="sm" variant="action"><Link to="/report"><Plus className="w-4 h-4" /> {t('cl.cases.new')}</Link></Button>
+            {/* Outline: "Save" at the bottom of the form is the one magenta action on this screen */}
+            <Button asChild size="sm" variant="outline"><Link to="/report"><Plus className="w-4 h-4" aria-hidden /> {t('cl.cases.new')}</Link></Button>
           </div>
           {cases.length === 0 ? <p className="text-sm text-muted-foreground">{t('cl.cases.empty')}</p> : (
             <ul className="divide-y divide-border">
@@ -147,7 +148,7 @@ export default function MyAccount() {
             <Label>{t('cl.f.location')}</Label>
             <div className="flex flex-wrap items-center gap-3">
               <Button type="button" variant="outline" onClick={locate} disabled={locating}>
-                {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />} {t('cl.f.locate')}
+                {locating ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <MapPin className="w-4 h-4" aria-hidden />} {t('cl.f.locate')}
               </Button>
               {p.lat != null && p.lng != null && <span className="font-mono text-sm">{p.lat}, {p.lng}</span>}
             </div>
@@ -158,8 +159,8 @@ export default function MyAccount() {
             {field('emergency_relation', t('cl.f.emRel'))}
             {field('emergency_phone', t('cl.f.emPhone'), 'tel')}
           </div>
-          <Button variant="action" className="w-full h-12" onClick={save} disabled={saving}>
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} {t('cl.save')}
+          <Button variant="action" className="w-full h-12" onClick={save} disabled={saving} aria-busy={saving}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <Save className="w-4 h-4" aria-hidden />} {t('cl.save')}
           </Button>
         </section>
       </main>

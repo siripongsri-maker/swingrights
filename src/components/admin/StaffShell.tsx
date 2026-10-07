@@ -92,7 +92,7 @@ function NavBody({ onPick }: { onPick?: () => void }) {
       <nav className="flex-1 space-y-4 overflow-y-auto" aria-label={t('staff.nav.menu')}>
         {groups.map((g) => (
           <div key={g.title} className="space-y-1">
-            <p className="px-3 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/70">{g.title}</p>
+            <p className="px-3 text-xs font-semibold text-sidebar-foreground/70">{g.title}</p>
             {g.items.map((it) => (
               <NavLink key={it.to} to={it.to} end={it.end} className={linkCls} onClick={onPick}>
                 <it.icon className="h-4 w-4 shrink-0" aria-hidden />

@@ -12,12 +12,9 @@ const LANGUAGE: Entry = { th: 'ภาษา', en: 'Language', my: 'ဘာသာ�
 export const UI_DICT: Record<string, Entry> = {
   // Close button on sheets and dialogs (sr-only label)
   'ui.close': CLOSE,
-  // Same text under the name other pages already plan to use (PhoneShell, Track)
-  'common.close': CLOSE,
 
   // Language switcher
   'ui.language': LANGUAGE,
-  'common.language': LANGUAGE,
 
   // Sonner toast region label
   'ui.notifications': {

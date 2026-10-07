@@ -310,7 +310,7 @@ export default function Track() {
                       <p className="text-xs text-muted-foreground">{formatDateTime(q.created_at, locale)}</p>
                       {q.answer_text || q.answered_at ? (
                         <div className="rounded-xl bg-primary-soft p-3">
-                          <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t('track.answered')}</p>
+                          <p className="text-xs font-semibold text-muted-foreground mb-1">{t('track.answered')}</p>
                           <p className="text-sm">{q.answer_text || '-'}</p>
                         </div>
                       ) : (

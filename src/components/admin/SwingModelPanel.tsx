@@ -12,7 +12,7 @@ type ModelRow = {
 };
 
 export default function SwingModelPanel() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const qc = useQueryClient();
   const [busy, setBusy] = useState(false);
   const q = useQuery({
@@ -58,20 +58,22 @@ export default function SwingModelPanel() {
         <p className="text-sm text-muted-foreground mt-1">{t('model.hint')}</p>
         <p className="text-sm mt-2">{active ? t('model.activeNow').replace('{v}', String(active.version)) : t('model.none')}</p>
         <div className="flex flex-wrap gap-2 mt-3">
-          <Button onClick={train} disabled={busy}>
-            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} {t('model.train')}
+          <Button onClick={train} disabled={busy} aria-busy={busy}>
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <Sparkles className="w-4 h-4" aria-hidden />} {t('model.train')}
           </Button>
-          {active && <Button variant="outline" onClick={deactivate}><Power className="w-4 h-4" /> {t('model.off')}</Button>}
+          {active && <Button variant="outline" onClick={deactivate}><Power className="w-4 h-4" aria-hidden /> {t('model.off')}</Button>}
         </div>
       </div>
-      {q.isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : rows.length === 0 ? (
+      {q.isLoading ? (
+        <div className="py-6 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>
+      ) : rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t('sys.none')}</p>
       ) : rows.map((r) => (
         <div key={r.id} className="rounded-2xl border bg-card p-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono font-semibold">v{r.version}</span>
             <span className={`rounded-full px-2 py-0.5 text-xs ${r.status === 'active' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>{t(`model.status.${r.status}`)}</span>
-            <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</span>
+            <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString(lang === 'th' ? 'th-TH' : 'en-GB')}</span>
             {r.status !== 'active' && <Button size="sm" variant="outline" className="ms-auto" onClick={() => activate(r.id)}>{t('model.activate')}</Button>}
           </div>
           <p className="text-xs text-muted-foreground mt-1">

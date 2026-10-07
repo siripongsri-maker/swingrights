@@ -60,7 +60,7 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'partners.orgType.other': { th: 'อื่น ๆ', en: 'Other' },
   'partners.header.title': { th: 'หน่วยงานรับส่งต่อ', en: 'Referral partners' },
   'partners.header.subtitle': { th: 'เครือข่ายช่วยเหลือรายพื้นที่ ใช้แนะนำในหน้าเคส', en: 'Local support network, suggested on each case page', my: 'ဒေသအလိုက် အကူအညီကွန်ရက်၊ အမှုစာမျက်နှာတွင် အကြံပြုသည်', km: 'បណ្ដាញជំនួយតាមតំបន់ ដែលណែនាំនៅលើទំព័រករណី', lo: 'ເຄືອຂ່າຍຊ່ວຍເຫຼືອຕາມພື້ນທີ່ ໃຊ້ແນະນຳໃນໜ້າເຄສ' },
-  'partners.add': { th: 'เพิ่มหน่วยงาน', en: 'Add partner' },
+  'partners.add': { th: 'เพิ่มหน่วยงาน', en: 'Add partner', my: 'မိတ်ဖက်အဖွဲ့ ထည့်ရန်', km: 'បន្ថែមដៃគូ', lo: 'ເພີ່ມໜ່ວຍງານ' },
   'partners.add.title': { th: 'เพิ่มหน่วยงานรับส่งต่อ', en: 'Add referral partner' },
   'partners.form.namePlaceholder': { th: 'ชื่อหน่วยงาน *', en: 'Organization name *' },
   'partners.form.provincePlaceholder': { th: 'จังหวัด (เว้นว่าง = ทุกพื้นที่)', en: 'Province (blank = all areas)' },
@@ -87,12 +87,13 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'partners.disable': { th: 'ปิดใช้งาน', en: 'Disable' },
   'partners.enable': { th: 'เปิดใช้งาน', en: 'Enable' },
   'partners.delete': { th: 'ลบ', en: 'Delete' },
+  // Quotes the partners.add label in each language; keep the two in step.
   'partners.empty': {
     th: 'ยังไม่มีหน่วยงานในระบบ กด "เพิ่มหน่วยงาน" เพื่อเริ่มสร้างเครือข่ายรายพื้นที่',
     en: 'No partners yet. Press "Add partner" to start building your local network.',
-    my: 'အဖွဲ့အစည်း မရှိသေးပါ။ ဒေသတွင်း ကွန်ရက် စတင်တည်ဆောက်ရန် "Add partner" ကို နှိပ်ပါ။',
-    km: 'មិនទាន់មានដៃគូទេ។ ចុច "Add partner" ដើម្បីចាប់ផ្ដើមកសាងបណ្ដាញតាមតំបន់។',
-    lo: 'ຍັງບໍ່ມີໜ່ວຍງານໃນລະບົບ ກົດ "Add partner" ເພື່ອເລີ່ມສ້າງເຄືອຂ່າຍຕາມພື້ນທີ່',
+    my: 'အဖွဲ့အစည်း မရှိသေးပါ။ ဒေသတွင်း ကွန်ရက် စတင်တည်ဆောက်ရန် "မိတ်ဖက်အဖွဲ့ ထည့်ရန်" ကို နှိပ်ပါ။',
+    km: 'មិនទាន់មានដៃគូទេ។ ចុច "បន្ថែមដៃគូ" ដើម្បីចាប់ផ្ដើមកសាងបណ្ដាញតាមតំបន់។',
+    lo: 'ຍັງບໍ່ມີໜ່ວຍງານໃນລະບົບ ກົດ "ເພີ່ມໜ່ວຍງານ" ເພື່ອເລີ່ມສ້າງເຄືອຂ່າຍຕາມພື້ນທີ່',
   },
 
   // ---------- access.* (roles) ----------
@@ -110,7 +111,7 @@ export const ADMIN_DICT: Record<string, Entry> = {
   'access.alerts.selfHarmRisk': { th: '🚨 เคสเสี่ยงทำร้ายตนเอง: {msg}', en: '🚨 Self-harm risk case: {msg}', my: "🚨 မိမိကိုယ်ကို ထိခိုက်စေနိုင်သည့် အန္တရာယ်ရှိသော အမှုကိစ္စ: {msg}", km: "🚨 ករណីមានហានិភ័យធ្វើបាបខ្លួនឯង: {msg}", lo: "🚨 ກໍລະນີທີ່ມີຄວາມສ່ຽງຕໍ່ການທຳຮ້າຍຕົນເອງ: {msg}",},
   'access.alerts.highRisk': { th: '⚠️ เคสความเสี่ยงสูง: {msg}', en: '⚠️ High-risk case: {msg}', my: "⚠️ အန္တရာယ်မြင့်မားသော အမှုကိစ္စ: {msg}", km: "⚠️ ករណីមានហានិភ័យខ្ពស់: {msg}", lo: "⚠️ ກໍລະນີທີ່ມີຄວາມສ່ຽງສູງ: {msg}",},
 
-  // ---------- staff login (/admin/login). login.notice overrides the older key in i18n/index.tsx ----------
+  // ---------- staff login (/admin/login). login.notice is defined only here ----------
   'login.subtitle': { th: 'มูลนิธิเพื่อนพนักงานบริการ · สำหรับเจ้าหน้าที่', en: 'SWING Foundation · for staff', my: 'SWING ဖောင်ဒေးရှင်း · ဝန်ထမ်းများအတွက်', km: 'មូលនិធិ SWING · សម្រាប់បុគ្គលិក', lo: 'ມູນລະນິທິ SWING · ສຳລັບພະນັກງານ' },
   'login.notice': {
     th: 'ระบบนี้เก็บข้อมูลที่อ่อนไหวสูงของผู้แจ้ง บัญชีเจ้าหน้าที่ใหม่ต้องรอผู้ดูแลระบบอนุมัติก่อนเข้าดูเคส และแนะนำให้เปิดการยืนยันตัวตนสองชั้น (TOTP) ทุกบัญชี',

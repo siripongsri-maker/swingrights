@@ -119,8 +119,8 @@ export function CaseAnswersEditor({ caseId, answers, canEdit, audioSigned, staff
                       {hist.map((r) => (
                         <li key={r.id} className="text-xs">
                           <p className="text-muted-foreground">{new Date(r.created_at).toLocaleString()} · {staffName(r.edited_by)} · {r.action === 'add' ? t('dash.ans.actAdd') : t('dash.ans.actEdit')}</p>
-                          {r.old_transcript != null && <p className="line-through text-muted-foreground whitespace-pre-wrap">{r.old_transcript || '—'}</p>}
-                          <p className="whitespace-pre-wrap">{r.new_transcript || '—'}</p>
+                          {r.old_transcript != null && <p className="line-through text-muted-foreground whitespace-pre-wrap">{r.old_transcript || '-'}</p>}
+                          <p className="whitespace-pre-wrap">{r.new_transcript || '-'}</p>
                         </li>
                       ))}
                     </ol>

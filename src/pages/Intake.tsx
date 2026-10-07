@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { useIntake } from '@/store/intake';
 import { AreaPicker } from '@/components/screening/AreaPicker';
-import { GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SEV_LABEL, SPECIAL_TESTS, VIOLATION_TYPES, MENTAL_VIOLATION_LABEL, type Severity } from '@/lib/screening';
+import { GENDERS, KP_GROUPS, QUESTIONS, REFERRAL_OPTIONS, SPECIAL_TESTS, VIOLATION_TYPES, MENTAL_VIOLATION_LABEL, type Severity } from '@/lib/screening';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { stripImageMetadata } from '@/lib/exif';

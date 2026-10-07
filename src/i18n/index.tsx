@@ -72,14 +72,14 @@ const BASE_DICT: Dict = {
   'common.record': { th: 'อัดเสียง', en: 'Record', my: 'အသံသွင်းမည်', km: 'ថតសំឡេង', lo: 'ອັດສຽງ' },
   'common.stop': { th: 'หยุดอัด', en: 'Stop', my: 'ရပ်မည်', km: 'ឈប់', lo: 'ຢຸດ' },
   'voice.transcribing': { th: 'กำลังฟังเสียงของคุณอยู่นะคะ…', en: 'Turning your voice into text…', my: 'အသံကို စာအဖြစ် ပြောင်းနေသည်…', km: 'កំពុងបម្លែងសំឡេងទៅជាអត្ថបទ…', lo: 'ກຳລັງປ່ຽນສຽງເປັນຂໍ້ຄວາມ…' },
-  'voice.editTranscript': { th: 'นี่คือสิ่งที่เราได้ยินค่ะ ถ้าตรงไหนไม่ถูก แก้ได้เลย', en: 'What we heard — edit if it is wrong', my: 'ကြားရသည့်စာ — မှားလျှင် ပြင်နိုင်သည်', km: 'អ្វីដែលយើងឮ — កែបានបើខុស', lo: 'ຂໍ້ຄວາມທີ່ໄດ້ຍິນ — ແກ້ໄຂໄດ້ຖ້າຜິດ' },
+  'voice.editTranscript': { th: 'นี่คือสิ่งที่เราได้ยินค่ะ ถ้าตรงไหนไม่ถูก แก้ได้เลย', en: 'What we heard. Edit it if something is wrong', my: 'ကြားရသည့်စာ မှားလျှင် ပြင်နိုင်သည်', km: 'អ្វីដែលយើងឮ កែបានបើខុស', lo: 'ຂໍ້ຄວາມທີ່ໄດ້ຍິນ ແກ້ໄຂໄດ້ຖ້າຜິດ' },
   'voice.transcriptPlaceholder': { th: 'พิมพ์หรือแก้ข้อความที่นี่', en: 'Type or correct the text here', my: 'ဤနေရာတွင် ရိုက်ပါ', km: 'វាយ ឬកែនៅទីនេះ', lo: 'ພິມ ຫຼື ແກ້ຢູ່ນີ້' },
   'voice.clearTranscript': { th: 'ลบข้อความ', en: 'Delete text', my: 'စာဖျက်မည်', km: 'លុបអត្ថបទ', lo: 'ລຶບຂໍ້ຄວາມ' },
   'followup.aiAsks': { th: 'AI ถามต่อ', en: 'AI follow-up', my: 'AI ဆက်မေးခွန်း', km: 'AI សួរបន្ត', lo: 'AI ຖາມຕໍ່' },
   'followup.answerVoice': { th: 'ตอบคำถามนี้ด้วยเสียง', en: 'Answer this by voice', my: 'အသံဖြင့် ဖြေမည်', km: 'ឆ្លើយដោយសំឡេង', lo: 'ຕອບດ້ວຍສຽງ' },
   'followup.thinking': { th: 'ขอดูสักครู่นะคะ ว่ายังมีอะไรที่ควรถามเพิ่ม…', en: 'AI is checking what is still missing…', my: 'AI စစ်ဆေးနေသည်…', km: 'AI កំពុងពិនិត្យ…', lo: 'AI ກຳລັງກວດ…' },
   'followup.title': { th: 'ข้อมูลที่ยังขาดสำหรับแบบบันทึกเรื่องร้องเรียน', en: 'Still needed for the complaint record', my: 'တိုင်ကြားမှတ်တမ်းအတွက် လိုအပ်သေးသည်', km: 'នៅត្រូវការសម្រាប់កំណត់ត្រាពាក្យបណ្តឹង', lo: 'ຍັງຕ້ອງການສຳລັບບັນທຶກຄຳຮ້ອງ' },
-  'followup.complete': { th: 'ได้ข้อมูลครบแล้วค่ะ ขอบคุณมากนะคะ', en: 'All form details are covered — thank you', my: 'အချက်အလက်ပြည့်စုံပြီ', km: 'ព័ត៌មានគ្រប់គ្រាន់ហើយ', lo: 'ຂໍ້ມູນຄົບແລ້ວ' },
+  'followup.complete': { th: 'ได้ข้อมูลครบแล้วค่ะ ขอบคุณมากนะคะ', en: 'All form details are covered. Thank you', my: 'အချက်အလက် ပြည့်စုံပါပြီ။ ကျေးဇူးတင်ပါသည်', km: 'ព័ត៌មានគ្រប់គ្រាន់ហើយ។ សូមអរគុណ', lo: 'ຂໍ້ມູນຄົບແລ້ວ ຂອບໃຈຫຼາຍ' },
   'followup.slot.what': { th: 'เกิดอะไรขึ้น', en: 'What happened', my: 'ဘာဖြစ်ခဲ့', km: 'អ្វីកើតឡើង', lo: 'ເກີດຫຍັງຂຶ້ນ' },
   'followup.slot.when': { th: 'เมื่อไร', en: 'When', my: 'ဘယ်အချိန်', km: 'ពេលណា', lo: 'ເມື່ອໃດ' },
   'followup.slot.where': { th: 'ที่ไหน', en: 'Where', my: 'ဘယ်နေရာ', km: 'កន្លែងណា', lo: 'ຢູ່ໃສ' },
@@ -101,7 +101,7 @@ const BASE_DICT: Dict = {
   // Organisation name (saved case-code card, copyright lines). Proper name: Thai, or English in other languages.
   'common.orgName': {
     th: 'มูลนิธิเพื่อนพนักงานบริการ', en: 'SWING Foundation (Service Workers in Group)',
-    my: 'SWING Foundation (Service Workers in Group)', km: 'SWING Foundation (Service Workers in Group)', lo: 'SWING Foundation (Service Workers in Group)',
+    my: 'SWING ဖောင်ဒေးရှင်း', km: 'មូលនិធិ SWING', lo: 'ມູນນິທິ SWING',
   },
 
   // ---------- Landing ----------
@@ -131,7 +131,7 @@ const BASE_DICT: Dict = {
   'landing.what.rightsBody': { th: 'สิทธิของคุณ ถ้าถูกจับหรือถูกควบคุมตัว', en: 'Your rights if you are arrested or held', my: 'ဖမ်းဆီး သို့မဟုတ် ထိန်းသိမ်းခံရလျှင် သင့်အခွင့်အရေး', km: 'សិទ្ធិរបស់អ្នក បើត្រូវចាប់ ឬឃុំខ្លួន', lo: 'ສິດຂອງທ່ານ ຖ້າຖືກຈັບ ຫຼື ຖືກຄວບຄຸມຕົວ' },
   'landing.hl.swing': { th: 'สวิง', en: 'SWING', my: 'SWING', km: 'SWING', lo: 'SWING' },
   'landing.hl.silom': { th: 'สวิง สาขาสีลม', en: 'SWING Silom', my: 'SWING ဆီလုံ', km: 'SWING ស៊ីឡុម', lo: 'SWING ສີລົມ' },
-  'landing.hl.pattaya': { th: 'สวิง สาขาพัทยา', en: 'SWING Pattaya', my: 'SWING ပတ္တယား', km: 'SWING ប៉ាតាយ៉ា', lo: 'SWING ພັດທະຍາ' },
+  'landing.hl.pattaya': { th: 'สวิง สาขาพัทยา', en: 'SWING Pattaya', my: 'SWING ပတ္တရား', km: 'SWING ប៉ាតាយ៉ា', lo: 'SWING ພັດທະຍາ' },
   'landing.hl.public': { th: 'สายด่วนอื่น ๆ', en: 'Other hotlines', my: 'အခြား ဟော့လိုင်းများ', km: 'ខ្សែទូរស័ព្ទបន្ទាន់ផ្សេងទៀត', lo: 'ສາຍດ່ວນອື່ນໆ' },
   'landing.hl.call': { th: 'โทร', en: 'Call', my: 'ခေါ်ဆိုရန်', km: 'ហៅ', lo: 'ໂທ' },
   'landing.title1': {
@@ -262,7 +262,7 @@ const BASE_DICT: Dict = {
   // The sound-wave toggle now uses ui.wave.show (src/i18n/dict/ui.ts) with aria-pressed.
   'landing.copyright': {
     th: '© มูลนิธิเพื่อนพนักงานบริการ (SWING Foundation)', en: '© SWING Foundation',
-    my: '© SWING Foundation', km: '© SWING Foundation', lo: '© SWING Foundation',
+    my: '© SWING ဖောင်ဒေးရှင်း', km: '© មូលនិធិ SWING', lo: '© ມູນນິທິ SWING',
   },
   // Shown under the Thai-only rights titles on the desktop landing card when lang is not th
   'landing.arrested.thaiOnly': {
@@ -372,10 +372,10 @@ const BASE_DICT: Dict = {
   },
   'report.consent.body': {
     th: 'เราจะเก็บเสียงและเรื่องที่คุณเล่าไว้อย่างปลอดภัย ใช้เพื่อช่วยเหลือคุณเท่านั้น ข้อมูลที่บอกว่าคุณเป็นใครจะแยกเก็บไว้ และจะไม่เปิดเผยถ้าคุณไม่อนุญาต อ่านรายละเอียดเพิ่มได้ในหน้านโยบายความเป็นส่วนตัวนะคะ ถ้าต้องการร้องทุกข์กล่าวโทษ ต้องลงทะเบียนก่อน เพื่อใช้ข้อมูลนี้ทำเอกสารให้ค่ะ',
-    en: 'We securely store the voice and information you provide, use it only to help you, keep identifying data separately, and never share it without permission — see the privacy policy for details — To file a formal complaint report, you must register first so this information can be used in official documents.',
-    my: 'သင်ပေးသော အသံအချက်အလက်များကို လုံခြုံစွာသိမ်းထားပြီး သင့်ကိုကူညီရန်သာ အသုံးပြုပါမည် ခွင့်ပြုချက်မရှိဘဲ မမျှဝေပါ — တရားဝင်တိုင်ကြားစာတင်ရန် အကောင့်စာရင်းသွင်းရန် လိုအပ်ပြီး ထိုအချက်အလက်များကို စာရွက်စာတမ်းများ၌ အသုံးပြုပါမည်',
-    km: 'យើងរក្សាទុកសំឡេង និងព័ត៌មានរបស់អ្នកដោយសុវត្ថិភាព ប្រើតែដើម្បីជួយអ្នក និងមិនចែករំលែកដោយគ្មានការអនុញ្ញាតទេ — បើចង់ដាក់ពាក្យបណ្តឹងផ្លូវការ អ្នកត្រូវចុះឈ្មោះជាមុន ដើម្បីប្រើព័ត៌មានទាំងនេះក្នុងឯកសារ',
-    lo: 'ພວກເຮົາເກັບສຽງ ແລະ ຂໍ້ມູນຂອງທ່ານຢ່າງປອດໄພ ໃຊ້ເພື່ອຊ່ວຍເຫຼືອທ່ານເທົ່ານັ້ນ ແລະ ບໍ່ເປີດເຜີຍໂດຍບໍ່ໄດ້ຮັບອະນຸຍາດ — ຖ້າຕ້ອງການຍື່ນຄຳຮ້ອງທຸກຢ່າງເປັນທາງການ ຕ້ອງລົງທະບຽນກ່ອນ ເພື່ອໃຊ້ຂໍ້ມູນດັ່ງກ່າວໃນເອກະສານ',
+    en: 'We securely store the voice and information you provide, use it only to help you, keep identifying data separately, and never share it without permission. See the privacy policy for details. To file a formal complaint report, you must register first so this information can be used in official documents.',
+    my: 'သင်ပေးသော အသံအချက်အလက်များကို လုံခြုံစွာသိမ်းထားပြီး သင့်ကိုကူညီရန်သာ အသုံးပြုပါမည် ခွင့်ပြုချက်မရှိဘဲ မမျှဝေပါ။ တရားဝင်တိုင်ကြားစာတင်ရန် အကောင့်စာရင်းသွင်းရန် လိုအပ်ပြီး ထိုအချက်အလက်များကို စာရွက်စာတမ်းများ၌ အသုံးပြုပါမည်',
+    km: 'យើងរក្សាទុកសំឡេង និងព័ត៌មានរបស់អ្នកដោយសុវត្ថិភាព ប្រើតែដើម្បីជួយអ្នក និងមិនចែករំលែកដោយគ្មានការអនុញ្ញាតទេ។ បើចង់ដាក់ពាក្យបណ្តឹងផ្លូវការ អ្នកត្រូវចុះឈ្មោះជាមុន ដើម្បីប្រើព័ត៌មានទាំងនេះក្នុងឯកសារ',
+    lo: 'ພວກເຮົາເກັບສຽງ ແລະ ຂໍ້ມູນຂອງທ່ານຢ່າງປອດໄພ ໃຊ້ເພື່ອຊ່ວຍເຫຼືອທ່ານເທົ່ານັ້ນ ແລະ ບໍ່ເປີດເຜີຍໂດຍບໍ່ໄດ້ຮັບອະນຸຍາດ. ຖ້າຕ້ອງການຍື່ນຄຳຮ້ອງທຸກຢ່າງເປັນທາງການ ຕ້ອງລົງທະບຽນກ່ອນ ເພື່ອໃຊ້ຂໍ້ມູນດັ່ງກ່າວໃນເອກະສານ',
   },
   'report.consent.agree': {
     th: 'ฉันยินยอมให้เก็บและใช้ข้อมูลเพื่อช่วยเหลือฉัน', en: 'I consent to my data being stored and used to help me',
@@ -632,8 +632,8 @@ const BASE_DICT: Dict = {
     my: 'ပင်ကို ဆွဲ၍ ချိန်ပါ', km: 'អូសម្ជុលដើម្បីកែ', lo: 'ລາກໝຸດເພື່ອປັບ',
   },
   'area.tapToPin': {
-    th: 'แตะบนแผนที่เพื่อปักหมุด — ไม่บังคับ', en: 'Tap the map to drop a pin — optional',
-    my: 'မြေပုံကို ထိ၍ အမှတ်သားပါ — မဖြည့်လည်းရ', km: 'ប៉ះលើផែនទីដើម្បីដាក់ម្ជុល — មិនបង្ខំ', lo: 'ແຕະແຜນທີ່ເພື່ອປັກໝຸດ — ບໍ່ບັງຄັບ',
+    th: 'แตะบนแผนที่เพื่อปักหมุด (ไม่บังคับ)', en: 'Tap the map to drop a pin (optional)',
+    my: 'မြေပုံကို ထိ၍ အမှတ်သားပါ (မဖြည့်လည်းရ)', km: 'ប៉ះលើផែនទីដើម្បីដាក់ម្ជុល (មិនបង្ខំ)', lo: 'ແຕະແຜນທີ່ເພື່ອປັກໝຸດ (ບໍ່ບັງຄັບ)',
   },
   'area.nearMe': {
     th: 'จังหวัดใกล้ฉัน', en: 'Nearest province',
@@ -656,18 +656,18 @@ const BASE_DICT: Dict = {
     my: 'ရှာဖွေမှု ရှင်းရန်', km: 'សម្អាតការស្វែងរក', lo: 'ລ້າງການຄົ້ນຫາ',
   },
   'area.geoDeniedHelp': {
-    th: 'ไม่สามารถใช้ตำแหน่งปัจจุบันได้ — คุณสามารถพิมพ์ชื่อจังหวัด อำเภอ หรือรหัสไปรษณีย์เพื่อค้นหาได้',
-    en: 'Current location is unavailable — you can type a province, district, or postcode to search.',
-    my: 'လက်ရှိတည်နေရာကို မသုံးနိုင်ပါ — ပြည်နယ်၊ ခရိုင် သို့မဟုတ် စာပို့ကုဒ်အမည်ဖြင့် ရှာဖွေနိုင်ပါသည်။',
-    km: 'ទីតាំងបច្ចុប្បន្នមិនអាចប្រើបានទេ — អ្នកអាចវាយឈ្មោះខេត្ត ស្រុក ឬកូដប្រៃសណីយ៍ដើម្បីស្វែងរក។',
-    lo: 'ຕຳແໜ່ງປັດຈຸບັນບໍ່ສາມາດໃຊ້ໄດ້ — ທ່ານສາມາດພິມຊື່ແຂວງ ເມືອງ ຫຼື ລະຫັດໄປສະນີເພື່ອຄົ້ນຫາໄດ້.',
+    th: 'ไม่สามารถใช้ตำแหน่งปัจจุบันได้ คุณสามารถพิมพ์ชื่อจังหวัด อำเภอ หรือรหัสไปรษณีย์เพื่อค้นหาได้',
+    en: 'Current location is unavailable. You can type a province, district, or postcode to search.',
+    my: 'လက်ရှိတည်နေရာကို မသုံးနိုင်ပါ။ ပြည်နယ်၊ ခရိုင် သို့မဟုတ် စာပို့ကုဒ်အမည်ဖြင့် ရှာဖွေနိုင်ပါသည်။',
+    km: 'ទីតាំងបច្ចុប្បន្នមិនអាចប្រើបានទេ។ អ្នកអាចវាយឈ្មោះខេត្ត ស្រុក ឬកូដប្រៃសណីយ៍ដើម្បីស្វែងរក។',
+    lo: 'ຕຳແໜ່ງປັດຈຸບັນບໍ່ສາມາດໃຊ້ໄດ້ ທ່ານສາມາດພິມຊື່ແຂວງ ເມືອງ ຫຼື ລະຫັດໄປສະນີເພື່ອຄົ້ນຫາໄດ້',
   },
   'area.geoUnsupportedHelp': {
-    th: 'อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง — กรุณาพิมพ์ค้นหาพื้นที่ด้วยตนเอง',
-    en: 'This device does not support geolocation — please type the area to search manually.',
-    my: 'ဤစက်သည် တည်နေရာဖော်ပြခြင်းကို မထောက်ခံပါ — ကျေးဇူးပြု၍ ဒေသကို ကိုယ်တိုင်ရိုက်ရှာပါ။',
-    km: 'ឧបករណ៍នេះមិនគាំទ្រការកំណត់ទីតាំងទេ — សូមវាយបញ្ចូលតំបន់ដើម្បីស្វែងរកដោយដៃ។',
-    lo: 'ອຸປະກອນນີ້ບໍ່ຮອງຮັບການລະບຸຕຳແໜ່ງ — ກະລຸນາພິມຄົ້ນຫາພື້ນທີ່ດ້ວຍຕົນເອງ.',
+    th: 'อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง กรุณาพิมพ์ค้นหาพื้นที่ด้วยตนเอง',
+    en: 'This device does not support geolocation. Please type the area to search manually.',
+    my: 'ဤစက်သည် တည်နေရာဖော်ပြခြင်းကို မထောက်ခံပါ။ ကျေးဇူးပြု၍ ဒေသကို ကိုယ်တိုင်ရိုက်ရှာပါ။',
+    km: 'ឧបករណ៍នេះមិនគាំទ្រការកំណត់ទីតាំងទេ។ សូមវាយបញ្ចូលតំបន់ដើម្បីស្វែងរកដោយដៃ។',
+    lo: 'ອຸປະກອນນີ້ບໍ່ຮອງຮັບການລະບຸຕຳແໜ່ງ ກະລຸນາພິມຄົ້ນຫາພື້ນທີ່ດ້ວຍຕົນເອງ',
   },
   'area.trySearch': {
     th: 'กรอกพื้นที่เอง', en: 'Enter area manually',
@@ -703,8 +703,8 @@ const BASE_DICT: Dict = {
   'train.rate.repeat': { th: 'ถามซ้ำ', en: 'Repeated', my: 'ထပ်မေးသည်', km: 'សួរដដែល', lo: 'ຖາມຊ້ຳ' },
   'train.rate.bad': { th: 'ไม่เหมาะ', en: 'Not suitable', my: 'မသင့်တော်', km: 'មិនសមរម្យ', lo: 'ບໍ່ເໝາະ' },
   'train.rateError': { th: 'บันทึกคะแนนไม่สำเร็จ', en: 'Could not save rating', my: 'သိမ်းမရပါ', km: 'មិនអាចរក្សាទុក', lo: 'ບັນທຶກບໍ່ສຳເລັດ' },
-  'train.progress': { th: 'ให้คะแนนแล้ว {n}/{total} คำถาม — กดซ้ำเพื่อยกเลิก', en: 'Rated {n}/{total} questions — tap again to clear', my: '{n}/{total} အမှတ်ပေးပြီး', km: 'បានវាយតម្លៃ {n}/{total}', lo: 'ໃຫ້ຄະແນນແລ້ວ {n}/{total}' },
-  'train.saved': { th: 'บันทึกคะแนนแล้ว จะใช้ในการเทรนเวอร์ชันถัดไป', en: 'Rating saved — used in the next training version', my: 'သိမ်းပြီး', km: 'បានរក្សាទុក', lo: 'ບັນທຶກແລ້ວ' },
+  'train.progress': { th: 'ให้คะแนนแล้ว {n}/{total} คำถาม กดซ้ำเพื่อยกเลิก', en: 'Rated {n}/{total} questions. Tap again to clear', my: 'မေးခွန်း {n}/{total} အမှတ်ပေးပြီး။ ပယ်ဖျက်ရန် ထပ်နှိပ်ပါ', km: 'បានវាយតម្លៃ {n}/{total} សំណួរ។ ចុចម្ដងទៀតដើម្បីលុប', lo: 'ໃຫ້ຄະແນນແລ້ວ {n}/{total} ຄຳຖາມ ກົດຊ້ຳເພື່ອຍົກເລີກ' },
+  'train.saved': { th: 'บันทึกคะแนนแล้ว จะใช้ในการเทรนเวอร์ชันถัดไป', en: 'Rating saved. It will be used in the next training version', my: 'အမှတ် သိမ်းပြီးပါပြီ။ နောက်ဗားရှင်း လေ့ကျင့်ရာတွင် သုံးပါမည်', km: 'បានរក្សាទុកពិន្ទុ។ នឹងប្រើក្នុងកំណែបណ្ដុះបណ្ដាលបន្ទាប់', lo: 'ບັນທຶກຄະແນນແລ້ວ ຈະໃຊ້ໃນການເທຣນເວີຊັນຖັດໄປ' },
   'report.train.consent': {
     th: 'ยินยอมให้ใช้คำถามและคำตอบของฉันแบบไม่ระบุตัวตน เพื่อปรับปรุง AI ของ SWING Rights เท่านั้น (ไม่บังคับ)',
     en: 'Let SWING Rights use my questions and answers, without my identity, only to improve its own AI (optional)',
@@ -828,7 +828,8 @@ const BASE_DICT: Dict = {
   'report.partners.orgType.legal': { th: 'หน่วยงานกฎหมาย', en: 'Legal aid', my: 'ဥပဒေ အကူအညီ', km: 'ជំនួយផ្លូវច្បាប់', lo: 'ຊ່ວຍເຫຼືອທາງກົດໝາຍ' },
   'report.partners.orgType.ngo': { th: 'องค์กรภาคี', en: 'NGO / partner', my: 'NGO / မိတ်ဖက်', km: 'អង្គការ/ដៃគូ', lo: 'NGO / ຄູ່ຮ່ວມ' },
   'report.partners.orgType.shelter': { th: 'ที่พักพิงฉุกเฉิน', en: 'Emergency shelter', my: 'အရေးပေါ် ခိုလှုံရာ', km: 'ទីជំរកបន្ទាន់', lo: 'ທີ່ພັກພິງສຸກເສີນ' },
-  'report.partners.orgType.police': { th: 'ตำรวจ', en: 'Police', my: 'ရဲ', km: 'ប៉ូលិស', lo: 'ຕຳຫຼວດ' },
+  // Public label for the 'police' org type. Public pages never say police; staff labels live in admin.ts.
+  'report.partners.orgType.police': { th: 'หน่วยงานรัฐ', en: 'Government agency', my: 'အစိုးရဌာန', km: 'ស្ថាប័នរដ្ឋ', lo: 'ໜ່ວຍງານລັດ' },
   'report.partners.orgType.hotline': { th: 'สายด่วน', en: 'Hotline', my: 'အရေးပေါ်လိုင်း', km: 'ខ្សែទូរស័ព្ទបន្ទាន់', lo: 'ສາຍດ່ວນ' },
   'report.partners.orgType.other': { th: 'อื่น ๆ', en: 'Other', my: 'အခြား', km: 'ផ្សេងៗ', lo: 'ອື່ນໆ' },
 
@@ -872,13 +873,7 @@ const BASE_DICT: Dict = {
   },
   'login.otp': { th: 'รหัสยืนยัน 6 หลัก (Authenticator)', en: '6-digit code (Authenticator)', my: 'ဂဏန်း ၆ လုံး ကုဒ် (Authenticator)', km: 'លេខកូដ ៦ ខ្ទង់ (Authenticator)', lo: 'ລະຫັດ 6 ຫຼັກ (Authenticator)' },
   'login.verify': { th: 'ยืนยันรหัส', en: 'Verify code', my: 'ကုဒ်အတည်ပြုမည်', km: 'ផ្ទៀងផ្ទាត់កូដ', lo: 'ຢືນຢັນລະຫັດ' },
-  'login.notice': {
-    th: 'ระบบนี้เก็บข้อมูลผู้เสียหายที่มีความอ่อนไหวสูง บัญชีเปิดใช้โดยผู้ดูแลระบบเท่านั้น และแนะนำให้เปิดการยืนยันตัวตนสองชั้น (TOTP) ทุกบัญชี',
-    en: 'This system holds highly sensitive survivor data. Accounts are created by administrators only, and two-factor authentication (TOTP) is strongly recommended.',
-    my: 'ဤစနစ်တွင် အလွန်အရေးကြီးသော ကိုယ်ရေးအချက်အလက်များ ရှိသည် အကောင့်များကို စီမံခန့်ခွဲသူများသာ ဖွင့်ပေးသည်',
-    km: 'ប្រព័ន្ធនេះមានទិន្នន័យដែលមានភាពរសើបខ្ពស់ គណនីត្រូវបានបង្កើតដោយអ្នកគ្រប់គ្រងប៉ុណ្ណោះ',
-    lo: 'ລະບົບນີ້ເກັບຂໍ້ມູນທີ່ອ່ອນໄຫວສູງ ບັນຊີສ້າງໂດຍຜູ້ດູແລລະບົບເທົ່ານັ້ນ',
-  },
+  // login.notice lives in dict/admin.ts (5 languages, matches the self-signup flow).
   'login.success': { th: 'เข้าสู่ระบบสำเร็จ', en: 'Signed in successfully', my: 'ဝင်ရောက်ပြီးပါပြီ', km: 'ចូលបានជោគជ័យ', lo: 'ເຂົ້າສູ່ລະບົບສຳເລັດ' },
   'login.fillBoth': { th: 'กรุณากรอกอีเมลและรหัสผ่าน', en: 'Please enter your email and password', my: 'အီးမေးလ်နှင့် စကားဝှက် ထည့်ပါ', km: 'សូមបញ្ចូលអ៊ីមែល និងពាក្យសម្ងាត់', lo: 'ກະລຸນາໃສ່ອີເມວ ແລະ ລະຫັດຜ່ານ' },
   'login.failed': { th: 'เข้าสู่ระบบไม่สำเร็จ', en: 'Sign in failed', my: 'ဝင်ရောက်မှု မအောင်မြင်ပါ', km: 'ចូលមិនបាន', lo: 'ເຂົ້າສູ່ລະບົບບໍ່ສຳເລັດ' },

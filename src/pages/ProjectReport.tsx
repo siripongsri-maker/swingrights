@@ -75,7 +75,7 @@ export default function ProjectReport() {
       [r('prep.total'), data.total_cases],
       [r('prep.sla'), `${data.sla_met_count} / ${data.sla_total}${data.sla_percent != null ? ` (${data.sla_percent}%)` : ''}`],
       [r('prep.referrals'), data.referrals_count],
-      [`${r('prep.referrals')} – ${r('prep.accepted')}`, data.referrals_accepted_count],
+      [`${r('prep.referrals')}: ${r('prep.accepted')}`, data.referrals_accepted_count],
       [r('prep.emergency'), data.emergency_fund_cases],
       [r('prep.suicide'), data.suicide_risk_count],
       [r('prep.trafficking'), data.trafficking_count],
@@ -192,7 +192,7 @@ export default function ProjectReport() {
               </div>
               <section className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <Stat label={r('prep.total')} value={data.total_cases} />
-                <Stat label={r('prep.sla')} value={data.sla_percent != null ? `${data.sla_percent}%` : '–'} sub={`${data.sla_met_count} / ${data.sla_total}`} />
+                <Stat label={r('prep.sla')} value={data.sla_percent != null ? `${data.sla_percent}%` : '-'} sub={`${data.sla_met_count} / ${data.sla_total}`} />
                 <Stat label={r('prep.referrals')} value={data.referrals_count} sub={`${data.referrals_accepted_count} ${r('prep.accepted')}`} />
                 <Stat label={r('prep.emergency')} value={data.emergency_fund_cases} />
                 <Stat label={r('prep.suicide')} value={data.suicide_risk_count} />

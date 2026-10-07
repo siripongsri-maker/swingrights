@@ -21,7 +21,7 @@ export const PROFILE_DICT: Record<string, Entry> = {
   'prof.pwSaved': { th: 'เปลี่ยนรหัสผ่านแล้ว', en: 'Password changed' },
   'prof.pwChange': { th: 'เปลี่ยนรหัสผ่าน', en: 'Change password' },
   'prof.preview': { th: 'ตัวอย่างข้อมูลที่บันทึกจริง', en: 'Preview of saved data' },
-  'prof.previewHint': { th: 'อ่านกลับจากระบบล่าสุด — สิ่งที่คนอื่นจะเห็น', en: 'Read back from the system — what others will see' },
+  'prof.previewHint': { th: 'อ่านกลับจากระบบล่าสุด คือสิ่งที่คนอื่นจะเห็น', en: 'Read back from the system: what others will see', my: 'စနစ်မှ နောက်ဆုံး ပြန်ဖတ်ထားသည်: အခြားသူများ မြင်ရမည့်အရာ', km: 'អានត្រឡប់ពីប្រព័ន្ធចុងក្រោយ: អ្វីដែលអ្នកដទៃនឹងឃើញ', lo: 'ອ່ານກັບຈາກລະບົບຫຼ້າສຸດ ຄືສິ່ງທີ່ຄົນອື່ນຈະເຫັນ' },
   'prof.seenAs': { th: 'คนอื่นเห็นเป็น', en: 'Others see' },
   'prof.roles': { th: 'บทบาท', en: 'Roles' },
   'prof.status': { th: 'สถานะ', en: 'Status' },

@@ -8,6 +8,7 @@ import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { useI18n } from '@/i18n';
 
 const KEY = 'sw_pdpa_consent_v1';
+const TABBABLE = 'button:not([disabled]), a[href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
  * PDPA acknowledgement + data-use consent, shown once per device. A bottom sheet on phones and a
@@ -22,10 +23,32 @@ export function PdpaConsent() {
   const [ack, setAck] = useState(false);
   const [consent, setConsent] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
 
   // Move keyboard and screen-reader focus into the sheet when it appears
   useEffect(() => {
     if (open) titleRef.current?.focus({ preventScroll: true });
+  }, [open]);
+
+  // Keep Tab inside the sheet while it is open. aria-modal hides the page behind from screen
+  // readers, so keyboard focus must not reach it either (the menu sheet would otherwise open
+  // under the overlay). Esc is left alone for Quick Exit's double press.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      const sheet = sheetRef.current;
+      if (e.key !== 'Tab' || !sheet) return;
+      const items = Array.from(sheet.querySelectorAll<HTMLElement>(TABBABLE)).filter((el) => el.getClientRects().length > 0);
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (!sheet.contains(active)) { e.preventDefault(); first.focus(); }
+      else if (e.shiftKey && active === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
   if (!open) return null;
@@ -37,6 +60,7 @@ export function PdpaConsent() {
 
   return (
     <div
+      ref={sheetRef}
       className="fixed inset-0 z-[60] flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center sm:p-6"
       role="dialog"
       aria-modal="true"

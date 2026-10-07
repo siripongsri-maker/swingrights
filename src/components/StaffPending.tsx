@@ -27,18 +27,18 @@ export function StaffPending() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="max-w-sm w-full text-center border border-border rounded-2xl p-8 bg-card">
-        {pending ? <Clock className="w-10 h-10 text-primary mx-auto mb-3" /> : <ShieldAlert className="w-10 h-10 text-destructive mx-auto mb-3" />}
+        {pending ? <Clock className="w-10 h-10 text-primary mx-auto mb-3" aria-hidden /> : <ShieldAlert className="w-10 h-10 text-destructive mx-auto mb-3" aria-hidden />}
         <h1 className="text-lg font-medium mb-1">{pending ? t('staffsignup.pendingTitle') : t('guard.accessDenied')}</h1>
         <p className="text-sm text-muted-foreground mb-4">
           {pending ? t('staffsignup.pendingBody') : rejected ? t('staffsignup.rejectedBody') : t('guard.noRole')}
         </p>
         <div className="flex flex-col gap-2 items-center">
           {!pending && !rejected && (
-            <Button size="sm" variant="action" disabled={busy} onClick={() => request(false)}>
-              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : t('staffsignup.requestBtn')}
+            <Button variant="action" disabled={busy} aria-busy={busy} onClick={() => request(false)}>
+              {busy && <Loader2 className="w-4 h-4 animate-spin" aria-hidden />} {t('staffsignup.requestBtn')}
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={async () => { await supabase.auth.signOut(); window.location.href = '/admin/login'; }}>
+          <Button variant="outline" onClick={async () => { await supabase.auth.signOut(); window.location.href = '/admin/login'; }}>
             {t('guard.signOut')}
           </Button>
         </div>

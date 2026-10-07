@@ -1,40 +1,34 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/screening/StatusBadge';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
-import { CaseStatus, STATUS_LABEL, BRANCHES, VIOLATION_TYPES } from '@/lib/screening';
+import { CaseStatus, VIOLATION_TYPES } from '@/lib/screening';
 import { q9Level } from '@/lib/screeningTools';
-import { printCaseReport, logExport, AI_DISCLAIMER, type CaseReportData } from '@/lib/caseReport';
-import { useCaseAlerts, type CaseAlert } from '@/hooks/useCaseAlerts';
-import { useAccess, useRoleLabels } from '@/hooks/useAccess';
+import { printCaseReport, type CaseReportData } from '@/lib/caseReport';
+import { useAccess } from '@/hooks/useAccess';
 
 import {
-  Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin,
-  Search, ChevronLeft, ChevronRight, UserCheck, UserCog, CalendarClock, BellRing, ShieldAlert, Check,
-  MessageCircleQuestion, Send, AlertTriangle, Clock, HelpCircle, Building2, Volume2, ChevronDown, Printer, Scale, Share2, HeartHandshake, Flag, History,
+  Loader2, ArrowLeft, FileText, MapPin,
+  ChevronLeft, ChevronRight, UserCheck, ShieldAlert, Check,
+  MessageCircleQuestion, Send, AlertTriangle, Clock, Building2, Volume2, ChevronDown, Printer, Scale, Share2, HeartHandshake, History,
   EyeOff, RotateCcw, Info,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { printCaseDocument, docInputFromReport, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
+import { docInputFromReport, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
-import { LanguageToggle } from '@/components/LanguageToggle';
 import { CaseReferrals } from '@/components/admin/CaseReferrals';
 import { MapPicker } from '@/components/screening/MapPicker';
 import { DocumentDraftDialog } from '@/components/admin/DocumentDraftDialog';
-import { BrandMark } from '@/components/BrandLogo';
 import { CaseAnswersEditor } from '@/components/admin/CaseAnswersEditor';
 import { CaseTrainingSamples } from '@/components/admin/CaseTrainingSamples';
-import { DashboardOverview } from '@/components/admin/DashboardOverview';
-import { StaffShell } from '@/components/admin/StaffShell';
 import { QuickExitSlot } from '@/components/screening/QuickExit';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -73,10 +67,12 @@ function SlaPill({ c, long = false }: { c: { created_at: string; first_response_
 /** Staff intake saves violation types as Thai labels, self-report saves ids. Show both as ids. */
 const typeId = (x: string) => VIOLATION_TYPES.find((v) => v.label === x)?.id ?? x;
 
-/** Where the back link goes, by the `from` state the case links pass (falls back to the queue). */
+/** Where the back link goes, by the `from` state the case links pass. */
 const BACK_LABEL: Record<string, string> = {
+  '/admin': 'staff.nav.queue',
   '/admin/cases': 'staff.nav.cases',
   '/admin/caseload': 'staff.nav.caseload',
+  '/admin/overview': 'staff.nav.overview',
 };
 
 /** Staff case detail page (/admin/case/:id). */
@@ -93,9 +89,12 @@ export function CaseDetail({ caseId, staff, staffName, onChanged }: {
   const location = useLocation();
   // Back: only step back when the previous entry is inside the app (history.length counts
   // other sites too). A case opened from a fresh tab or a pasted link goes to the queue.
+  // The label always says where the button goes: the list it came from, a plain "Back" for
+  // any other in-app origin (overview dialog, partner search, case history), else "Queue".
   const backFrom = (location.state as { from?: string } | null)?.from;
-  const backLabel = t(BACK_LABEL[backFrom ?? ''] ?? 'staff.nav.queue');
-  const goBack = () => (location.key !== 'default' ? navigate(-1) : navigate('/admin'));
+  const inApp = location.key !== 'default';
+  const backLabel = t(inApp ? (BACK_LABEL[backFrom ?? ''] ?? 'common.back') : 'staff.nav.queue');
+  const goBack = () => (inApp ? navigate(-1) : navigate('/admin'));
   const [note, setNote] = useState('');
   // Draft shown in the "completed / cancelled" confirm dialog. One-tap status changes never
   // carry the message draft; only the send button or this dialog sends a note to the reporter.
@@ -237,7 +236,7 @@ export function CaseDetail({ caseId, staff, staffName, onChanged }: {
     if (!c) return;
     let cancelled = false;
     (async () => {
-      // Phase 0.6 — audit every access to sensitive media, and keep links short-lived (5 นาที)
+      // Phase 0.6: audit every access to sensitive media, and keep links short-lived (5 นาที)
       void supabase.rpc('log_case_access' as any, { _case_id: c.id, _action: 'view_media' });
       const out: Record<number, string> = {};
       const list: { url: string; label: string }[] = [];

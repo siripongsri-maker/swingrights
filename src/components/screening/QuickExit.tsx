@@ -40,6 +40,31 @@ const OPEN_MODAL = '[role="dialog"][data-state="open"]:not([data-side]), [role="
 const ANY_MODAL = '[role="dialog"]:not([data-side]), [role="alertdialog"], [aria-modal="true"]';
 const isShown = (el: Element) => el.getClientRects().length > 0;
 
+/** Stacking order of a modal: the nearest z-index set on it or an ancestor (0 when none). */
+const zIndexOf = (el: HTMLElement) => {
+  for (let node: HTMLElement | null = el; node && node !== document.body; node = node.parentElement) {
+    const z = parseInt(getComputedStyle(node).zIndex, 10);
+    if (!Number.isNaN(z)) return z;
+  }
+  return 0;
+};
+
+/**
+ * The open modal that is visually on top. By z-index, not DOM order: an in-tree overlay such
+ * as PdpaConsent (z-60) sits above Radix sheets and dialogs portaled to the end of <body>
+ * (z-50), so the pill must not be moved into a sheet hidden under the consent card.
+ * Ties go to the later node, which is the one Radix opened last.
+ */
+const topModal = (modals: HTMLElement[]) => {
+  let top: HTMLElement | null = null;
+  let topZ = -1;
+  for (const m of modals) {
+    const z = zIndexOf(m);
+    if (z >= topZ) { top = m; topZ = z; }
+  }
+  return top;
+};
+
 type Spot = { slot: HTMLElement | null; overlay: boolean; inModal: boolean };
 
 /**
@@ -53,8 +78,7 @@ function useQuickExitSpot() {
     let timer = 0;
     const find = () => {
       timer = 0;
-      const modals = document.querySelectorAll<HTMLElement>(OPEN_MODAL);
-      const top = modals.length ? modals[modals.length - 1] : null;
+      const top = topModal(Array.from(document.querySelectorAll<HTMLElement>(OPEN_MODAL)));
       let el: HTMLElement | null = null;
       if (top) {
         el = Array.from(top.querySelectorAll<HTMLElement>('[data-qe-slot]')).find(isShown) ?? null;

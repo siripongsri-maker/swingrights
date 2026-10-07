@@ -73,7 +73,7 @@ export interface CaseReportData {
 /** AI risk level as a Thai word, same scale as case severity (ต่ำ / ปานกลาง / สูง) */
 const AI_LEVEL_TH: Record<string, string> = { low: 'ต่ำ', medium: 'ปานกลาง', high: 'สูง' };
 
-/** เอกสารส่งต่อรายเคส (OSCC / ตำรวจ / ทนาย) — พิมพ์เป็น PDF ผ่านเบราว์เซอร์ */
+/** เอกสารส่งต่อรายเคส (OSCC / หน่วยงานรัฐ / ทนาย): พิมพ์เป็น PDF ผ่านเบราว์เซอร์ */
 export function printCaseReport(c: CaseReportData) {
   const p = c.profile || {};
   const s = c.screening || {};

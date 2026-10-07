@@ -4,40 +4,25 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { StatusBadge } from '@/components/screening/StatusBadge';
 import { SeverityBadge } from '@/components/screening/SeverityBadge';
 import { CaseStatus, STATUS_LABEL, SEV_LABEL, BRANCHES, VIOLATION_TYPES, type Severity } from '@/lib/screening';
-import { q9Level } from '@/lib/screeningTools';
-import { printCaseReport, logExport, AI_DISCLAIMER, type CaseReportData } from '@/lib/caseReport';
+import { logExport } from '@/lib/caseReport';
 import { useCaseAlerts, type CaseAlert } from '@/hooks/useCaseAlerts';
-import { useAccess, useRoleLabels } from '@/hooks/useAccess';
+import { useAccess } from '@/hooks/useAccess';
 
 import {
-  Loader2, LogOut, Plus, ShieldCheck, ArrowLeft, Download, FileText, MapPin,
-  Search, ChevronLeft, ChevronRight, UserCheck, UserCog, CalendarClock, BellRing, ShieldAlert, Check,
-  MessageCircleQuestion, Send, AlertTriangle, Clock, HelpCircle, Building2, Volume2, ChevronDown, Printer, Scale, Share2, HeartHandshake, Flag, History,
+  Loader2, Plus, Download, MapPin, Search, ChevronLeft, ChevronRight, UserCheck, CalendarClock,
+  BellRing, ShieldAlert, Check, AlertTriangle, Clock, HelpCircle, Flag,
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { printCaseDocument, docInputFromReport, DOC_KINDS, type DocKind } from '@/lib/caseDocuments';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
-import { LanguageToggle } from '@/components/LanguageToggle';
-import { CaseReferrals } from '@/components/admin/CaseReferrals';
-import { MapPicker } from '@/components/screening/MapPicker';
-import { DocumentDraftDialog } from '@/components/admin/DocumentDraftDialog';
-import { BrandMark } from '@/components/BrandLogo';
-import { CaseAnswersEditor } from '@/components/admin/CaseAnswersEditor';
-import { CaseTrainingSamples } from '@/components/admin/CaseTrainingSamples';
 import { DashboardOverview } from '@/components/admin/DashboardOverview';
 import { StaffShell, StaffLoadError } from '@/components/admin/StaffShell';
 import { CaseDetail } from '@/components/admin/CaseDetail';
-import { QuickExitSlot } from '@/components/screening/QuickExit';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const PAGE_SIZE = 20;
 
@@ -45,15 +30,6 @@ const LIST_COLS =
   'id, case_code, status, severity, created_at, follow_up_at, assigned_to, suicide_risk, ai_reviewed, victim, profile, ai_result, first_response_at, pii_flag';
 const DETAIL_COLS = '*';
 const sel = (s: string): string => s;
-
-function referralLabel(value: unknown): string {
-  if (typeof value === 'string') return value;
-  if (!value || typeof value !== 'object') return '';
-  const referral = value as Record<string, unknown>;
-  return [referral.org_name, referral.phone, referral.note]
-    .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
-    .join(' · ');
-}
 
 interface CaseListRow {
   id: string;
@@ -70,18 +46,6 @@ interface CaseListRow {
   profile: any;
   ai_result: any;
   first_response_at: string | null;
-}
-
-function SlaBadge({ createdAt }: { createdAt: string }) {
-  const { t } = useI18n();
-  const elapsed = (Date.now() - new Date(createdAt).getTime()) / 3_600_000;
-  const left = 24 - elapsed;
-  if (left <= 0) {
-    return <span className="text-xs bg-destructive text-destructive-foreground px-2 py-0.5 rounded-full tabular-nums">{t('dash.sla.overdue', { h: Math.floor(elapsed) })}</span>;
-  }
-  const h = Math.ceil(left);
-  const cls = left < 6 ? 'bg-sevYellow-bg text-sevYellow-fg' : 'bg-muted text-muted-foreground';
-  return <span className={`text-xs px-2 py-0.5 rounded-full tabular-nums ${cls}`}>{t('dash.sla.remaining', { h })}</span>;
 }
 
 interface Staff { id: string; display_name: string | null; email: string | null }
@@ -406,7 +370,7 @@ export default function AdminDashboard() {
     toast.success(t('dash.export.csvSuccess', { n: rows.length }));
   };
 
-  if (checking) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
+  if (checking) return <div className="min-h-screen flex items-center justify-center" role="status"><Loader2 className="w-6 h-6 animate-spin text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>;
   if (!authorized) return null;
 
   if (routeCaseId) {
@@ -550,7 +514,7 @@ export default function AdminDashboard() {
                         <td className="px-3 text-sm">{typesOf(c).map(typeLabel).join(', ') || '-'}</td>
                         <td className="px-3"><Flags c={c} /></td>
                         <td className="px-3 text-sm">{c.profile?.province || c.profile?.branch || '-'}</td>
-                        <td className="px-3"><Owner c={c} name={staffName(c.assigned_to)} canClaim={access.canEdit} onClaim={() => claim.mutate(c.id)} busy={claim.isPending} /></td>
+                        <td className="px-3"><Owner c={c} name={staffName(c.assigned_to)} canClaim={access.canManage} onClaim={() => claim.mutate(c.id)} busy={claim.isPending} /></td>
                       </tr>
                     ))}
                   </tbody>
@@ -570,7 +534,7 @@ export default function AdminDashboard() {
                     <Flags c={c} />
                     <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                       <span className="inline-flex items-center gap-1 text-muted-foreground"><MapPin className="h-4 w-4" aria-hidden />{c.profile?.province || c.profile?.branch || '-'}</span>
-                      <Owner c={c} name={staffName(c.assigned_to)} canClaim={access.canEdit} onClaim={() => claim.mutate(c.id)} busy={claim.isPending} />
+                      <Owner c={c} name={staffName(c.assigned_to)} canClaim={access.canManage} onClaim={() => claim.mutate(c.id)} busy={claim.isPending} />
                     </div>
                   </li>
                 ))}
@@ -711,6 +675,11 @@ function Kpi({ label, n, tone }: { label: string; n?: number; tone?: 'danger' | 
   );
 }
 
+/**
+ * Assignee cell. The claim button writes assigned_to = me, which RLS allows only for admin/manager
+ * (a caseworker's update matches 0 rows with no error), so callers pass canClaim={access.canManage},
+ * the same rule as the case page.
+ */
 function Owner({ c, name, canClaim, onClaim, busy }: { c: QueueRow; name: string | null; canClaim: boolean; onClaim: () => void; busy: boolean }) {
   const { t } = useI18n();
   if (c.assigned_to && name) {
@@ -722,7 +691,8 @@ function Owner({ c, name, canClaim, onClaim, busy }: { c: QueueRow; name: string
     );
   }
   if (!canClaim) return <span className="text-sm text-muted-foreground">{t('dash.cases.unassigned')}</span>;
-  return <Button size="sm" variant="action" disabled={busy} onClick={onClaim}><UserCheck className="h-4 w-4" /> {t('staff.claim')}</Button>;
+  // Charcoal, not magenta: the page keeps one main action and a queue can show several of these.
+  return <Button size="sm" variant="default" disabled={busy} onClick={onClaim}><UserCheck className="h-4 w-4" /> {t('staff.claim')}</Button>;
 }
 
 
@@ -732,29 +702,6 @@ function StatCard({ num, label, tone }: { num: number; label: string; tone: 'pur
     <div className="bg-card border border-border rounded-[20px] p-4 text-center shadow-card hover-lift animate-bloom">
       <p className={`font-display text-3xl font-medium ${cls} tabular-nums`}>{num}</p>
       <p className="text-xs text-muted-foreground mt-1">{label}</p>
-    </div>
-  );
-}
-
-function ChartBlock({ title, data, noDataLabel }: { title: string; data: { label: string; value: number }[]; noDataLabel: string }) {
-  const max = Math.max(...data.map((d) => d.value), 1);
-  const visible = data.filter((d) => d.value > 0);
-  return (
-    <div className="bg-card border border-border rounded-[20px] p-5 mb-4 shadow-card animate-bloom">
-      <p className="text-xs font-medium text-muted-foreground mb-3 tracking-wide">{title}</p>
-      {visible.length === 0 ? <p className="text-xs text-muted-foreground">{noDataLabel}</p> : (
-        <div className="space-y-2">
-          {visible.map((d) => (
-            <div key={d.label} className="flex items-center gap-3">
-              <span className="text-xs w-32 truncate">{d.label}</span>
-              <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${(d.value / max) * 100}%` }} />
-              </div>
-              <span className="text-xs font-medium w-6 text-right tabular-nums">{d.value}</span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

@@ -90,7 +90,7 @@ export default function PartnerSearch() {
   const focusProv = focus?.profile?.province || '';
   const focusDist = focus?.profile?.district || '';
 
-  // Local Thai geo data (provinces/districts/tambon centers) — loaded once, offline.
+  // Local Thai geo data (provinces/districts/tambon centers), loaded once, offline.
   const { data: geo } = useQuery({ queryKey: ['thai-geo'], queryFn: loadThaiGeo, staleTime: Infinity });
 
   const provinces = useMemo(() => [...new Set(partners.map((p) => p.province).filter(Boolean))].sort() as string[], [partners]);
@@ -125,7 +125,7 @@ export default function PartnerSearch() {
   /** Straight-line km from the case area to the partner (null if unknown). */
   const distanceKm = (p: Partner): number | null => {
     if (!focusProv) return null;
-    if (!p.province) return null; // nationwide — no fixed location
+    if (!p.province) return null; // nationwide: no fixed location
     const pc = partnerCoords.get(p.id);
     if (casePoint && pc) {
       const d = distKm(casePoint, pc);

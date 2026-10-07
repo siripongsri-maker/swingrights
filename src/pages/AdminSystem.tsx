@@ -108,7 +108,7 @@ export default function AdminSystem() {
                 </div>
                 <div className="bg-card border border-border rounded-[20px] p-4">
                   <p className="text-xs font-medium text-muted-foreground mb-2">{t('sys.topPaths')}</p>
-                  <Table head={['Path', t('sys.visits')]} rows={Object.entries(u.top_paths).sort((a, b) => b[1] - a[1]).map(([p, n]) => [p, n])} empty={t('sys.none')} />
+                  <Table head={[t('sys.col.path'), t('sys.visits')]} rows={Object.entries(u.top_paths).sort((a, b) => b[1] - a[1]).map(([p, n]) => [p, n])} empty={t('sys.none')} />
                 </div>
               </div>
             )}

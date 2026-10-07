@@ -104,7 +104,7 @@ export function PartnerMap({ markers, emptyHint }: { markers: MapMarker[]; empty
       )}
       <div ref={ref} className="w-full h-[320px] sm:h-[420px] bg-muted" />
       {markers.length === 0 && status === 'ready' && (
-        <p className="absolute bottom-2 inset-x-2 text-center text-[11px] bg-card/90 rounded-md py-1 text-muted-foreground">{emptyHint}</p>
+        <p className="absolute bottom-2 inset-x-2 text-center text-xs bg-card/90 rounded-md py-1 text-muted-foreground">{emptyHint}</p>
       )}
     </div>
   );

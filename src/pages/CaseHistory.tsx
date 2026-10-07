@@ -12,7 +12,7 @@ import { StaffShell, StaffLoadError } from '@/components/admin/StaffShell';
 /** หน้าประวัติเคสสำหรับเจ้าหน้าที่: ข้อมูลผู้รายงาน (PII แยกตาราง ต้องกดเปิดดู), ไทม์ไลน์, คำตอบทั้งหมดรวม follow-up */
 export default function CaseHistory() {
   const { id: caseId } = useParams<{ id: string }>();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [pii, setPii] = useState<{ reporter: any; victim: any } | null>(null);
   const [piiLoading, setPiiLoading] = useState(false);
 
@@ -61,7 +61,8 @@ export default function CaseHistory() {
     setPii(data as any);
   };
 
-  const fmt = (iso: string) => new Date(iso).toLocaleString('th-TH');
+  // Dates follow the UI language, as the other staff pages do (Thai calendar in th, Gregorian otherwise)
+  const fmt = (iso: string) => new Date(iso).toLocaleString(lang === 'th' ? 'th-TH' : 'en-GB');
   // Labelled 44px link back to the case (the shell sidebar / bottom nav cover the lists)
   const backLink = caseId ? (
     <Link to={`/admin/case/${caseId}`}

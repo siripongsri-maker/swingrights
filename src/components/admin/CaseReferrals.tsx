@@ -153,7 +153,7 @@ export function CaseReferrals({ caseId, province, violationTypes, canEdit }: {
               <li key={r.id} className="ms-4 text-sm">
                 <span className="absolute -start-[7px] mt-1.5 w-3 h-3 rounded-full bg-primary border-2 border-background" />
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium">{names[r.partner_id] ?? '—'}</span>
+                  <span className="font-medium">{names[r.partner_id] ?? '-'}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${OUTCOME_CLS[o] ?? ''}`}>{t(`ref.outcome.${o}`)}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">

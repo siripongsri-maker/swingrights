@@ -59,8 +59,9 @@ export default function ResetPassword() {
               <Label className="text-xs text-muted-foreground mb-1.5 block">{t('reset.confirmPassword')}</Label>
               <Input value={pw2} onChange={(e) => setPw2(e.target.value)} type="password" autoComplete="new-password" />
             </div>
-            <Button variant="action" onClick={submit} disabled={saving} className="w-full">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t('reset.save')}
+            <Button variant="action" onClick={submit} disabled={saving} aria-busy={saving} className="w-full">
+              {saving && <Loader2 className="w-4 h-4 animate-spin" aria-hidden />}
+              {t('reset.save')}
             </Button>
           </>
         )}
