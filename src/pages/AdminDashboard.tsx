@@ -168,6 +168,7 @@ export default function AdminDashboard() {
   const [qSearch, setQSearch] = useState('');
   const [alertOnly, setAlertOnly] = useState(false);
 
+  useRealtimeCases(routeCaseId);
   useEffect(() => { const t = setTimeout(() => { setDebounced(search.trim()); setPage(0); }, 350); return () => clearTimeout(t); }, [search]);
   useEffect(() => { setPage(0); }, [status, branch, assignee]);
 
