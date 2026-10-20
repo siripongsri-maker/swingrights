@@ -86,4 +86,9 @@ export const STAFF_DICT: Record<string, Entry> = {
   'staff.page.next': e('หน้าถัดไป', 'Next page', 'နောက် စာမျက်နှာ', 'ទំព័របន្ទាប់', 'ໜ້າຖັດໄປ'),
   'staff.hist.backToCase': e('กลับไปที่เคส', 'Back to the case', 'အမှုသို့ ပြန်သွားရန်', 'ត្រឡប់ទៅករណី', 'ກັບໄປທີ່ເຄສ'),
   'staff.hist.created': e('รับเรื่องเมื่อ {date}', 'Received {date}', '{date} တွင် လက်ခံခဲ့သည်', 'បានទទួលនៅ {date}', 'ຮັບເລື່ອງເມື່ອ {date}'),
+  // Case status labels (English matches the Thai wording SWING uses: รับเรื่อง / ดำเนินงาน / สำเร็จ / ยกเลิก)
+  'status.received': e('รับเรื่อง', 'Received', 'လက်ခံရရှိ', 'បានទទួល', 'ຮັບເລື່ອງ'),
+  'status.inprogress': e('ดำเนินงาน', 'In progress', 'ဆောင်ရွက်နေ', 'កំពុងដំណើរការ', 'ກຳລັງດຳເນີນງານ'),
+  'status.completed': e('สำเร็จ', 'Completed', 'ပြီးစီး', 'បានបញ្ចប់', 'ສຳເລັດ'),
+  'status.cancelled': e('ยกเลิก', 'Cancelled', 'ပယ်ဖျက်', 'បានបោះបង់', 'ຍົກເລີກ'),
 };
