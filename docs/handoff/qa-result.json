@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-20",
+  "volumes": [
+    {
+      "volume": 1,
+      "pages": 33
+    },
+    {
+      "volume": 2,
+      "pages": 33
+    },
+    {
+      "volume": 3,
+      "pages": 21
+    }
+  ],
+  "visual_review": "ตรวจภาพครบทุกหน้า หลังแก้หมายเลขขั้นและวงชี้",
+  "geometry": [
+    {
+      "volume": 1,
+      "pages": 33,
+      "issues": []
+    },
+    {
+      "volume": 2,
+      "pages": 33,
+      "issues": []
+    },
+    {
+      "volume": 3,
+      "pages": 21,
+      "issues": []
+    }
+  ],
+  "remaining": "ดู README.md, ภาพหลายขั้นยังต้องยืนยัน ไม่ใช่ฉบับครบทุกขั้น"
+}
