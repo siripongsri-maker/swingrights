@@ -77,6 +77,57 @@ export default function MySettings() {
     toast.success(t('prof.pwSaved'));
   };
 
+  // TOTP (MFA) state
+  const mfaQ = useQuery({
+    queryKey: ['my-mfa'],
+    queryFn: async () => {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error) throw error;
+      return (data.totp ?? []).filter((f) => f.status === 'verified');
+    },
+  });
+  const [totpEnroll, setTotpEnroll] = useState<{ id: string; qr: string } | null>(null);
+  const [totpCode, setTotpCode] = useState('');
+  const [totpBusy, setTotpBusy] = useState(false);
+
+  const startEnroll = async () => {
+    setTotpBusy(true);
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
+    if (error || !data) { setTotpBusy(false); toast.error(t('prof.error')); return; }
+    const qr = await QRCode.toDataURL(data.totp.uri, { width: 220, margin: 1 });
+    setTotpEnroll({ id: data.id, qr });
+    setTotpCode('');
+    setTotpBusy(false);
+  };
+
+  const verifyEnroll = async () => {
+    if (!totpEnroll) return;
+    setTotpBusy(true);
+    const { data: ch, error: chErr } = await supabase.auth.mfa.challenge({ factorId: totpEnroll.id });
+    const { error } = chErr ? { error: chErr } : await supabase.auth.mfa.verify({ factorId: totpEnroll.id, challengeId: ch.id, code: totpCode.trim() });
+    setTotpBusy(false);
+    if (error) { toast.error(t('prof.totp.badCode')); return; }
+    setTotpEnroll(null); setTotpCode('');
+    toast.success(t('prof.totp.on'));
+    qc.invalidateQueries({ queryKey: ['my-mfa'] });
+  };
+
+  const cancelEnroll = async () => {
+    if (totpEnroll) await supabase.auth.mfa.unenroll({ factorId: totpEnroll.id });
+    setTotpEnroll(null); setTotpCode('');
+  };
+
+  const disableTotp = async () => {
+    const f = mfaQ.data?.[0];
+    if (!f) return;
+    setTotpBusy(true);
+    const { error } = await supabase.auth.mfa.unenroll({ factorId: f.id });
+    setTotpBusy(false);
+    if (error) { toast.error(t('prof.error')); return; }
+    toast.success(t('prof.totp.off'));
+    qc.invalidateQueries({ queryKey: ['my-mfa'] });
+  };
+
   const card = 'bg-card border border-border rounded-xl p-4 shadow-card space-y-3';
   const d = q.data;
 
