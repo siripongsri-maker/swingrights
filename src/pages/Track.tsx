@@ -160,6 +160,16 @@ export default function Track() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (initialCode) void lookup(initialCode); }, []);
 
+  // Auto-lookup whenever the typed/pasted code is complete (SW- + 8 chars), so the result
+  // always comes from the database without depending on a URL parameter or the search button.
+  useEffect(() => {
+    if (code.length !== 11) return;
+    if (data?.case_code === code) return;
+    const timer = setTimeout(() => void lookup(code), 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
+
   const sendAnswer = async (qid: string) => {
     const a = answers[qid];
     const text = (a?.text ?? '').trim();
@@ -265,6 +275,17 @@ export default function Track() {
               </div>
               <StatusBadge value={toStatus(data.cancelled ? 'cancelled' : data.status)} />
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full rounded-xl min-h-11"
+              onClick={() => void lookup(data.case_code)}
+              disabled={loading}
+              aria-busy={loading}
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <Search className="w-4 h-4" aria-hidden />}
+              {t('track.refresh')}
+            </Button>
             {data.cancelled && (
               <p className="text-sm text-center text-muted-foreground">{t('track.cancelled')}</p>
             )}
