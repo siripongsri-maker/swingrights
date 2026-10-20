@@ -257,15 +257,15 @@ export const MISC_DICT: Record<string, Entry> = {
 
   // ---------- SeverityBadge ----------
   'severity.green': {
-    th: 'ต่ำ', en: 'Low',
+    th: 'ต่ำ (ไม่เร่งด่วน)', en: 'Low (not urgent)',
     my: 'နိမ့်', km: 'ទាប', lo: 'ຕ່ຳ',
   },
   'severity.yellow': {
-    th: 'ปานกลาง', en: 'Medium',
+    th: 'ปานกลาง (ติดตามใกล้ชิด)', en: 'Medium (close follow-up)',
     my: 'အလယ်အလတ်', km: 'មធ្យម', lo: 'ປານກາງ',
   },
   'severity.red': {
-    th: 'สูง', en: 'High',
+    th: 'สูง (ฉุกเฉิน)', en: 'High (urgent)',
     my: 'မြင့်', km: 'ខ្ពស់', lo: 'ສູງ',
   },
 
