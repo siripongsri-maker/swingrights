@@ -11,6 +11,7 @@ import { CaseStatus, STATUS_LABEL, SEV_LABEL, BRANCHES, VIOLATION_TYPES, type Se
 import { logExport } from '@/lib/caseReport';
 import { useCaseAlerts, type CaseAlert } from '@/hooks/useCaseAlerts';
 import { useAccess } from '@/hooks/useAccess';
+import { useRealtimeCases } from '@/hooks/useRealtimeCases';
 
 import {
   Loader2, Plus, Download, MapPin, Search, ChevronLeft, ChevronRight, UserCheck, CalendarClock,
@@ -168,6 +169,7 @@ export default function AdminDashboard() {
   const [qSearch, setQSearch] = useState('');
   const [alertOnly, setAlertOnly] = useState(false);
 
+  useRealtimeCases(routeCaseId);
   useEffect(() => { const t = setTimeout(() => { setDebounced(search.trim()); setPage(0); }, 350); return () => clearTimeout(t); }, [search]);
   useEffect(() => { setPage(0); }, [status, branch, assignee]);
 
