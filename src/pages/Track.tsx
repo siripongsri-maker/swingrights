@@ -275,6 +275,17 @@ export default function Track() {
               </div>
               <StatusBadge value={toStatus(data.cancelled ? 'cancelled' : data.status)} />
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full rounded-xl min-h-11"
+              onClick={() => void lookup(data.case_code)}
+              disabled={loading}
+              aria-busy={loading}
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <Search className="w-4 h-4" aria-hidden />}
+              {t('track.refresh')}
+            </Button>
             {data.cancelled && (
               <p className="text-sm text-center text-muted-foreground">{t('track.cancelled')}</p>
             )}
