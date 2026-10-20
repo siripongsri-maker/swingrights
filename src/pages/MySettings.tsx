@@ -4,7 +4,8 @@ import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Save, KeyRound, Eye } from 'lucide-react';
+import { Loader2, Save, KeyRound, Eye, ShieldCheck } from 'lucide-react';
+import QRCode from 'qrcode';
 import { toast } from 'sonner';
 import { useI18n } from '@/i18n';
 import { useRoleLabels, type AppRole } from '@/hooks/useAccess';
@@ -76,6 +77,57 @@ export default function MySettings() {
     toast.success(t('prof.pwSaved'));
   };
 
+  // TOTP (MFA) state
+  const mfaQ = useQuery({
+    queryKey: ['my-mfa'],
+    queryFn: async () => {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error) throw error;
+      return (data.totp ?? []).filter((f) => f.status === 'verified');
+    },
+  });
+  const [totpEnroll, setTotpEnroll] = useState<{ id: string; qr: string } | null>(null);
+  const [totpCode, setTotpCode] = useState('');
+  const [totpBusy, setTotpBusy] = useState(false);
+
+  const startEnroll = async () => {
+    setTotpBusy(true);
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp' });
+    if (error || !data) { setTotpBusy(false); toast.error(t('prof.error')); return; }
+    const qr = await QRCode.toDataURL(data.totp.uri, { width: 220, margin: 1 });
+    setTotpEnroll({ id: data.id, qr });
+    setTotpCode('');
+    setTotpBusy(false);
+  };
+
+  const verifyEnroll = async () => {
+    if (!totpEnroll) return;
+    setTotpBusy(true);
+    const { data: ch, error: chErr } = await supabase.auth.mfa.challenge({ factorId: totpEnroll.id });
+    const { error } = chErr ? { error: chErr } : await supabase.auth.mfa.verify({ factorId: totpEnroll.id, challengeId: ch.id, code: totpCode.trim() });
+    setTotpBusy(false);
+    if (error) { toast.error(t('prof.totp.badCode')); return; }
+    setTotpEnroll(null); setTotpCode('');
+    toast.success(t('prof.totp.on'));
+    qc.invalidateQueries({ queryKey: ['my-mfa'] });
+  };
+
+  const cancelEnroll = async () => {
+    if (totpEnroll) await supabase.auth.mfa.unenroll({ factorId: totpEnroll.id });
+    setTotpEnroll(null); setTotpCode('');
+  };
+
+  const disableTotp = async () => {
+    const f = mfaQ.data?.[0];
+    if (!f) return;
+    setTotpBusy(true);
+    const { error } = await supabase.auth.mfa.unenroll({ factorId: f.id });
+    setTotpBusy(false);
+    if (error) { toast.error(t('prof.error')); return; }
+    toast.success(t('prof.totp.off'));
+    qc.invalidateQueries({ queryKey: ['my-mfa'] });
+  };
+
   const card = 'bg-card border border-border rounded-xl p-4 shadow-card space-y-3';
   const d = q.data;
 
@@ -132,6 +184,49 @@ export default function MySettings() {
               <Button variant="outline" onClick={changePw} disabled={pwSaving || !cur || !pw}>
                 {pwSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />} {t('prof.pwChange')}
               </Button>
+            </section>
+
+            <section className={`${card} md:col-span-2`}>
+              <h2 className="font-subhead text-lg font-semibold flex items-center gap-2"><ShieldCheck className="w-4 h-4" /> {t('prof.totp.title')}</h2>
+              {mfaQ.isLoading ? (
+                <div className="py-4 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>
+              ) : (
+                <>
+                  <p className="text-sm">
+                    {t('prof.status')}: <span className="font-medium">{mfaQ.data?.length ? t('prof.totp.statusOn') : t('prof.totp.statusOff')}</span>
+                  </p>
+                  {totpEnroll ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">{t('prof.totp.hint')}</p>
+                      <img src={totpEnroll.qr} alt={t('prof.totp.qrAlt')} className="w-44 h-44 rounded-lg border border-border" />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Input
+                          className="h-11 w-40 font-mono"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          maxLength={6}
+                          placeholder="123456"
+                          aria-label={t('prof.totp.code')}
+                          value={totpCode}
+                          onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        />
+                        <Button variant="action" onClick={verifyEnroll} disabled={totpBusy || totpCode.length !== 6}>
+                          {totpBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} {t('prof.totp.verify')}
+                        </Button>
+                        <Button variant="outline" onClick={cancelEnroll} disabled={totpBusy}>{t('prof.totp.cancel')}</Button>
+                      </div>
+                    </div>
+                  ) : mfaQ.data?.length ? (
+                    <Button variant="outline" onClick={disableTotp} disabled={totpBusy}>
+                      {totpBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : null} {t('prof.totp.disable')}
+                    </Button>
+                  ) : (
+                    <Button variant="action" onClick={startEnroll} disabled={totpBusy}>
+                      {totpBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} {t('prof.totp.enable')}
+                    </Button>
+                  )}
+                </>
+              )}
             </section>
           </div>
         )}
