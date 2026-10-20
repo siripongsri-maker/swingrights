@@ -185,6 +185,49 @@ export default function MySettings() {
                 {pwSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />} {t('prof.pwChange')}
               </Button>
             </section>
+
+            <section className={`${card} md:col-span-2`}>
+              <h2 className="font-subhead text-lg font-semibold flex items-center gap-2"><ShieldCheck className="w-4 h-4" /> {t('prof.totp.title')}</h2>
+              {mfaQ.isLoading ? (
+                <div className="py-4 text-center" role="status"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" aria-hidden /><span className="sr-only">{t('ui.loading')}</span></div>
+              ) : (
+                <>
+                  <p className="text-sm">
+                    {t('prof.status')}: <span className="font-medium">{mfaQ.data?.length ? t('prof.totp.statusOn') : t('prof.totp.statusOff')}</span>
+                  </p>
+                  {totpEnroll ? (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">{t('prof.totp.hint')}</p>
+                      <img src={totpEnroll.qr} alt={t('prof.totp.qrAlt')} className="w-44 h-44 rounded-lg border border-border" />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Input
+                          className="h-11 w-40 font-mono"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          maxLength={6}
+                          placeholder="123456"
+                          aria-label={t('prof.totp.code')}
+                          value={totpCode}
+                          onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        />
+                        <Button variant="action" onClick={verifyEnroll} disabled={totpBusy || totpCode.length !== 6}>
+                          {totpBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} {t('prof.totp.verify')}
+                        </Button>
+                        <Button variant="outline" onClick={cancelEnroll} disabled={totpBusy}>{t('prof.totp.cancel')}</Button>
+                      </div>
+                    </div>
+                  ) : mfaQ.data?.length ? (
+                    <Button variant="outline" onClick={disableTotp} disabled={totpBusy}>
+                      {totpBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : null} {t('prof.totp.disable')}
+                    </Button>
+                  ) : (
+                    <Button variant="action" onClick={startEnroll} disabled={totpBusy}>
+                      {totpBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />} {t('prof.totp.enable')}
+                    </Button>
+                  )}
+                </>
+              )}
+            </section>
           </div>
         )}
       </div>
