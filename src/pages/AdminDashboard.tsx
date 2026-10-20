@@ -11,6 +11,7 @@ import { CaseStatus, STATUS_LABEL, SEV_LABEL, BRANCHES, VIOLATION_TYPES, type Se
 import { logExport } from '@/lib/caseReport';
 import { useCaseAlerts, type CaseAlert } from '@/hooks/useCaseAlerts';
 import { useAccess } from '@/hooks/useAccess';
+import { useRealtimeCases } from '@/hooks/useRealtimeCases';
 
 import {
   Loader2, Plus, Download, MapPin, Search, ChevronLeft, ChevronRight, UserCheck, CalendarClock,
