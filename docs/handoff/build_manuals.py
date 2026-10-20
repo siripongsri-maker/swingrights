@@ -27,6 +27,9 @@ def annotate(key,xy=None,num=1):
 CSS='''@font-face{font-family:SW;src:url(fonts/regular.ttf)} @font-face{font-family:SW;src:url(fonts/bold.ttf);font-weight:700}
 @page{size:A4;margin:14mm 15mm 16mm;@bottom-left{content:'ภายในองค์กร ห้ามเผยแพร่สาธารณะ';font-family:SW;font-size:9pt;color:TOKEN_CHAR}@bottom-right{content:'หน้า ' counter(page);font-family:SW;font-size:9pt;color:TOKEN_CHAR}}*{box-sizing:border-box}body{font-family:SW;font-size:11pt;line-height:1.65;color:TOKEN_CHAR;margin:0}.page{break-after:page;page-break-after:always;height:266mm;overflow:hidden;position:relative}.page:last-child{break-after:auto}h1{font-size:25pt;line-height:1.35;margin:5mm 0;color:TOKEN_CHAR}h2{font-size:17pt;line-height:1.4;margin:3mm 0 4mm}h3{font-size:12pt;margin:3mm 0 1mm;color:TOKEN_PINK}p{margin:2mm 0}.eyebrow{color:TOKEN_PINK;font-size:10pt;font-weight:700;letter-spacing:1px}.note{background:TOKEN_AQUA;border-left:3pt solid TOKEN_PINK;padding:3mm 4mm;font-size:10pt;line-height:1.55;margin:3mm 0}figure{margin:3mm 0 2mm;text-align:center}figure img{max-width:100%;max-height:130mm;object-fit:contain;border:1px solid #d5e6e6}.mobile img{max-height:133mm}figcaption{font-size:8.5pt;line-height:1.45;text-align:left;overflow-wrap:anywhere}.caption{font-weight:700;font-size:10pt;margin-top:2mm}ul{padding-left:5mm;margin:2mm 0}li{margin-bottom:1.6mm}.small{font-size:8.8pt;line-height:1.5;overflow-wrap:anywhere}.sources{position:absolute;bottom:1mm;left:0;right:0;font-size:8pt;line-height:1.45;color:#5b6168;overflow-wrap:anywhere}.cover{background:TOKEN_AQUA;padding:8mm}.cover img{max-height:104mm}.cover .badge{background:TOKEN_PINK;color:white;display:inline-block;padding:1mm 3mm;font-size:10pt}.toc img{max-height:55mm}.toc p{font-size:10pt;line-height:1.5;margin:1mm 0}.dense figure img{max-height:91mm}.dense{font-size:10.5pt}'''.replace('TOKEN_CHAR',CHAR).replace('TOKEN_PINK',PINK).replace('TOKEN_AQUA',AQUA)
 def fig(key,caption,xy=None,num=1):
+ if xy is None:
+  targets={'home_1280':(308,285),'home_375':(160,360),'queue_1280':(135,110),'queue_375':(68,680),'cases_1280':(645,164),'caseload_1280':(134,207),'overview_1280':(135,255),'model_1280':(851,124),'logs_1280':(365,195),'report_375':(184,780),'report_details':(130,540),'report_about':(175,540),'report_area_live':(153,480),'report_composer_live':(175,488),'track_375':(183,339),'track_checked':(182,451),'recover_375':(150,338),'signin_375':(180,347),'privacy_1280':(621,300),'partner_search_1280':(625,238),'users_1280':(132,465),'totp_1280':(650,550),'settings_1280':(132,1750),'detail_1280':(660,350),'documents_1280':(1070,35),'refer_1280':(1110,1650),'pii_1280':(710,833),'home_hotlines':(184,240),'rights_calls':(196,750)}
+  xy=targets.get(key)
  f,x=annotate(key,xy,num)
  return f'<figure class="{"mobile" if x["width"]==375 else "desktop"}"><img src="{f.relative_to(ROOT)}"><figcaption>หน้า: {esc(x["label"])} · {x["width"]}px · ถ่าย {DATE}<br>URL: {esc(x["url"])}<div class="caption">ขั้นที่ {num}: {esc(caption)}</div></figcaption></figure>'
 def entry(title,key,caption,body,source,xy=None,dense=False):return dict(title=title,key=key,caption=caption,body=body,source=source,xy=xy,dense=dense)
@@ -200,7 +203,7 @@ entry('14. /intake, ก่อนสัมภาษณ์','intake_375','อ่�
 '[ต้องยืนยัน] ภาพทุกขั้นอัดเสียง คัดกรอง ส่งต่อ ลายเซ็น และส่งสำเร็จ /intake ไม่ถูกห่อด้วยตัวล็อกที่ route ตามซอร์ส'], 'src/App.tsx:55; src/pages/Intake.tsx'),
 entry('15. ค้นหาหน่วยงานส่งต่อ','partner_search_1280','เปิด “ค้นหาหน่วยงานส่งต่อ” แล้วค้นพื้นที่หรือบริการ',[
 'ตรวจโทรศัพท์ บริการ เวลา และความพร้อมกับหน่วยงานก่อนส่งข้อมูล',
-'การมีรายชื่อบนแผนที่ไม่ยืนยันว่าหน่วยงานรับเคสประเภทนี้หรือเปิดบริการในขณะนั้น',
+'ภาพจริงพบแผนที่ Google แจ้งข้อผิดพลาด แต่รายชื่อยังแสดง จึงไม่ยืนยันว่าแผนที่พร้อมใช้ การมีรายชื่อไม่ยืนยันว่าหน่วยงานรับเคสหรือเปิดในขณะนั้น',
 '[ต้องยืนยัน] ข้อจำกัดโดเมนและบริการ Google Maps แม้พบชื่อค่าลับแล้ว'], 'src/pages/PartnerSearch.tsx; src/components/PartnerMap.tsx'),
 entry('16. ส่งต่อจากเคส, ขั้นที่ 1','refer_1280','กด “ส่งต่อหน่วยงาน” เพื่อเริ่มเลือกรายการส่งต่อ',[
 'ตรวจความจำเป็นและขอบเขตข้อมูลก่อนส่ง ให้ใช้ข้อมูลสรุปเท่าที่จำเป็น',
@@ -239,7 +242,7 @@ entry('24. บันทึกกิจกรรม','logs_1280','เลือก
 'บันทึกเก่าบางรายการอาจยังอยู่แม้เคสถูกลบจริงจากรอบทดสอบก่อน ไม่ถือว่าเป็นเคสที่ยังเปิด',
 'หากต้องใช้สอบสวนเหตุ ให้รักษาบันทึกต้นฉบับและสิทธิ์เข้าถึง ไม่ลบเพื่อทำให้รายงานดูสะอาด'], 'AdminSystem.tsx:34-39,117-135'),
 entry('25. AI และเครดิต','model_1280','ตรวจ “ใช้งานอยู่: เวอร์ชัน 5” ก่อนสั่งฝึกหรือเปิดเวอร์ชันอื่น',[
-'โมเดลตามซอร์ส: followup-question และ draft-case-document ใช้ openai/gpt-6-astra; analyze-case ใช้ google/gemini-2.5-flash; speak-text ใช้ google/gemini-3.1-flash-tts-preview; transcribe-audio ใช้ชื่อโมเดลตามฟังก์ชัน',
+'โมเดลตามซอร์ส: followup-question และ draft-case-document ใช้ openai/gpt-6-astra; analyze-case ใช้ google/gemini-2.5-flash; speak-text ใช้ google/gemini-3.1-flash-tts-preview; [ต้องยืนยัน] โมเดลถอดเสียงที่ให้บริการจริงจากประวัติคำขอ',
 'SWING Rights model เป็นเวอร์ชันแนวทาง/ตัวอย่าง ไม่ใช่หลักฐานว่าฝึกโมเดลพื้นฐานใหม่หรือประมวลผลอยู่เฉพาะในองค์กร ทุกฟังก์ชันต้องตรวจการส่งข้อมูลภายนอก',
 'ตรวจเครดิต workspace เหลือ 615.14 ณ เวลาสอบถาม เป็นยอดเปลี่ยนแปลงได้ ไม่ใช่เครดิต AI ที่กันไว้ให้โปรเจกต์นี้โดยเฉพาะ [ต้องยืนยัน] หน้าจอเครดิตใน Lovable'], 'supabase/functions/*/index.ts; credits read 20/10/2026',dense=True),
 entry('26. หยุดแนวทาง AI, ไม่เท่ากับหยุด AI ทั้งหมด','model_1280','ปุ่ม “ปิดการใช้งาน” อยู่ในแท็บโมเดล แต่ยังไม่กด',[
@@ -350,7 +353,14 @@ def build(n,title,items):
   ss=items[off:off+chunk]
   parts.append('<section class="page toc"><div class="eyebrow">SWING RIGHTS · สารบัญ</div><h2>สารบัญ'+(' (ต่อ)' if off else '')+'</h2>'+''.join(f'<p>{esc(e["title"])} · หน้า {i+2+(len(items)+chunk-1)//chunk}</p>' for i,e in enumerate(items) if off<=i<off+chunk)+fig('home_1280' if n==1 else 'queue_1280' if n==2 else 'logs_1280','ใช้เมนูจริงเทียบกับบทที่ต้องการ')+'<div class="note">ภาพหนึ่งภาพต่อจุดที่ตรวจได้ ภาพผลที่ต้องเปลี่ยนบัญชี ส่งเคส หรือเปิดฟีเจอร์ยัง [ต้องยืนยัน] ไม่มีการจำลองผลลัพธ์</div></section>')
  for e in items:
-  parts.append('<section class="page '+('dense' if e['dense'] else '')+'"><div class="eyebrow">SWING RIGHTS · เล่ม '+str(n)+'</div><h2>'+esc(e['title'])+'</h2>'+fig(e['key'],e['caption'],e['xy'])+'<ul>'+''.join('<li>'+esc(x)+'</li>' for x in e['body'])+'</ul><div class="sources">หลักฐาน: '+esc(e['source'])+'</div></section>')
+  step=re.search(r'ขั้นที่ (\d+)',e['title'])
+  num=int(step.group(1)) if step else 1
+  xy=e['xy']
+  if e['title'].startswith('1. บัญชีและสิทธิ์'):xy=(135,465)
+  if e['title'].startswith('4. ปิด demo'):xy=(1190,424)
+  if e['title'].startswith('7. รับเคส'):xy=(1030,315)
+  if e['title'].startswith('8. นัดติดตาม'):xy=(1030,460)
+  parts.append('<section class="page '+('dense' if e['dense'] else '')+'"><div class="eyebrow">SWING RIGHTS · เล่ม '+str(n)+'</div><h2>'+esc(e['title'])+'</h2>'+fig(e['key'],e['caption'],xy,num)+'<ul>'+''.join('<li>'+esc(x)+'</li>' for x in e['body'])+'</ul><div class="sources">หลักฐาน: '+esc(e['source'])+'</div></section>')
  out=ROOT/f'volume-{n}.html';out.write_text('<!DOCTYPE html><html lang="th"><meta charset="utf-8"><title>SWING RIGHTS เล่ม '+str(n)+'</title><style>'+CSS+'</style><body>'+''.join(parts)+'</body></html>')
  HTML(filename=str(out),base_url=str(ROOT)).write_pdf(str(ROOT/f'SWING-RIGHTS-handoff-volume-{n}.pdf'))
  return {'volume':n,'title':title,'expected_pages':len(items)+1+(len(items)+chunk-1)//chunk,'chapters':items}
