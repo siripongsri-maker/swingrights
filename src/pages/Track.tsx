@@ -160,6 +160,16 @@ export default function Track() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (initialCode) void lookup(initialCode); }, []);
 
+  // Auto-lookup whenever the typed/pasted code is complete (SW- + 8 chars), so the result
+  // always comes from the database without depending on a URL parameter or the search button.
+  useEffect(() => {
+    if (code.length !== 11) return;
+    if (data?.case_code === code) return;
+    const timer = setTimeout(() => void lookup(code), 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
+
   const sendAnswer = async (qid: string) => {
     const a = answers[qid];
     const text = (a?.text ?? '').trim();
